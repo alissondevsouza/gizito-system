@@ -3,7 +3,7 @@
 **Status:** em execução  
 **Fase atual:** F0 — Fundação  
 **Data:** 14/10/2026  
-**Estado atualizado em:** 14/10/2026  
+**Estado atualizado em:** 15/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
 **Como usar:** cada feature vira uma spec em `specs/{modulo}/{slug}/` executada pelo fluxo `gizito-spec-driven`; as fases só avançam quando o critério de saída é atendido  
 **Como marcar:** `[x]` concluída, com data e commit ou spec ao lado · `[ ]` com **em andamento** no título quando iniciada, com o sub-item "Feito até agora" · `[ ]` sem marca é pendente. Ao concluir uma feature, marcar o item e trocar "Feito até agora" por "Concluída em". Ao fechar uma fase, marcar o gate, atualizar a coluna Estado da seção 2, o bloco "Estado atual" abaixo e a tabela de estado de `docs/README.md`
@@ -22,7 +22,7 @@ Resumo por fase:
 
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
-| F0 Fundação | 7 | 1 | 0 | 6 |
+| F0 Fundação | 7 | 1 | 1 | 5 |
 | F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
@@ -98,7 +98,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 1 de 7 concluídas
+**Estado:** em andamento · 1 de 7 concluídas · 1 em andamento
 
 - [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
@@ -107,9 +107,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 - [ ] **F0-02 `infra-local-compose`** — infra · P · depende: F0-01
   - Entrega: `docker-compose.yml` com Postgres 16 (bancos `gizito` e `evolution`), Redis 7 e Evolution API fixada na linha 2.x; healthchecks; portas só locais
   - Pronto quando: `docker compose up -d` saudável; Evolution responde na porta interna com a API key
-- [ ] **F0-03 `design-tecnico-e-adrs`** — docs · M · depende: —
+- [ ] **F0-03 `design-tecnico-e-adrs`** (em andamento) — docs · M · depende: — · `specs/docs/design-tecnico-e-adrs/`
   - Entrega: `docs/engineering/architecture.md`, `data-model.md`, `state-machine.md`, `api.md`, `jobs.md`; ADRs 0002 a 0007 (monorepo Bun, fila no Postgres, Mercado Pago, Evolution API, TanStack Start + Elysia, dois PDFs); o 0001 já é o harness
   - Pronto quando: revisados por você; índice de `docs/README.md` atualizado
+  - Feito até agora: 15/10/2026, os cinco docs e os ADRs 0002 a 0007 escritos e indexados em `docs/README.md`; falta a sua revisão
 - [ ] **F0-04 `core-fundacao`** — core · M · depende: F0-01
   - Entrega: constantes de negócio, enums com `List`, máquina de estados do pedido como dado, schemas de pedido, cobrança e payload de job, interfaces `PaymentGateway`, `NotificationChannel`, `AiProvider`, `ObjectStorage`, `MathEvaluator`
   - Pronto quando: toda transição válida e inválida testada; nenhum IO no pacote
