@@ -22,7 +22,7 @@ Resumo por fase:
 
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
-| F0 Fundação | 7 | 2 | 0 | 5 |
+| F0 Fundação | 7 | 3 | 0 | 4 |
 | F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
@@ -98,7 +98,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 2 de 7 concluídas
+**Estado:** em andamento · 3 de 7 concluídas
 
 - [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
@@ -111,9 +111,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 - [ ] **F0-03 `design-tecnico-e-adrs`** — docs · M · depende: —
   - Entrega: `docs/engineering/architecture.md`, `data-model.md`, `state-machine.md`, `api.md`, `jobs.md`; ADRs 0002 a 0007 (monorepo Bun, fila no Postgres, Mercado Pago, Evolution API, TanStack Start + Elysia, dois PDFs); o 0001 já é o harness
   - Pronto quando: revisados por você; índice de `docs/README.md` atualizado
-- [ ] **F0-04 `core-fundacao`** — core · M · depende: F0-01
+- [x] **F0-04 `core-fundacao`** — core · M · depende: F0-01 · 15/10/2026 · `74c3c61` · `specs/core/core-fundacao/`
   - Entrega: constantes de negócio, enums com `List`, máquina de estados do pedido como dado, schemas de pedido, cobrança e payload de job, interfaces `PaymentGateway`, `NotificationChannel`, `AiProvider`, `ObjectStorage`, `MathEvaluator`
   - Pronto quando: toda transição válida e inválida testada; nenhum IO no pacote
+  - Concluída em: 15/10/2026. 13 transições do PRD §5 como dado, `transitionOrder` com `Result` e teste exaustivo status × evento (90 combinações); schemas de pedido, foto, cobrança e dos 6 payloads de job; regras puras de cobrança (30 min) e retenção (30 dias / 12 meses) com relógio por parâmetro; `expectedAnswerSchema`; keys de storage; cinco interfaces com teste de contrato; teste de pureza (só `zod` e `#src`, sem env/relógio/IO) e cobertura mínima de 70% no `bunfig.toml`. 184 testes
 - [ ] **F0-05 `db-fundacao`** — db · M · depende: F0-02, F0-04
   - Entrega: schema Drizzle das tabelas do MVP (`order`, `order_photo`, `charge`, `kit`, `ai_call`, `webhook_event`, `notification`, `support_ticket`), migration 0001, conexão, `test-helpers` com Postgres em docker
   - Pronto quando: migration aplica do zero; teste de integração sobe banco e insere um pedido
