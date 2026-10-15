@@ -1,0 +1,9 @@
+[test]
+coverage = true
+coverageSkipTestFiles = true
+coveragePathIgnorePatterns = [
+  "**/__tests__/**",
+  "**/test-helpers/**",
+  "**/migrate.ts",
+  "**/packages/core/**",
+]

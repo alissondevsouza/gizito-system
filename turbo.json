@@ -6,6 +6,9 @@
     "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".output/**"] },
     "typecheck": { "dependsOn": ["transit"] },
     "test": { "dependsOn": ["transit"] },
+    "test:integration": { "dependsOn": ["transit"], "cache": false, "env": ["TEST_DATABASE_URL"] },
+    "db:generate": { "cache": false },
+    "db:migrate": { "cache": false, "env": ["DATABASE_URL"] },
     "dev": { "cache": false, "persistent": true }
   }
 }

@@ -11,6 +11,9 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
     "lint": "biome check .",
     "format": "biome check --write ."
   },

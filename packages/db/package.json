@@ -4,19 +4,26 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./test-helpers": "./src/test-helpers/index.ts"
   },
   "imports": {
     "#src/*": "./src/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test --path-ignore-patterns '**/integration/**'",
+    "test:integration": "bun test src/__tests__/integration",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun run src/migrate.ts"
   },
   "dependencies": {
-    "@gizito/core": "workspace:*"
+    "@gizito/core": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/bun": "~1.3.11"
+    "@types/bun": "~1.3.11",
+    "drizzle-kit": "^0.31.11"
   }
 }
