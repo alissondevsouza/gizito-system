@@ -53,6 +53,18 @@ describe("jobPayloadSchema", () => {
     );
   });
 
+  it("charge.reconcile aceita orderId opcional (webhook direcionado) e rejeita orderId inválido", () => {
+    expect(
+      jobPayloadSchema.safeParse({ name: "charge.reconcile", orderId: ORDER_ID }),
+    ).toMatchObject({
+      success: true,
+      data: { name: "charge.reconcile", orderId: ORDER_ID },
+    });
+    expect(jobPayloadSchema.safeParse({ name: "charge.reconcile", orderId: "1" }).success).toBe(
+      false,
+    );
+  });
+
   it("campo extra é descartado, nunca propagado", () => {
     const parsed = jobPayloadSchema.parse({
       name: "order.generate",

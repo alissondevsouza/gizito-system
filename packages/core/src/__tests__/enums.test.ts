@@ -8,6 +8,7 @@ import {
   orderStatusSchema,
   subjectLabelMap,
   subjectList,
+  supportTicketKindList,
 } from "#src/enums.ts";
 
 describe("enums", () => {
@@ -37,6 +38,10 @@ describe("enums", () => {
         "whatsapp.inbound",
       ].sort(),
     );
+  });
+
+  it("tickets de suporte incluem pagamento duplicado (Pix antigo pago depois de novo Pix)", () => {
+    expect(supportTicketKindList).toContain("duplicate_payment");
   });
 
   it("anos e disciplinas do MVP com rótulo pt-BR", () => {

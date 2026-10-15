@@ -98,7 +98,12 @@ export const webhookSourceList = ["mercadopago", "whatsapp"] as const;
 export const webhookSourceSchema = z.enum(webhookSourceList);
 export type WebhookSource = z.infer<typeof webhookSourceSchema>;
 
-export const supportTicketKindList = ["content_error", "delivery_problem", "other"] as const;
+export const supportTicketKindList = [
+  "content_error",
+  "delivery_problem",
+  "duplicate_payment",
+  "other",
+] as const;
 export const supportTicketKindSchema = z.enum(supportTicketKindList);
 export type SupportTicketKind = z.infer<typeof supportTicketKindSchema>;
 

@@ -22,6 +22,7 @@ export const orderNotifyJobPayloadSchema = z.object({
 
 export const chargeReconcileJobPayloadSchema = z.object({
   name: z.literal("charge.reconcile"),
+  orderId: guidSchema.optional(),
 });
 
 export const retentionPurgeJobPayloadSchema = z.object({
