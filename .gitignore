@@ -18,3 +18,4 @@ logs
 .claude/projects/
 tests/pedagogy/cases/**/photos/
 tests/pedagogy/output/
+.output

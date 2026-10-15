@@ -1,0 +1,16 @@
+{
+  "name": "@gizito/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.4"
+  }
+}
