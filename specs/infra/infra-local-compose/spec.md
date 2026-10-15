@@ -46,7 +46,7 @@ Subir a infra local do Gizito com um comando: Postgres 16 (bancos `gizito` e `ev
 
 ### M2 — Env, CI e docs
 - [x] 2.1 `.env.example` (`EVOLUTION_API_KEY` de exemplo, comentário do compose) e step `docker compose config --quiet` no CI · Verificação: `bun -e` parse do YAML
-- [ ] 2.2 Roadmap, `docs/progress/infra.md`, `docs/README.md` · Verificação: leitura
+- [x] 2.2 Roadmap, `docs/progress/infra.md`, `docs/README.md` · Verificação: leitura
 - [ ] 2.3 Commit; revisão neutra (toca config da Evolution: zona WhatsApp/LGPD); `review.md`
 
 ## Decisões
@@ -58,4 +58,4 @@ Subir a infra local do Gizito com um comando: Postgres 16 (bancos `gizito` e `ev
 | 2026-10-15 | Healthcheck da Evolution por `node -e fetch` | imagem final sem curl/wget |
 
 ## Status
-Fase: M1 e 2.1 concluídos; docs de estado e revisão neutra pendentes.
+Fase: implementação concluída (commit M1 `dcb3319`); revisão neutra pendente (task 2.3).

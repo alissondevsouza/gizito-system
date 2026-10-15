@@ -3,7 +3,7 @@
 **Status:** em execução  
 **Fase atual:** F0 — Fundação  
 **Data:** 14/10/2026  
-**Estado atualizado em:** 14/10/2026  
+**Estado atualizado em:** 15/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
 **Como usar:** cada feature vira uma spec em `specs/{modulo}/{slug}/` executada pelo fluxo `gizito-spec-driven`; as fases só avançam quando o critério de saída é atendido  
 **Como marcar:** `[x]` concluída, com data e commit ou spec ao lado · `[ ]` com **em andamento** no título quando iniciada, com o sub-item "Feito até agora" · `[ ]` sem marca é pendente. Ao concluir uma feature, marcar o item e trocar "Feito até agora" por "Concluída em". Ao fechar uma fase, marcar o gate, atualizar a coluna Estado da seção 2, o bloco "Estado atual" abaixo e a tabela de estado de `docs/README.md`
@@ -22,7 +22,7 @@ Resumo por fase:
 
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
-| F0 Fundação | 7 | 1 | 0 | 6 |
+| F0 Fundação | 7 | 2 | 0 | 5 |
 | F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
@@ -98,15 +98,16 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 1 de 7 concluídas
+**Estado:** em andamento · 2 de 7 concluídas
 
 - [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
   - Pronto quando: `bun run lint`, `typecheck` e `test` verdes no repo vazio; CI passando no primeiro push
   - Concluída em: 14/10/2026. Bun 1.3.11, Turborepo 2, Biome 2, TypeScript 7, packages exportando fonte TS sem build, testes de resolução de imports por workspace, CI em `.github/workflows/ci.yml` (primeiro run acontece no primeiro push, que é do humano). `db:generate`/`db:migrate` entram em F0-05 e `test:pedagogy` em F1-10 porque o Turborepo falha em task sem implementação
-- [ ] **F0-02 `infra-local-compose`** — infra · P · depende: F0-01
+- [x] **F0-02 `infra-local-compose`** — infra · P · depende: F0-01 · 15/10/2026 · `dcb3319` · `specs/infra/infra-local-compose/`
   - Entrega: `docker-compose.yml` com Postgres 16 (bancos `gizito` e `evolution`), Redis 7 e Evolution API fixada na linha 2.x; healthchecks; portas só locais
   - Pronto quando: `docker compose up -d` saudável; Evolution responde na porta interna com a API key
+  - Concluída em: 15/10/2026. `evoapicloud/evolution-api:v2.3.7` (última estável da linha 2.x), banco `evolution` criado por script em `infra/postgres/initdb/`, healthchecks nos três serviços, portas só em `127.0.0.1`, Evolution sem gravar mensagens, contatos nem chats (LGPD), CI valida `docker compose config`. Primeira subida em ~41 s (migrations da Evolution), reinício em ~11 s
 - [ ] **F0-03 `design-tecnico-e-adrs`** — docs · M · depende: —
   - Entrega: `docs/engineering/architecture.md`, `data-model.md`, `state-machine.md`, `api.md`, `jobs.md`; ADRs 0002 a 0007 (monorepo Bun, fila no Postgres, Mercado Pago, Evolution API, TanStack Start + Elysia, dois PDFs); o 0001 já é o harness
   - Pronto quando: revisados por você; índice de `docs/README.md` atualizado

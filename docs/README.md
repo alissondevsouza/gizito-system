@@ -38,7 +38,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-14 (F0-01). Monorepo criado; todo workspace é só esqueleto (entrypoint vazio e teste de resolução de imports). Detalhes em `progress/{modulo}.md`.
+> Atualizado em 2026-10-15 (F0-02). Monorepo e infra local criados; todo workspace é só esqueleto (entrypoint vazio e teste de resolução de imports). Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
@@ -48,4 +48,4 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | API | `@gizito/api` | esqueleto (F0-01); `/health` e config em F0-07 |
 | Worker | `@gizito/worker` | esqueleto (F0-01); loop da fila em F0-07 |
 | Web | `@gizito/web` | esqueleto com Vitest (F0-01); TanStack Start em F0-07 |
-| Infra | `docker-compose.yml`, `infra/`, `.github/` | monorepo, Biome, Turborepo e CI (F0-01); compose em F0-02 |
+| Infra | `docker-compose.yml`, `infra/`, `.github/` | monorepo, Biome, Turborepo e CI (F0-01); compose com Postgres, Redis e Evolution (F0-02) |
