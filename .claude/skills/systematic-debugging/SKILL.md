@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: "Use when a bug's cause is not yet confirmed and you are about to propose a fix. Skip when the failing test already shows the cause."
 ---
 
 # Systematic Debugging

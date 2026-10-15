@@ -1,6 +1,8 @@
 ---
 name: elysia
-description: Expert guide for building APIs with the Elysia framework, including routing, validation, plugins, error handling, and type-safe handlers. Use when building APIs with Elysia framework, defining routes, plugins, or type-safe handlers.
+description: "Elysia routing, plugins, validation and error handling for apps/api. Use when adding or changing a route, plugin or middleware."
+paths:
+  - "apps/api/**"
 allowed-tools: Read, Grep, Glob
 ---
 

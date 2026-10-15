@@ -1,6 +1,8 @@
 ---
 name: react
-description: Comprehensive React development guide covering component architecture, hooks, state management, TypeScript integration, useEffect patterns, and testing with Vitest. Use when creating React components, custom hooks, managing state, or any frontend React code. Essential for React 19+ development.
+description: "React 19 component, hook and effect patterns. Use when writing components or custom hooks in apps/web."
+paths:
+  - "apps/web/**"
 allowed-tools: Read, Grep, Glob
 ---
 

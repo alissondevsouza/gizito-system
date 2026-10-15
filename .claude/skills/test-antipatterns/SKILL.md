@@ -1,6 +1,11 @@
 ---
 name: test-antipatterns
-description: Use when writing or changing tests, adding mocks, or tempted to add test-only methods to production code - prevents testing mock behavior, production pollution with test-only methods, and mocking without understanding dependencies
+description: "Read before adding a mock, a test-only method to production code, or a test that asserts mock behavior instead of real behavior."
+paths:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/__tests__/**"
+  - "**/fakes/**"
 ---
 
 # Testing Anti-Patterns

@@ -1,12 +1,8 @@
 ---
 name: drizzle-postgres
-description: |
-  PostgreSQL and Drizzle ORM best practices. Triggers on: PostgreSQL, Postgres, Drizzle, database,
-  schema, tables, columns, indexes, queries, migrations, ORM, relations, joins, transactions, SQL,
-  drizzle-kit, connection pooling, N+1, JSONB, RLS.
-
-  Use when: writing database schemas, queries, migrations, or any database-related code.
-  Proactively apply when creating APIs, backends, or data models.
+description: "Drizzle + PostgreSQL schema, query, index and migration patterns for packages/db. Use when writing or changing a Drizzle schema, a migration or a non-trivial query."
+paths:
+  - "packages/db/**"
 ---
 
 # PostgreSQL + Drizzle ORM

@@ -4,11 +4,9 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Como usar
 
-- **Antes de implementar:** leia o PRD (`product/`), o guia de design (`design/`), os ADRs relevantes (`engineering/adr/`), as lições (`lessons.md`) e o estado do módulo (`progress/`)
-- **Depois de implementar:** atualize `progress/{modulo}.md`, a tabela de estado abaixo, e gradue decisões/lições (fluxo `gizito-spec-driven`, Phase 5)
+- **Antes de implementar:** leia a seção do PRD ou do design doc que a tarefa toca (tabela no `CLAUDE.md`) e procure o tema por grep em `engineering/adr/`, `lessons.md` e `engineering/known-issues.md`. Não leia tudo antes de cada mudança
+- **Depois de implementar, só quando aconteceu:** decisão arquitetural durável vira ADR; gotcha que custou iteração vira entrada em `lessons.md`; dívida deliberada vai para `engineering/known-issues.md`; comportamento visível muda PRD/design doc com entrada no histórico; módulo que mudou de estado atualiza `progress/{modulo}.md` e a tabela abaixo
 - **Nova decisão arquitetural:** crie um ADR a partir de `engineering/adr/_template.md` e adicione a linha na tabela
-- **Gotcha/aprendizado operacional:** append em `lessons.md`
-- **Dívida deliberada:** registre em `engineering/known-issues.md`
 
 ## Mapa
 
@@ -23,7 +21,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [`legal/`](legal/) | Termos, privacidade, ajuda (a criar) |
 | [`lessons.md`](lessons.md) | Lições operacionais graduadas das features |
 | [`progress/`](progress/) | Estado por módulo (1 arquivo por workspace) |
-| [`../specs/`](../specs/) | Artefatos por feature (spec/plan/tasks/progress/validate/review) |
+| [`../specs/`](../specs/) | Artefatos por feature: `spec.md` e `review.md` (templates em `specs/_templates/`) |
 
 ---
 
@@ -31,7 +29,8 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 | # | Decisão | Status | Data |
 |---|---------|--------|------|
-| — | Nenhum ADR ainda. As decisões já tomadas estão no PRD, seções 9, 9.1, 9.2 e 12.1, e devem virar ADRs no design técnico | — | — |
+| [0001](engineering/adr/0001-harness-enxuto.md) | Harness enxuto para modelos de fronteira: contexto contextual, uma revisão neutra por feature, dois artefatos | aceito | 2026-10-14 |
+| — | As decisões de produto já tomadas estão no PRD, seções 9, 9.1, 9.2 e 12.1, e viram ADRs no design técnico | — | — |
 
 > Para criar um novo ADR: copie `engineering/adr/_template.md` → `engineering/adr/NNNN-titulo.md` e adicione a linha aqui.
 

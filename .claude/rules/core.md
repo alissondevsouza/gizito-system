@@ -35,6 +35,3 @@ paths:
 - `ObjectStorage`: `putPrivate`, `getSignedUrl(ttlSeconds)`, `delete`.
 - `MathEvaluator`: `evaluate(expression) → ExpectedAnswer`.
 - Interfaces não carregam detalhes de fornecedor (nenhum campo chamado `mercadoPagoOrderId` aqui; isso é do adaptador e do `db`).
-
-## Skills Relacionadas
-- `zod`, `typescript-advanced`

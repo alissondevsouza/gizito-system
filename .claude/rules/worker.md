@@ -37,6 +37,3 @@ paths:
 ## Testes
 - Unit: stages com `FakeAiProvider` e fixtures JSON; validações; mapeamento de erros para `outcomeCode`.
 - Integração: Postgres real; job reexecutado; regeneração única; `ready` só com dois arquivos; `WHATSAPP_ENABLED=false`.
-
-## Skills Relacionadas
-- `zod`, `claude-api` (adaptador de IA), `systematic-debugging`, `test-antipatterns`

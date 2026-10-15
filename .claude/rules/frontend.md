@@ -33,6 +33,3 @@ paths:
 
 ## Testes
 - Vitest + Testing Library para `order-route`, formulários, componentes de estado; Playwright para o fluxo completo com API real e adaptadores falsos.
-
-## Skills Relacionadas
-- `tanstack-start-best-practices`, `tanstack-router-best-practices`, `tanstack-query-best-practices`, `tanstack`, `react`, `shadcn-ui`, `tailwindcss`, `vitest`

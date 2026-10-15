@@ -30,6 +30,11 @@
       "Bash(cat *)"
     ],
     "deny": [
+      "Bash(git merge *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh pr create *)",
+      "Bash(git push *)",
+      "Bash(git push)",
       "Bash(rm -rf *)",
       "Bash(git push --force*)",
       "Bash(git push -f*)",

@@ -33,6 +33,3 @@ paths:
 ## Testes
 - Unit: schemas, services com fakes, máquina de estados nos services.
 - Integração: Postgres real; webhook duplicado; cobrança expirada; `confirm` repetido; download de pedido não `ready`; rate limit da prévia.
-
-## Skills Relacionadas
-- `elysia`, `zod`, `drizzle-orm`, `test-antipatterns`, `systematic-debugging`, `better-auth-best-practices` (admin)

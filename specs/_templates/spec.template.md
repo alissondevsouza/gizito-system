@@ -1,33 +1,40 @@
 ---
-feature: {{FEATURE_NAME}}
-module: {{MODULE_NAME}}
-phase: spec
-status: draft
+feature: {{FEATURE}}
+module: {{MODULE}}
 size: {{P|M|L}}
-created: {{DATE}}
+status: in_progress
+branch: feat/{{MODULE}}/{{SLUG}}
 updated: {{DATE}}
 ---
 
-# Spec: {{FEATURE_NAME}}
+# {{FEATURE}}
 
-## O Que
-<!-- Descrição clara da funcionalidade -->
+## Objetivo
+<!-- 2 a 5 linhas: o que muda para o usuário ou para o sistema e por quê. Seção do PRD/design doc/roadmap. -->
 
-## Por Que
-<!-- Objetivo de negócio, referência ao PRD/Roadmap se aplicável -->
+## Requisitos e critérios de aceite
+<!-- Um por linha. Critério testável, nomeando a borda que cobre. -->
+- **RF-01** — … · Aceite: …
+- **RF-02** — … · Aceite: …
 
-## Requisitos
-<!-- Um por linha, numerados, não-ambíguos e verificáveis -->
-- **RF-01** — <!-- requisito funcional -->
-- **RF-02** — <!-- requisito funcional -->
+## Fora de escopo
+<!-- Explícito. Nada crítico excluído em silêncio. -->
 
-## Critérios de Aceite
-<!-- Testáveis; pelo menos um por RF, referenciando o RF coberto -->
-- [ ] (RF-01) <!-- Critério 1 -->
-- [ ] (RF-02) <!-- Critério 2 -->
+## Plano
+<!-- Só o que não é óbvio: decisões técnicas com justificativa, arquivos a criar/modificar, estratégia de testes, riscos. Size L: resumo da pesquisa no código existente (padrões a seguir, schemas tocados, dependências entre packages). -->
 
-## Fora de Escopo
-<!-- O que NÃO faz parte desta feature (explícito — nada crítico excluído em silêncio) -->
+## Tasks
+<!-- Atômicas, em ordem de dependência. Checkbox aqui é a fonte de verdade do progresso. -->
+### M1 — {{nome}}
+- [ ] 1.1 … · Arquivos: … · Verificação: `…`
+- [ ] 1.2 …
 
-## Restrições Conhecidas
-<!-- Limites técnicos, dependências externas, etc -->
+### M2 — {{nome}}
+- [ ] 2.1 …
+
+## Decisões
+| Data | Decisão | Justificativa |
+|---|---|---|
+
+## Status
+<!-- Ponto de retomada: fase atual, próximo passo, pendências para o humano. -->

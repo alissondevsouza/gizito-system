@@ -30,8 +30,5 @@ paths:
 - Uma regeneração automática; depois `failed` e tratamento operacional. Nunca entregar kit com bloqueador.
 
 ## Regressão pedagógica
-- Qualquer mudança em prompt, modelo, taxonomia, validador ou schema do kit roda `bun run test:pedagogy` antes do handoff; o relatório é anexado em `validate.md`.
+- Qualquer mudança em prompt, modelo, taxonomia, validador ou schema do kit roda `bun run test:pedagogy` antes do handoff; o resumo do relatório vai no `review.md` da feature.
 - Novo defeito encontrado em produção vira caso novo em `tests/pedagogy/cases/`.
-
-## Skills Relacionadas
-- `claude-api` (obrigatória ao tocar `packages/integrations/src/ai/`), `zod`

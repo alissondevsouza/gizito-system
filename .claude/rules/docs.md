@@ -12,7 +12,7 @@ paths:
 - ADRs em `docs/engineering/adr/NNNN-titulo.md` a partir do template; imutáveis depois de aceitos (substituir com novo ADR). Linha no índice de `docs/README.md`.
 - `docs/lessons.md` é append-only, entrada no topo, com data e origem.
 - `docs/engineering/known-issues.md`: dívida só entra com condição de resolução; ao resolver, mover para Resolvidos com data e commit.
-- `docs/progress/{modulo}.md` e a tabela de estado em `docs/README.md` são atualizados juntos ao fechar trabalho num módulo.
-- Diagramas em Mermaid (skill `mermaid-diagrams`), nunca imagens de diagrama.
-- Specs em `specs/` seguem `.claude/rules/spec-format.md`.
+- `docs/progress/{modulo}.md` e a tabela de estado em `docs/README.md` são atualizados quando o estado de um módulo muda (módulo criado, fase do roadmap fechada), não a cada feature.
+- Diagramas em Mermaid, nunca imagens de diagrama.
+- Specs em `specs/{modulo}/{slug}/` seguem os templates de `specs/_templates/` (formato em `.claude/skills/gizito-spec-driven/references/artifacts.md`).
 - Não registrar nos docs conteúdo de fotos, textos extraídos reais ou dados de clientes do piloto.

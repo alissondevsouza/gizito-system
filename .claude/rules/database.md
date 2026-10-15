@@ -37,10 +37,3 @@ paths:
 
 ## Test helpers
 - `@gizito/db/test-helpers` sobe Postgres em container docker, roda migrations e expõe `createTestDatabase()`; usado por `api`, `worker` e `integrations`.
-
-## Comandos
-- `bun run db:generate --filter=@gizito/db`
-- `bun run db:migrate --filter=@gizito/db`
-
-## Skills Relacionadas
-- `drizzle-orm`, `drizzle-postgres`, `drizzle-safe-migrations`

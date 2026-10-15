@@ -1,6 +1,8 @@
 ---
 name: tailwindcss
-description: Guide for Tailwind CSS v4 patterns and best practices. Use when styling components with Tailwind CSS, creating responsive layouts, working with Tailwind 4 features, or using tailwind-variants for component styling.
+description: "Tailwind v4 and tailwind-variants patterns for styling apps/web."
+paths:
+  - "apps/web/**"
 allowed-tools: Read, Grep, Glob
 ---
 
