@@ -17,9 +17,15 @@ import {
   subjectSchema,
 } from "#src/enums.ts";
 
+const PUBLIC_TOKEN_CANONICAL_LAST_CHAR_CLASS = "[AEIMQUYcgkosw048]";
+
 export const publicTokenSchema = z
   .string()
-  .regex(new RegExp(`^[A-Za-z0-9_-]{${PUBLIC_TOKEN_LENGTH - 1}}[AQgw]$`));
+  .regex(
+    new RegExp(
+      `^[A-Za-z0-9_-]{${PUBLIC_TOKEN_LENGTH - 1}}${PUBLIC_TOKEN_CANONICAL_LAST_CHAR_CLASS}$`,
+    ),
+  );
 export type PublicToken = z.infer<typeof publicTokenSchema>;
 
 export const shortCodeSchema = z
