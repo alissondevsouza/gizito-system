@@ -2,7 +2,7 @@
 feature: F0-01 repo-e-monorepo
 module: infra
 size: M
-status: in_progress
+status: done
 branch: feat/infra/repo-e-monorepo
 updated: 2026-10-14
 ---
@@ -21,8 +21,8 @@ Transformar o repositório (hoje só docs e harness) num monorepo Bun pronto par
 - **RF-06** — `bun run typecheck` roda `tsc --noEmit` por workspace a partir de `tsconfig.base.json` com `strict`, `module: Preserve`, `moduleResolution: bundler`, `verbatimModuleSyntax`, `noUncheckedIndexedAccess` · Aceite: verde nos seis workspaces; mudança em `packages/core/src` invalida o cache do typecheck de `apps/api` (verificado com `--dry-run`/`--summarize` durante a implementação).
 - **RF-07** — `bun run build` e `bun run dev` existem na raiz via Turborepo; `build` empacota api e worker com `bun build --target=bun`; `dev` é `persistent` e sem cache (o `dev` das três apps só é exigido em F0-07) · Aceite: `bun run build` verde e gera `apps/api/dist` e `apps/worker/dist` (ignorados pelo git).
 - **RF-08** — `.env.example` documenta, agrupadas por serviço e com valores de exemplo não reais, as variáveis já nomeadas por CLAUDE.md e pelas rules (`DATABASE_URL`, `WHATSAPP_ENABLED`, `PAYMENT_GATEWAY`, `AI_MODEL_EXTRACT`, `AI_MODEL_GENERATE`, `MAX_AI_COST_CENTS_PER_ORDER`, `PREVIEW_RATE_LIMIT_PER_HOUR`, `PREVIEW_RATE_LIMIT_PER_DAY`, `GENERATE_CONCURRENCY`, Evolution, Mercado Pago, Resend, R2) · Aceite: arquivo presente, sem segredo real, `.env` continua ignorado pelo git.
-- **RF-09** — CI em `.github/workflows/ci.yml` roda `bun install --frozen-lockfile`, lint, typecheck, test e build em push na `main` e em pull request, com a versão do Bun lida de `package.json` (`packageManager`) · Aceite: workflow válido (YAML parseável, ações com versão major fixada); passa no primeiro push, que é do humano.
-- **RF-10** — Docs de estado atualizados: roadmap (F0-01 concluída, resumo por fase), `docs/README.md` (estado por módulo) e `docs/progress/{modulo}.md` para os sete módulos criados · Aceite: arquivos presentes com data e commit.
+- **RF-09** — CI em `.github/workflows/ci.yml` roda `bun install --frozen-lockfile`, lint, typecheck, test e build em todo push (qualquer branch) e por `workflow_dispatch`, com a versão do Bun lida de `package.json` (`packageManager`) · Aceite: workflow válido (YAML parseável, ações com versão major fixada); passa no primeiro push, que é do humano.
+- **RF-10** — Docs de estado atualizados: roadmap (F0-01 concluída, resumo por fase), `docs/README.md` (estado por módulo) e `docs/progress/{modulo}.md` para os sete módulos criados · Aceite: arquivos presentes com data, caminho da spec e commit de criação do monorepo.
 
 ## Fora de escopo
 - `docker-compose.yml`, Postgres, Redis, Evolution (F0-02).
@@ -73,7 +73,7 @@ Transformar o repositório (hoje só docs e harness) num monorepo Bun pronto par
 - [x] 3.1 `.github/workflows/ci.yml` (checkout, setup-bun lendo `package.json`, install frozen, lint, typecheck, test, build) · Verificação: `bun -e` com parser YAML ou `bunx yaml` valida; revisão manual das versões das actions
 - [x] 3.2 `.env.example` por serviço, sem valores reais · Verificação: `git check-ignore .env` ignora; `.env.example` rastreado
 - [x] 3.3 Roadmap (F0-01 `[x]`, resumo por fase), `docs/README.md` (estado por módulo) e `docs/progress/*.md` dos sete módulos · Verificação: leitura
-- [ ] 3.4 Commits de checkpoint por milestone; `git log main..HEAD` só com esta feature · Verificação: `git status` limpo
+- [x] 3.4 Commits de checkpoint por milestone; `git log main..HEAD` só com esta feature · Verificação: `git status` limpo
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -83,10 +83,10 @@ Transformar o repositório (hoje só docs e harness) num monorepo Bun pronto par
 | 2026-10-14 | Biome como script raiz, não como task do Turborepo | Uma execução cobre o monorepo; config única; sem cache a invalidar |
 | 2026-10-14 | Lint proíbe `./`, `../` e `#src/*` sem extensão via `noRestrictedImports.patterns` | É a única forma mecânica de garantir a rule `imports.md`; o hook PostToolUse já roda `biome check --write` |
 | 2026-10-14 | Testes de F0-01 são de resolução de imports (`#src`, `@gizito/core`) | Única entrega testável de um esqueleto; evitam o `exit 1` de runner sem testes sem recorrer a `--passWithNoTests` |
-| 2026-10-14 | Turborepo `typecheck` e `test` com `dependsOn: ["^typecheck"]` / `["^test"]` | Verificado na task 1.4: sem isso o hash de `api#typecheck` não muda quando `packages/core/src` muda |
+| 2026-10-14 | Turborepo com task `transit` (no-op, `dependsOn: ["^transit"]`) e `typecheck`/`test` dependendo de `transit` | Verificado na task 1.4: sem dependência o hash de `api#typecheck` não muda quando `packages/core/src` muda; `^typecheck`/`^test` resolveria mas serializaria a suíte e um teste quebrado em `core` esconderia os de api/worker (sugestão da revisão) |
 | 2026-10-14 | `.claude/**` fora do escopo do Biome | O harness não é código do produto; o formatter reescrevia um exemplo de skill |
 | 2026-10-14 | CI dispara em todo push e por `workflow_dispatch`, sem `pull_request` | Repositório de uma pessoa: evita run duplicado no PR; o check do commit aparece no PR |
 | 2026-10-14 | `db:generate`, `db:migrate` e `test:pedagogy` ficam para F0-05 e F1-10 | Turborepo falha em task sem implementação em nenhum workspace |
 
 ## Status
-Fase: M1, M2 e M3 implementados e verificados localmente (lint, typecheck, test e build verdes; cache cruzado do Turborepo e lint de imports provados). Próximo passo: revisão neutra por `gizito-implement-verifier` e `review.md`. Pendências para o humano: push (primeiro run do CI), PR e merge.
+Fase: concluída. Revisão neutra APROVADA (rodada 1, `review.md`); ALERTAs e três das quatro SUGESTÕES aplicados no commit de fechamento. Pendências para o humano: push (primeiro run do CI), PR e merge.

@@ -100,7 +100,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 **Estado:** em andamento · 1 de 7 concluídas
 
-- [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `specs/infra/repo-e-monorepo/`
+- [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
   - Pronto quando: `bun run lint`, `typecheck` e `test` verdes no repo vazio; CI passando no primeiro push
   - Concluída em: 14/10/2026. Bun 1.3.11, Turborepo 2, Biome 2, TypeScript 7, packages exportando fonte TS sem build, testes de resolução de imports por workspace, CI em `.github/workflows/ci.yml` (primeiro run acontece no primeiro push, que é do humano). `db:generate`/`db:migrate` entram em F0-05 e `test:pedagogy` em F1-10 porque o Turborepo falha em task sem implementação
