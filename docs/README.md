@@ -14,7 +14,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 | Diretório/Arquivo | Conteúdo |
 |---|---|
-| [`product/`](product/) | PRD (`product-doc-v1.md`): escopo, jornada, pedagogia, arquitetura decidida, decisões em aberto |
+| [`product/`](product/) | PRD (`product-doc-v1.md`): escopo, jornada, pedagogia, arquitetura decidida, decisões em aberto; roadmap por fases (`roadmap-v1.md`) |
 | [`design/`](design/) | Guia de design, identidade, mascote, telas, PDFs (`design-doc-v1.md`) |
 | [`gizito-image/`](gizito-image/) | Referências visuais do mascote |
 | [`pedagogy/`](pedagogy/) | Taxonomia, schema do kit, prompts, regras de validação, casos de teste (a criar) |

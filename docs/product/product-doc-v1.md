@@ -335,6 +335,8 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 
 ## 11. Prioridade de implementação
 
+Detalhamento em features, dependências, pendências do humano e critérios de passagem em `docs/product/roadmap-v1.md`.
+
 **Fase 1 — Prova técnica/pedagógica:** taxonomia v1 (4º–7º × 2 disciplinas) → upload local de fotos → extração com perfil do material → JSON validado → recálculo matemático → dois PDFs; biblioteca de 40 casos rodando como regressão; medição de custo por prévia e por kit; geração dos dois kits de amostra. Tudo isso antes de qualquer checkout.
 
 **Fase 2 — Fluxo comercial:** landing com amostra → prévia → e-mail → Pix (Mercado Pago) → webhook → job → entrega privada por e-mail e WhatsApp (Evolution API); incluir termos, suporte e painel admin.
