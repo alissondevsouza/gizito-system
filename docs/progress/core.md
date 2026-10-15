@@ -16,6 +16,7 @@
 - Interfaces em `interfaces/`: `PaymentGateway`, `NotificationChannel`, `AiProvider` (4 métodos genéricos no `outputSchema`), `ObjectStorage`, `MathEvaluator`; tipos de entrada e saída como schemas Zod.
 - Ajuste pós-revisão da F0-03: `charge.reconcile { orderId? }` (o webhook do gateway enfileira a reconciliação direcionada) e `duplicate_payment` em `supportTicketKindList`.
 - Testes: 184 em `src/__tests__/` (máquina de estados exaustiva, fixtures válidas e inválidas, regras com datas fixas, contratos das interfaces com fakes mínimos, `purity.test.ts`); `bunfig.toml` com `coverageThreshold` 0.7 (cobertura atual 100%). Dependência: `zod` 4.
+- Ajuste em F0-05 (`66f1217`): `publicTokenSchema` aceita os 16 últimos caracteres canônicos de base64url de 32 bytes (`AEIMQUYcgkosw048`); a classe `[AQgw]` rejeitava 75% dos tokens reais.
 
 ## Implementado
 

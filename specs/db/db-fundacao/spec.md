@@ -23,7 +23,7 @@ Dar ao `@gizito/db` o schema Drizzle das oito tabelas do MVP, a primeira migrati
 - **RF-08** — `@gizito/db/test-helpers` com `createTestDatabase()` (cria `gizito_test_<hex>` no Postgres de `TEST_DATABASE_URL`, default do compose em `127.0.0.1:5433`, migra, devolve `{ db, databaseName, destroy }`; `destroy` fecha conexões e dropa o banco) e `truncateAllTables(db)` · Aceite: teste de integração: duas chamadas dão bancos distintos; depois de `destroy` o banco não existe em `pg_database`; `truncateAllTables` zera `order` e filhas.
 - **RF-09** — Linhas do banco são compatíveis com os schemas do core: um `order` inserido e lido passa em `orderSchema.parse`; `$inferSelect` de `order`, `orderPhoto` e `charge` é atribuível a `Order`, `OrderPhoto` e `Charge` do core (teste de tipo) · Aceite: `tsc` verde e teste de integração com `parse`.
 - **RF-10** — Relations Drizzle com coleções `List` (`order.photoList`, `chargeList`, `kitList`, `aiCallList`, `notificationList`, `supportTicketList`; `kit.supersededByKit`) · Aceite: `db.query.order.findFirst({ with: { photoList: true } })` devolve o pedido com as fotos no teste de integração.
-- **RF-11** — Scripts: `db:generate` e `db:migrate` no workspace e na raiz via Turborepo (`bun run db:migrate --filter=@gizito/db`); `test` só unit (ignora `integration/`), `test:integration` só integração; raiz ganha `test:integration`; CI sobe o Postgres do compose e roda a integração; cobertura ≥ 70% no `bunfig.toml` · Aceite: `bun run lint`, `typecheck`, `test`, `test:integration` verdes na raiz; `ci.yml` com o step.
+- **RF-11** — Scripts: `db:generate` e `db:migrate` no workspace e na raiz via Turborepo (`bun run db:migrate --filter=@gizito/db`); `test` só unit (ignora `integration/`), `test:integration` só integração; raiz ganha `test:integration`; CI sobe o Postgres do compose e roda a integração; cobertura reportada pelo `bunfig.toml` (threshold adiado: ver Decisões e known-issues) · Aceite: `bun run lint`, `typecheck`, `test`, `test:integration` verdes na raiz; `ci.yml` com o step.
 - **RF-12** — Docs de estado: roadmap (F0-05 `[x]`, contadores), `docs/progress/db.md`, `docs/README.md`, histórico 1.1 em `data-model.md` com o nome real da migration e o trigger; `.env.example` documenta `TEST_DATABASE_URL` · Aceite: arquivos atualizados com data e spec.
 
 ## Fora de escopo
@@ -46,15 +46,15 @@ Dar ao `@gizito/db` o schema Drizzle das oito tabelas do MVP, a primeira migrati
 
 ## Tasks
 ### M1 — Schema
-- [ ] 1.1 `drizzle-orm` e `drizzle-kit` no workspace; `drizzle.config.ts`; `schema/enums.ts` e `schema/timestamps.ts` · Verificação: `tsc`
-- [ ] 1.2 Oito tabelas com índices e checks; `schema/relations.ts`; `schema/index.ts` · Verificação: `tsc`, teste unit de convenções (`__tests__/schema/conventions.test.ts`) e de alinhamento com o core (`core-alignment.test.ts`)
+- [x] 1.1 `drizzle-orm` e `drizzle-kit` no workspace; `drizzle.config.ts`; `schema/enums.ts` e `schema/timestamps.ts` · Verificação: `tsc`
+- [x] 1.2 Oito tabelas com índices e checks; `schema/relations.ts`; `schema/index.ts` · Verificação: `tsc`, teste unit de convenções (`__tests__/schema/conventions.test.ts`) e de alinhamento com o core (`core-alignment.test.ts`)
 ### M2 — Migration, conexão, test-helpers
-- [ ] 2.1 `drizzle-kit generate --name fundacao`; trigger de `update_datetime` anexado; `migrations.ts` com `MIGRATIONS_FOLDER` e `runMigrations`; teste unit `migrations.test.ts` (journal, um trigger por tabela) · Verificação: `bun test`
-- [ ] 2.2 `client.ts`, `migrate.ts`, `test-helpers/index.ts`, `index.ts`, `exports` do `package.json` · Verificação: `tsc`
-- [ ] 2.3 Testes de integração: migração do zero e idempotente, insert e `parse` de pedido, uniques, FKs, checks, trigger, relations, `createTestDatabase`/`destroy`/`truncateAllTables` · Verificação: `bun run test:integration` no workspace
+- [x] 2.1 `drizzle-kit generate --name fundacao`; trigger de `update_datetime` anexado; `migrations.ts` com `MIGRATIONS_FOLDER` e `runMigrations`; teste unit `migrations.test.ts` (journal, um trigger por tabela) · Verificação: `bun test`
+- [x] 2.2 `client.ts`, `migrate.ts`, `test-helpers/index.ts`, `index.ts`, `exports` do `package.json` · Verificação: `tsc`
+- [x] 2.3 Testes de integração: migração do zero e idempotente, insert e `parse` de pedido, uniques, FKs, checks, trigger, relations, `createTestDatabase`/`destroy`/`truncateAllTables` · Verificação: `bun run test:integration` no workspace
 ### M3 — Scripts, CI, docs, revisão
-- [ ] 3.1 Scripts do workspace e da raiz, `turbo.json`, `bunfig.toml`, `ci.yml`, `.env.example` · Verificação: `bun run lint && bun run typecheck && bun run test && bun run test:integration` na raiz
-- [ ] 3.2 Roadmap, `docs/progress/db.md`, `docs/README.md`, `data-model.md` 1.1, `docs/lessons.md` (bind mount do initdb vira root) · Verificação: leitura
+- [x] 3.1 Scripts do workspace e da raiz, `turbo.json`, `bunfig.toml`, `ci.yml`, `.env.example` · Verificação: `bun run lint && bun run typecheck && bun run test && bun run test:integration` na raiz
+- [x] 3.2 Roadmap, `docs/progress/db.md`, `docs/README.md`, `data-model.md` 1.1, `docs/lessons.md` (bind mount do initdb vira root) · Verificação: leitura
 - [ ] 3.3 Commits; revisão neutra (`gizito-implement-verifier`); `review.md`; correções
 
 ## Decisões
@@ -66,6 +66,10 @@ Dar ao `@gizito/db` o schema Drizzle das oito tabelas do MVP, a primeira migrati
 | 2026-10-15 | `onDelete: "restrict"` nas FKs para `order`; `set null` em `kit.superseded_by_kit_id` | pedido nunca é apagado (registro contábil anonimizado); apagar com filhos deve falhar alto |
 | 2026-10-15 | Um banco `gizito_test_<hex>` por `createTestDatabase()`, em `TEST_DATABASE_URL` (default do compose) | isolamento entre arquivos de teste sem `mock.module`; nunca cria/dropa no servidor de `DATABASE_URL` |
 | 2026-10-15 | Checks de domínio (`amount_cents > 0`, consentimento junto do telefone, `legibility_score` 0–1) também no banco | o core valida na borda, o banco garante o invariante para qualquer escritor |
+| 2026-10-15 | Sem `coverageThreshold` no `db` (só relatório) | o Bun avalia o threshold também sobre os arquivos do core importados e escondidos por `coveragePathIgnorePatterns`; `bun test` saía com 1 com 92% de linhas. Registrado em `known-issues.md` e `lessons.md` |
+| 2026-10-15 | Corrigir `publicTokenSchema` do core nesta branch, em commit separado (`66f1217`) | o teste de integração com tokens de `randomBytes(32)` mostrou que `[AQgw]` rejeita 75% dos tokens; a classe canônica tem 16 caracteres (`AEIMQUYcgkosw048`) |
+| 2026-10-15 | `db:migrate` e `test:integration` declaram `env` (`DATABASE_URL`, `TEST_DATABASE_URL`) no `turbo.json` | o modo estrito do Turborepo não repassa variáveis não declaradas às tasks |
+| 2026-10-15 | `drizzle/meta` fora do Biome | arquivos gerados pelo drizzle-kit; reformatar o snapshot gera ruído no diff |
 
 ## Status
-Fase: spec escrita; próximo passo M1 (1.1).
+Fase: implementação concluída e verificada (lint, typecheck, 88 unit, 32 integração, `db:generate` no-op, `db:migrate` aplicado no Postgres local do compose); próximo passo: revisão neutra (3.3).

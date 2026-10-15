@@ -44,12 +44,12 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-15 (F0-02 e F0-04). Monorepo e infra local criados; core com domínio puro; os demais workspaces são só esqueleto. Detalhes em `progress/{modulo}.md`.
+> Atualizado em 2026-10-15 (F0-05). Monorepo e infra local criados; core com domínio puro; db com schema, migration e test-helpers; os demais workspaces são só esqueleto. Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
 | Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia em F1-01, schemas do kit em F1-03 |
-| Database | `@gizito/db` | esqueleto (F0-01); schema e fila em F0-05/F0-06 |
+| Database | `@gizito/db` | schema das 8 tabelas, migration `0000_fundacao`, conexão Bun.SQL e test-helpers (F0-05); fila e transações em F0-06 |
 | Integrations | `@gizito/integrations` | esqueleto (F0-01); adaptadores a partir de F1 |
 | API | `@gizito/api` | esqueleto (F0-01); `/health` e config em F0-07 |
 | Worker | `@gizito/worker` | esqueleto (F0-01); loop da fila em F0-07 |

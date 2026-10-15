@@ -98,7 +98,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 3 de 7 concluídas · 1 em andamento
+**Estado:** em andamento · 4 de 7 concluídas · 1 em andamento
 
 - [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
@@ -116,9 +116,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: constantes de negócio, enums com `List`, máquina de estados do pedido como dado, schemas de pedido, cobrança e payload de job, interfaces `PaymentGateway`, `NotificationChannel`, `AiProvider`, `ObjectStorage`, `MathEvaluator`
   - Pronto quando: toda transição válida e inválida testada; nenhum IO no pacote
   - Concluída em: 15/10/2026. 13 transições do PRD §5 como dado, `transitionOrder` com `Result` e teste exaustivo status × evento (90 combinações); schemas de pedido, foto, cobrança e dos 6 payloads de job; regras puras de cobrança (30 min) e retenção (30 dias / 12 meses) com relógio por parâmetro; `expectedAnswerSchema`; keys de storage; cinco interfaces com teste de contrato; teste de pureza (só `zod` e `#src`, sem env/relógio/IO) e cobertura mínima de 70% no `bunfig.toml`. 184 testes
-- [ ] **F0-05 `db-fundacao`** — db · M · depende: F0-02, F0-04
+- [x] **F0-05 `db-fundacao`** — db · M · depende: F0-02, F0-04 · 15/10/2026 · `5f2b6a3` · `specs/db/db-fundacao/`
   - Entrega: schema Drizzle das tabelas do MVP (`order`, `order_photo`, `charge`, `kit`, `ai_call`, `webhook_event`, `notification`, `support_ticket`), migration 0001, conexão, `test-helpers` com Postgres em docker
   - Pronto quando: migration aplica do zero; teste de integração sobe banco e insere um pedido
+  - Concluída em: 15/10/2026. drizzle-orm 0.45 com driver `bun-sql` (Bun.SQL nativo, sem `pg`); 13 `pgEnum` vindos das listas do core; índices do data-model (unique parcial em `gateway_payment_id`), checks de domínio, FKs `restrict` e trigger de `update_datetime` na migration `0000_fundacao` (numeração nativa do drizzle-kit); `db:migrate` por script próprio porque o drizzle-kit não detecta o driver do Bun; `createTestDatabase()` cria um banco `gizito_test_*` por chamada; 88 testes unit e 32 de integração; CI roda a integração com o Postgres do compose. Corrigiu de passagem o `publicTokenSchema` do core (`66f1217`). Sem `coverageThreshold` no `db` por limitação do Bun (known-issues)
 - [ ] **F0-06 `fila-postgres`** — db · P · depende: F0-05
   - Entrega: spike pg-boss no Bun contra fila própria com `SKIP LOCKED`; decisão em ADR 0008; `enqueue` e `work` com payload validado por Zod; `markOrderPaidAndEnqueue` e `publishKit` como transações
   - Pronto quando: job enfileirado e consumido na mesma transação do estado; reexecução idempotente testada
