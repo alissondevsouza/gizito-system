@@ -83,9 +83,10 @@ sequenceDiagram
   API->>PG: awaiting_payment + charge
   R->>MP: paga o Pix
   MP->>API: webhook (assinado)
-  API->>PG: webhook_event (unique) + job charge.reconcile ou consulta
-  API->>MP: GET /v1/orders/{id}
-  API->>PG: paid + job order.generate (mesma transação)
+  API->>PG: webhook_event (unique) + job charge.reconcile {orderId} (mesma transação)
+  API-->>MP: 200
+  WK->>MP: GET /v1/orders/{id}
+  WK->>PG: paid + job order.generate (mesma transação)
   WK->>IA: plan, generate, review (modelo forte)
   WK->>WK: validateStudyKit + mathjs + render dos dois PDFs
   WK->>R2: activities.pdf, answer-key.pdf
@@ -99,7 +100,8 @@ sequenceDiagram
 Pontos que não mudam:
 
 - A API **nunca** chama IA; só enfileira. A IA só roda no worker, atrás de `AiProvider`, com saída validada por Zod e custo gravado em `ai_call`.
-- `awaiting_payment → paid` só depois de **consultar o gateway**; marcar pago e enfileirar `order.generate` na mesma transação, idempotente por `gateway_payment_id` (ver `jobs.md`).
+- `awaiting_payment → paid` só depois de **consultar o gateway**; marcar pago e enfileirar `order.generate` na mesma transação, idempotente por `gateway_payment_id` (ver `jobs.md`). O webhook do gateway só valida a assinatura, registra o evento e enfileira `charge.reconcile` para aquele pedido; a consulta e a transição acontecem no worker, pelo mesmo caminho da reconciliação periódica.
+- Nenhuma etapa depende do WhatsApp: e-mail é obrigatório e `WHATSAPP_ENABLED=false` desliga botão, webhook e envios sem afetar o resto.
 - `ready` só com os **dois PDFs** no storage e as validações críticas verdes (`publishKit`).
 - Download sempre por URL assinada de minutos gerada no clique; o link do pedido (token) é de vida longa e só dá acesso ao status e às ações daquele pedido.
 

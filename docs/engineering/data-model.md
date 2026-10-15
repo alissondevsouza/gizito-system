@@ -9,7 +9,7 @@ PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolame
 - Tabelas em snake_case **singular**; export Drizzle camelCase singular (`order`, `orderPhoto`, `charge`, `kit`, `aiCall`, `webhookEvent`, `notification`, `supportTicket`).
 - PK `{tabela}_id` (`uuid`, `gen_random_uuid()`), nunca `id`; FK com o mesmo nome da PK e `onDelete` explícito.
 - Timestamps `timestamptz` com sufixo `_datetime`, nunca `_at`; `insert_datetime` e `update_datetime` em toda tabela.
-- Enums como `pgEnum` cujos valores vêm dos arrays `*List` do core (`orderStatusList`, `chargeStatusList`, `gradeList`, `subjectList`, `notificationChannelList`, `notificationKindList`, `notificationStatusList`, `webhookSourceList`, `supportTicketKindList`, `supportTicketStatusList`, `aiStageList`, `paymentGatewayList`).
+- Enums como `pgEnum` cujos valores vêm dos arrays `*List` do core (`orderStatusList`, `chargeStatusList`, `gradeList`, `subjectList`, `perceivedDifficultyList`, `notificationChannelList`, `notificationKindList`, `notificationStatusList`, `webhookSourceList`, `supportTicketKindList`, `supportTicketStatusList`, `aiStageList`, `paymentGatewayList`).
 - `order` é palavra reservada em SQL: o Drizzle cita identificadores nas queries geradas; SQL manual precisa de `"order"`.
 - Ids do Postgres validados com `z.guid()` (não `z.uuid()`, lesson de 2026-10-14).
 - Migration aplicada nunca se edita; correção vai em migration nova.
@@ -73,6 +73,7 @@ erDiagram
     timestamptz expire_datetime "criação + 30 min"
     timestamptz paid_datetime
     text refund_id
+    timestamptz refund_datetime
     timestamptz insert_datetime
     timestamptz update_datetime
   }
@@ -153,7 +154,7 @@ A tabela da fila (`job` própria ou as do pg-boss no schema `pgboss`) é definid
 | `kit` | `order_id`; `(delete_datetime, published_datetime)` | download; purge |
 | `ai_call` | `order_id` | custo por pedido |
 | `webhook_event` | unique `(source, external_id)` | idempotência |
-| `notification` | `(order_id, kind, channel)` | um envio por evento |
+| `notification` | unique `(order_id, kind, channel)` | um envio por evento; retry de envio atualiza a linha (`failed → pending → sent`), nunca insere outra |
 | `support_ticket` | `order_id`; `status` | admin |
 
 ## 4. O que cada tabela não guarda
@@ -173,9 +174,10 @@ A tabela da fila (`job` própria ou as do pg-boss no schema `pgboss`) é definid
 
 ## 6. Transações obrigatórias (`packages/db`)
 
-- `markOrderPaidAndEnqueue(tx, { orderId, chargeId, gatewayPaymentId, paidDatetime })`: `transitionOrder(status, "payment_confirmed")`, atualiza `order` e `charge`, insere `order.generate`, marca `webhook_event.processed_datetime`. Repetição com o mesmo `gateway_payment_id` é no-op.
+- `markOrderPaidAndEnqueue(tx, { orderId, chargeId, gatewayPaymentId, paidDatetime })`: `transitionOrder(status, "payment_confirmed")`, atualiza `order` e `charge`, marca como `expired` as demais cobranças `pending` do pedido, insere `order.generate`. Repetição com o mesmo `gateway_payment_id` é no-op. Pagamento confirmado de **outra** cobrança de pedido já `paid` ou posterior não muda estado: abre `support_ticket` `duplicate_payment` para reembolso manual.
+- `republishKit(tx, { orderId, kit })` (admin): insere o kit novo com as duas keys e grava `superseded_by_kit_id` no anterior; sem transição de estado, porque o pedido já está `ready`.
 - `publishKit(tx, { orderId, kit })`: insere `kit` com as **duas** storage keys, `transitionOrder(status, "kit_published")`, `ready_datetime`, insere `order.notify`. Nunca com uma key só.
 
 ## Histórico
 
-- **1.0 (2026-10-15):** versão inicial (F0-03). Colunas de `delete_datetime` em `kit` e índices derivados das rules; a migration 0001 (F0-05) é a implementação.
+- **1.0 (2026-10-15):** versão inicial (F0-03). Colunas `kit.delete_datetime` e `charge.refund_datetime` e índices derivados das rules; a migration 0001 (F0-05) é a implementação.

@@ -19,7 +19,7 @@ Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos
 |---|---|---|---|
 | `POST /orders` | multipart: `grade`, `subject`, `photos[]` (1–5, JPG/PNG, ≤ 8 MB cada) | valida, remove EXIF, reduz, calcula hash, grava no R2; cria `draft`; enfileira `order.analyze` na mesma transação | `201 { publicToken, shortCode, status }` |
 | `GET /orders/:token` | — | — | `200` com o estado e os dados da etapa atual (seção 3) |
-| `POST /orders/:token/confirm` | `topicIdList` (1–3) ou `otherTopicText`, `email`, `noteText?`, `perceivedDifficulty?`, `acceptedTerms: true` | `preview_ready → awaiting_payment`; cria cobrança via `PaymentGateway` na mesma transação | `200` com a cobrança (`qrCode`, `qrCodeBase64`, `expireDatetime`, `amountCents`) |
+| `POST /orders/:token/confirm` | `topicIdList` (1–3) ou `otherTopicText`, `email`, `noteText?`, `perceivedDifficulty?`, `acceptedTerms: true` | cria a cobrança no gateway primeiro (idempotente por `chargeId`; cobrança órfã expira sozinha em 30 min); depois, numa transação, `preview_ready → awaiting_payment` e insert de `charge` | `200` com a cobrança (`qrCode`, `qrCodeBase64`, `expireDatetime`, `amountCents`) |
 | `POST /orders/:token/charges` | — | nova cobrança só se a anterior expirou (`charge_expired`); `charge_active` se ainda válida; `invalid_state` se já pago | `201` com a cobrança |
 | `GET /orders/:token/downloads/:kind` | `kind` ∈ `activities`, `answer_key` | só em `ready`; gera URL assinada com TTL de minutos | `200 { url, expiresAt }` |
 | `POST /orders/:token/whatsapp/unlink` | — | limpa `whatsapp_phone` e consentimento | `204` |
@@ -41,7 +41,7 @@ A resposta sempre traz `publicToken`, `shortCode`, `status`, `grade`, `subject`,
 | `paid`, `processing` | `whatsapp` (`enabled`, `linked`, `phoneLast4`), `startedDatetime` |
 | `ready` | `kit` (`publishedDatetime`, `pageCountActivities`, `pageCountAnswerKey`, `topicIdList`), `whatsapp`; os downloads vêm por rota própria |
 | `failed` | `failReasonCode` mapeado para a mensagem do design doc 5.2; `supportUrl` |
-| `refunded` | `refundedDatetime` |
+| `refunded` | `refundedDatetime` (de `charge.refund_datetime`) |
 
 O web usa só `status` (e `substate`) para decidir a rota (design doc §6.8).
 
@@ -49,10 +49,10 @@ O web usa só `status` (e `substate`) para decidir a rota (design doc §6.8).
 
 | Rota | Validação | Efeito | Resposta |
 |---|---|---|---|
-| `POST /webhooks/mercadopago` | header `x-signature` (HMAC com `ts` e `v1`, segredo por env) | registra `webhook_event` (unique por `source` + `external_id`); duplicado → 200 sem efeito; consulta o recurso no gateway e, se pago, `markOrderPaidAndEnqueue`; nunca confia no corpo | `200` em menos de 22 s |
+| `POST /webhooks/mercadopago` | header `x-signature` (HMAC com `ts` e `v1`, segredo por env) | registra `webhook_event` (unique por `source` + `external_id`) e enfileira `charge.reconcile { orderId }` na mesma transação; duplicado → 200 sem efeito; a consulta ao gateway e `markOrderPaidAndEnqueue` acontecem no worker; o corpo serve só para localizar o pedido, nunca como prova de pagamento | `200` em menos de 22 s |
 | `POST /webhooks/whatsapp` | segredo na URL ou header; ignora `fromMe`, grupos e mensagens sem texto; desligado com `WHATSAPP_ENABLED=false` | registra `webhook_event`; enfileira `whatsapp.inbound` com telefone e texto limitados | `200` |
 
-Processamento pesado nunca acontece inline: o webhook registra, enfileira ou faz uma consulta curta, e responde.
+Nada acontece inline além de validar, registrar e enfileirar: o webhook responde 200 e o worker faz o resto.
 
 ## 5. Admin (`/admin/*`)
 
@@ -64,7 +64,7 @@ Operador único com sessão (login por senha forte em env, cookie `HttpOnly`, ex
 | `GET /admin/orders?email=\|shortCode=` | busca; e-mail e telefone mascarados |
 | `GET /admin/orders/:orderId` | pedido, cobranças, kits, `ai_call`, notificações, tickets; fotos só por ação explícita e auditada |
 | `POST /admin/orders/:orderId/reprocess` | `failed → paid` + `order.generate` |
-| `POST /admin/orders/:orderId/republish` | novo kit a partir do `study_kit` corrigido; supersede o anterior; sem nova cobrança |
+| `POST /admin/orders/:orderId/republish` | novo kit a partir do `study_kit` corrigido, gravando `superseded_by_kit_id` no anterior; sem transição de estado nem nova cobrança |
 | `POST /admin/orders/:orderId/refund` | reembolso no gateway com motivo; `→ refunded` |
 | `POST /admin/orders/:orderId/email` | corrige e-mail, com verificação |
 | `POST /admin/orders/:orderId/whatsapp/unlink` | remove vínculo |

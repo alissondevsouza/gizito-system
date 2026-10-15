@@ -30,17 +30,17 @@ stateDiagram-v2
 | De | Evento | Para | Quem dispara | Quando |
 |---|---|---|---|---|
 | `draft` | `start_analysis` | `analyzing` | worker, `order.analyze` | ao pegar o job |
-| `analyzing` | `analysis_succeeded` | `preview_ready` | worker, `order.analyze` | extração devolveu 1–3 assuntos e perfil |
+| `analyzing` | `analysis_succeeded` | `preview_ready` | worker, `order.analyze` | extração devolveu ao menos um candidato e material suficiente; o teto de 3 assuntos é da confirmação |
 | `analyzing` | `analysis_failed` | `draft` | worker, `order.analyze` | fotos insuficientes ou ilegíveis; avisos por foto gravados |
-| `preview_ready` | `confirm` | `awaiting_payment` | api, `POST /orders/:token/confirm` | assuntos, e-mail e aceite válidos; cobrança criada na mesma transação |
-| `awaiting_payment` | `payment_confirmed` | `paid` | api (webhook) ou worker (`charge.reconcile`) | **após consultar o gateway**; enfileira `order.generate` na mesma transação |
+| `preview_ready` | `confirm` | `awaiting_payment` | api, `POST /orders/:token/confirm` | assuntos, e-mail e aceite válidos; a cobrança é criada no gateway antes (idempotente por `chargeId`) e gravada na mesma transação da transição |
+| `awaiting_payment` | `payment_confirmed` | `paid` | worker, `charge.reconcile` (disparado pelo webhook com `orderId` ou pelo agendador) | **após consultar o gateway**; `markOrderPaidAndEnqueue` enfileira `order.generate` e expira as demais cobranças `pending` do pedido na mesma transação |
 | `paid` | `generation_started` | `processing` | worker, `order.generate` | ao pegar o job |
 | `processing` | `kit_published` | `ready` | worker, `publishKit` | os dois PDFs no storage e validações críticas verdes |
 | `processing` | `generation_failed` | `failed` | worker, `order.generate` | bloqueador persistente após uma regeneração, custo excedido ou erro não transitório; `fail_reason_code` gravado |
 | `failed` | `reprocess` | `paid` | admin | reenfileira `order.generate`; o job sempre parte de `paid` |
 | `paid`, `processing`, `ready`, `failed` | `refund` | `refunded` | admin, com motivo | após reembolso no gateway; `refund_id` gravado na cobrança |
 
-Estados terminais: só `refunded`. Estados "pagos" (`isPaidOrderStatus`): `paid`, `processing`, `ready`.
+Estados terminais: só `refunded`. Estados em que o WhatsApp pode ser vinculado (`isWhatsappLinkableOrderStatus`, PRD §9.2): `paid`, `processing`, `ready`.
 
 ## 3. Sub-estado `charge_expired`
 
@@ -51,8 +51,8 @@ Não é um status do pedido. Com o pedido em `awaiting_payment`, o sub-estado de
 | Situação | Comportamento |
 |---|---|
 | Webhook repetido | `webhook_event` é unique por (`source`, `external_id`): segundo recebimento responde 200 sem efeito |
-| Pagamento confirmado para pedido já `paid` ou posterior | no-op com log `info`; `transitionOrder` recusaria de qualquer forma |
-| Pix pago depois da cobrança expirar | ainda vale: `payment_confirmed` segue; o dinheiro entrou |
+| Pagamento confirmado para pedido já `paid` ou posterior | no-op na máquina (`transitionOrder` recusaria de qualquer forma); se for **outra cobrança** do mesmo pedido, o responsável pagou duas vezes: `markOrderPaidAndEnqueue` abre `support_ticket` `duplicate_payment` e dispara alerta para reembolso manual pelo admin |
+| Pix pago depois da cobrança expirar | ainda vale: `payment_confirmed` segue e as demais cobranças `pending` do pedido viram `expired` (canceladas no gateway quando a API permitir), para um segundo Pix já gerado não ser pago também |
 | Webhook atrasado ou perdido | `charge.reconcile` consulta o gateway a cada 2 minutos para cobranças `awaiting_payment` com mais de 1 minuto |
 | Falha de geração | uma regeneração automática dentro do mesmo job; persistindo, `generation_failed` e aviso ao responsável (`kit_failed`) |
 | Reembolso durante `processing` | `refund` leva a `refunded`; quando o job tentar `kit_published`, a máquina recusa e o kit não é publicado |

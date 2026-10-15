@@ -41,7 +41,7 @@ Registrar o design técnico do Gizito em documentos que agentes e humanos leem p
 - [x] 2.2 `data-model.md`, `api.md`, `jobs.md` · Verificação: nomes × rules e core
 ### M3 — Índice, roadmap, revisão
 - [x] 3.1 `docs/README.md` (índice de ADRs, mapa) e roadmap (F0-03 em andamento, "Feito até agora")
-- [ ] 3.2 Commit; revisão neutra (1 verifier, size M); `review.md`; handoff para revisão do humano
+- [x] 3.2 Commit; revisão neutra (1 verifier, size M); `review.md`; handoff para revisão do humano
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -50,6 +50,8 @@ Registrar o design técnico do Gizito em documentos que agentes e humanos leem p
 | 2026-10-15 | `api.md` sem prefixo de versão (`/orders`) | um consumidor só (o web); versionar quando houver outro |
 | 2026-10-15 | `jobs.md` fixa `fail_reason_code` estáveis (`generation_blocked`, `ai_cost_exceeded`, `render_failed`, `ai_output_invalid`, `payload_invalid`) | o web mapeia código → mensagem do design doc 5.2; códigos precisam existir antes de F2 |
 | 2026-10-15 | F0-03 fica "em andamento" no roadmap até o humano revisar | o critério de pronto do roadmap é "revisados por você" |
+| 2026-10-15 | Webhook do gateway só registra e enfileira `charge.reconcile { orderId }`; consulta e transição no worker | rule `payments.md` e PRD §9.1 pedem assíncrono; reutiliza o código da reconciliação; exige `orderId` opcional no payload (commit complementar em `feat/core/core-fundacao`) |
+| 2026-10-15 | Segunda cobrança paga do mesmo pedido abre `support_ticket` `duplicate_payment`; `markOrderPaidAndEnqueue` expira as demais cobranças `pending` | achado da revisão: Pix antigo pago depois de "Gerar novo Pix" não tinha caminho operacional |
 
 ## Status
-Fase: docs escritos; revisão neutra pendente (task 3.2); depois, revisão do humano.
+Fase: revisão neutra APROVADA (rodada 1, `review.md`); 4 ALERTAs e 9 SUGESTÕES aplicados. Aguardando a revisão do humano (critério de pronto do roadmap); ao aprovar, marcar F0-03 `[x]` no roadmap e `status: done` aqui. Os nomes `charge.reconcile { orderId? }` e `duplicate_payment` dependem do commit complementar na branch da F0-04.

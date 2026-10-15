@@ -36,7 +36,7 @@ O PRD §9 fixa a divisão em `apps/web` (landing e fluxo de compra, conversa só
 - TanStack Start é mais novo que Next.js; menos exemplos prontos.
 
 ### Riscos
-- Mudanças de API do TanStack Start antes da 1.x estável: versões fixadas; skills com padrões em `.claude/skills/`.
+- TanStack Start ainda muda entre versões: fixar a versão ao instalar em F0-07 e registrá-la; skills com padrões em `.claude/skills/`.
 
 ## O que faria esta decisão mudar
 
