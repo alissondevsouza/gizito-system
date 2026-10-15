@@ -71,8 +71,12 @@ export function isTerminalOrderStatus(status: OrderStatus): boolean {
   return terminalOrderStatusList.includes(status);
 }
 
-export const paidOrderStatusList: readonly OrderStatus[] = ["paid", "processing", "ready"];
+export const whatsappLinkableOrderStatusList: readonly OrderStatus[] = [
+  "paid",
+  "processing",
+  "ready",
+];
 
-export function isPaidOrderStatus(status: OrderStatus): boolean {
-  return paidOrderStatusList.includes(status);
+export function isWhatsappLinkableOrderStatus(status: OrderStatus): boolean {
+  return whatsappLinkableOrderStatusList.includes(status);
 }

@@ -14,7 +14,7 @@
 - `order/state-machine.ts`: `orderEventList`, `orderTransitionList` (13 transições do PRD §5), `transitionOrder` devolvendo `Result<OrderStatus, InvalidTransitionError>`, `allowedEventList`, `isTerminalOrderStatus`, `isPaidOrderStatus`. `charge_expired` é derivado em `charge/rules.ts`, não é status.
 - Schemas: `order/schemas.ts` (`publicToken`, `shortCode`, `email`, `phone`, `noteText`, `otherTopicText`, `topicId`, `orderSchema`, `orderPhotoSchema`), `charge/schemas.ts`, `jobs/schemas.ts` (união discriminada dos 6 jobs), `pedagogy/expected-answer.ts`, `storage/keys.ts`, `common.ts` (`guidSchema`, `outcomeCodeSchema`, timestamps).
 - Interfaces em `interfaces/`: `PaymentGateway`, `NotificationChannel`, `AiProvider` (4 métodos genéricos no `outputSchema`), `ObjectStorage`, `MathEvaluator`; tipos de entrada e saída como schemas Zod.
-- Testes: 180 em `src/__tests__/` (máquina de estados exaustiva, fixtures válidas e inválidas, regras com datas fixas, contratos das interfaces com fakes mínimos, `purity.test.ts`); `bunfig.toml` com `coverageThreshold` 0.7 (cobertura atual 100%). Dependência: `zod` 4.
+- Testes: 182 em `src/__tests__/` (máquina de estados exaustiva, fixtures válidas e inválidas, regras com datas fixas, contratos das interfaces com fakes mínimos, `purity.test.ts`); `bunfig.toml` com `coverageThreshold` 0.7 (cobertura atual 100%). Dependência: `zod` 4.
 
 ## Implementado
 
@@ -25,3 +25,5 @@
 
 - Taxonomia em F1-01; `studyKitSchema`, `extractionResultSchema`, `materialProfileSchema`, `kitPlanSchema`, `reviewResultSchema` e `validateStudyKit` em F1-03 (`order.materialProfile` fica `unknown` até lá)
 - Payloads da API (`POST /orders`, `confirm`) em F2-01; mapeamento estado → rota no web em F2-09
+- F0-06: payload de job nunca vai para log; linhas concluídas de `whatsapp.inbound` (telefone e texto) são expurgadas na conclusão
+- F0-07: `config.ts` da api rejeita `PAYMENT_GATEWAY=fake` com `NODE_ENV=production`

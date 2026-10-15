@@ -19,7 +19,7 @@ import {
 
 export const publicTokenSchema = z
   .string()
-  .regex(new RegExp(`^[A-Za-z0-9_-]{${PUBLIC_TOKEN_LENGTH}}$`));
+  .regex(new RegExp(`^[A-Za-z0-9_-]{${PUBLIC_TOKEN_LENGTH - 1}}[AQgw]$`));
 export type PublicToken = z.infer<typeof publicTokenSchema>;
 
 export const shortCodeSchema = z

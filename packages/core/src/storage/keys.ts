@@ -7,7 +7,7 @@ const kitFileNameMap: Readonly<Record<KitFileKind, string>> = {
   answer_key: "answer-key.pdf",
 };
 
-const GUID_PATTERN = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+const GUID_PATTERN = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 
 export const storageKeySchema = z
   .string()
@@ -19,9 +19,9 @@ export const storageKeySchema = z
 export type StorageKey = z.infer<typeof storageKeySchema>;
 
 export function photoStorageKey(orderId: Guid, orderPhotoId: Guid): StorageKey {
-  return `orders/${orderId}/photos/${orderPhotoId}.jpg`;
+  return `orders/${orderId.toLowerCase()}/photos/${orderPhotoId.toLowerCase()}.jpg`;
 }
 
 export function kitStorageKey(orderId: Guid, kitId: Guid, kind: KitFileKind): StorageKey {
-  return `orders/${orderId}/kits/${kitId}/${kitFileNameMap[kind]}`;
+  return `orders/${orderId.toLowerCase()}/kits/${kitId.toLowerCase()}/${kitFileNameMap[kind]}`;
 }

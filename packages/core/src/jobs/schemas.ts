@@ -32,7 +32,7 @@ export const whatsappInboundJobPayloadSchema = z.object({
   name: z.literal("whatsapp.inbound"),
   webhookEventId: guidSchema,
   phone: phoneSchema,
-  text: z.string().max(MAX_WHATSAPP_INBOUND_TEXT_LENGTH),
+  text: z.string().min(1).max(MAX_WHATSAPP_INBOUND_TEXT_LENGTH),
 });
 
 export const jobPayloadSchema = z.discriminatedUnion("name", [

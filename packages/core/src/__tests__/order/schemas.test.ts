@@ -14,10 +14,15 @@ import {
 } from "#src/order/schemas.ts";
 
 describe("publicTokenSchema", () => {
-  it("aceita 43 caracteres base64url (32 bytes)", () => {
-    expect(publicTokenSchema.safeParse("Ab3_-cdEfGhIjKlMnOpQrStUvWxYz0123456789abcd").success).toBe(
-      true,
-    );
+  it("aceita 43 caracteres base64url canônicos de 32 bytes (último caractere A, Q, g ou w)", () => {
+    for (const last of ["A", "Q", "g", "w"]) {
+      expect(
+        publicTokenSchema.safeParse(`Ab3_-cdEfGhIjKlMnOpQrStUvWxYz0123456789abc${last}`).success,
+      ).toBe(true);
+    }
+  });
+  it("rejeita token de 43 caracteres com último caractere não canônico", () => {
+    expect(publicTokenSchema.safeParse("a".repeat(43)).success).toBe(false);
   });
   it("rejeita token curto, com padding ou com caractere fora do base64url", () => {
     expect(publicTokenSchema.safeParse("abc").success).toBe(false);

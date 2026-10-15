@@ -3,8 +3,8 @@ import { orderStatusList } from "#src/enums.ts";
 import {
   allowedEventList,
   InvalidTransitionError,
-  isPaidOrderStatus,
   isTerminalOrderStatus,
+  isWhatsappLinkableOrderStatus,
   type OrderTransition,
   orderEventList,
   orderTransitionList,
@@ -91,7 +91,11 @@ describe("máquina de estados do pedido (PRD §5)", () => {
     expect(allowedEventList("draft")).toEqual(["start_analysis"]);
   });
 
-  it("estados pagos são paid, processing e ready", () => {
-    expect(orderStatusList.filter(isPaidOrderStatus)).toEqual(["paid", "processing", "ready"]);
+  it("vínculo de WhatsApp só em paid, processing e ready (PRD §9.2)", () => {
+    expect(orderStatusList.filter(isWhatsappLinkableOrderStatus)).toEqual([
+      "paid",
+      "processing",
+      "ready",
+    ]);
   });
 });

@@ -13,6 +13,15 @@ describe("keys do storage (rule integrations.md)", () => {
     );
   });
 
+  it("uuid em maiúsculas (aceito por guidSchema) vira key canônica em minúsculas", () => {
+    expect(photoStorageKey(ORDER_ID.toUpperCase(), PHOTO_ID.toUpperCase())).toBe(
+      photoStorageKey(ORDER_ID, PHOTO_ID),
+    );
+    expect(
+      storageKeySchema.safeParse(`orders/${ORDER_ID.toUpperCase()}/photos/${PHOTO_ID}.jpg`).success,
+    ).toBe(true);
+  });
+
   it("storageKeySchema aceita as keys geradas e rejeita caminhos fora do layout", () => {
     expect(storageKeySchema.safeParse(photoStorageKey(ORDER_ID, PHOTO_ID)).success).toBe(true);
     expect(storageKeySchema.safeParse(kitStorageKey(ORDER_ID, KIT_ID, "activities")).success).toBe(

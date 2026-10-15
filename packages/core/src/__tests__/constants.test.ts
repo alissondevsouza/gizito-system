@@ -53,9 +53,9 @@ describe("constantes de negócio (PRD §5, §6 e §7)", () => {
   it("cobertura mínima por assunto e bloco cabe no bloco", () => {
     expect(MIN_QUESTION_COUNT_PER_TOPIC_PER_BLOCK).toEqual({ 1: 10, 2: 4, 3: 3 });
     for (const topicCount of [1, 2, 3] as const) {
-      expect(MIN_QUESTION_COUNT_PER_TOPIC_PER_BLOCK[topicCount] * topicCount).toBeLessThanOrEqual(
-        PRACTICE_QUESTION_COUNT,
-      );
+      const minimum = MIN_QUESTION_COUNT_PER_TOPIC_PER_BLOCK[topicCount] * topicCount;
+      expect(minimum).toBeLessThanOrEqual(PRACTICE_QUESTION_COUNT);
+      expect(minimum).toBeLessThanOrEqual(MOCK_QUESTION_COUNT);
     }
   });
 

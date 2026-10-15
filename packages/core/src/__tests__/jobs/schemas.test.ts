@@ -47,6 +47,7 @@ describe("jobPayloadSchema", () => {
     };
     expect(jobPayloadSchema.safeParse({ ...base, text: "a".repeat(1000) }).success).toBe(true);
     expect(jobPayloadSchema.safeParse({ ...base, text: "a".repeat(1001) }).success).toBe(false);
+    expect(jobPayloadSchema.safeParse({ ...base, text: "" }).success).toBe(false);
     expect(jobPayloadSchema.safeParse({ ...base, phone: "11999998888", text: "oi" }).success).toBe(
       false,
     );
