@@ -68,4 +68,4 @@ Dar ao `@gizito/core` o domínio puro que api, worker, db e integrations vão co
 | 2026-10-15 | Pureza garantida por teste (`purity.test.ts`) e cobertura ≥ 70% por `bunfig.toml` do core | regra mecânica em vez de revisão manual; threshold adiado em F0-01 entra com o primeiro domínio |
 
 ## Status
-Fase: implementação concluída e verde na raiz; docs de estado e revisão neutra (task 3.2) pendentes.
+Fase: implementação concluída (commit `74c3c61`) e docs de estado atualizados; revisão neutra pendente (task 3.2).

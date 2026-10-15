@@ -38,11 +38,11 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-14 (F0-01). Monorepo criado; todo workspace é só esqueleto (entrypoint vazio e teste de resolução de imports). Detalhes em `progress/{modulo}.md`.
+> Atualizado em 2026-10-15 (F0-04). Monorepo criado; core com domínio puro; os demais workspaces são só esqueleto. Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
-| Core | `@gizito/core` | esqueleto (F0-01); domínio em F0-04 |
+| Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia em F1-01, schemas do kit em F1-03 |
 | Database | `@gizito/db` | esqueleto (F0-01); schema e fila em F0-05/F0-06 |
 | Integrations | `@gizito/integrations` | esqueleto (F0-01); adaptadores a partir de F1 |
 | API | `@gizito/api` | esqueleto (F0-01); `/health` e config em F0-07 |
