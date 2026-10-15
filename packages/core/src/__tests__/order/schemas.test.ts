@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { randomBytes } from "node:crypto";
 import { buildOrder, buildOrderPhoto, FIXED_NOW } from "#src/__tests__/__fixtures__/entities.ts";
+import { PUBLIC_TOKEN_BYTES } from "#src/constants.ts";
 import {
   emailSchema,
   noteTextSchema,
@@ -19,6 +21,12 @@ describe("publicTokenSchema", () => {
       expect(
         publicTokenSchema.safeParse(`Ab3_-cdEfGhIjKlMnOpQrStUvWxYz0123456789abc${last}`).success,
       ).toBe(true);
+    }
+  });
+  it('aceita tokens gerados por randomBytes(32).toString("base64url")', () => {
+    for (let count = 0; count < 256; count++) {
+      const token = randomBytes(PUBLIC_TOKEN_BYTES).toString("base64url");
+      expect(publicTokenSchema.safeParse(token).success).toBe(true);
     }
   });
   it("rejeita token de 43 caracteres com último caractere não canônico", () => {

@@ -136,18 +136,21 @@ describe("order_photo", () => {
     );
   });
 
-  it("rejeita dimensões zero e legibility_score fora de 0–1", async () => {
+  it.each([
+    ["width zero", { width: 0 }],
+    ["height zero", { height: 0 }],
+    ["legibility_score abaixo de 0", { legibilityScore: -0.1 }],
+    ["legibility_score acima de 1", { legibilityScore: 1.5 }],
+  ] as const)("rejeita %s", async (_, overrides) => {
     const row = await insertOrder();
     await expectSqlState(
-      testDatabase.db.insert(orderPhoto).values(buildOrderPhotoInsert(row.orderId, { width: 0 })),
+      testDatabase.db.insert(orderPhoto).values(buildOrderPhotoInsert(row.orderId, overrides)),
       SQL_STATE.checkViolation,
     );
-    await expectSqlState(
-      testDatabase.db
-        .insert(orderPhoto)
-        .values(buildOrderPhotoInsert(row.orderId, { legibilityScore: 1.5 })),
-      SQL_STATE.checkViolation,
-    );
+  });
+
+  it("aceita legibility_score dentro de 0–1", async () => {
+    const row = await insertOrder();
     const [photo] = await testDatabase.db
       .insert(orderPhoto)
       .values(buildOrderPhotoInsert(row.orderId, { legibilityScore: 0.75 }))

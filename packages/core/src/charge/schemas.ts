@@ -16,5 +16,6 @@ export const chargeSchema = timestampFieldsSchema.extend({
   expireDatetime: z.date(),
   paidDatetime: z.date().nullable(),
   refundId: z.string().min(1).nullable(),
+  refundDatetime: z.date().nullable(),
 });
 export type Charge = z.infer<typeof chargeSchema>;

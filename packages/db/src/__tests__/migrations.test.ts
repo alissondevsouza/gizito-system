@@ -15,7 +15,7 @@ const journalSchema = z.object({
         idx: z.int().nonnegative(),
         version: z.string(),
         when: z.int().positive(),
-        tag: z.string().regex(/^\d{4}_[a-z0-9-]+$/),
+        tag: z.string().regex(/^\d{4}_[a-z0-9_-]+$/),
         breakpoints: z.literal(true),
       }),
     )

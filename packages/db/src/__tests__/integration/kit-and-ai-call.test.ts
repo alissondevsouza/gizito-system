@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { eq } from "drizzle-orm";
 import {
+  buildAiCallInsert,
   buildKitInsert,
   buildOrderInsert,
   expectSqlState,
@@ -55,10 +56,13 @@ describe("kit", () => {
     expect(loadedOrder?.kitList).toHaveLength(2);
   });
 
-  it("rejeita contagem de páginas zero", async () => {
+  it.each([
+    ["page_count_activities", { pageCountActivities: 0 }],
+    ["page_count_answer_key", { pageCountAnswerKey: 0 }],
+  ] as const)("rejeita %s zero", async (_, overrides) => {
     const orderId = await insertOrderId();
     await expectSqlState(
-      testDatabase.db.insert(kit).values(buildKitInsert(orderId, { pageCountAnswerKey: 0 })),
+      testDatabase.db.insert(kit).values(buildKitInsert(orderId, overrides)),
       SQL_STATE.checkViolation,
     );
   });
@@ -99,20 +103,15 @@ describe("ai_call", () => {
     expect(row?.costCents).toBeCloseTo(0.012345, 6);
   });
 
-  it("rejeita contagens negativas", async () => {
+  it.each([
+    ["input_token_count", { inputTokenCount: -1 }],
+    ["output_token_count", { outputTokenCount: -1 }],
+    ["cost_cents", { costCents: -0.000001 }],
+    ["duration_ms", { durationMs: -1 }],
+  ] as const)("rejeita %s negativo", async (_, overrides) => {
     const orderId = await insertOrderId();
     await expectSqlState(
-      testDatabase.db.insert(aiCall).values({
-        orderId,
-        stage: "generate",
-        model: "strong-model",
-        promptVersion: "generate-v1",
-        inputTokenCount: -1,
-        outputTokenCount: 0,
-        costCents: 0,
-        durationMs: 0,
-        outcomeCode: "ok",
-      }),
+      testDatabase.db.insert(aiCall).values(buildAiCallInsert(orderId, overrides)),
       SQL_STATE.checkViolation,
     );
   });

@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { getTableName, sql } from "drizzle-orm";
+import { getTableConfig } from "drizzle-orm/pg-core";
 import { runMigrations } from "#src/migrations.ts";
 import { tableList } from "#src/schema/index.ts";
 import { createTestDatabase, type TestDatabase } from "#src/test-helpers/index.ts";
@@ -58,29 +59,16 @@ describe("migration do zero", () => {
     expect(nameList).toEqual(tableList.map((table) => getTableName(table)).sort());
   });
 
-  it("cria os índices obrigatórios, com o unique parcial de gateway_payment_id", async () => {
+  it("cria todo índice declarado no schema, com o unique parcial de gateway_payment_id", async () => {
     const rowList = (await testDatabase.db.execute(
       sql`SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = 'public'`,
     )) as unknown as { indexname: string; indexdef: string }[];
     const indexMap = new Map(Array.from(rowList).map((row) => [row.indexname, row.indexdef]));
-    for (const name of [
-      "order_public_token_idx",
-      "order_short_code_idx",
-      "order_status_update_datetime_idx",
-      "order_email_idx",
-      "order_photo_order_id_idx",
-      "order_photo_delete_datetime_insert_datetime_idx",
-      "charge_order_id_idx",
-      "charge_gateway_payment_id_idx",
-      "charge_status_expire_datetime_idx",
-      "kit_order_id_idx",
-      "kit_delete_datetime_published_datetime_idx",
-      "ai_call_order_id_idx",
-      "webhook_event_source_external_id_idx",
-      "notification_order_id_kind_channel_idx",
-      "support_ticket_order_id_idx",
-      "support_ticket_status_idx",
-    ]) {
+    const declaredNameList = tableList.flatMap((table) =>
+      getTableConfig(table).indexes.map((index) => index.config.name ?? ""),
+    );
+    expect(declaredNameList).toHaveLength(16);
+    for (const name of declaredNameList) {
       expect(indexMap.has(name)).toBe(true);
     }
     expect(indexMap.get("charge_gateway_payment_id_idx")).toContain("UNIQUE");

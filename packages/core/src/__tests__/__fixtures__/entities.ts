@@ -66,6 +66,7 @@ export function buildCharge(overrides: Partial<Charge> = {}): Charge {
     expireDatetime: new Date("2026-10-15T12:30:00.000Z"),
     paidDatetime: null,
     refundId: null,
+    refundDatetime: null,
     insertDatetime: FIXED_NOW,
     updateDatetime: FIXED_NOW,
     ...overrides,

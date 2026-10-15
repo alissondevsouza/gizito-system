@@ -7,7 +7,7 @@ import {
   SHORT_CODE_LENGTH,
   SHORT_CODE_PREFIX,
 } from "@gizito/core";
-import type { charge, kit, order, orderPhoto } from "#src/schema/index.ts";
+import type { aiCall, charge, kit, order, orderPhoto } from "#src/schema/index.ts";
 
 export const SQL_STATE = {
   uniqueViolation: "23505",
@@ -87,6 +87,24 @@ export function buildKitInsert(
     pageCountActivities: 6,
     pageCountAnswerKey: 8,
     publishedDatetime: FIXED_DATETIME,
+    ...overrides,
+  };
+}
+
+export function buildAiCallInsert(
+  orderId: string,
+  overrides: Partial<typeof aiCall.$inferInsert> = {},
+): typeof aiCall.$inferInsert {
+  return {
+    orderId,
+    stage: "extract",
+    model: "cheap-model",
+    promptVersion: "extract-v1",
+    inputTokenCount: 1200,
+    outputTokenCount: 300,
+    costCents: 0.012345,
+    durationMs: 850,
+    outcomeCode: "ok",
     ...overrides,
   };
 }

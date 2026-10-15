@@ -2,7 +2,7 @@
 feature: F0-05 db-fundacao
 module: db
 size: M
-status: in_progress
+status: done
 branch: feat/db/db-fundacao
 updated: 2026-10-15
 ---
@@ -55,7 +55,7 @@ Dar ao `@gizito/db` o schema Drizzle das oito tabelas do MVP, a primeira migrati
 ### M3 — Scripts, CI, docs, revisão
 - [x] 3.1 Scripts do workspace e da raiz, `turbo.json`, `bunfig.toml`, `ci.yml`, `.env.example` · Verificação: `bun run lint && bun run typecheck && bun run test && bun run test:integration` na raiz
 - [x] 3.2 Roadmap, `docs/progress/db.md`, `docs/README.md`, `data-model.md` 1.1, `docs/lessons.md` (bind mount do initdb vira root) · Verificação: leitura
-- [ ] 3.3 Commits; revisão neutra (`gizito-implement-verifier`); `review.md`; correções
+- [x] 3.3 Commits; revisão neutra (`gizito-implement-verifier`); `review.md`; correções
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -72,4 +72,4 @@ Dar ao `@gizito/db` o schema Drizzle das oito tabelas do MVP, a primeira migrati
 | 2026-10-15 | `drizzle/meta` fora do Biome | arquivos gerados pelo drizzle-kit; reformatar o snapshot gera ruído no diff |
 
 ## Status
-Fase: implementação concluída e verificada (lint, typecheck, 88 unit, 32 integração, `db:generate` no-op, `db:migrate` aplicado no Postgres local do compose); próximo passo: revisão neutra (3.3).
+Fase: concluída. Revisão neutra APROVADA (rodada 1, `review.md`); o ALERTA e as 5 SUGESTÕES aplicados no commit de fechamento (core 185 testes, db 88 unit + 40 integração, lint e typecheck verdes na raiz). Pendências para o humano: push, PR e merge; ao mesclar, o roadmap (contador da F0) e a linha "Atualizado em" do `docs/README.md` só conflitam se outra feature entrar antes.
