@@ -1,0 +1,105 @@
+name: gizito
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gizito
+      POSTGRES_PASSWORD: gizito
+      POSTGRES_DB: gizito
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U gizito -d gizito"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  evolution:
+    image: evoapicloud/evolution-api:v2.3.7
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - evolution_instances:/evolution/instances
+    environment:
+      SERVER_URL: http://127.0.0.1:8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-gizito-local-dev-key}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: "false"
+      LANGUAGE: pt-BR
+      LOG_LEVEL: ERROR,WARN,INFO
+      LOG_COLOR: "false"
+      LOG_BAILEYS: error
+      TELEMETRY_ENABLED: "false"
+      DEL_INSTANCE: "false"
+      CONFIG_SESSION_PHONE_CLIENT: Gizito
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://gizito:gizito@postgres:5432/evolution?schema=public
+      DATABASE_CONNECTION_CLIENT_NAME: gizito_evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_MESSAGE_UPDATE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+      DATABASE_SAVE_DATA_LABELS: "false"
+      DATABASE_SAVE_DATA_HISTORIC: "false"
+      DATABASE_SAVE_IS_ON_WHATSAPP: "false"
+      DATABASE_DELETE_MESSAGE: "true"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://redis:6379/0
+      CACHE_REDIS_PREFIX_KEY: evolution
+      CACHE_REDIS_SAVE_INSTANCES: "false"
+      CACHE_LOCAL_ENABLED: "false"
+      WEBHOOK_GLOBAL_ENABLED: "false"
+      WEBSOCKET_ENABLED: "false"
+      RABBITMQ_ENABLED: "false"
+      SQS_ENABLED: "false"
+      KAFKA_ENABLED: "false"
+      PUSHER_ENABLED: "false"
+      S3_ENABLED: "false"
+      TYPEBOT_ENABLED: "false"
+      CHATWOOT_ENABLED: "false"
+      OPENAI_ENABLED: "false"
+      DIFY_ENABLED: "false"
+      N8N_ENABLED: "false"
+      EVOAI_ENABLED: "false"
+      QRCODE_LIMIT: "30"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:8080/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+
+volumes:
+  postgres_data:
+  redis_data:
+  evolution_instances:
