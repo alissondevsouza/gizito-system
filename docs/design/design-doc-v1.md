@@ -1,7 +1,7 @@
-# Gizito — Guia de Design, Identidade Visual e Experiência (v1.2)
+# Gizito — Guia de Design, Identidade Visual e Experiência (v1.3)
 
 **Tipo:** complemento de UI/UX e branding ao `product-doc-v1.md`  
-**Data:** 14/10/2026 · revisão 1.2 em 14/10/2026 (ver seção 15)  
+**Data:** 14/10/2026 · revisão 1.3 em 14/10/2026 (ver seção 15)  
 **Status:** especificação proposta, pronta para orientar design e implementação  
 **Produto:** kit de reforço escolar personalizado, adquirido por Pix a cada necessidade  
 **Marca escolhida:** **Gizito**
@@ -214,6 +214,7 @@ Estados visuais circunstanciais: `boas-vindas`, `orientação`, `pensando`, `suc
 | Mais de 3 assuntos | “Vamos escolher até três assuntos para este kit.” |
 | Checkout | “Tudo pronto! O material começa a ser preparado depois da confirmação do Pix.” |
 | Pix aguardando | “Ainda estou aguardando a confirmação do pagamento.” |
+| Pix, nome do recebedor | “No seu banco, o pagamento aparece em nome de {nome civil do titular da conta Mercado Pago}, responsável pelo Gizito, pela instituição Mercado Pago. Está correto.” |
 | Geração | “Estou organizando a revisão, os exercícios e o simulado. Você pode voltar depois; aviso por e-mail.” |
 | Kit pronto | “Prontinho! Suas atividades e o gabarito estão disponíveis para baixar.” |
 | Falha de geração | “Tivemos um problema ao preparar o material. Seu pagamento está registrado e vamos ajudar a resolver.” |
@@ -261,6 +262,8 @@ A navegação deve parecer uma sequência de passos simples, com contexto e prog
 
 **Abaixo:** 3 passos com ilustrações simples; **kit de amostra completo para download** (um de Matemática e um de Língua Portuguesa, com atividades e gabarito, gerados pelo próprio pipeline e marcados como “amostra”); lista do que vem no kit; FAQ objetiva; suporte/privacidade/termos. Não inventar depoimentos ou estatísticas.
 
+**Transparência sobre quem está por trás:** uma linha curta, perto do rodapé ou do bloco de confiança, identificando o Gizito como projeto independente de {nome civil do titular da conta Mercado Pago}, com canal de contato. É o mesmo nome que aparecerá no banco do pagador na hora do Pix (seção 6.4); mostrá-lo antes transforma uma surpresa em sinal de confiança.
+
 ### 6.2 Upload e dados (`/criar`)
 
 - Cabeçalho curto: “Vamos preparar o reforço?”
@@ -288,6 +291,7 @@ A navegação deve parecer uma sequência de passos simples, com contexto e prog
 - Valor e resumo do kit sempre visíveis.
 - QR Code grande e opção **“Copiar código Pix”** com confirmação de cópia.
 - Cobrança gerada no Mercado Pago com validade de 30 minutos (mínimo do gateway), com contagem regressiva visível. QR a partir de `qr_code_base64`; “Copiar código Pix” a partir de `qr_code`; link discreto “Ver instruções no Mercado Pago” (`ticket_url`) como alternativa. A marca do gateway aparece pequena, como sinal de confiança, sem competir com o valor.
+- **Aviso obrigatório do recebedor**, fixo logo abaixo do QR e do botão de copiar, visível sem rolar e antes de qualquer dica do Gizito: “No seu banco, o pagamento aparece em nome de {nome civil do titular da conta Mercado Pago}, responsável pelo Gizito, pela instituição Mercado Pago. Está correto.” O nome é escrito exatamente como o banco exibe e vem de configuração (`PIX_RECIPIENT_DISPLAY_NAME`), nunca digitado na tela. Motivo: conta pessoa física mostra o nome do titular, não a marca; o que derruba a conversão é a surpresa no app do banco, não o nome em si. Quando houver conta PJ, só a configuração muda.
 - Informar que a liberação depende de **confirmação real do pagamento**, não apenas do envio do Pix.
 - Estados: `aguardando`, `confirmando`, `pago`, `expirado`, `erro`.
 - Em mobile, o botão **Copiar código Pix** deve ter prioridade sobre QR quando só há um dispositivo.
@@ -317,7 +321,7 @@ A navegação deve parecer uma sequência de passos simples, com contexto e prog
 
 ### 6.7 Páginas operacionais obrigatórias
 
-- `/ajuda`: FAQ curta, contato e suporte.
+- `/ajuda`: FAQ curta, contato e suporte. A FAQ inclui obrigatoriamente “Por que o Pix aparece em nome de uma pessoa?”, com a mesma explicação da seção 6.4 e a linha de transparência da 6.1.
 - `/privacidade` e `/termos`: links disponíveis antes do checkout.
 - `/pedido/:id/erro`: recuperação e atendimento, sem exposição de informações pessoais.
 
@@ -420,7 +424,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 - Mensagens essenciais fora dos balões do mascote e acessíveis a leitores de tela.
 - A criança **não é convidada a fornecer dados pessoais**; comunicação comercial e pagamento para o responsável adulto.
 - Evitar elementos persuasivos direcionados a crianças (“peça para seus pais comprarem mais”).
-- Informar claramente preço, conteúdo recebido, armazenamento do material e canais de suporte.
+- Informar claramente preço, conteúdo recebido, armazenamento do material, canais de suporte e, antes do Pix, o nome que aparecerá no banco do pagador.
 - Mostrar apenas selos de segurança ou avaliações que sejam verdadeiros e verificáveis.
 
 ## 11. Assets e arquivos de design a produzir
@@ -465,6 +469,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 - [ ] Materiais comerciais não estimulam crianças a realizar compras.
 - [ ] Toda rota do pedido respeita a tabela estado → rota.
 - [ ] O vínculo com WhatsApp é iniciado pelo responsável, pode ser removido na página do pedido, e nenhuma etapa depende dele.
+- [ ] A tela do Pix mostra, antes do pagamento e sem rolar, o nome do titular exatamente como o banco exibe; a landing e a ajuda identificam o responsável pelo projeto.
 
 ## 13. Prioridades de execução
 
@@ -488,6 +493,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 ## 15. Histórico de revisões
 
+- **1.3 (14/10/2026):** aviso obrigatório do recebedor na tela do Pix (6.4), com o nome do titular vindo de configuração; linha de transparência na landing (6.1); pergunta obrigatória na FAQ (6.7); microcopy do recebedor (5.2); item de confiança (10) e critério de aceite (12). Motivo: conta pessoa física no Mercado Pago exibe o nome civil do titular no app do banco do pagador, e MEI não resolve.
 - **1.2 (14/10/2026):** checkout com detalhes do Mercado Pago (validade de 30 minutos, QR, copia e cola, `ticket_url`); botão “Receber no WhatsApp” nas telas de processamento e entrega, com estados de vínculo e remoção; microcopy das mensagens de WhatsApp e regra de canal somente resposta; componente `WhatsAppOptIn`; critério de aceite do vínculo.
 - **1.1 (14/10/2026):** anos 4º–7º; preço R$ 29,90; kit em dois PDFs com 10 + 10 = 20 questões; campos opcionais na tela de confirmação; bloco “O que entendi do material”; kit de amostra completo na landing; seção 3.4 com referências e decisões do personagem baseadas em `docs/gizito-image/`; spec do mascote alinhada ao estilo 2.5D das referências e assets em PNG/WebP; token `--color-gizito-blue`; lettering de referência para o logotipo; rota `/pedido/:id/assuntos`; tabela estado → rota (6.8); tela de entrega com dois downloads e links de curta duração; simulado com formato de prova nos PDFs; textos somente em português.
 - **1.0 (14/10/2026):** versão inicial.
