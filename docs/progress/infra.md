@@ -16,6 +16,7 @@
 - Evolution: `AUTHENTICATION_API_KEY` vem de `EVOLUTION_API_KEY` do `.env` (default só-local `gizito-local-dev-key`); `DATABASE_SAVE_DATA_*=false` para não guardar mensagens, contatos, chats, histórico nem labels; telemetria desligada; `DEL_INSTANCE=false`. Healthcheck via `node -e fetch(...)` porque a imagem final não tem curl/wget.
 - Verificado: `docker compose up -d --wait` saudável (~41 s na primeira vez, ~11 s no reinício com volumes); `GET /instance/fetchInstances` 200 com `apikey` e 401 sem; Postgres acessível do host pelo `DATABASE_URL` do `.env.example`.
 - CI ganhou o step `docker compose config --quiet`.
+- Operação: o script de `initdb` só roda com `postgres_data` vazio. Se a primeira subida for interrompida, o banco `evolution` pode não existir e a Evolution entra em crash-loop com erro do Prisma; recuperação: `docker compose down -v` e subir de novo.
 
 ## Implementado
 
@@ -24,6 +25,6 @@
 
 ## Pendências
 
-- Compose de produção, proxy com TLS, backups e Dockerfiles em F2-13; imagem do worker com Chromium em F1-08
+- Compose de produção, proxy com TLS, backups e Dockerfiles em F2-13; imagem do worker com Chromium em F1-08. O compose de produção deve exigir a chave (`${EVOLUTION_API_KEY:?}`), sem o default só-local do compose de dev
 - Scripts `db:generate`/`db:migrate` em F0-05 e `test:pedagogy` em F1-10 (Turborepo falha em task sem implementação)
 - Primeiro run do CI depende do primeiro push, que é do humano

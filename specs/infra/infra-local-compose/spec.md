@@ -2,7 +2,7 @@
 feature: F0-02 infra-local-compose
 module: infra
 size: P
-status: in_progress
+status: done
 branch: feat/infra/infra-local-compose
 updated: 2026-10-15
 ---
@@ -47,7 +47,7 @@ Subir a infra local do Gizito com um comando: Postgres 16 (bancos `gizito` e `ev
 ### M2 — Env, CI e docs
 - [x] 2.1 `.env.example` (`EVOLUTION_API_KEY` de exemplo, comentário do compose) e step `docker compose config --quiet` no CI · Verificação: `bun -e` parse do YAML
 - [x] 2.2 Roadmap, `docs/progress/infra.md`, `docs/README.md` · Verificação: leitura
-- [ ] 2.3 Commit; revisão neutra (toca config da Evolution: zona WhatsApp/LGPD); `review.md`
+- [x] 2.3 Commit; revisão neutra (toca config da Evolution: zona WhatsApp/LGPD); `review.md`
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -58,4 +58,4 @@ Subir a infra local do Gizito com um comando: Postgres 16 (bancos `gizito` e `ev
 | 2026-10-15 | Healthcheck da Evolution por `node -e fetch` | imagem final sem curl/wget |
 
 ## Status
-Fase: implementação concluída (commit M1 `dcb3319`); revisão neutra pendente (task 2.3).
+Fase: concluída. Revisão neutra APROVADA (rodada 1, `review.md`); ALERTA e duas das três SUGESTÕES aplicados no commit de fechamento. Pendências para o humano: push, PR e merge; decidir o alinhamento entre a rule `docs.md` e a prática de atualizar `docs/progress` por feature (ver `review.md`).
