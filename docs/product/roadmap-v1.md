@@ -22,7 +22,7 @@ Resumo por fase:
 
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
-| F0 Fundação | 7 | 0 | 1 (F0-01) | 6 |
+| F0 Fundação | 7 | 1 | 0 | 6 |
 | F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
@@ -98,12 +98,12 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 0 de 7 concluídas · F0-01 iniciada
+**Estado:** em andamento · 1 de 7 concluídas
 
-- [ ] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · **em andamento**
+- [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
   - Pronto quando: `bun run lint`, `typecheck` e `test` verdes no repo vazio; CI passando no primeiro push
-  - Feito até agora: `git init`, `.gitignore` e primeiro commit (`ada7324`, 14/10/2026). Falta tudo o que é Bun, Turborepo, Biome, tsconfig, layout de workspaces, `.env.example`, scripts e CI
+  - Concluída em: 14/10/2026. Bun 1.3.11, Turborepo 2, Biome 2, TypeScript 7, packages exportando fonte TS sem build, testes de resolução de imports por workspace, CI em `.github/workflows/ci.yml` (primeiro run acontece no primeiro push, que é do humano). `db:generate`/`db:migrate` entram em F0-05 e `test:pedagogy` em F1-10 porque o Turborepo falha em task sem implementação
 - [ ] **F0-02 `infra-local-compose`** — infra · P · depende: F0-01
   - Entrega: `docker-compose.yml` com Postgres 16 (bancos `gizito` e `evolution`), Redis 7 e Evolution API fixada na linha 2.x; healthchecks; portas só locais
   - Pronto quando: `docker compose up -d` saudável; Evolution responde na porta interna com a API key

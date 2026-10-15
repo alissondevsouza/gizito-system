@@ -70,9 +70,9 @@ Transformar o repositório (hoje só docs e harness) num monorepo Bun pronto par
 - [x] 2.5 Raiz: `bun run lint`, `bun run typecheck`, `bun run test`, `bun run build` verdes · Verificação: os quatro comandos
 
 ### M3 — CI, env e docs
-- [ ] 3.1 `.github/workflows/ci.yml` (checkout, setup-bun lendo `package.json`, install frozen, lint, typecheck, test, build) · Verificação: `bun -e` com parser YAML ou `bunx yaml` valida; revisão manual das versões das actions
-- [ ] 3.2 `.env.example` por serviço, sem valores reais · Verificação: `git check-ignore .env` ignora; `.env.example` rastreado
-- [ ] 3.3 Roadmap (F0-01 `[x]`, resumo por fase), `docs/README.md` (estado por módulo) e `docs/progress/*.md` dos sete módulos · Verificação: leitura
+- [x] 3.1 `.github/workflows/ci.yml` (checkout, setup-bun lendo `package.json`, install frozen, lint, typecheck, test, build) · Verificação: `bun -e` com parser YAML ou `bunx yaml` valida; revisão manual das versões das actions
+- [x] 3.2 `.env.example` por serviço, sem valores reais · Verificação: `git check-ignore .env` ignora; `.env.example` rastreado
+- [x] 3.3 Roadmap (F0-01 `[x]`, resumo por fase), `docs/README.md` (estado por módulo) e `docs/progress/*.md` dos sete módulos · Verificação: leitura
 - [ ] 3.4 Commits de checkpoint por milestone; `git log main..HEAD` só com esta feature · Verificação: `git status` limpo
 
 ## Decisões
@@ -83,7 +83,10 @@ Transformar o repositório (hoje só docs e harness) num monorepo Bun pronto par
 | 2026-10-14 | Biome como script raiz, não como task do Turborepo | Uma execução cobre o monorepo; config única; sem cache a invalidar |
 | 2026-10-14 | Lint proíbe `./`, `../` e `#src/*` sem extensão via `noRestrictedImports.patterns` | É a única forma mecânica de garantir a rule `imports.md`; o hook PostToolUse já roda `biome check --write` |
 | 2026-10-14 | Testes de F0-01 são de resolução de imports (`#src`, `@gizito/core`) | Única entrega testável de um esqueleto; evitam o `exit 1` de runner sem testes sem recorrer a `--passWithNoTests` |
+| 2026-10-14 | Turborepo `typecheck` e `test` com `dependsOn: ["^typecheck"]` / `["^test"]` | Verificado na task 1.4: sem isso o hash de `api#typecheck` não muda quando `packages/core/src` muda |
+| 2026-10-14 | `.claude/**` fora do escopo do Biome | O harness não é código do produto; o formatter reescrevia um exemplo de skill |
+| 2026-10-14 | CI dispara em todo push e por `workflow_dispatch`, sem `pull_request` | Repositório de uma pessoa: evita run duplicado no PR; o check do commit aparece no PR |
 | 2026-10-14 | `db:generate`, `db:migrate` e `test:pedagogy` ficam para F0-05 e F1-10 | Turborepo falha em task sem implementação em nenhum workspace |
 
 ## Status
-Fase: spec escrita, implementação não iniciada. Próximo passo: M1 task 1.1. Pendências para o humano: nenhuma até o handoff (push e primeiro run do CI).
+Fase: M1, M2 e M3 implementados e verificados localmente (lint, typecheck, test e build verdes; cache cruzado do Turborepo e lint de imports provados). Próximo passo: revisão neutra por `gizito-implement-verifier` e `review.md`. Pendências para o humano: push (primeiro run do CI), PR e merge.

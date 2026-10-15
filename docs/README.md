@@ -38,14 +38,14 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-14. Nenhum código ainda. Detalhes em `progress/{modulo}.md` quando o módulo for criado.
+> Atualizado em 2026-10-14 (F0-01). Monorepo criado; todo workspace é só esqueleto (entrypoint vazio e teste de resolução de imports). Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
-| Core | `@gizito/core` | não iniciado |
-| Database | `@gizito/db` | não iniciado |
-| Integrations | `@gizito/integrations` | não iniciado |
-| API | `@gizito/api` | não iniciado |
-| Worker | `@gizito/worker` | não iniciado |
-| Web | `@gizito/web` | não iniciado |
-| Infra | `docker-compose.yml`, `infra/` | não iniciado |
+| Core | `@gizito/core` | esqueleto (F0-01); domínio em F0-04 |
+| Database | `@gizito/db` | esqueleto (F0-01); schema e fila em F0-05/F0-06 |
+| Integrations | `@gizito/integrations` | esqueleto (F0-01); adaptadores a partir de F1 |
+| API | `@gizito/api` | esqueleto (F0-01); `/health` e config em F0-07 |
+| Worker | `@gizito/worker` | esqueleto (F0-01); loop da fila em F0-07 |
+| Web | `@gizito/web` | esqueleto com Vitest (F0-01); TanStack Start em F0-07 |
+| Infra | `docker-compose.yml`, `infra/`, `.github/` | monorepo, Biome, Turborepo e CI (F0-01); compose em F0-02 |
