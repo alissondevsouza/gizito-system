@@ -16,7 +16,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [`design/`](design/) | Guia de design, identidade, mascote, telas, PDFs (`design-doc-v1.md`) |
 | [`gizito-image/`](gizito-image/) | Referências visuais do mascote |
 | [`pedagogy/`](pedagogy/) | Taxonomia, schema do kit, prompts, regras de validação, casos de teste (a criar) |
-| [`engineering/`](engineering/) | Arquitetura, modelo de dados, máquina de estados, API, [`adr/`](engineering/adr/), [`known-issues.md`](engineering/known-issues.md) (a criar) |
+| [`engineering/`](engineering/) | [`architecture.md`](engineering/architecture.md), [`data-model.md`](engineering/data-model.md), [`state-machine.md`](engineering/state-machine.md), [`api.md`](engineering/api.md), [`jobs.md`](engineering/jobs.md), [`adr/`](engineering/adr/), [`known-issues.md`](engineering/known-issues.md) |
 | [`ops/`](ops/) | Runbook e deploy (a criar) |
 | [`legal/`](legal/) | Termos, privacidade, ajuda (a criar) |
 | [`lessons.md`](lessons.md) | Lições operacionais graduadas das features |
@@ -30,7 +30,13 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | # | Decisão | Status | Data |
 |---|---------|--------|------|
 | [0001](engineering/adr/0001-harness-enxuto.md) | Harness enxuto para modelos de fronteira: contexto contextual, uma revisão neutra por feature, dois artefatos | aceito | 2026-10-14 |
-| — | As decisões de produto já tomadas estão no PRD, seções 9, 9.1, 9.2 e 12.1, e viram ADRs no design técnico | — | — |
+| [0002](engineering/adr/0002-monorepo-bun.md) | Monorepo Bun com Turborepo, Biome e packages exportando fonte sem build | aceito | 2026-10-15 |
+| [0003](engineering/adr/0003-fila-no-postgres.md) | Fila de jobs no próprio PostgreSQL, enfileirada na transação do estado | aceito | 2026-10-15 |
+| [0004](engineering/adr/0004-mercado-pago-pix.md) | Mercado Pago (Orders API) como gateway Pix, Asaas como plano B, atrás de `PaymentGateway` | aceito | 2026-10-15 |
+| [0005](engineering/adr/0005-evolution-api-whatsapp.md) | WhatsApp por Evolution API (Baileys), somente resposta, desligável por flag | aceito | 2026-10-15 |
+| [0006](engineering/adr/0006-tanstack-start-e-elysia.md) | TanStack Start no web, Elysia na API, worker Bun puro; HTTP como única fronteira | aceito | 2026-10-15 |
+| [0007](engineering/adr/0007-dois-pdfs-html-katex-playwright.md) | Dois PDFs gerados de HTML/CSS com KaTeX no servidor e Playwright | aceito | 2026-10-15 |
+| — | ADR-0008 (pg-boss ou fila própria) sai do spike de F0-06 | — | — |
 
 > Para criar um novo ADR: copie `engineering/adr/_template.md` → `engineering/adr/NNNN-titulo.md` e adicione a linha aqui.
 

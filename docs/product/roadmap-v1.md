@@ -22,7 +22,7 @@ Resumo por fase:
 
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
-| F0 Fundação | 7 | 3 | 0 | 4 |
+| F0 Fundação | 7 | 3 | 1 | 3 |
 | F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
@@ -98,7 +98,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 3 de 7 concluídas
+**Estado:** em andamento · 3 de 7 concluídas · 1 em andamento
 
 - [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
@@ -108,9 +108,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `docker-compose.yml` com Postgres 16 (bancos `gizito` e `evolution`), Redis 7 e Evolution API fixada na linha 2.x; healthchecks; portas só locais
   - Pronto quando: `docker compose up -d` saudável; Evolution responde na porta interna com a API key
   - Concluída em: 15/10/2026. `evoapicloud/evolution-api:v2.3.7` (última estável da linha 2.x), banco `evolution` criado por script em `infra/postgres/initdb/`, healthchecks nos três serviços, portas só em `127.0.0.1`, Evolution sem gravar mensagens, contatos nem chats (LGPD), CI valida `docker compose config`. Primeira subida em ~41 s (migrations da Evolution), reinício em ~11 s
-- [ ] **F0-03 `design-tecnico-e-adrs`** — docs · M · depende: —
+- [ ] **F0-03 `design-tecnico-e-adrs`** (em andamento) — docs · M · depende: — · `specs/docs/design-tecnico-e-adrs/`
   - Entrega: `docs/engineering/architecture.md`, `data-model.md`, `state-machine.md`, `api.md`, `jobs.md`; ADRs 0002 a 0007 (monorepo Bun, fila no Postgres, Mercado Pago, Evolution API, TanStack Start + Elysia, dois PDFs); o 0001 já é o harness
   - Pronto quando: revisados por você; índice de `docs/README.md` atualizado
+  - Feito até agora: 15/10/2026, os cinco docs e os ADRs 0002 a 0007 escritos e indexados em `docs/README.md`; falta a sua revisão
 - [x] **F0-04 `core-fundacao`** — core · M · depende: F0-01 · 15/10/2026 · `74c3c61` · `specs/core/core-fundacao/`
   - Entrega: constantes de negócio, enums com `List`, máquina de estados do pedido como dado, schemas de pedido, cobrança e payload de job, interfaces `PaymentGateway`, `NotificationChannel`, `AiProvider`, `ObjectStorage`, `MathEvaluator`
   - Pronto quando: toda transição válida e inválida testada; nenhum IO no pacote
