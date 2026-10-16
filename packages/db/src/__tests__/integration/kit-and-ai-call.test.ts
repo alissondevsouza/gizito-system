@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   buildAiCallInsert,
   buildKitInsert,
@@ -31,6 +31,10 @@ describe("kit", () => {
     const orderId = await insertOrderId();
     const [row] = await testDatabase.db.insert(kit).values(buildKitInsert(orderId)).returning();
     expect(row?.studyKit).toEqual({ topicIdList: ["fractions"] });
+    const typeList = (await testDatabase.db.execute(
+      sql`SELECT jsonb_typeof(study_kit) AS study_kit_type FROM kit WHERE kit_id = ${row?.kitId ?? ""}`,
+    )) as unknown as { study_kit_type: string }[];
+    expect(Array.from(typeList)).toEqual([{ study_kit_type: "object" }]);
     expect(row?.supersededByKitId).toBeNull();
     expect(row?.deleteDatetime).toBeNull();
   });

@@ -1,14 +1,6 @@
 import { sql } from "drizzle-orm";
-import {
-  type AnyPgColumn,
-  check,
-  index,
-  integer,
-  jsonb,
-  pgTable,
-  text,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { type AnyPgColumn, check, index, integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { jsonb } from "#src/schema/jsonb.ts";
 import { order } from "#src/schema/order.ts";
 import { datetime, timestampColumnMap } from "#src/schema/timestamps.ts";
 

@@ -57,6 +57,19 @@ describe("order", () => {
     expect(orderSchema.safeParse(reloaded).success).toBe(true);
   });
 
+  it("grava topic_id_list como array e material_profile como objeto jsonb, não como string", async () => {
+    const row = await insertOrder({
+      topicIdList: ["fractions"],
+      materialProfile: { kind: "notebook" },
+    });
+    const typeList = (await testDatabase.db.execute(
+      sql`SELECT jsonb_typeof(topic_id_list) AS topic_type, jsonb_typeof(material_profile) AS profile_type, topic_id_list->>0 AS first_topic FROM "order" WHERE order_id = ${row.orderId}`,
+    )) as unknown as { topic_type: string; profile_type: string; first_topic: string }[];
+    expect(Array.from(typeList)).toEqual([
+      { topic_type: "array", profile_type: "object", first_topic: "fractions" },
+    ]);
+  });
+
   it("trigger atualiza update_datetime a cada UPDATE", async () => {
     const row = await insertOrder();
     const [updated] = await testDatabase.db

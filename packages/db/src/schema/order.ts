@@ -1,12 +1,13 @@
 import type { TopicId } from "@gizito/core";
 import { sql } from "drizzle-orm";
-import { check, index, jsonb, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { check, index, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import {
   gradeEnum,
   orderStatusEnum,
   perceivedDifficultyEnum,
   subjectEnum,
 } from "#src/schema/enums.ts";
+import { jsonb } from "#src/schema/jsonb.ts";
 import { datetime, timestampColumnMap } from "#src/schema/timestamps.ts";
 
 export const order = pgTable(
