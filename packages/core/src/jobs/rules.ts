@@ -8,6 +8,12 @@ import type { JobPayloadByName } from "#src/jobs/schemas.ts";
 
 const MILLISECONDS_PER_SECOND = 1000;
 
+export const jobErrorCodeMap = {
+  payloadInvalid: "payload_invalid",
+  lockExpired: "lock_expired",
+  unhandledError: "unhandled_error",
+} as const;
+
 export function jobRetryDelaySeconds(
   attemptCount: number,
   maxAttemptCount: number = JOB_MAX_ATTEMPT_COUNT,

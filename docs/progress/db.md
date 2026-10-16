@@ -24,8 +24,8 @@
 - `src/schema/job.ts`: tabela `job` (`name` e `status` como `pgEnum` das listas do core, `payload` jsonb, `singleton_key`, `attempt_count`, `max_attempt_count`, `run_after_datetime`, `locked_by`, `lock_expire_datetime`, `finish_datetime`, `last_error_code`), índices `(status, name, run_after_datetime)`, `(status, lock_expire_datetime)` e unique parcial `(name, singleton_key)` para `pending`/`active`; check `payload->>'name' IS NOT DISTINCT FROM name`. Migration `drizzle/0001_fila.sql` com o trigger `set_update_datetime`.
 - `src/schema/jsonb.ts`: coluna `jsonb` própria (`customType` que entrega o valor cru ao Bun.SQL). O `jsonb` do Drizzle gravava string no `bun-sql`; toda coluna `jsonb` usa a própria (teste de convenção) e os testes de integração leem `jsonb_typeof` (`62facd6`).
 - `src/queue/`: `enqueueJob`, `enqueueSingletonJob`, `claimJob` (um `UPDATE` com subquery `FOR UPDATE SKIP LOCKED`; payload revalidado e inválido vai para `failed` com `payload_invalid`), `completeJob` e `failJob` pelo par `(job_id, attempt_count)`, `recoverExpiredJobs`, `workJob` (handler devolve `Result` do core; exceção vira `unhandled_error` transitório). `Executor = Database | Transaction` em `client.ts`.
-- `src/order/`: `markOrderPaidAndEnqueue` e `publishKit` (exigem `Transaction`, travam o pedido com `FOR UPDATE`, devolvem `Result` com `OrderNotFoundError`, `ChargeNotFoundError`, `WebhookEventNotFoundError`, `ChargePaymentMismatchError` ou `InvalidTransitionError`, sempre antes de escrever).
-- Testes: 98 unit (convenções com 9 tabelas, 15 enums, jsonb próprio, migrations) e 92 de integração (fila com 28 casos, inclusive 20 claims concorrentes; markOrderPaidAndEnqueue com 15, inclusive 4 confirmações concorrentes; publishKit com 8; tipo jsonb no SQL).
+- `src/order/`: `markOrderPaidAndEnqueue` e `publishKit` (exigem `Transaction`, travam o pedido com `FOR UPDATE`, devolvem `Result` com `OrderNotFoundError`, `ChargeNotFoundError`, `WebhookEventNotFoundError`, `GatewayPaymentInUseError`, `ChargePaymentMismatchError` ou `InvalidTransitionError`, sempre antes de escrever).
+- Testes: 98 unit (convenções com 9 tabelas, 15 enums, jsonb próprio, migrations) e 95 de integração (fila com 28 casos, inclusive 20 claims concorrentes; markOrderPaidAndEnqueue com 17, inclusive confirmações concorrentes do mesmo pagamento e de Pix antigo e novo do mesmo pedido; publishKit com 9, inclusive dois concorrentes; tipo jsonb no SQL).
 
 ## Implementado
 
@@ -36,7 +36,7 @@
 ## Pendências
 
 - Toda tabela nova precisa do trigger `set_update_datetime` na migration (`migrations.test.ts` falha sem ele) e toda coluna `jsonb` usa `#src/schema/jsonb.ts`
-- F0-07: loop do worker sobre `workJob` e `recoverExpiredJobs`; agendador de `charge.reconcile` e `retention.purge` com `enqueueSingletonJob`; métricas da fila no `/health`
+- F0-07: loop do worker sobre `workJob` e `recoverExpiredJobs`; agendador de `charge.reconcile` e `retention.purge` com `enqueueSingletonJob`; métricas da fila no `/health`; `cause` de `workJob` só em log `debug`; alerta por job `failed` com `payload_invalid`
 - `republishKit` em F2-11 (admin); expurgo de jobs `completed` com `retention.purge` (F2-06)
 - F0-07: `config.ts` das apps lê `DATABASE_URL` e chama `createDatabase`
 - `kit.study_kit` fica `jsonb` sem tipo até `studyKitSchema` (F1-03)

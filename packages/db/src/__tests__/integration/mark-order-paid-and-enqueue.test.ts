@@ -15,6 +15,7 @@ import {
 import { createDatabase } from "#src/client.ts";
 import {
   ChargeNotFoundError,
+  GatewayPaymentInUseError,
   markOrderPaidAndEnqueue,
   OrderNotFoundError,
   WebhookEventNotFoundError,
@@ -205,7 +206,7 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
     expect((await loadOrder(pendingOrder.orderId))?.status).toBe("paid");
   });
 
-  it("duas confirmações concorrentes do mesmo pagamento geram um job só", async () => {
+  it("confirmações concorrentes do mesmo pagamento geram um job só", async () => {
     const { pendingOrder, pendingCharge } = await awaitingPaymentFixture();
     const concurrentHandle = createDatabase({
       databaseUrl: withDatabaseName(resolveTestDatabaseUrl(), testDatabase.databaseName),
@@ -233,6 +234,43 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
 });
 
 describe("markOrderPaidAndEnqueue: pagamento duplicado", () => {
+  it("Pix antigo e Pix novo do mesmo pedido confirmados juntos: um paid, um duplicado, sem deadlock", async () => {
+    const pendingOrder = await insertOrder("awaiting_payment");
+    const oldCharge = await insertCharge(pendingOrder.orderId, { gatewayPaymentId: "pay-old" });
+    const newCharge = await insertCharge(pendingOrder.orderId, { gatewayPaymentId: "pay-new" });
+    const concurrentHandle = createDatabase({
+      databaseUrl: withDatabaseName(resolveTestDatabaseUrl(), testDatabase.databaseName),
+      maxConnections: 2,
+    });
+    try {
+      const resultList = await Promise.all(
+        [
+          { chargeId: oldCharge.chargeId, gatewayPaymentId: "pay-old" },
+          { chargeId: newCharge.chargeId, gatewayPaymentId: "pay-new" },
+        ].map((payment) =>
+          concurrentHandle.db.transaction((tx) =>
+            markOrderPaidAndEnqueue(tx, {
+              ...payment,
+              orderId: pendingOrder.orderId,
+              paidDatetime: PAID_DATETIME,
+            }),
+          ),
+        ),
+      );
+      const outcomeList = resultList.map((result) => (result.ok ? result.value.outcome : "error"));
+      expect(outcomeList.sort()).toEqual(["duplicate_payment", "paid"]);
+    } finally {
+      await concurrentHandle.close();
+    }
+    expect((await loadOrder(pendingOrder.orderId))?.status).toBe("paid");
+    expect((await loadCharge(oldCharge.chargeId))?.status).toBe("paid");
+    expect((await loadCharge(newCharge.chargeId))?.status).toBe("paid");
+    expect(await countGenerateJob(pendingOrder.orderId)).toBe(1);
+    expect(
+      await testDatabase.db.$count(supportTicket, eq(supportTicket.orderId, pendingOrder.orderId)),
+    ).toBe(1);
+  });
+
   it("outra cobrança paga com o pedido já pago: cobrança registrada, ticket aberto, estado mantido", async () => {
     const { pendingOrder, pendingCharge } = await awaitingPaymentFixture();
     const secondCharge = await insertCharge(pendingOrder.orderId, { gatewayPaymentId: "pay-2" });
@@ -358,6 +396,24 @@ describe("markOrderPaidAndEnqueue: erros, sem escrita", () => {
     if (result.ok) return;
     expect(result.error).toBeInstanceOf(ChargePaymentMismatchError);
     await expectNothingWritten(pendingOrder.orderId, pendingCharge.chargeId, "awaiting_payment");
+  });
+
+  it("pagamento já ligado a outra cobrança devolve GatewayPaymentInUseError", async () => {
+    const { pendingOrder, pendingCharge } = await awaitingPaymentFixture();
+    const otherOrder = await insertOrder("paid");
+    await insertCharge(otherOrder.orderId, { status: "paid", gatewayPaymentId: "pay-taken" });
+    const freeCharge = await insertCharge(pendingOrder.orderId);
+    const result = await markPaid({
+      orderId: pendingOrder.orderId,
+      chargeId: freeCharge.chargeId,
+      gatewayPaymentId: "pay-taken",
+      paidDatetime: PAID_DATETIME,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBeInstanceOf(GatewayPaymentInUseError);
+    await expectNothingWritten(pendingOrder.orderId, pendingCharge.chargeId, "awaiting_payment");
+    expect((await loadCharge(freeCharge.chargeId))?.status).toBe("pending");
   });
 
   it("entrada inválida lança antes de tocar o banco", async () => {

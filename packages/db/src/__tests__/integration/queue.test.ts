@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
-import { err, type JobName, type JobPayload, ok } from "@gizito/core";
+import { err, type JobName, type JobPayload, jobErrorCodeMap, ok } from "@gizito/core";
 import { eq, sql } from "drizzle-orm";
 import { ZodError } from "zod";
 import { expectSqlState, SQL_STATE } from "#src/__tests__/integration/helpers.ts";
@@ -10,7 +10,6 @@ import {
   enqueueJob,
   enqueueSingletonJob,
   failJob,
-  jobErrorCodeMap,
   recoverExpiredJobs,
   workJob,
 } from "#src/queue/index.ts";

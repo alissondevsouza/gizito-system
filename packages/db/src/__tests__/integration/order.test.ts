@@ -70,15 +70,16 @@ describe("order", () => {
     ]);
   });
 
-  it("trigger atualiza update_datetime a cada UPDATE", async () => {
-    const row = await insertOrder();
+  it("trigger atualiza update_datetime a cada UPDATE, mesmo sem a coluna no SET", async () => {
+    const pastDatetime = new Date("2020-01-01T00:00:00.000Z");
+    const row = await insertOrder({ insertDatetime: pastDatetime, updateDatetime: pastDatetime });
     const [updated] = await testDatabase.db
       .update(order)
       .set({ noteText: "revisar frações" })
       .where(eq(order.orderId, row.orderId))
       .returning();
-    expect(updated?.insertDatetime.getTime()).toBe(row.insertDatetime.getTime());
-    expect(updated?.updateDatetime.getTime()).toBeGreaterThan(row.updateDatetime.getTime());
+    expect(updated?.insertDatetime).toEqual(pastDatetime);
+    expect(updated?.updateDatetime.getTime()).toBeGreaterThan(pastDatetime.getTime());
   });
 
   it("rejeita public_token e short_code repetidos", async () => {

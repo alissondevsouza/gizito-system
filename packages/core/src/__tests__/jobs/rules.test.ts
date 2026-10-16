@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { FIXED_NOW } from "#src/__tests__/__fixtures__/entities.ts";
+import { outcomeCodeSchema } from "#src/common.ts";
 import {
   JOB_LOCK_TIMEOUT_SECONDS,
   JOB_MAX_ATTEMPT_COUNT,
@@ -8,6 +9,7 @@ import {
 import { jobNameList } from "#src/enums.ts";
 import {
   isPersonalDataJob,
+  jobErrorCodeMap,
   jobLockExpireDatetime,
   jobRetryDelaySeconds,
   nextJobRunAfterDatetime,
@@ -72,6 +74,19 @@ describe("payload com dado pessoal (invariante 9, LGPD)", () => {
     const shapeKeyList = Object.keys(whatsappInboundJobPayloadSchema.shape);
     for (const field of retainedFieldList) {
       expect(shapeKeyList).toContain(field);
+    }
+  });
+});
+
+describe("códigos de erro da fila", () => {
+  it("são outcome codes válidos e estáveis (jobs.md §4)", () => {
+    expect(Object.values(jobErrorCodeMap)).toEqual([
+      "payload_invalid",
+      "lock_expired",
+      "unhandled_error",
+    ]);
+    for (const code of Object.values(jobErrorCodeMap)) {
+      expect(outcomeCodeSchema.safeParse(code).success).toBe(true);
     }
   });
 });

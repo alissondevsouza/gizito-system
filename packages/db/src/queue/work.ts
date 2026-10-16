@@ -1,7 +1,6 @@
-import { err, type JobName, type OutcomeCode, type Result } from "@gizito/core";
+import { err, type JobName, jobErrorCodeMap, type OutcomeCode, type Result } from "@gizito/core";
 import type { Executor } from "#src/client.ts";
 import { type ClaimedJob, claimJob } from "#src/queue/claim.ts";
-import { jobErrorCodeMap } from "#src/queue/error-codes.ts";
 import { completeJob, type FailJobOutcome, failJob, type JobFailure } from "#src/queue/finish.ts";
 
 export type JobHandler = (claimedJob: ClaimedJob) => Promise<Result<unknown, JobFailure>>;

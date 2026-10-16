@@ -15,6 +15,7 @@ import { and, eq, ne } from "drizzle-orm";
 import type { Transaction } from "#src/client.ts";
 import {
   ChargeNotFoundError,
+  GatewayPaymentInUseError,
   OrderNotFoundError,
   WebhookEventNotFoundError,
 } from "#src/order/errors.ts";
@@ -29,6 +30,7 @@ export type MarkOrderPaidOutcome =
 export type MarkOrderPaidError =
   | OrderNotFoundError
   | ChargeNotFoundError
+  | GatewayPaymentInUseError
   | WebhookEventNotFoundError
   | ChargePaymentMismatchError
   | InvalidTransitionError;
@@ -44,7 +46,7 @@ type LockedPaymentTarget = {
 
 async function lockPaymentTarget(
   tx: Transaction,
-  { orderId, chargeId, webhookEventId }: MarkOrderPaidInput,
+  { orderId, chargeId, gatewayPaymentId, webhookEventId }: MarkOrderPaidInput,
 ): Promise<Result<LockedPaymentTarget, MarkOrderPaidError>> {
   const [lockedOrder] = await tx
     .select({ status: order.status })
@@ -62,6 +64,13 @@ async function lockPaymentTarget(
     .where(and(eq(charge.chargeId, chargeId), eq(charge.orderId, orderId)))
     .for("update");
   if (!lockedCharge) return err(new ChargeNotFoundError(chargeId, orderId));
+  const [chargeWithSamePayment] = await tx
+    .select({ chargeId: charge.chargeId })
+    .from(charge)
+    .where(and(eq(charge.gatewayPaymentId, gatewayPaymentId), ne(charge.chargeId, chargeId)));
+  if (chargeWithSamePayment) {
+    return err(new GatewayPaymentInUseError(gatewayPaymentId, chargeWithSamePayment.chargeId));
+  }
   if (webhookEventId !== undefined) {
     const [lockedWebhookEvent] = await tx
       .select({ webhookEventId: webhookEvent.webhookEventId })

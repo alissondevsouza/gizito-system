@@ -1,12 +1,12 @@
 import {
   type JobName,
   type JobPayload,
+  jobErrorCodeMap,
   jobLockExpireDatetime,
   jobPayloadSchema,
 } from "@gizito/core";
 import { and, asc, eq, inArray, lte, sql } from "drizzle-orm";
 import type { Executor } from "#src/client.ts";
-import { jobErrorCodeMap } from "#src/queue/error-codes.ts";
 import { failJob } from "#src/queue/finish.ts";
 import type { JobLease } from "#src/queue/lease.ts";
 import { job } from "#src/schema/job.ts";

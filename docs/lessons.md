@@ -6,6 +6,10 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-15] Datas lidas pelo driver têm milissegundo; o Postgres grava microssegundo — F0-06
+
+Comparar `update_datetime` antes e depois de um UPDATE feito logo em seguida falha de forma intermitente: as duas operações cabem no mesmo milissegundo e o `Date` do JavaScript trunca o resto. O teste de trigger de F0-05 passava e começou a falhar quando as queries ficaram mais rápidas. Em teste de tempo, gravar uma data antiga explícita e conferir que ela foi sobrescrita, ou injetar o relógio; nunca depender da distância entre dois `now()` reais.
+
 ## [2026-10-15] O `jsonb` do Drizzle grava string JSON com o driver `bun-sql` — F0-06
 
 O `jsonb()` do `drizzle-orm` aplica `JSON.stringify` no valor, e o Bun.SQL, ao ver que o parâmetro é `jsonb`, codifica de novo: o banco guarda `"{\"name\": ...}"` com `jsonb_typeof = 'string'`. Ida e volta pelo Drizzle devolve o objeto (ele faz `JSON.parse` na leitura), então os testes de F0-05 passaram; o defeito só apareceu quando o SQL leu um campo (`payload->>'name'` nulo) e um check com `=` passou por comparar com nulo. Usar a coluna própria de `packages/db/src/schema/jsonb.ts`, testar o tipo no SQL (`jsonb_typeof`) e escrever checks com `IS NOT DISTINCT FROM` quando o lado esquerdo pode ser nulo. O mesmo vale para `sql` cru: `${valor}::jsonb` com um objeto JS, nunca com `JSON.stringify(valor)`.

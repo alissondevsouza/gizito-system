@@ -21,10 +21,10 @@
 ## Ajustes em fila-postgres (2026-10-15, `db5e365`, `70d9d60`)
 
 - `enums.ts`: `jobStatusList` (`pending`, `active`, `completed`, `failed`). `constants.ts`: `JOB_RETRY_DELAY_SECONDS_LIST` (30, 120, 480), `JOB_MAX_ATTEMPT_COUNT` (4), `JOB_LOCK_TIMEOUT_SECONDS` (900).
-- `jobs/rules.ts`: `jobRetryDelaySeconds`, `nextJobRunAfterDatetime`, `jobLockExpireDatetime`, `personalDataJobNameList`, `personalDataJobRetainedFieldMap` e `isPersonalDataJob`.
+- `jobs/rules.ts`: `jobRetryDelaySeconds`, `nextJobRunAfterDatetime`, `jobLockExpireDatetime`, `jobErrorCodeMap` (`payload_invalid`, `lock_expired`, `unhandled_error`), `personalDataJobNameList`, `personalDataJobRetainedFieldMap` e `isPersonalDataJob`.
 - `order/state-machine.ts`: `postPaymentOrderStatusList` derivada da máquina (alcançáveis a partir de `paid`) e `isPostPaymentOrderStatus`.
 - `charge/schemas.ts`: `markOrderPaidInputSchema`. `charge/rules.ts`: `decidePaymentConfirmation` e `ChargePaymentMismatchError`. `kit/schemas.ts`: `publishKitInputSchema` (as duas keys iguais a `kitStorageKey` do próprio kit).
-- Testes: 211, cobertura 100%.
+- Testes: 212, cobertura 100%.
 
 ## Implementado
 

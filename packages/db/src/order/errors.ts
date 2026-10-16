@@ -19,6 +19,18 @@ export class ChargeNotFoundError extends Error {
   }
 }
 
+export class GatewayPaymentInUseError extends Error {
+  readonly code = "gateway_payment_in_use";
+
+  constructor(
+    readonly gatewayPaymentId: string,
+    readonly otherChargeId: string,
+  ) {
+    super(`Gateway payment ${gatewayPaymentId} is already bound to charge ${otherChargeId}`);
+    this.name = "GatewayPaymentInUseError";
+  }
+}
+
 export class WebhookEventNotFoundError extends Error {
   readonly code = "webhook_event_not_found";
 

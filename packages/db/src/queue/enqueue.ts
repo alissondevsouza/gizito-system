@@ -30,7 +30,7 @@ function buildJobInsert(
     payload: parsedPayload,
     singletonKey,
     maxAttemptCount,
-    runAfterDatetime,
+    runAfterDatetime: runAfterDatetime ?? new Date(),
   };
 }
 

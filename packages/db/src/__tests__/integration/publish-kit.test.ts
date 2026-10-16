@@ -8,12 +8,15 @@ import {
 import { eq } from "drizzle-orm";
 import { ZodError } from "zod";
 import { buildOrderInsert, FIXED_DATETIME } from "#src/__tests__/integration/helpers.ts";
+import { createDatabase } from "#src/client.ts";
 import { OrderNotFoundError, publishKit } from "#src/order/index.ts";
 import { job, kit, order } from "#src/schema/index.ts";
 import {
   createTestDatabase,
+  resolveTestDatabaseUrl,
   type TestDatabase,
   truncateAllTables,
+  withDatabaseName,
 } from "#src/test-helpers/index.ts";
 
 let testDatabase: TestDatabase;
@@ -125,6 +128,31 @@ describe("publishKit", () => {
     await publish(buildPublishKitInput(processingOrder.orderId));
     const second = await publish(buildPublishKitInput(processingOrder.orderId));
     expect(second.ok).toBe(false);
+    expect(await testDatabase.db.$count(kit)).toBe(1);
+    expect(await testDatabase.db.$count(job)).toBe(1);
+  });
+
+  it("dois publishKit concorrentes do mesmo pedido gravam um kit e um order.notify", async () => {
+    const processingOrder = await insertOrder("processing");
+    const concurrentHandle = createDatabase({
+      databaseUrl: withDatabaseName(resolveTestDatabaseUrl(), testDatabase.databaseName),
+      maxConnections: 2,
+    });
+    try {
+      const resultList = await Promise.all(
+        [1, 2].map(() =>
+          concurrentHandle.db.transaction((tx) =>
+            publishKit(tx, buildPublishKitInput(processingOrder.orderId)),
+          ),
+        ),
+      );
+      expect(resultList.filter((result) => result.ok)).toHaveLength(1);
+      const failedList = resultList.flatMap((result) => (result.ok ? [] : [result.error]));
+      expect(failedList).toHaveLength(1);
+      expect(failedList[0]).toBeInstanceOf(InvalidTransitionError);
+    } finally {
+      await concurrentHandle.close();
+    }
     expect(await testDatabase.db.$count(kit)).toBe(1);
     expect(await testDatabase.db.$count(job)).toBe(1);
   });

@@ -29,7 +29,7 @@ A fila é uma tabela `job` própria em `packages/db`, nas convenções do projet
 
 - **Tentativas:** 4 (a primeira e 3 retentativas com 30 s, 120 s e 480 s), regra pura no core (`JOB_RETRY_DELAY_SECONDS_LIST`, `jobRetryDelaySeconds`); falha não transitória vai direto para `failed`.
 - **Lock:** `lock_expire_datetime` gravado no claim (`JOB_LOCK_TIMEOUT_SECONDS`, 15 min); `recoverExpiredJobs` devolve jobs travados de worker morto. Concluir ou falhar exige o par `(job_id, attempt_count)` do claim, para um worker atrasado não fechar a tentativa de outro.
-- **Singleton:** unique parcial em `(name, singleton_key)` enquanto o job está `pending` ou `active`; `enqueueJob` com a mesma chave devolve `null`.
+- **Singleton:** unique parcial em `(name, singleton_key)` enquanto o job está `pending` ou `active`; `enqueueSingletonJob` com a mesma chave devolve `null`; `enqueueJob`, sem chave, sempre insere.
 - **Dead letter:** a linha fica `failed` com `last_error_code`; payload inválido no consumo vai para `failed` com `payload_invalid`.
 - **Dado pessoal:** ao terminar (sucesso ou falha definitiva), o payload de `whatsapp.inbound` é reduzido aos campos de `personalDataJobRetainedFieldMap` do core (`name`, `webhookEventId`).
 

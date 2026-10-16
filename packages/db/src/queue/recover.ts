@@ -1,6 +1,6 @@
+import { jobErrorCodeMap } from "@gizito/core";
 import { and, eq, gte, lt, lte } from "drizzle-orm";
 import type { Executor } from "#src/client.ts";
-import { jobErrorCodeMap } from "#src/queue/error-codes.ts";
 import { finishedPayloadSql } from "#src/queue/lease.ts";
 import { job } from "#src/schema/job.ts";
 
