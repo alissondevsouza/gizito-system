@@ -6,6 +6,10 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-16] Turbo 2 em strict mode descarta variáveis do shell nas tasks — revisão da F0-07
+
+Por padrão o Turbo só repassa às tasks as variáveis declaradas em `env`/`passThroughEnv` do `turbo.json`. `DATABASE_URL=... bun run dev` chegava às apps sem `DATABASE_URL` e o config derrubava o processo; o caminho com `.env` funcionava só porque o próprio Bun lê o arquivo. A task `dev` usa `passThroughEnv: ["*"]` (não tem cache, então não muda hash); tasks com cache declaram cada variável em `env`.
+
 ## [2026-10-16] Testes do Elysia com `app.handle`: host com ponto e `onAfterResponse` depois da resposta — F0-07
 
 `app.handle(new Request("http://x/health"))` devolve 404 para toda rota: o Elysia acha o início do path por posição na URL e erra com host curto sem ponto. Usar `http://localhost/...` nos testes. E o `onAfterResponse` roda depois de `handle` resolver, então asserção sobre o log de request logo após o `await` falha de forma intermitente; esperar a entrada no destino do logger (`createMemoryLogger().waitForEntryList`), nunca `sleep`.

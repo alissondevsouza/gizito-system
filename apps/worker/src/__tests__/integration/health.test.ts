@@ -8,7 +8,7 @@ import {
   type TestDatabase,
   withDatabaseName,
 } from "@gizito/db/test-helpers";
-import { createMemoryLogger } from "@gizito/integrations";
+import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { findFreePort, ORDER_ID, waitForHttpStatus } from "#src/__tests__/integration/helpers.ts";
 import { readWorkerHealth } from "#src/health.ts";
 import { HEALTH_PATH, startHealthServer } from "#src/health-server.ts";
@@ -70,6 +70,7 @@ describe("processo do worker", () => {
         DATABASE_URL: withDatabaseName(resolveTestDatabaseUrl(), testDatabase.databaseName),
         WORKER_HEALTH_PORT: String(port),
         LOG_LEVEL: "info",
+        PAYMENT_GATEWAY: "fake",
       },
       stdout: "pipe",
       stderr: "pipe",

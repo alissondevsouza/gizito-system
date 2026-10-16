@@ -11,8 +11,9 @@
 ## Feature esqueleto-das-apps (2026-10-16, `c579f79`)
 
 - `src/logger.ts`: `createLogger({ service, level, destination? })` com Pino 10, JSON, horário ISO, campo `service` e redação de `email`, `phone`, `token`, `publicToken`, `payload` e `text` no topo e um nível abaixo.
-- `src/fakes/memory-logger.ts`: `createMemoryLogger` com `waitForEntryList` para testes que esperam um log assíncrono.
-- Testes: 6.
+- `src/log-error.ts`: `serializeLogError` (serializer de `err`: tipo, código, mensagem e stack, causa até 3 níveis; sem `detail`, `query` nem `params`) e `scrubLogText` (mascara e-mail, token e telefone).
+- `src/fakes/memory-logger.ts`: `createMemoryLogger` com `waitForEntryList` para testes que esperam um log assíncrono; exposto só por `@gizito/integrations/fakes`, fora do entrypoint de produção.
+- Testes: 12.
 
 ## Implementado
 

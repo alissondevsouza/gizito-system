@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const DATABASE_UNAVAILABLE_ERROR_CODE = "database_unavailable";
+
 export const healthStatusList = ["ok", "unavailable"] as const;
 export const healthStatusSchema = z.enum(healthStatusList);
 export type HealthStatus = z.infer<typeof healthStatusSchema>;

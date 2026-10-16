@@ -26,6 +26,11 @@ const laneList = buildJobLaneList(handledNameList, {
   generateConcurrency: config.GENERATE_CONCURRENCY,
 });
 
+const healthServer = startHealthServer({
+  hostname: config.HOST,
+  port: config.WORKER_HEALTH_PORT,
+  readHealth: () => readWorkerHealth({ db: database.db, logger, runnerState: runner.state }),
+});
 const runner = startJobRunner({
   db: database.db,
   handlerMap: jobHandlerMap,
@@ -34,11 +39,6 @@ const runner = startJobRunner({
   logger,
 });
 const scheduler = startScheduler({ db: database.db, logger, handledNameList });
-const healthServer = startHealthServer({
-  hostname: config.HOST,
-  port: config.WORKER_HEALTH_PORT,
-  readHealth: () => readWorkerHealth({ db: database.db, logger, runnerState: runner.state }),
-});
 logger.info(
   {
     workerId,

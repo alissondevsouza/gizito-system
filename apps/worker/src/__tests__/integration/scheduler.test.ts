@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { claimJob, enqueueJob, job } from "@gizito/db";
 import { createTestDatabase, type TestDatabase, truncateAllTables } from "@gizito/db/test-helpers";
-import { createMemoryLogger } from "@gizito/integrations";
+import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { eq } from "drizzle-orm";
 import { ORDER_ID } from "#src/__tests__/integration/helpers.ts";
 import {

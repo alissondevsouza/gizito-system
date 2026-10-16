@@ -10,12 +10,12 @@
 
 ## Feature esqueleto-das-apps (2026-10-16, `c579f79`)
 
-- `src/config.ts`: `workerConfigSchema` (`WORKER_HEALTH_PORT` 3002, `GENERATE_CONCURRENCY` ≥ 1 default 2, mesma recusa do gateway fake em produção); fail-fast como a api.
+- `src/config.ts`: `workerConfigSchema` (`WORKER_HEALTH_PORT` 3002, `GENERATE_CONCURRENCY` ≥ 1 default 2, `PAYMENT_GATEWAY` obrigatória e as mesmas guardas de produção da api); fail-fast como a api. O `/health` sobe antes do runner, para porta ocupada derrubar o processo antes de qualquer claim.
 - `src/runner/`: `buildJobLaneList` (raias `generate`, `charge_reconcile`, `retention_purge` e `default` com 2 vagas; só nomes com handler) e `startJobRunner` (vaga em laço sobre `workJob`, pausa de 1 s com fila vazia e 5 s após erro de banco, log por job sem payload, `cause` em `debug`, `payload_invalid` em `error`, `stop()` espera os jobs em curso).
 - `src/scheduler.ts`: `startScheduler` com `enqueueSingletonJob` (chave `scheduled`) para `charge.reconcile` a cada 2 min e `retention.purge` a cada 24 h, só se houver handler, e manutenção a cada 60 s com `recoverExpiredJobs`.
 - `src/health.ts` e `src/health-server.ts`: `GET /health` em `Bun.serve` com `getQueueMetrics`; `503` com o runner parando ou sem banco.
 - `src/jobs/index.ts`: `jobHandlerMap` vazio; em dev o worker só faz manutenção e health.
-- Testes: 16 unit (config, raias, laço sem banco, health, agendador, boot sem env) e 12 de integração (consumo e log, teto de `GENERATE_CONCURRENCY`, raia sem handler, `stop` com job em curso, retry e causa em `debug`, payload inválido, agendador singleton, recuperação de lock, health 200/503/404, processo com `SIGTERM`).
+- Testes: 18 unit (config, raias, laço sem banco, health, agendador, boot sem env) e 12 de integração (consumo e log, teto de `GENERATE_CONCURRENCY`, raia sem handler, `stop` com job em curso, retry e causa em `debug`, payload inválido, agendador singleton, recuperação de lock, health 200/503/404, processo com `SIGTERM`).
 
 ## Implementado
 

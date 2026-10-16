@@ -46,6 +46,7 @@ describe("processo da api", () => {
         WEB_PUBLIC_URL: "http://localhost:3000",
         API_PORT: String(port),
         LOG_LEVEL: "info",
+        PAYMENT_GATEWAY: "fake",
       },
       stdout: "pipe",
       stderr: "pipe",

@@ -1,7 +1,9 @@
 import { afterAll, describe, expect, it } from "bun:test";
 import { apiErrorSchema, apiHealthSchema } from "@gizito/core";
 import { createDatabase } from "@gizito/db";
-import { createMemoryLogger } from "@gizito/integrations";
+import { createMemoryLogger } from "@gizito/integrations/fakes";
+import { status } from "elysia";
+import { z } from "zod";
 import { createApp, UNMATCHED_ROUTE } from "#src/app.ts";
 
 const WEB_PUBLIC_URL = "http://localhost:3000";
@@ -65,6 +67,51 @@ describe("erros e log de request", () => {
       expect(typeof entry.durationMs).toBe("number");
     }
     expect(lineList.join("\n")).not.toContain(token);
+  });
+});
+
+describe("erros lançados por rotas", () => {
+  const orderNotFound = { error: "Pedido não encontrado.", code: "order_not_found" } as const;
+
+  function createAppWithRouteList() {
+    const testApp = createTestApp();
+    const app = testApp.app
+      .get("/lancado", () => {
+        throw status(404, orderNotFound);
+      })
+      .get("/excecao", () => {
+        throw new TypeError("dado-do-cliente@example.com");
+      })
+      .post("/corpo", ({ body }) => body, { body: z.object({ grade: z.string() }) });
+    return { ...testApp, app };
+  }
+
+  it("status lançado chega ao cliente com o mesmo status e corpo, sem log de erro", async () => {
+    const { app, readEntryList } = createAppWithRouteList();
+    const response = await app.handle(request("/lancado"));
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual(orderNotFound);
+    expect(readEntryList().some((entry) => entry.level >= 50)).toBe(false);
+  });
+
+  it("exceção vira 500 internal_error e o log error leva só o nome do erro", async () => {
+    const { app, readEntryList } = createAppWithRouteList();
+    const response = await app.handle(request("/excecao"));
+    expect(response.status).toBe(500);
+    expect(apiErrorSchema.parse(await response.json()).code).toBe("internal_error");
+    const errorEntry = readEntryList().find((entry) => entry.level === 50);
+    expect(errorEntry).toMatchObject({ errorCode: "internal_error", errorName: "TypeError" });
+    expect(JSON.stringify(errorEntry)).not.toContain("dado-do-cliente");
+  });
+
+  it("corpo malformado e corpo fora do schema viram 400 validation_error", async () => {
+    const { app } = createAppWithRouteList();
+    const headers = { "content-type": "application/json" };
+    for (const body of ["{quebrado", JSON.stringify({ grade: 5 })]) {
+      const response = await app.handle(request("/corpo", { method: "POST", headers, body }));
+      expect(response.status).toBe(400);
+      expect(apiErrorSchema.parse(await response.json()).code).toBe("validation_error");
+    }
   });
 });
 

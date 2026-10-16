@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
 import { err, jobErrorCodeMap, ok } from "@gizito/core";
 import { enqueueJob, job } from "@gizito/db";
 import { createTestDatabase, type TestDatabase, truncateAllTables } from "@gizito/db/test-helpers";
-import { createMemoryLogger } from "@gizito/integrations";
+import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { eq, sql } from "drizzle-orm";
 import { createCountdown, createGate, ORDER_ID } from "#src/__tests__/integration/helpers.ts";
 import { type StartJobRunnerOptions, startJobRunner } from "#src/runner/job-runner.ts";

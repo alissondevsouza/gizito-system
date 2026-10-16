@@ -10,11 +10,11 @@
 
 ## Feature esqueleto-das-apps (2026-10-16, `c579f79`)
 
-- Elysia 1.4 com Zod 4 como schema de resposta. `src/config.ts`: `apiConfigSchema` estende `sharedEnvironmentSchema` e `paymentEnvironmentSchema` do core (`DATABASE_URL` e `WEB_PUBLIC_URL` obrigatórias; `API_PORT` 3001, `HOST` 127.0.0.1; `PAYMENT_GATEWAY=fake` recusado em produção). `src/index.ts` sai com 1 e lista os campos antes de abrir porta ou banco; `SIGTERM`/`SIGINT` param o servidor e fecham o banco.
-- `src/app.ts`: `createApp({ db, logger, webPublicUrl })` com CORS só para a origem do web, `onError` → `toApiErrorResponse` (`404 not_found`, `400 validation_error`, `500 internal_error`, resposta fora do schema conta como 500), log `request` por resposta com `method`, `route` (padrão, nunca a URL), `status` e `durationMs`.
+- Elysia 1.4 com Zod 4 como schema de resposta. `src/config.ts`: `apiConfigSchema` estende `sharedEnvironmentSchema` e `paymentEnvironmentSchema` do core (`DATABASE_URL`, `WEB_PUBLIC_URL` e `PAYMENT_GATEWAY` obrigatórias; `API_PORT` 3001, `HOST` 127.0.0.1; `checkProductionEnvironment` recusa gateway fake e log `debug` em produção). `src/index.ts` sai com 1 e lista os campos antes de abrir porta ou banco; `SIGTERM`/`SIGINT` param o servidor e fecham o banco.
+- `src/app.ts`: `createApp({ db, logger, webPublicUrl })` com CORS só para a origem do web, `onError` → `toApiErrorResponse` (`404 not_found`, `400 validation_error`, `500 internal_error`; `throw status(4xx, { error, code })` passa como está; resposta fora do schema conta como 500), log `request` por resposta com `method`, `route` (padrão, nunca a URL), `status` e `durationMs`.
 - `GET /health`: `routes/health.ts` → `services/health.ts` → `pingDatabase`; `200 ok` ou `503 unavailable` com `warn` só do nome do erro.
 - `dev` lê o `.env` da raiz (`bun --env-file=../../.env`); `exports` aponta para `src/app.ts` para importar a api não subir o servidor.
-- Testes: 16 unit (config, erros, app com banco inalcançável, CORS, log sem token, boot sem env) e 2 de integração (health com banco, processo com `SIGTERM`).
+- Testes: 23 unit (config, erros, app com banco inalcançável, status lançado, exceção, corpo inválido, CORS, log sem token, boot sem env) e 2 de integração (health com banco, processo com `SIGTERM`).
 
 ## Implementado
 

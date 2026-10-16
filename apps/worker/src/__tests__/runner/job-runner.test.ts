@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "bun:test";
 import { ok } from "@gizito/core";
 import { createDatabase } from "@gizito/db";
-import { createMemoryLogger } from "@gizito/integrations";
+import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { JOB_LOOP_FAILED_ERROR_CODE, startJobRunner } from "#src/runner/job-runner.ts";
 
 const unreachableDatabase = createDatabase({

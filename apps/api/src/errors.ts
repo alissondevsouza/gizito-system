@@ -1,4 +1,5 @@
-import type { ApiError } from "@gizito/core";
+import { type ApiError, apiErrorSchema } from "@gizito/core";
+import { ElysiaCustomStatusResponse } from "elysia";
 
 export const notFoundError: ApiError = {
   error: "Não encontramos o que você procurou.",
@@ -20,13 +21,25 @@ export type ApiErrorResponse = {
   body: ApiError;
 };
 
+const internalErrorResponse: ApiErrorResponse = { status: 500, body: internalError };
+const validationErrorResponse: ApiErrorResponse = { status: 400, body: validationError };
+
 export function toApiErrorResponse(elysiaCode: string | number, error: unknown): ApiErrorResponse {
+  if (error instanceof ElysiaCustomStatusResponse) return fromThrownStatus(error);
   if (elysiaCode === "NOT_FOUND") return { status: 404, body: notFoundError };
-  if (elysiaCode === "PARSE") return { status: 400, body: validationError };
+  if (elysiaCode === "PARSE" || elysiaCode === "INVALID_FILE_TYPE") return validationErrorResponse;
   if (elysiaCode === "VALIDATION" && !isResponseValidationError(error)) {
-    return { status: 400, body: validationError };
+    return validationErrorResponse;
   }
-  return { status: 500, body: internalError };
+  return internalErrorResponse;
+}
+
+function fromThrownStatus(thrown: ElysiaCustomStatusResponse<number>): ApiErrorResponse {
+  const body = apiErrorSchema.safeParse(thrown.response);
+  if (!body.success || typeof thrown.code !== "number" || thrown.code < 400) {
+    return internalErrorResponse;
+  }
+  return { status: thrown.code, body: body.data };
 }
 
 function isResponseValidationError(error: unknown): boolean {

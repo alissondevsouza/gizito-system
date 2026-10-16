@@ -20,10 +20,6 @@ export function startHealthServer({ hostname, port, readHealth }: StartHealthSer
         },
       },
     },
-    fetch: () =>
-      Response.json(
-        { error: "Não encontramos o que você procurou.", code: "not_found" },
-        { status: 404 },
-      ),
+    fetch: () => new Response(null, { status: 404 }),
   });
 }

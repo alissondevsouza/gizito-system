@@ -1,6 +1,6 @@
 import type { QueueMetrics } from "@gizito/core";
 import { jobErrorCodeMap } from "@gizito/core";
-import { and, eq, gte, lte, type SQL, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, or, type SQL, sql } from "drizzle-orm";
 import type { Executor } from "#src/client.ts";
 import { job } from "#src/schema/job.ts";
 
@@ -36,7 +36,8 @@ export async function getQueueMetrics(
         and(failedCondition, eq(job.lastErrorCode, jobErrorCodeMap.payloadInvalid)),
       ),
     })
-    .from(job);
+    .from(job)
+    .where(or(inArray(job.status, ["pending", "active"]), failedCondition));
   if (!row) throw new Error("queue metrics query returned no row");
   return row;
 }

@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "bun:test";
 import { createDatabase } from "@gizito/db";
-import { createMemoryLogger } from "@gizito/integrations";
+import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { readWorkerHealth } from "#src/health.ts";
 
 const unreachableDatabase = createDatabase({

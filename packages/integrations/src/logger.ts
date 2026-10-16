@@ -1,5 +1,6 @@
 import type { LogLevel } from "@gizito/core";
 import { type DestinationStream, type Logger, type LoggerOptions, pino } from "pino";
+import { serializeLogError } from "#src/log-error.ts";
 
 export type { Logger } from "pino";
 
@@ -25,6 +26,7 @@ export function createLogger({ service, level, destination }: CreateLoggerOption
     level,
     base: { service },
     timestamp: pino.stdTimeFunctions.isoTime,
+    serializers: { err: serializeLogError },
     redact: {
       paths: redactedLogKeyList.flatMap((key) => [key, `*.${key}`]),
       censor: REDACTED_LOG_VALUE,

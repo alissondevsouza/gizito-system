@@ -1,6 +1,5 @@
 import {
-  FAKE_GATEWAY_IN_PRODUCTION_MESSAGE,
-  isPaymentGatewayAllowed,
+  checkProductionEnvironment,
   paymentEnvironmentSchema,
   portSchema,
   sharedEnvironmentSchema,
@@ -16,8 +15,5 @@ export const workerConfigSchema = sharedEnvironmentSchema
     WORKER_HEALTH_PORT: portSchema.default(DEFAULT_WORKER_HEALTH_PORT),
     GENERATE_CONCURRENCY: z.coerce.number().int().min(1).default(DEFAULT_GENERATE_CONCURRENCY),
   })
-  .refine(isPaymentGatewayAllowed, {
-    path: ["PAYMENT_GATEWAY"],
-    message: FAKE_GATEWAY_IN_PRODUCTION_MESSAGE,
-  });
+  .superRefine(checkProductionEnvironment);
 export type WorkerConfig = z.infer<typeof workerConfigSchema>;

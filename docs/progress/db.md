@@ -29,7 +29,7 @@
 
 ## Ajustes em esqueleto-das-apps (2026-10-16, `c579f79`)
 
-- `src/health.ts`: `pingDatabase`. `src/queue/metrics.ts`: `getQueueMetrics` (prontos, idade do mais antigo pronto, ativos, falhas e `payload_invalid` na janela, numa consulta com `FILTER`).
+- `src/health.ts`: `pingDatabase`. `src/queue/metrics.ts`: `getQueueMetrics` (prontos, idade do mais antigo pronto, ativos, falhas e `payload_invalid` na janela, numa consulta com `FILTER`, lendo só `pending`, `active` e as falhas da janela).
 - `claimJob` e `workJob` aceitam `onPayloadInvalid({ jobId, name })`.
 - Testes: 98 unit e 101 de integração.
 

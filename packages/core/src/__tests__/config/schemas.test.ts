@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 import {
+  checkProductionEnvironment,
+  isLogLevelAllowed,
   isPaymentGatewayAllowed,
   paymentEnvironmentSchema,
   portSchema,
@@ -52,9 +54,12 @@ describe("ambiente compartilhado das apps (api.md §6)", () => {
   });
 });
 
-describe("gateway de pagamento no ambiente", () => {
-  it("default é o fake, para dev e testes", () => {
-    expect(paymentEnvironmentSchema.parse({})).toEqual({ PAYMENT_GATEWAY: "fake" });
+describe("guardas de produção no ambiente", () => {
+  it("PAYMENT_GATEWAY é obrigatório e sem default", () => {
+    expect(paymentEnvironmentSchema.safeParse({}).success).toBe(false);
+    expect(paymentEnvironmentSchema.parse({ PAYMENT_GATEWAY: "fake" })).toEqual({
+      PAYMENT_GATEWAY: "fake",
+    });
   });
 
   it("fake é recusado só em produção", () => {
@@ -67,5 +72,22 @@ describe("gateway de pagamento no ambiente", () => {
     for (const NODE_ENV of ["development", "test"] as const) {
       expect(isPaymentGatewayAllowed({ NODE_ENV, PAYMENT_GATEWAY: "fake" })).toBe(true);
     }
+  });
+
+  it("debug e trace são recusados só em produção (privacy-security.md)", () => {
+    for (const LOG_LEVEL of ["debug", "trace"] as const) {
+      expect(isLogLevelAllowed({ NODE_ENV: "production", LOG_LEVEL })).toBe(false);
+      expect(isLogLevelAllowed({ NODE_ENV: "development", LOG_LEVEL })).toBe(true);
+    }
+    expect(isLogLevelAllowed({ NODE_ENV: "production", LOG_LEVEL: "info" })).toBe(true);
+  });
+
+  it("checkProductionEnvironment aponta cada campo recusado", () => {
+    const issueList: { path: string[] }[] = [];
+    checkProductionEnvironment(
+      { NODE_ENV: "production", LOG_LEVEL: "debug", PAYMENT_GATEWAY: "fake" },
+      { addIssue: (issue) => issueList.push(issue) },
+    );
+    expect(issueList.map((issue) => issue.path)).toEqual([["PAYMENT_GATEWAY"], ["LOG_LEVEL"]]);
   });
 });

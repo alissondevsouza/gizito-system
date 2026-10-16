@@ -6,7 +6,10 @@ import {
   workerConfigSchema,
 } from "#src/config.ts";
 
-const validEnvironment = { DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito" };
+const validEnvironment = {
+  DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito",
+  PAYMENT_GATEWAY: "fake",
+};
 
 describe("config do worker", () => {
   it("aplica defaults de porta do health e concorrência da geração", () => {
@@ -34,6 +37,26 @@ describe("config do worker", () => {
         workerConfigSchema.safeParse({ ...validEnvironment, GENERATE_CONCURRENCY }).success,
       ).toBe(false);
     }
+  });
+
+  it("recusa LOG_LEVEL=debug em produção, nomeando o campo", () => {
+    const result = workerConfigSchema.safeParse({
+      ...validEnvironment,
+      NODE_ENV: "production",
+      PAYMENT_GATEWAY: "mercadopago",
+      LOG_LEVEL: "debug",
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["LOG_LEVEL"]);
+  });
+
+  it("PAYMENT_GATEWAY é obrigatória", () => {
+    const { PAYMENT_GATEWAY: _omitted, ...withoutGateway } = validEnvironment;
+    const result = workerConfigSchema.safeParse(withoutGateway);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(z.prettifyError(result.error)).toContain("PAYMENT_GATEWAY");
   });
 
   it("recusa PAYMENT_GATEWAY=fake em produção, nomeando o campo", () => {

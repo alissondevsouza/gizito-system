@@ -28,10 +28,10 @@
 
 ## Ajustes em esqueleto-das-apps (2026-10-16, `c579f79`)
 
-- `config/schemas.ts`: `nodeEnvList`, `logLevelList`, `portSchema`, `postgresUrlSchema`, `sharedEnvironmentSchema`, `paymentEnvironmentSchema` e `isPaymentGatewayAllowed` (fake recusado em produção).
+- `config/schemas.ts`: `nodeEnvList`, `logLevelList`, `portSchema`, `postgresUrlSchema`, `sharedEnvironmentSchema`, `paymentEnvironmentSchema` (`PAYMENT_GATEWAY` obrigatória), `isPaymentGatewayAllowed`, `isLogLevelAllowed` e `checkProductionEnvironment` (fake e `debug`/`trace` recusados em produção).
 - `api/errors.ts`: `apiErrorCodeList` (com `not_found` e `internal_error`) e `apiErrorSchema`. `health/schemas.ts`: `healthStatusList`, `apiHealthSchema`, `queueMetricsSchema`, `workerHealthSchema`.
-- `constants.ts`: `RETENTION_PURGE_INTERVAL_HOURS` (24) e `JOB_FAILED_METRIC_WINDOW_HOURS` (24). `jobErrorCodeMap.handlerNotFound`. `common.ts`: `errorNameOf`.
-- Testes: 231.
+- `constants.ts`: `RETENTION_PURGE_INTERVAL_HOURS` (24) e `JOB_FAILED_METRIC_WINDOW_HOURS` (24). `jobErrorCodeMap.handlerNotFound`. `common.ts`: `errorNameOf`. `health/schemas.ts`: `DATABASE_UNAVAILABLE_ERROR_CODE`.
+- Testes: 233.
 
 ## Implementado
 

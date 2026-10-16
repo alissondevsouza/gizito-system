@@ -1,4 +1,9 @@
-import { errorNameOf, JOB_FAILED_METRIC_WINDOW_HOURS, type WorkerHealth } from "@gizito/core";
+import {
+  DATABASE_UNAVAILABLE_ERROR_CODE,
+  errorNameOf,
+  JOB_FAILED_METRIC_WINDOW_HOURS,
+  type WorkerHealth,
+} from "@gizito/core";
 import { type Executor, getQueueMetrics } from "@gizito/db";
 import type { Logger } from "@gizito/integrations";
 import type { JobRunnerState } from "#src/runner/job-runner.ts";
@@ -33,7 +38,7 @@ export async function readWorkerHealth({
   } catch (error) {
     logger.warn(
       {
-        errorCode: "database_unavailable",
+        errorCode: DATABASE_UNAVAILABLE_ERROR_CODE,
         errorName: errorNameOf(error),
       },
       "health sem banco",

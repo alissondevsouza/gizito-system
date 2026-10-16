@@ -22,18 +22,60 @@ export const sharedEnvironmentSchema = z.object({
 export type SharedEnvironment = z.infer<typeof sharedEnvironmentSchema>;
 
 export const paymentEnvironmentSchema = z.object({
-  PAYMENT_GATEWAY: paymentGatewaySchema.default("fake"),
+  PAYMENT_GATEWAY: paymentGatewaySchema,
 });
+
+export const productionDebugLogLevelList = [
+  "debug",
+  "trace",
+] as const satisfies readonly LogLevel[];
 
 export const FAKE_GATEWAY_IN_PRODUCTION_MESSAGE =
   "PAYMENT_GATEWAY=fake não é permitido com NODE_ENV=production";
+export const DEBUG_LOG_IN_PRODUCTION_MESSAGE =
+  "LOG_LEVEL=debug ou trace não é permitido com NODE_ENV=production";
+
+type GuardedEnvironment = {
+  NODE_ENV: NodeEnv;
+  LOG_LEVEL: LogLevel;
+  PAYMENT_GATEWAY: PaymentGatewayName;
+};
 
 export function isPaymentGatewayAllowed({
   NODE_ENV,
   PAYMENT_GATEWAY,
-}: {
-  NODE_ENV: NodeEnv;
-  PAYMENT_GATEWAY: PaymentGatewayName;
-}): boolean {
+}: Pick<GuardedEnvironment, "NODE_ENV" | "PAYMENT_GATEWAY">): boolean {
   return !(NODE_ENV === "production" && PAYMENT_GATEWAY === "fake");
+}
+
+export function isLogLevelAllowed({
+  NODE_ENV,
+  LOG_LEVEL,
+}: Pick<GuardedEnvironment, "NODE_ENV" | "LOG_LEVEL">): boolean {
+  const isDebugLevel = productionDebugLogLevelList.some((level) => level === LOG_LEVEL);
+  return !(NODE_ENV === "production" && isDebugLevel);
+}
+
+export type EnvironmentIssueSink = {
+  addIssue: (issue: { code: "custom"; path: string[]; message: string }) => void;
+};
+
+export function checkProductionEnvironment(
+  environment: GuardedEnvironment,
+  context: EnvironmentIssueSink,
+): void {
+  if (!isPaymentGatewayAllowed(environment)) {
+    context.addIssue({
+      code: "custom",
+      path: ["PAYMENT_GATEWAY"],
+      message: FAKE_GATEWAY_IN_PRODUCTION_MESSAGE,
+    });
+  }
+  if (!isLogLevelAllowed(environment)) {
+    context.addIssue({
+      code: "custom",
+      path: ["LOG_LEVEL"],
+      message: DEBUG_LOG_IN_PRODUCTION_MESSAGE,
+    });
+  }
 }

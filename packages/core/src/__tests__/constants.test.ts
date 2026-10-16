@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   ANSWER_KEY_COUNT,
   CHARGE_TTL_MINUTES,
+  JOB_FAILED_METRIC_WINDOW_HOURS,
   KIT_PRICE_CENTS,
   KIT_RETENTION_MONTHS,
   MAX_NOTE_LENGTH,
@@ -65,6 +66,7 @@ describe("constantes de negócio (PRD §5, §6 e §7)", () => {
     expect(PHOTO_RETENTION_DAYS).toBe(30);
     expect(KIT_RETENTION_MONTHS).toBe(12);
     expect(RETENTION_PURGE_INTERVAL_HOURS).toBe(24);
+    expect(JOB_FAILED_METRIC_WINDOW_HOURS).toBe(24);
   });
 
   it("identificadores do pedido", () => {

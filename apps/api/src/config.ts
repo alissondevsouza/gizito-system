@@ -1,6 +1,5 @@
 import {
-  FAKE_GATEWAY_IN_PRODUCTION_MESSAGE,
-  isPaymentGatewayAllowed,
+  checkProductionEnvironment,
   paymentEnvironmentSchema,
   portSchema,
   sharedEnvironmentSchema,
@@ -15,8 +14,5 @@ export const apiConfigSchema = sharedEnvironmentSchema
     API_PORT: portSchema.default(DEFAULT_API_PORT),
     WEB_PUBLIC_URL: z.url({ protocol: /^https?$/ }),
   })
-  .refine(isPaymentGatewayAllowed, {
-    path: ["PAYMENT_GATEWAY"],
-    message: FAKE_GATEWAY_IN_PRODUCTION_MESSAGE,
-  });
+  .superRefine(checkProductionEnvironment);
 export type ApiConfig = z.infer<typeof apiConfigSchema>;
