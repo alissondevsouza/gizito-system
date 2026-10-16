@@ -2,9 +2,9 @@
 feature: F0-03 design-tecnico-e-adrs
 module: docs
 size: M
-status: in_progress
+status: done
 branch: feat/docs/design-tecnico-e-adrs
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # F0-03 design-tecnico-e-adrs
@@ -54,4 +54,4 @@ Registrar o design técnico do Gizito em documentos que agentes e humanos leem p
 | 2026-10-15 | Segunda cobrança paga do mesmo pedido abre `support_ticket` `duplicate_payment`; `markOrderPaidAndEnqueue` expira as demais cobranças `pending` | achado da revisão: Pix antigo pago depois de "Gerar novo Pix" não tinha caminho operacional |
 
 ## Status
-Fase: revisão neutra APROVADA (rodada 1, `review.md`); 4 ALERTAs e 9 SUGESTÕES aplicados. Aguardando a revisão do humano (critério de pronto do roadmap); ao aprovar, marcar F0-03 `[x]` no roadmap e `status: done` aqui. Os nomes `charge.reconcile { orderId? }` e `duplicate_payment` dependem do commit complementar na branch da F0-04.
+Fase: concluída. Revisão neutra APROVADA (rodada 1, `review.md`), com 4 ALERTAs e 9 SUGESTÕES aplicados; revisão do humano feita em 16/10/2026 e F0-03 marcada `[x]` no roadmap. Os nomes `charge.reconcile { orderId? }` e `duplicate_payment` dependem do commit complementar na branch da F0-04.

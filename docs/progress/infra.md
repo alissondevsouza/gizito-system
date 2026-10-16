@@ -1,8 +1,8 @@
 # Progresso: infra
 
 **Workspace:** raiz do monorepo (`package.json`, `turbo.json`, `biome.json`, `tsconfig.base.json`, `docker-compose.yml`, `infra/`, `.github/`)
-**Fase atual:** F0 — Fundação
-**Última atualização:** 2026-10-15
+**Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
+**Última atualização:** 2026-10-16
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 

@@ -1,7 +1,7 @@
 # Gizito — Roadmap de Implementação v1.1
 
 **Status:** em execução  
-**Fase atual:** F0 — Fundação  
+**Fase atual:** F1 — Prova técnica e pedagógica  
 **Data:** 14/10/2026  
 **Estado atualizado em:** 16/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
@@ -22,7 +22,7 @@ Resumo por fase:
 
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
-| F0 Fundação | 7 | 6 | 1 | 0 |
+| F0 Fundação | 7 | 7 | 0 | 0 |
 | F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
@@ -88,7 +88,7 @@ flowchart LR
 
 | Fase | Objetivo | Saída principal | Critério de saída | Esforço estimado | Estado |
 |---|---|---|---|---|---|
-| F0 Fundação | Repositório pronto para construir | monorepo, infra local, core e db com máquina de estados e fila, docs técnicos | lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos | 1 a 2 semanas | em andamento |
+| F0 Fundação | Repositório pronto para construir | monorepo, infra local, core e db com máquina de estados e fila, docs técnicos | lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos | 1 a 2 semanas | concluída |
 | F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 40 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | pendente |
 | F2 Fluxo comercial | Compra ponta a ponta em produção | API, worker, web, WhatsApp, admin, legal, deploy | checklist da seção 10 do PRD completa; compra real feita por você e entregue num celular real | 4 a 6 semanas | pendente |
 | F3 Piloto pago | Validar H1 a H4 com dinheiro real | 10 a 20 responsáveis, auditoria semanal, métricas | memo de decisão com evidência das hipóteses | 3 a 4 semanas de calendário | pendente |
@@ -98,7 +98,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 6 de 7 concluídas · 1 em andamento
+**Estado:** concluída · 7 de 7 concluídas · gate fechado em 16/10/2026
 
 - [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
@@ -108,10 +108,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `docker-compose.yml` com Postgres 16 (bancos `gizito` e `evolution`), Redis 7 e Evolution API fixada na linha 2.x; healthchecks; portas só locais
   - Pronto quando: `docker compose up -d` saudável; Evolution responde na porta interna com a API key
   - Concluída em: 15/10/2026. `evoapicloud/evolution-api:v2.3.7` (última estável da linha 2.x), banco `evolution` criado por script em `infra/postgres/initdb/`, healthchecks nos três serviços, portas só em `127.0.0.1`, Evolution sem gravar mensagens, contatos nem chats (LGPD), CI valida `docker compose config`. Primeira subida em ~41 s (migrations da Evolution), reinício em ~11 s
-- [ ] **F0-03 `design-tecnico-e-adrs`** (em andamento) — docs · M · depende: — · `specs/docs/design-tecnico-e-adrs/`
+- [x] **F0-03 `design-tecnico-e-adrs`** — docs · M · depende: — · 16/10/2026 · `d4626a7` · `specs/docs/design-tecnico-e-adrs/`
   - Entrega: `docs/engineering/architecture.md`, `data-model.md`, `state-machine.md`, `api.md`, `jobs.md`; ADRs 0002 a 0007 (monorepo Bun, fila no Postgres, Mercado Pago, Evolution API, TanStack Start + Elysia, dois PDFs); o 0001 já é o harness
   - Pronto quando: revisados por você; índice de `docs/README.md` atualizado
-  - Feito até agora: 15/10/2026, os cinco docs e os ADRs 0002 a 0007 escritos e indexados em `docs/README.md`; falta a sua revisão
+  - Concluída em: 16/10/2026. Os cinco docs e os ADRs 0002 a 0007 escritos e indexados em `docs/README.md` em 15/10, com revisão neutra aprovada; revisados pelo humano em 16/10. `data-model.md`, `jobs.md` e `api.md` já receberam as versões de F0-05 a F0-07
 - [x] **F0-04 `core-fundacao`** — core · M · depende: F0-01 · 15/10/2026 · `74c3c61` · `specs/core/core-fundacao/`
   - Entrega: constantes de negócio, enums com `List`, máquina de estados do pedido como dado, schemas de pedido, cobrança e payload de job, interfaces `PaymentGateway`, `NotificationChannel`, `AiProvider`, `ObjectStorage`, `MathEvaluator`
   - Pronto quando: toda transição válida e inválida testada; nenhum IO no pacote
@@ -129,7 +129,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Pronto quando: `bun run dev` sobe os três; health responde
   - Concluída em: 16/10/2026. Size M em vez de P (as três apps mais core, db e integrations). Api Elysia 1.4 com Zod 4 nas respostas, `/health` 200/503 pelo banco, erros `{ error, code }` (`not_found`, `validation_error`, `internal_error`), CORS só para a origem de `WEB_PUBLIC_URL`, log Pino por padrão de rota. Worker com raias de concorrência sobre `workJob` (só nomes com handler; o mapa de produção começa vazio), agendador singleton dos periódicos, manutenção de locks a cada 60 s, `/health` com métricas da fila e `payload_invalid` em log `error`. Config das duas apps estende o schema compartilhado do core, sai com 1 nomeando o campo e recusa `PAYMENT_GATEWAY=fake` e log `debug` em produção; logger mascara e-mail, telefone e token no `err`; desligamento limpo por `SIGTERM`. Web TanStack Start 1.169 + Vite 8 + Tailwind 4.3 com os 12 tokens de cor (teste confere contra o design doc) e 404 em pt-BR. `bun run dev` sobe as três com o `.env` da raiz
 
-- [ ] **Gate F0 → F1:** lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos; tabela de estado de `docs/README.md` atualizada
+- [x] **Gate F0 → F1:** lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos; tabela de estado de `docs/README.md` atualizada — 16/10/2026. Suíte local verde (unit, integração com Postgres e build); o primeiro run da CI acontece no primeiro push, que ainda não houve
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 

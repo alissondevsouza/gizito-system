@@ -44,7 +44,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-16 (F0-07). Monorepo e infra local criados; core com domínio puro; db com schema, migrations, fila e as transações obrigatórias; api, worker e web sobem com `bun run dev` e respondem health; integrations só com o logger. Detalhes em `progress/{modulo}.md`.
+> Atualizado em 2026-10-16 (fechamento da F0; fase atual F1). Monorepo e infra local criados; core com domínio puro; db com schema, migrations, fila e as transações obrigatórias; api, worker e web sobem com `bun run dev` e respondem health; integrations só com o logger. Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
