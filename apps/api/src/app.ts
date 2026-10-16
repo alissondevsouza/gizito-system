@@ -1,4 +1,5 @@
 import { cors } from "@elysiajs/cors";
+import { errorNameOf } from "@gizito/core";
 import type { Executor } from "@gizito/db";
 import type { Logger } from "@gizito/integrations";
 import { Elysia } from "elysia";
@@ -24,7 +25,7 @@ export function createApp({ db, logger, webPublicUrl }: AppDependencies) {
       const response = toApiErrorResponse(code, error);
       if (response.status >= 500) {
         logger.error(
-          { errorCode: response.body.code, errorName: error instanceof Error ? error.name : code },
+          { errorCode: response.body.code, errorName: errorNameOf(error) },
           "erro inesperado",
         );
         logger.debug({ err: error }, "detalhe do erro inesperado");

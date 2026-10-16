@@ -39,9 +39,11 @@
         "@gizito/core": "workspace:*",
         "@gizito/db": "workspace:*",
         "@gizito/integrations": "workspace:*",
+        "zod": "^4.6.7",
       },
       "devDependencies": {
         "@types/bun": "~1.3.11",
+        "drizzle-orm": "^0.45.4",
       },
     },
     "packages/core": {

@@ -1,4 +1,4 @@
-import type { ApiHealth } from "@gizito/core";
+import { type ApiHealth, errorNameOf } from "@gizito/core";
 import { type Executor, pingDatabase } from "@gizito/db";
 
 export type ApiHealthCheck = {
@@ -13,7 +13,7 @@ export async function checkApiHealth(db: Executor): Promise<ApiHealthCheck> {
   } catch (error) {
     return {
       health: { status: "unavailable" },
-      errorName: error instanceof Error ? error.name : typeof error,
+      errorName: errorNameOf(error),
     };
   }
 }

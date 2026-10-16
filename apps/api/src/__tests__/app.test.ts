@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, it } from "bun:test";
 import { apiErrorSchema, apiHealthSchema } from "@gizito/core";
 import { createDatabase } from "@gizito/db";
-import { createMemoryLogger } from "#src/__tests__/__fixtures__/memory-logger.ts";
+import { createMemoryLogger } from "@gizito/integrations";
 import { createApp, UNMATCHED_ROUTE } from "#src/app.ts";
 
 const WEB_PUBLIC_URL = "http://localhost:3000";

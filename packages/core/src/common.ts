@@ -14,3 +14,7 @@ export const timestampFieldsSchema = z.object({
   updateDatetime: z.date(),
 });
 export type TimestampFields = z.infer<typeof timestampFieldsSchema>;
+
+export function errorNameOf(error: unknown): string {
+  return error instanceof Error ? error.name : typeof error;
+}

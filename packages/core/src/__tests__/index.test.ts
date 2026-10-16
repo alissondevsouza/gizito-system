@@ -8,3 +8,9 @@ it("o entrypoint exporta constantes, máquina de estados, schemas e payloads de 
   expect(core.jobPayloadSchema.safeParse({ name: "charge.reconcile" }).success).toBe(true);
   expect(core.orderStatusList).toHaveLength(9);
 });
+
+it("errorNameOf devolve o nome do erro, nunca a mensagem", () => {
+  expect(core.errorNameOf(new TypeError("dado do cliente"))).toBe("TypeError");
+  expect(core.errorNameOf("texto solto")).toBe("string");
+  expect(core.errorNameOf(null)).toBe("object");
+});

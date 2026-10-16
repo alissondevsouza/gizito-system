@@ -1,8 +1,15 @@
-import { createLogger } from "@gizito/integrations";
+import type { LogLevel } from "@gizito/core";
+import { createLogger } from "#src/logger.ts";
 
 export type LogEntry = Record<string, unknown> & { level: number; msg: string };
 
-export function createMemoryLogger() {
+export function createMemoryLogger({
+  service = "test",
+  level = "debug",
+}: {
+  service?: string;
+  level?: LogLevel;
+} = {}) {
   const lineList: string[] = [];
   const waiterList: { predicate: (entryList: LogEntry[]) => boolean; resolve: () => void }[] = [];
   const readEntryList = () => lineList.map((line) => JSON.parse(line) as LogEntry);
@@ -14,8 +21,8 @@ export function createMemoryLogger() {
     }
   };
   const logger = createLogger({
-    service: "api-test",
-    level: "debug",
+    service,
+    level,
     destination: {
       write: (line: string) => {
         lineList.push(line);
