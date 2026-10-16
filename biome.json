@@ -63,7 +63,8 @@
                   "!#src/**/*.ts",
                   "!#src/**/*.tsx",
                   "!#src/**/*.json",
-                  "!#src/**/*.css"
+                  "!#src/**/*.css",
+                  "!#src/**/*.css\\?url"
                 ],
                 "message": "Import #src/* precisa da extensão do arquivo (rule imports.md)."
               }
@@ -71,6 +72,11 @@
           }
         }
       }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

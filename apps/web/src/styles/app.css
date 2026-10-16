@@ -1,0 +1,19 @@
+@import "tailwindcss" source("../");
+
+@theme {
+  --color-*: initial;
+  --color-board: #214c45;
+  --color-ink: #22352f;
+  --color-paper: #f8f5e9;
+  --color-card: #fffefa;
+  --color-chalk: #fcfaf2;
+  --color-sun: #f2bd50;
+  --color-gizito-blue: #2b6fd3;
+  --color-blue: #4774c1;
+  --color-muted: #54635f;
+  --color-success: #286b4b;
+  --color-error: #8e3e34;
+  --color-line: #d8d5c9;
+
+  --container-content: 70rem;
+}

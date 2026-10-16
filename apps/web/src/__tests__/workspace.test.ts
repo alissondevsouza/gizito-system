@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import * as entry from "#src/index.ts";
+import { getRouter } from "#src/router.tsx";
 
-it("resolve o entrypoint do workspace pelo subpath import #src no Vitest", () => {
-  expect(typeof entry).toBe("object");
+it("resolve o router pelo subpath import #src no Vitest", () => {
+  expect(getRouter().routesByPath["/"]).toBeDefined();
 });

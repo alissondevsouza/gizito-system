@@ -60,7 +60,7 @@ Levar as três apps de "workspace vazio" a processos que sobem com `bun run dev`
 ### M3 — Worker
 - [x] 3.1 Config, raias, runner, agendador, health, index, testes unit e integração · Verificação: `cd apps/worker && bun test && bun run test:integration && bunx tsc --noEmit`
 ### M4 — Web
-- [ ] 4.1 TanStack Start, Tailwind com tokens, página `/`, teste, build · Verificação: `cd apps/web && bun run test && bun run typecheck && bun run build`
+- [x] 4.1 TanStack Start, Tailwind com tokens, página `/`, teste, build · Verificação: `cd apps/web && bun run test && bun run typecheck && bun run build`
 ### M5 — Integração, docs, revisão
 - [ ] 5.1 `.env.example`, `bun run dev` com os três health/página em 200 · Verificação: `curl`
 - [ ] 5.2 Docs de RF-13 · Verificação: leitura
