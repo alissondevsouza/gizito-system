@@ -1,17 +1,18 @@
 # API HTTP (`apps/api`)
 
-**Versão:** 1.0 · **Data:** 2026-10-15 · **Fonte:** PRD §5, §6, §9.1, §9.2; design doc §6; `.claude/rules/api.md` · **Implementação:** F0-07 (`/health`), F2-01 a F2-11
+**Versão:** 1.1 · **Data:** 2026-10-16 · **Fonte:** PRD §5, §6, §9.1, §9.2; design doc §6; `.claude/rules/api.md` · **Implementação:** F0-07 (`/health`), F2-01 a F2-11
 
 Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos chamam services; services usam Drizzle e `transitionOrder` dentro de transação. A API não chama IA. Prefixo sem versão no MVP (`/orders`, não `/v1/orders`); versionar quando houver segundo consumidor.
 
 ## 1. Convenções
 
 - JSON em UTF-8; datas em ISO 8601 UTC; ids como uuid; valores em centavos.
-- Erros: `{ "error": "mensagem em pt-BR para o usuário", "code": "codigo_estavel" }` com status HTTP adequado. Códigos: `invalid_token`, `order_not_found`, `invalid_state`, `photo_too_large`, `photo_invalid`, `too_many_photos`, `charge_expired`, `charge_active`, `rate_limited`, `validation_error`, `unauthorized`.
+- Erros: `{ "error": "mensagem em pt-BR para o usuário", "code": "codigo_estavel" }` com status HTTP adequado. Códigos (`apiErrorCodeList` do core): `invalid_token`, `order_not_found`, `invalid_state`, `photo_too_large`, `photo_invalid`, `too_many_photos`, `charge_expired`, `charge_active`, `rate_limited`, `validation_error`, `unauthorized`, `not_found`, `internal_error`.
+- Erros genéricos, tratados no `onError` do app: rota desconhecida → `404 not_found`; corpo malformado ou entrada fora do schema → `400 validation_error`; resposta fora do schema ou exceção → `500 internal_error`, com log `error` só do nome do erro (a causa vai para `debug`). Contratos `apiErrorSchema` e `apiHealthSchema` no core, para o web validar.
 - Token inexistente ou inválido → **404 neutro** `order_not_found`, sem revelar se o token existiu.
 - CORS restrito a `WEB_PUBLIC_URL`. HTTPS atrás do proxy.
 - Rate limit: prévia gratuita por IP + cookie de dispositivo (`PREVIEW_RATE_LIMIT_PER_HOUR`, `PREVIEW_RATE_LIMIT_PER_DAY`); webhooks por IP.
-- Logs com `orderId`, rota, status, duração, `code`. Nunca foto, texto extraído, observação, `qr_code`, token, e-mail, telefone completo ou corpo de webhook.
+- Logs com `orderId`, padrão da rota (`/orders/:token`, nunca a URL, que leva o token), método, status, duração, `code`; um log `request` por resposta. Nunca foto, texto extraído, observação, `qr_code`, token, e-mail, telefone completo ou corpo de webhook.
 
 ## 2. Rotas públicas (comprador)
 
@@ -24,7 +25,7 @@ Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos
 | `GET /orders/:token/downloads/:kind` | `kind` ∈ `activities`, `answer_key` | só em `ready`; gera URL assinada com TTL de minutos | `200 { url, expiresAt }` |
 | `POST /orders/:token/whatsapp/unlink` | — | limpa `whatsapp_phone` e consentimento | `204` |
 | `POST /orders/:token/report` | `kind`, `noteText` (≤ 300) | abre `support_ticket` | `201 { supportTicketId }` |
-| `GET /health` | — | checa banco | `200 { status: "ok" }` |
+| `GET /health` | — | checa banco (`pingDatabase`) | `200 { status: "ok" }`; sem banco `503 { status: "unavailable" }` |
 
 Não existe `PUT`/`DELETE` de pedido: o comprador não edita pedido confirmado; correção de e-mail é pelo suporte.
 
@@ -73,8 +74,9 @@ Operador único com sessão (login por senha forte em env, cookie `HttpOnly`, ex
 
 ## 6. Configuração
 
-`src/config.ts` valida o ambiente com Zod no boot; variável obrigatória ausente derruba o processo nomeando o campo. Ausência de `WHATSAPP_*` com `WHATSAPP_ENABLED=false` é válida. Lista em `.env.example`.
+`src/config.ts` valida o ambiente com Zod no boot (`apiConfigSchema`, que estende `sharedEnvironmentSchema` do core); variável obrigatória ausente faz o `index.ts` escrever no stderr cada campo (`z.prettifyError`) e sair com 1, antes de abrir porta ou banco. Obrigatórias hoje: `DATABASE_URL` e `WEB_PUBLIC_URL` (o CORS usa a origem dela); `API_PORT` (3001), `HOST` (`127.0.0.1`), `LOG_LEVEL`, `NODE_ENV` e `PAYMENT_GATEWAY` (`fake`) têm default; `PAYMENT_GATEWAY=fake` com `NODE_ENV=production` é recusado (`isPaymentGatewayAllowed` do core). Ausência de `WHATSAPP_*` com `WHATSAPP_ENABLED=false` é válida. `SIGTERM`/`SIGINT` param o servidor e fecham o banco; segundo sinal sai com 1. Lista em `.env.example`.
 
 ## Histórico
 
 - **1.0 (2026-10-15):** versão inicial (F0-03). Os schemas de entrada e resposta entram em `packages/core` conforme as rotas forem implementadas (F2-01 em diante).
+- **1.1 (2026-10-16):** F0-07: `/health` com `503 unavailable`, códigos `not_found` e `internal_error`, erros genéricos do `onError`, log por padrão de rota, config com obrigatórias e defaults, desligamento por sinal.

@@ -3,7 +3,7 @@
 **Status:** em execução  
 **Fase atual:** F0 — Fundação  
 **Data:** 14/10/2026  
-**Estado atualizado em:** 15/10/2026  
+**Estado atualizado em:** 16/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
 **Como usar:** cada feature vira uma spec em `specs/{modulo}/{slug}/` executada pelo fluxo `gizito-spec-driven`; as fases só avançam quando o critério de saída é atendido  
 **Como marcar:** `[x]` concluída, com data e commit ou spec ao lado · `[ ]` com **em andamento** no título quando iniciada, com o sub-item "Feito até agora" · `[ ]` sem marca é pendente. Ao concluir uma feature, marcar o item e trocar "Feito até agora" por "Concluída em". Ao fechar uma fase, marcar o gate, atualizar a coluna Estado da seção 2, o bloco "Estado atual" abaixo e a tabela de estado de `docs/README.md`
@@ -22,7 +22,7 @@ Resumo por fase:
 
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
-| F0 Fundação | 7 | 5 | 1 | 1 |
+| F0 Fundação | 7 | 6 | 1 | 0 |
 | F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
@@ -98,7 +98,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 3. Fase 0 — Fundação
 
-**Estado:** em andamento · 5 de 7 concluídas · 1 em andamento
+**Estado:** em andamento · 6 de 7 concluídas · 1 em andamento
 
 - [x] **F0-01 `repo-e-monorepo`** — infra · M · depende: — · 14/10/2026 · `8d2509c` · `specs/infra/repo-e-monorepo/`
   - Entrega: `git init`, Bun Workspaces, Turborepo, Biome, tsconfig base, layout `apps/{web,api,worker}` e `packages/{core,db,integrations}`, `.env.example`, scripts raiz, CI de lint/typecheck/test
@@ -124,9 +124,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: spike pg-boss no Bun contra fila própria com `SKIP LOCKED`; decisão em ADR 0008; `enqueue` e `work` com payload validado por Zod; `markOrderPaidAndEnqueue` e `publishKit` como transações
   - Pronto quando: job enfileirado e consumido na mesma transação do estado; reexecução idempotente testada
   - Concluída em: 15/10/2026. Spike: pg-boss 12.38 roda no Bun 1.3.11 (inclusive sobre Bun.SQL e em transação do Drizzle), mas o ADR-0008 escolhe a fila própria por encaixe nas convenções e no migrator. Tabela `job` (migration `0001_fila`), `enqueueJob`/`enqueueSingletonJob`, claim em uma instrução com `FOR UPDATE SKIP LOCKED`, 4 tentativas (30 s, 2 min, 8 min), lock de 15 min com `recoverExpiredJobs`, `workJob`, payload revalidado no consumo e payload de `whatsapp.inbound` reduzido ao terminar. `markOrderPaidAndEnqueue` com a decisão pura `decidePaymentConfirmation` no core (pago, no-op, duplicado com ticket, divergência) e `publishKit` com as duas keys validadas no core. Corrigiu de passagem o `jsonb` de F0-05, que o Drizzle gravava como string no `bun-sql` (`62facd6`). Core 212 testes; db 98 unit e 95 de integração
-- [ ] **F0-07 `esqueleto-das-apps`** — api, worker, web · P · depende: F0-05
+- [x] **F0-07 `esqueleto-das-apps`** — api, worker, web · M · depende: F0-05 · 16/10/2026 · `c579f79` · `specs/cross/esqueleto-das-apps/`
   - Entrega: api com `/health` e config Zod fail-fast; worker com loop da fila e health; web TanStack Start com página vazia usando os tokens do design doc
   - Pronto quando: `bun run dev` sobe os três; health responde
+  - Concluída em: 16/10/2026. Size M em vez de P (as três apps mais core, db e integrations). Api Elysia 1.4 com Zod 4 nas respostas, `/health` 200/503 pelo banco, erros `{ error, code }` (`not_found`, `validation_error`, `internal_error`), CORS só para a origem de `WEB_PUBLIC_URL`, log Pino por padrão de rota. Worker com raias de concorrência sobre `workJob` (só nomes com handler; o mapa de produção começa vazio), agendador singleton dos periódicos, manutenção de locks a cada 60 s, `/health` com métricas da fila e `payload_invalid` em log `error`. Config das duas apps estende o schema compartilhado do core, sai com 1 nomeando o campo e recusa `PAYMENT_GATEWAY=fake` em produção; desligamento limpo por `SIGTERM`. Web TanStack Start 1.169 + Vite 8 + Tailwind 4.3 com os 12 tokens de cor (teste confere contra o design doc) e 404 em pt-BR. `bun run dev` sobe as três com o `.env` da raiz
 
 - [ ] **Gate F0 → F1:** lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos; tabela de estado de `docs/README.md` atualizada
 

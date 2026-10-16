@@ -1,6 +1,6 @@
 # Jobs e fila (`apps/worker`)
 
-**Versão:** 1.1 · **Data:** 2026-10-15 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md` · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008)
+**Versão:** 1.2 · **Data:** 2026-10-16 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md` · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
 
 O worker é um processo Bun que consome a fila no Postgres. Cada job tem um handler em `src/jobs/{nome}.ts`, payload validado por `jobPayloadSchema` ao enfileirar e ao consumir, e é **idempotente**: checa o estado do pedido antes de agir e reexecução não duplica kit, cobrança, e-mail nem mensagem.
 
@@ -14,6 +14,8 @@ O worker é um processo Bun que consome a fila no Postgres. Cada job tem um hand
 | `charge.reconcile` | `{ orderId? }` | webhook do Mercado Pago (com `orderId`, na transação do `webhook_event`); agendador a cada 2 minutos (sem `orderId`) | `awaiting_payment → paid` por `markOrderPaidAndEnqueue`, após consultar o gateway; cobrança vencida → `expired` | 1 |
 | `retention.purge` | `{}` | agendador, diário | nenhuma; grava `delete_datetime` | 1 |
 | `whatsapp.inbound` | `{ webhookEventId, phone, text ≤ 1000 }` | api, `POST /webhooks/whatsapp` | nenhuma; grava ou remove vínculo | padrão |
+
+O worker agrupa os jobs em raias pela coluna Concorrência (`buildJobLaneList`): `order.generate` com `GENERATE_CONCURRENCY` vagas, `charge.reconcile` e `retention.purge` com uma cada, e os de concorrência padrão numa raia de 2 vagas. Cada vaga é um laço sobre `workJob` que dorme 1 s com a fila vazia e 5 s depois de erro de banco, sem morrer. Só sobem raias com handler registrado em `src/jobs/index.ts`; enquanto um job não tem handler, ninguém o reclama nem o agenda.
 
 ## 2. Fluxo de `order.generate` (PRD §7.4)
 
@@ -63,7 +65,7 @@ flowchart TD
 - Falhas **transitórias** (rede, 5xx, rate limit do provedor): 4 tentativas no total, a primeira e 3 retentativas após 30 s, 2 min e 8 min (`JOB_RETRY_DELAY_SECONDS_LIST` do core), mantendo o estado do pedido. Exceção não tratada no handler conta como transitória (`unhandled_error`).
 - **Lock:** o claim grava `lock_expire_datetime` (15 min, `JOB_LOCK_TIMEOUT_SECONDS`); `recoverExpiredJobs`, chamado pelo loop do worker, devolve a `pending` (ou `failed`, se esgotado) o job de worker morto, com `last_error_code = lock_expired`. Concluir ou falhar exige o par `(job_id, attempt_count)` do claim: worker atrasado recebe `lease_lost` e não fecha a tentativa de outro.
 - Falhas **definitivas**: `generation_failed` com `fail_reason_code` estável e `order.notify` `kit_failed`: `ai_output_invalid` (saída não passou em `studyKitSchema` também na regeneração), `generation_blocked` (bloqueador na validação ou inconsistência na revisão também na regeneração), `ai_cost_exceeded` (teto por pedido), `render_failed` (as duas tentativas de render falharam).
-- Job com payload que não passa em `jobPayloadSchema` vai direto para `failed` com `last_error_code = payload_invalid` no claim, sem chamar handler, e o próximo job é entregue; nunca é "corrigido" em runtime. O pedido não muda de estado nem é notificado: é falha da fila, não da geração, e o alerta por job `failed` (F0-07) leva ao admin. Código de erro passa em `outcomeCodeSchema` (minúsculas e `_`, até 64), então não carrega conteúdo.
+- Job com payload que não passa em `jobPayloadSchema` vai direto para `failed` com `last_error_code = payload_invalid` no claim, sem chamar handler, e o próximo job é entregue; nunca é "corrigido" em runtime. O pedido não muda de estado nem é notificado: é falha da fila, não da geração. O claim avisa o worker (`onPayloadInvalid`), que loga `error` com `payload_invalid`, e o `/health` conta os da janela (`payloadInvalidCount`) para o alerta. Código de erro passa em `outcomeCodeSchema` (minúsculas e `_`, até 64), então não carrega conteúdo.
 - Dead letter: job esgotado fica na tabela `job` como `failed`, com `last_error_code` e `finish_datetime`, para o admin ver; alerta por taxa de `failed` e por qualquer `payload_invalid`.
 - `workJob` devolve a exceção do handler em `cause` para diagnóstico; ela pode carregar mensagem de provedor ou dado de entrada, então só vai para log em `debug` (invariante 9).
 
@@ -71,15 +73,18 @@ flowchart TD
 
 - `charge.reconcile` sem `orderId`, a cada 2 minutos: cobranças `pending` com mais de 1 minuto são consultadas no gateway; pagas passam por `markOrderPaidAndEnqueue`; vencidas (`expire_datetime` passado e gateway confirma) viram `expired`. Com `orderId` (enfileirado pelo webhook), só aquele pedido, imediatamente, pelo mesmo código.
 - `retention.purge` uma vez por dia: fotos com `insert_datetime` anterior a 30 dias e kits com `published_datetime` anterior a 12 meses; apaga do storage, grava `delete_datetime`; lote limitado por execução.
-- O agendador é um `setInterval` no worker (F0-07) que chama `enqueueSingletonJob` com chave fixa: o unique parcial em `(name, singleton_key)` mantém um só job pendente ou ativo por nome, com uma réplica ou várias.
+- O agendador (`startScheduler`) enfileira na partida e a cada intervalo, com `enqueueSingletonJob` e a chave `scheduled`, só os periódicos que aquele worker consome: o unique parcial em `(name, singleton_key)` mantém um só job pendente ou ativo por nome, com uma réplica ou várias; periódico sem consumidor ficaria pendente e dispararia o alerta de fila parada.
+- Manutenção a cada 60 s, no mesmo agendador: `recoverExpiredJobs`, com log `warn` quando recupera algo. Tarefa que falha vira log `error` (`scheduler_task_failed`) e roda de novo no próximo intervalo.
 
 ## 6. Observabilidade
 
-- Log por job e por etapa: `orderId`, `jobName`, `stage`, duração, tokens, custo, `outcomeCode`. Nunca imagem, texto extraído, prompt, resposta, observação ou mensagem de WhatsApp.
-- `/health` do worker responde 200 enquanto o loop está vivo; métrica de idade do job mais antigo pendente alimenta o alerta de fila parada.
+- Log por job e por etapa: `orderId`, `jobName`, `stage`, duração, tokens, custo, `outcomeCode`. Nunca imagem, texto extraído, prompt, resposta, observação ou mensagem de WhatsApp. Desde F0-07 o loop loga cada job (`jobId`, `jobName`, `orderId` quando o payload tem, `attemptCount`, `outcome`, `errorCode`, `durationMs`) em `info` (concluído), `warn` (retry ou lease perdido) ou `error` (falha definitiva), nunca o payload.
+- `GET /health` do worker (`WORKER_HEALTH_PORT`, 3002): `200 { status: "ok", queue }` com o loop rodando e o banco respondendo, em que `queue` traz `readyCount`, `oldestReadyAgeSeconds` (idade do job pronto mais antigo, para o alerta de fila parada), `activeCount`, `failedCount` e `payloadInvalidCount` das últimas `JOB_FAILED_METRIC_WINDOW_HOURS` (24 h); `503 { status: "unavailable", queue: null }` com o loop parando ou sem banco. Contrato `workerHealthSchema` no core.
+- `SIGTERM`/`SIGINT`: para o agendador, para de reclamar e espera os jobs em curso, fecha o health e o banco e sai com 0; segundo sinal sai com 1. Job morto no meio volta pela recuperação de lock.
 - `WHATSAPP_ENABLED=false` ou instância desconectada: `order.notify` pula o canal com `skipped`, e-mail segue.
 
 ## Histórico
 
 - **1.0 (2026-10-15):** versão inicial (F0-03). Nomes de jobs e payloads espelham o core de F0-04; detalhes da fila (pg-boss ou própria) ficam para o ADR-0008.
 - **1.1 (2026-10-15):** F0-06 e ADR-0008: fila própria; 4 tentativas com os atrasos do core; lock de 15 min com recuperação e lease por `(job_id, attempt_count)`; payload de `whatsapp.inbound` reduzido (não expurgado) ao terminar; agendador por `enqueueSingletonJob`.
+- **1.2 (2026-10-16):** F0-07: raias de concorrência, agendador só do que o worker consome, manutenção de locks a cada 60 s, log por job, `payload_invalid` em log `error`, `/health` com métricas da fila e desligamento por sinal.

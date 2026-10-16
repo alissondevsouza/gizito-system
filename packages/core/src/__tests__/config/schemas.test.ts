@@ -1,6 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
-import { portSchema, sharedEnvironmentSchema } from "#src/config/schemas.ts";
+import {
+  isPaymentGatewayAllowed,
+  paymentEnvironmentSchema,
+  portSchema,
+  sharedEnvironmentSchema,
+} from "#src/config/schemas.ts";
 
 const validEnvironment = { DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito" };
 
@@ -43,6 +48,24 @@ describe("ambiente compartilhado das apps (api.md §6)", () => {
     expect(portSchema.parse("3001")).toBe(3001);
     for (const port of ["", "0", "65536", "30.5", "abc"]) {
       expect(portSchema.safeParse(port).success).toBe(false);
+    }
+  });
+});
+
+describe("gateway de pagamento no ambiente", () => {
+  it("default é o fake, para dev e testes", () => {
+    expect(paymentEnvironmentSchema.parse({})).toEqual({ PAYMENT_GATEWAY: "fake" });
+  });
+
+  it("fake é recusado só em produção", () => {
+    expect(isPaymentGatewayAllowed({ NODE_ENV: "production", PAYMENT_GATEWAY: "fake" })).toBe(
+      false,
+    );
+    expect(
+      isPaymentGatewayAllowed({ NODE_ENV: "production", PAYMENT_GATEWAY: "mercadopago" }),
+    ).toBe(true);
+    for (const NODE_ENV of ["development", "test"] as const) {
+      expect(isPaymentGatewayAllowed({ NODE_ENV, PAYMENT_GATEWAY: "fake" })).toBe(true);
     }
   });
 });

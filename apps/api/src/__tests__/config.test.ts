@@ -32,4 +32,18 @@ describe("config da api (api.md §6)", () => {
     ).toBe(false);
     expect(apiConfigSchema.safeParse({ ...validEnvironment, API_PORT: "0" }).success).toBe(false);
   });
+
+  it("recusa PAYMENT_GATEWAY=fake em produção, nomeando o campo", () => {
+    const result = apiConfigSchema.safeParse({ ...validEnvironment, NODE_ENV: "production" });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(z.prettifyError(result.error)).toContain("PAYMENT_GATEWAY");
+    expect(
+      apiConfigSchema.safeParse({
+        ...validEnvironment,
+        NODE_ENV: "production",
+        PAYMENT_GATEWAY: "mercadopago",
+      }).success,
+    ).toBe(true);
+  });
 });

@@ -2,7 +2,7 @@
 
 **Workspace:** `@gizito/core`
 **Fase atual:** F0 — Fundação
-**Última atualização:** 2026-10-15
+**Última atualização:** 2026-10-16
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -26,6 +26,13 @@
 - `charge/schemas.ts`: `markOrderPaidInputSchema`. `charge/rules.ts`: `decidePaymentConfirmation` e `ChargePaymentMismatchError`. `kit/schemas.ts`: `publishKitInputSchema` (as duas keys iguais a `kitStorageKey` do próprio kit).
 - Testes: 212, cobertura 100%.
 
+## Ajustes em esqueleto-das-apps (2026-10-16, `c579f79`)
+
+- `config/schemas.ts`: `nodeEnvList`, `logLevelList`, `portSchema`, `postgresUrlSchema`, `sharedEnvironmentSchema`, `paymentEnvironmentSchema` e `isPaymentGatewayAllowed` (fake recusado em produção).
+- `api/errors.ts`: `apiErrorCodeList` (com `not_found` e `internal_error`) e `apiErrorSchema`. `health/schemas.ts`: `healthStatusList`, `apiHealthSchema`, `queueMetricsSchema`, `workerHealthSchema`.
+- `constants.ts`: `RETENTION_PURGE_INTERVAL_HOURS` (24) e `JOB_FAILED_METRIC_WINDOW_HOURS` (24). `jobErrorCodeMap.handlerNotFound`. `common.ts`: `errorNameOf`.
+- Testes: 231.
+
 ## Implementado
 
 - [x] Esqueleto do workspace, lint, typecheck e teste verdes (F0-01)
@@ -35,5 +42,4 @@
 
 - Taxonomia em F1-01; `studyKitSchema`, `extractionResultSchema`, `materialProfileSchema`, `kitPlanSchema`, `reviewResultSchema` e `validateStudyKit` em F1-03 (`order.materialProfile` fica `unknown` até lá)
 - Payloads da API (`POST /orders`, `confirm`) em F2-01; mapeamento estado → rota no web em F2-09
-- F0-07: payload de job nunca vai para log; o loop do worker loga só `jobId`, `name`, `attemptCount`, `outcome` e `errorCode` de `workJob`
-- F0-07: `config.ts` da api rejeita `PAYMENT_GATEWAY=fake` com `NODE_ENV=production`
+- Contratos HTTP de cada rota nova entram em `api/` conforme F2 avança

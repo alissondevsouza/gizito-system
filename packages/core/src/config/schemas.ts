@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { type PaymentGatewayName, paymentGatewaySchema } from "#src/enums.ts";
 
 export const nodeEnvList = ["development", "test", "production"] as const;
 export const nodeEnvSchema = z.enum(nodeEnvList);
@@ -19,3 +20,20 @@ export const sharedEnvironmentSchema = z.object({
   HOST: z.string().min(1).default("127.0.0.1"),
 });
 export type SharedEnvironment = z.infer<typeof sharedEnvironmentSchema>;
+
+export const paymentEnvironmentSchema = z.object({
+  PAYMENT_GATEWAY: paymentGatewaySchema.default("fake"),
+});
+
+export const FAKE_GATEWAY_IN_PRODUCTION_MESSAGE =
+  "PAYMENT_GATEWAY=fake não é permitido com NODE_ENV=production";
+
+export function isPaymentGatewayAllowed({
+  NODE_ENV,
+  PAYMENT_GATEWAY,
+}: {
+  NODE_ENV: NodeEnv;
+  PAYMENT_GATEWAY: PaymentGatewayName;
+}): boolean {
+  return !(NODE_ENV === "production" && PAYMENT_GATEWAY === "fake");
+}

@@ -2,7 +2,7 @@
 
 **Workspace:** `@gizito/db`
 **Fase atual:** F0 — Fundação
-**Última atualização:** 2026-10-15
+**Última atualização:** 2026-10-16
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -27,6 +27,12 @@
 - `src/order/`: `markOrderPaidAndEnqueue` e `publishKit` (exigem `Transaction`, travam o pedido com `FOR UPDATE`, devolvem `Result` com `OrderNotFoundError`, `ChargeNotFoundError`, `WebhookEventNotFoundError`, `GatewayPaymentInUseError`, `ChargePaymentMismatchError` ou `InvalidTransitionError`, sempre antes de escrever).
 - Testes: 98 unit (convenções com 9 tabelas, 15 enums, jsonb próprio, migrations) e 95 de integração (fila com 28 casos, inclusive 20 claims concorrentes; markOrderPaidAndEnqueue com 17, inclusive confirmações concorrentes do mesmo pagamento e de Pix antigo e novo do mesmo pedido; publishKit com 9, inclusive dois concorrentes; tipo jsonb no SQL).
 
+## Ajustes em esqueleto-das-apps (2026-10-16, `c579f79`)
+
+- `src/health.ts`: `pingDatabase`. `src/queue/metrics.ts`: `getQueueMetrics` (prontos, idade do mais antigo pronto, ativos, falhas e `payload_invalid` na janela, numa consulta com `FILTER`).
+- `claimJob` e `workJob` aceitam `onPayloadInvalid({ jobId, name })`.
+- Testes: 98 unit e 101 de integração.
+
 ## Implementado
 
 - [x] Esqueleto do workspace, lint, typecheck e teste verdes (F0-01)
@@ -36,8 +42,6 @@
 ## Pendências
 
 - Toda tabela nova precisa do trigger `set_update_datetime` na migration (`migrations.test.ts` falha sem ele) e toda coluna `jsonb` usa `#src/schema/jsonb.ts`
-- F0-07: loop do worker sobre `workJob` e `recoverExpiredJobs`; agendador de `charge.reconcile` e `retention.purge` com `enqueueSingletonJob`; métricas da fila no `/health`; `cause` de `workJob` só em log `debug`; alerta por job `failed` com `payload_invalid`
 - `republishKit` em F2-11 (admin); expurgo de jobs `completed` com `retention.purge` (F2-06)
-- F0-07: `config.ts` das apps lê `DATABASE_URL` e chama `createDatabase`
 - `kit.study_kit` fica `jsonb` sem tipo até `studyKitSchema` (F1-03)
 - `coverageThreshold` volta ao `bunfig.toml` quando o Bun deixar de avaliar os arquivos do core importados (known-issues)

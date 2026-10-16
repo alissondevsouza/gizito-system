@@ -35,4 +35,18 @@ describe("config do worker", () => {
       ).toBe(false);
     }
   });
+
+  it("recusa PAYMENT_GATEWAY=fake em produção, nomeando o campo", () => {
+    const result = workerConfigSchema.safeParse({ ...validEnvironment, NODE_ENV: "production" });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(z.prettifyError(result.error)).toContain("PAYMENT_GATEWAY");
+    expect(
+      workerConfigSchema.safeParse({
+        ...validEnvironment,
+        NODE_ENV: "production",
+        PAYMENT_GATEWAY: "mercadopago",
+      }).success,
+    ).toBe(true);
+  });
 });

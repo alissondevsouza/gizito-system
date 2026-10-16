@@ -6,6 +6,14 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-16] Testes do Elysia com `app.handle`: host com ponto e `onAfterResponse` depois da resposta — F0-07
+
+`app.handle(new Request("http://x/health"))` devolve 404 para toda rota: o Elysia acha o início do path por posição na URL e erra com host curto sem ponto. Usar `http://localhost/...` nos testes. E o `onAfterResponse` roda depois de `handle` resolver, então asserção sobre o log de request logo após o `await` falha de forma intermitente; esperar a entrada no destino do logger (`createMemoryLogger().waitForEntryList`), nunca `sleep`.
+
+## [2026-10-16] No Vitest com jsdom, `readFileSync(new URL(...))` falha — F0-07
+
+O ambiente jsdom troca o `URL` global pelo do jsdom, e o `fs` do Node não reconhece essa instância como URL de arquivo. Passar `fileURLToPath(new URL(caminho, import.meta.url).href)` (string) ao `fs` em testes de `apps/web`.
+
 ## [2026-10-15] Datas lidas pelo driver têm milissegundo; o Postgres grava microssegundo — F0-06
 
 Comparar `update_datetime` antes e depois de um UPDATE feito logo em seguida falha de forma intermitente: as duas operações cabem no mesmo milissegundo e o `Date` do JavaScript trunca o resto. O teste de trigger de F0-05 passava e começou a falhar quando as queries ficaram mais rápidas. Em teste de tempo, gravar uma data antiga explícita e conferir que ela foi sobrescrita, ou injetar o relógio; nunca depender da distância entre dois `now()` reais.

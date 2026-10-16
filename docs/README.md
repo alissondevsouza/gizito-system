@@ -44,14 +44,14 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-15 (F0-06). Monorepo e infra local criados; core com domínio puro; db com schema, migrations, fila e as transações obrigatórias; os demais workspaces são só esqueleto. Detalhes em `progress/{modulo}.md`.
+> Atualizado em 2026-10-16 (F0-07). Monorepo e infra local criados; core com domínio puro; db com schema, migrations, fila e as transações obrigatórias; api, worker e web sobem com `bun run dev` e respondem health; integrations só com o logger. Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
 | Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia em F1-01, schemas do kit em F1-03 |
 | Database | `@gizito/db` | schema das 8 tabelas, conexão Bun.SQL e test-helpers (F0-05); tabela `job` e fila própria com `SKIP LOCKED`, `markOrderPaidAndEnqueue` e `publishKit` (F0-06) |
-| Integrations | `@gizito/integrations` | esqueleto (F0-01); adaptadores a partir de F1 |
-| API | `@gizito/api` | esqueleto (F0-01); `/health` e config em F0-07 |
-| Worker | `@gizito/worker` | esqueleto (F0-01); loop sobre `workJob` e `recoverExpiredJobs` em F0-07 |
-| Web | `@gizito/web` | esqueleto com Vitest (F0-01); TanStack Start em F0-07 |
+| Integrations | `@gizito/integrations` | logger Pino com redação e fake em memória (F0-07); adaptadores a partir de F1 |
+| API | `@gizito/api` | Elysia com config fail-fast, `/health`, erros `{ error, code }`, CORS e log por rota (F0-07); rotas de pedido a partir de F2-01 |
+| Worker | `@gizito/worker` | loop da fila por raias, agendador, manutenção de locks e `/health` com métricas (F0-07); handlers a partir de F1 |
+| Web | `@gizito/web` | TanStack Start com Tailwind v4, tokens de cor e página vazia (F0-07); identidade em F2-08 |
 | Infra | `docker-compose.yml`, `infra/`, `.github/` | monorepo, Biome, Turborepo e CI (F0-01); compose com Postgres, Redis e Evolution (F0-02) |
