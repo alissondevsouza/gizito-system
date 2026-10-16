@@ -1,9 +1,9 @@
 import { expect, it } from "bun:test";
 import * as core from "@gizito/core";
-import * as entry from "#src/index.ts";
+import * as app from "#src/app.ts";
 
-it("resolve o entrypoint do workspace pelo subpath import #src", () => {
-  expect(typeof entry).toBe("object");
+it("resolve o módulo do app pelo subpath import #src", () => {
+  expect(typeof app.createApp).toBe("function");
 });
 
 it("resolve @gizito/core como dependência de workspace", () => {
