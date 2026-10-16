@@ -58,7 +58,7 @@ Dar ao `@gizito/db` a fila de jobs no Postgres prevista no ADR-0003 e as duas tr
 - [x] 3.1 `order/errors.ts`, `mark-order-paid-and-enqueue.ts`, `publish-kit.ts`, `index.ts`; exports · Verificação: `tsc`
 - [x] 3.2 Testes de integração dos dois services (RF-08, RF-09) · Verificação: `bun run test:integration`
 ### M4 — Docs, revisão
-- [ ] 4.1 `data-model.md` 1.2, `jobs.md` 1.1, roadmap, progress db e core, README · Verificação: leitura
+- [x] 4.1 `data-model.md` 1.2, `jobs.md` 1.1, roadmap, progress db e core, README, `lessons.md` (jsonb), `known-issues.md` (lock sem renovação), rule `database.md` · Verificação: leitura
 - [ ] 4.2 `bun run lint && typecheck && test && test:integration` na raiz; commits; revisão neutra; `review.md`; correções
 
 ## Decisões
@@ -81,4 +81,4 @@ Dar ao `@gizito/db` a fila de jobs no Postgres prevista no ADR-0003 e as duas tr
 | 2026-10-15 | `republishKit` fora | o roadmap F0-06 não o lista; a semântica (notificar ou não) é do admin (F2-11) |
 
 ## Status
-Fase: M1, M2 e M3 concluídos (core 211 testes; db 98 unit e 92 integração; lint e typecheck verdes na raiz). Próximo passo: M4 (docs e revisão neutra).
+Fase: M1 a M3 e docs concluídos (core 211 testes; db 98 unit e 92 integração; lint e typecheck verdes na raiz). Próximo passo: revisão neutra (task 4.2).

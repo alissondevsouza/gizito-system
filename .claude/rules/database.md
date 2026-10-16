@@ -21,13 +21,14 @@ paths:
 - `webhook_event`: idempotência (`webhook_event_id`, `source`, `external_id`, `received_datetime`, `processed_datetime`, `outcome_code`); unique em (`source`, `external_id`)
 - `notification`: envios (`notification_id`, `order_id`, `channel`, `kind`, `status`, `provider_message_id`, `error_code`)
 - `support_ticket`: reportes (`support_ticket_id`, `order_id`, `kind`, `status`, `note_text`)
-- Fila: tabelas do pg-boss no schema `pgboss`, ou `job` própria com `FOR UPDATE SKIP LOCKED`. Payloads validados com `jobPayloadSchema` do core na entrada e na saída.
+- Fila: tabela `job` própria com `FOR UPDATE SKIP LOCKED` (ADR-0008), API em `src/queue/`. Payloads validados com `jobPayloadSchema` do core na entrada e na saída.
 
 ## Convenções de Nomenclatura
 - Tabelas: snake_case, **singular**. Export Drizzle: camelCase singular (`order`, `orderPhoto`, `charge`, `kit`, `aiCall`).
 - PK com prefixo da tabela (`order_id`, `charge_id`); nunca `id`. JS: `orderId`, `chargeId`.
 - Timestamps com sufixo `_datetime`; NUNCA `_at`. `insert_datetime` e `update_datetime` em toda tabela.
 - Enums como `pgEnum`, com o array `List` correspondente vindo do `core` (fonte única).
+- Colunas `jsonb` com `jsonb` de `#src/schema/jsonb.ts`, nunca o do `drizzle-orm`: com `bun-sql` ele grava string JSON (`docs/lessons.md`).
 - FKs com `onDelete` explícito; coleções em relações com sufixo `List`.
 
 ## Transações obrigatórias

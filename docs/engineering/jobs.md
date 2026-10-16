@@ -1,6 +1,6 @@
 # Jobs e fila (`apps/worker`)
 
-**Versão:** 1.0 · **Data:** 2026-10-15 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md` · **Código:** `jobNameList` e `jobPayloadSchema` em `packages/core/src/jobs/schemas.ts` (F0-04); fila em `packages/db` (F0-06, ADR-0003 e ADR-0008)
+**Versão:** 1.1 · **Data:** 2026-10-15 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md` · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008)
 
 O worker é um processo Bun que consome a fila no Postgres. Cada job tem um handler em `src/jobs/{nome}.ts`, payload validado por `jobPayloadSchema` ao enfileirar e ao consumir, e é **idempotente**: checa o estado do pedido antes de agir e reexecução não duplica kit, cobrança, e-mail nem mensagem.
 
@@ -51,25 +51,26 @@ flowchart TD
 | Operação | Garantia |
 |---|---|
 | Enfileirar `order.analyze` | mesma transação do `INSERT` em `order` |
-| `markOrderPaidAndEnqueue` | `payment_confirmed` + `charge.paid` + `order.generate` + `webhook_event.processed_datetime` em uma transação; unique em `charge.gateway_payment_id` e em `webhook_event (source, external_id)` fazem a repetição ser no-op |
+| `markOrderPaidAndEnqueue` | `payment_confirmed` + `charge.paid` + `order.generate` + `webhook_event.processed_datetime` em uma transação, com pedido e cobrança travados; cobrança já paga com o mesmo pagamento é no-op e unique em `webhook_event (source, external_id)` barra o webhook repetido; detalhes em `data-model.md` §6 |
 | `publishKit` | `kit` com as duas keys + `kit_published` + `order.notify` em uma transação; sem as duas keys não roda |
 | `charge.reconcile { orderId }` | consulta o gateway e chama `markOrderPaidAndEnqueue`; pedido já `paid` ou posterior é no-op, salvo se for **outra** cobrança paga do mesmo pedido: abre `support_ticket` `duplicate_payment` e alerta (reembolso manual) |
 | `order.notify` | unique `(order_id, kind, channel)` em `notification`: retry de envio atualiza a linha; segundo envio do mesmo evento é `skipped` |
 | `whatsapp.inbound` | mensagem é identificada pelo `webhookEventId`; vínculo repetido não muda nada; resposta de ajuda limitada a uma por 24 h por número |
-| Payload de job | nunca entra em log, em nível nenhum (o de `whatsapp.inbound` carrega telefone e texto); linhas concluídas de `whatsapp.inbound` são expurgadas na conclusão |
+| Payload de job | nunca entra em log, em nível nenhum (o de `whatsapp.inbound` carrega telefone e texto); ao terminar (concluído ou falha definitiva), o payload de `whatsapp.inbound` é reduzido a `name` e `webhookEventId` (`personalDataJobRetainedFieldMap` do core) e a linha fica como registro |
 
 ## 4. Retry, falhas e códigos
 
-- Falhas **transitórias** (rede, 5xx, rate limit do provedor): retry com backoff exponencial pela fila (por exemplo 30 s, 2 min, 8 min; 3 tentativas), mantendo o estado do pedido.
+- Falhas **transitórias** (rede, 5xx, rate limit do provedor): 4 tentativas no total, a primeira e 3 retentativas após 30 s, 2 min e 8 min (`JOB_RETRY_DELAY_SECONDS_LIST` do core), mantendo o estado do pedido. Exceção não tratada no handler conta como transitória (`unhandled_error`).
+- **Lock:** o claim grava `lock_expire_datetime` (15 min, `JOB_LOCK_TIMEOUT_SECONDS`); `recoverExpiredJobs`, chamado pelo loop do worker, devolve a `pending` (ou `failed`, se esgotado) o job de worker morto, com `last_error_code = lock_expired`. Concluir ou falhar exige o par `(job_id, attempt_count)` do claim: worker atrasado recebe `lease_lost` e não fecha a tentativa de outro.
 - Falhas **definitivas**: `generation_failed` com `fail_reason_code` estável e `order.notify` `kit_failed`: `ai_output_invalid` (saída não passou em `studyKitSchema` também na regeneração), `generation_blocked` (bloqueador na validação ou inconsistência na revisão também na regeneração), `ai_cost_exceeded` (teto por pedido), `render_failed` (as duas tentativas de render falharam), `payload_invalid` (payload do job não passou no schema).
-- Job com payload que não passa em `jobPayloadSchema` vai direto para falha com `outcome_code = payload_invalid`; nunca é "corrigido" em runtime.
-- Dead letter: job esgotado fica na fila marcado como `failed` para o admin ver; alerta por taxa de `failed`.
+- Job com payload que não passa em `jobPayloadSchema` vai direto para `failed` com `last_error_code = payload_invalid` no claim, e o próximo job é entregue; nunca é "corrigido" em runtime. Código de erro passa em `outcomeCodeSchema` (minúsculas e `_`, até 64), então não carrega conteúdo.
+- Dead letter: job esgotado fica na tabela `job` como `failed`, com `last_error_code` e `finish_datetime`, para o admin ver; alerta por taxa de `failed`.
 
 ## 5. Agendamento
 
 - `charge.reconcile` sem `orderId`, a cada 2 minutos: cobranças `pending` com mais de 1 minuto são consultadas no gateway; pagas passam por `markOrderPaidAndEnqueue`; vencidas (`expire_datetime` passado e gateway confirma) viram `expired`. Com `orderId` (enfileirado pelo webhook), só aquele pedido, imediatamente, pelo mesmo código.
 - `retention.purge` uma vez por dia: fotos com `insert_datetime` anterior a 30 dias e kits com `published_datetime` anterior a 12 meses; apaga do storage, grava `delete_datetime`; lote limitado por execução.
-- Com uma réplica do worker, o agendador é um `setInterval` no processo; com mais de uma, lock por nome do job na própria fila (decisão em F0-06).
+- O agendador é um `setInterval` no worker (F0-07) que chama `enqueueSingletonJob` com chave fixa: o unique parcial em `(name, singleton_key)` mantém um só job pendente ou ativo por nome, com uma réplica ou várias.
 
 ## 6. Observabilidade
 
@@ -80,3 +81,4 @@ flowchart TD
 ## Histórico
 
 - **1.0 (2026-10-15):** versão inicial (F0-03). Nomes de jobs e payloads espelham o core de F0-04; detalhes da fila (pg-boss ou própria) ficam para o ADR-0008.
+- **1.1 (2026-10-15):** F0-06 e ADR-0008: fila própria; 4 tentativas com os atrasos do core; lock de 15 min com recuperação e lease por `(job_id, attempt_count)`; payload de `whatsapp.inbound` reduzido (não expurgado) ao terminar; agendador por `enqueueSingletonJob`.

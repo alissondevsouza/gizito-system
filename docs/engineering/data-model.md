@@ -1,19 +1,20 @@
 # Modelo de dados
 
-**Versão:** 1.1 · **Data:** 2026-10-15 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md` · **Código:** `packages/db` (F0-05), enums e schemas em `packages/core` (F0-04)
+**Versão:** 1.2 · **Data:** 2026-10-15 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
 
 PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolamento é por pedido, e toda leitura pública passa pelo `public_token`.
 
 ## 1. Convenções
 
-- Tabelas em snake_case **singular**; export Drizzle camelCase singular (`order`, `orderPhoto`, `charge`, `kit`, `aiCall`, `webhookEvent`, `notification`, `supportTicket`).
+- Tabelas em snake_case **singular**; export Drizzle camelCase singular (`order`, `orderPhoto`, `charge`, `kit`, `aiCall`, `webhookEvent`, `notification`, `supportTicket`, `job`).
 - PK `{tabela}_id` (`uuid`, `gen_random_uuid()`), nunca `id`; FK com o mesmo nome da PK e `onDelete` explícito.
 - Timestamps `timestamptz` com sufixo `_datetime`, nunca `_at`; `insert_datetime` e `update_datetime` em toda tabela.
-- Enums como `pgEnum` cujos valores vêm dos arrays `*List` do core (`orderStatusList`, `chargeStatusList`, `gradeList`, `subjectList`, `perceivedDifficultyList`, `notificationChannelList`, `notificationKindList`, `notificationStatusList`, `webhookSourceList`, `supportTicketKindList`, `supportTicketStatusList`, `aiStageList`, `paymentGatewayList`).
+- Enums como `pgEnum` cujos valores vêm dos arrays `*List` do core (`orderStatusList`, `chargeStatusList`, `gradeList`, `subjectList`, `perceivedDifficultyList`, `notificationChannelList`, `notificationKindList`, `notificationStatusList`, `webhookSourceList`, `supportTicketKindList`, `supportTicketStatusList`, `aiStageList`, `paymentGatewayList`, `jobNameList`, `jobStatusList`).
 - `order` é palavra reservada em SQL: o Drizzle cita identificadores nas queries geradas; SQL manual precisa de `"order"`.
 - Ids do Postgres validados com `z.guid()` (não `z.uuid()`, lesson de 2026-10-14).
 - Migration aplicada nunca se edita; correção vai em migration nova.
 - `update_datetime` é mantido pelo trigger `set_update_datetime` (`BEFORE UPDATE`) em toda tabela, definido como SQL customizado na migration; tabela nova precisa do seu trigger (o teste `migrations.test.ts` do `db` falha sem ele).
+- Colunas `jsonb` usam a coluna própria de `src/schema/jsonb.ts`, nunca o `jsonb` do `drizzle-orm`: com o driver `bun-sql` ele grava string JSON em vez de objeto (lessons de 2026-10-15). O teste de convenções exige a coluna própria e os testes de integração leem `jsonb_typeof`.
 - FKs para `order` são `ON DELETE RESTRICT` (o pedido nunca é apagado; remoção LGPD anonimiza, §5); `kit.superseded_by_kit_id` é `ON DELETE SET NULL`.
 - Checks no banco: `amount_cents > 0`; `whatsapp_phone` e `whatsapp_consent_datetime` nulos ou preenchidos juntos; `legibility_score` em 0–1; `width`, `height` e `page_count_*` > 0; contagens de tokens, `cost_cents` e `duration_ms` ≥ 0.
 
@@ -131,6 +132,22 @@ erDiagram
     timestamptz insert_datetime
     timestamptz update_datetime
   }
+  job {
+    uuid job_id PK
+    job_name name
+    jsonb payload "validado por jobPayloadSchema"
+    job_status status
+    text singleton_key
+    int attempt_count
+    int max_attempt_count "4"
+    timestamptz run_after_datetime
+    text locked_by
+    timestamptz lock_expire_datetime "claim + 15 min"
+    timestamptz finish_datetime
+    text last_error_code
+    timestamptz insert_datetime
+    timestamptz update_datetime
+  }
   support_ticket {
     uuid support_ticket_id PK
     uuid order_id FK
@@ -142,7 +159,7 @@ erDiagram
   }
 ```
 
-A tabela da fila (`job` própria ou as do pg-boss no schema `pgboss`) é definida em F0-06 (ADR-0008) e guarda `name` (de `jobNameList`), `payload` (validado por `jobPayloadSchema`), estado, tentativas e `run_after_datetime`.
+A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, quando existe, está no `payload`. `status` vai de `pending` a `active` no claim e termina em `completed` ou `failed`; falha transitória volta a `pending` com `run_after_datetime` adiado. O check `payload->>'name' IS NOT DISTINCT FROM name` recusa payload sem `name`, com outro `name` ou que não seja objeto.
 
 ## 3. Índices obrigatórios
 
@@ -159,6 +176,7 @@ A tabela da fila (`job` própria ou as do pg-boss no schema `pgboss`) é definid
 | `webhook_event` | unique `(source, external_id)` | idempotência |
 | `notification` | unique `(order_id, kind, channel)` | um envio por evento; retry de envio atualiza a linha (`failed → pending → sent`), nunca insere outra |
 | `support_ticket` | `order_id`; `status` | admin |
+| `job` | `(status, name, run_after_datetime)`; `(status, lock_expire_datetime)`; unique parcial `(name, singleton_key)` com chave não nula e status `pending` ou `active` | claim; recuperação de lock vencido; agendador sem duplicar |
 
 ## 4. O que cada tabela não guarda
 
@@ -167,6 +185,7 @@ A tabela da fila (`job` própria ou as do pg-boss no schema `pgboss`) é definid
 - `ai_call`: prompt, resposta, texto extraído. Só números e códigos.
 - `webhook_event`: corpo bruto. Só identificação e resultado.
 - `charge`: o `qr_code` existe na tabela (o web precisa exibi-lo) mas nunca vai para log.
+- `job`: o payload de `whatsapp.inbound` carrega telefone e texto só enquanto o job pode rodar; ao terminar, fica reduzido a `name` e `webhookEventId` (`personalDataJobRetainedFieldMap` do core).
 
 ## 5. Retenção e soft delete
 
@@ -177,11 +196,12 @@ A tabela da fila (`job` própria ou as do pg-boss no schema `pgboss`) é definid
 
 ## 6. Transações obrigatórias (`packages/db`)
 
-- `markOrderPaidAndEnqueue(tx, { orderId, chargeId, gatewayPaymentId, paidDatetime })`: `transitionOrder(status, "payment_confirmed")`, atualiza `order` e `charge`, marca como `expired` as demais cobranças `pending` do pedido, insere `order.generate`. Repetição com o mesmo `gateway_payment_id` é no-op. Pagamento confirmado de **outra** cobrança de pedido já `paid` ou posterior não muda estado: abre `support_ticket` `duplicate_payment` para reembolso manual.
-- `republishKit(tx, { orderId, kit })` (admin): insere o kit novo com as duas keys e grava `superseded_by_kit_id` no anterior; sem transição de estado, porque o pedido já está `ready`.
-- `publishKit(tx, { orderId, kit })`: insere `kit` com as **duas** storage keys, `transitionOrder(status, "kit_published")`, `ready_datetime`, insere `order.notify`. Nunca com uma key só.
+- `markOrderPaidAndEnqueue(tx, { orderId, chargeId, gatewayPaymentId, paidDatetime, webhookEventId? }, { now? })`: trava `order`, `charge` e o `webhook_event` informado com `FOR UPDATE`; a decisão é `decidePaymentConfirmation` do core. `paid`: grava o status de destino da máquina e `paid_datetime`, marca a cobrança `paid` com o `gateway_payment_id`, expira as demais cobranças `pending` do pedido e enfileira `order.generate`. Cobrança já `paid` ou `refunded` com o mesmo pagamento: no-op (`already_paid`). Outra cobrança paga com o pedido já `paid` ou posterior: marca a cobrança `paid`, abre `support_ticket` `duplicate_payment` e não muda o estado. Com `webhookEventId`, grava `processed_datetime` e `outcome_code` (`paid`, `already_paid`, `duplicate_payment`). Erros (`OrderNotFoundError`, `ChargeNotFoundError`, `WebhookEventNotFoundError`, `ChargePaymentMismatchError`, `InvalidTransitionError`) voltam como `Result` antes de qualquer escrita.
+- `republishKit(tx, { orderId, kit })` (admin, F2-11): insere o kit novo com as duas keys e grava `superseded_by_kit_id` no anterior; sem transição de estado, porque o pedido já está `ready`.
+- `publishKit(tx, { orderId, kitId, studyKit, generationVersion, taxonomyVersion, activitiesStorageKey, answerKeyStorageKey, pageCountActivities, pageCountAnswerKey }, { now? })`: a entrada passa em `publishKitInputSchema` do core (as duas keys iguais a `kitStorageKey` do próprio kit); trava o pedido, `transitionOrder(status, "kit_published")`, insere `kit` com `published_datetime`, grava `ready_datetime` e enfileira `order.notify` `kit_ready`. Transição inválida (por exemplo reembolso durante `processing`) volta como erro sem inserir kit. Nunca com uma key só.
 
 ## Histórico
 
 - **1.0 (2026-10-15):** versão inicial (F0-03). Colunas `kit.delete_datetime` e `charge.refund_datetime` e índices derivados das rules; a migration 0001 (F0-05) é a implementação.
 - **1.1 (2026-10-15):** F0-05 implementa o modelo em `packages/db/drizzle/0000_fundacao.sql` (numeração nativa do drizzle-kit: a "migration 0001" da 1.0 é esta); convenções de trigger, `onDelete` e checks acrescentadas em §1; `ai_call.cost_cents` é `numeric(12,6)` lido como número.
+- **1.2 (2026-10-15):** F0-06 acrescenta a tabela `job` (diagrama, índices, o que não guarda), a convenção da coluna `jsonb` própria e as assinaturas reais de `markOrderPaidAndEnqueue` e `publishKit` em §6.

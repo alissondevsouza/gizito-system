@@ -18,6 +18,14 @@
 - Testes: 184 em `src/__tests__/` (máquina de estados exaustiva, fixtures válidas e inválidas, regras com datas fixas, contratos das interfaces com fakes mínimos, `purity.test.ts`); `bunfig.toml` com `coverageThreshold` 0.7 (cobertura atual 100%). Dependência: `zod` 4.
 - Ajuste em F0-05 (`66f1217`): `publicTokenSchema` aceita os 16 últimos caracteres canônicos de base64url de 32 bytes (`AEIMQUYcgkosw048`); a classe `[AQgw]` rejeitava 75% dos tokens reais. `chargeSchema` ganha `refundDatetime` (coluna já prevista no data-model).
 
+## Ajustes em fila-postgres (2026-10-15, `db5e365`, `70d9d60`)
+
+- `enums.ts`: `jobStatusList` (`pending`, `active`, `completed`, `failed`). `constants.ts`: `JOB_RETRY_DELAY_SECONDS_LIST` (30, 120, 480), `JOB_MAX_ATTEMPT_COUNT` (4), `JOB_LOCK_TIMEOUT_SECONDS` (900).
+- `jobs/rules.ts`: `jobRetryDelaySeconds`, `nextJobRunAfterDatetime`, `jobLockExpireDatetime`, `personalDataJobNameList`, `personalDataJobRetainedFieldMap` e `isPersonalDataJob`.
+- `order/state-machine.ts`: `postPaymentOrderStatusList` derivada da máquina (alcançáveis a partir de `paid`) e `isPostPaymentOrderStatus`.
+- `charge/schemas.ts`: `markOrderPaidInputSchema`. `charge/rules.ts`: `decidePaymentConfirmation` e `ChargePaymentMismatchError`. `kit/schemas.ts`: `publishKitInputSchema` (as duas keys iguais a `kitStorageKey` do próprio kit).
+- Testes: 211, cobertura 100%.
+
 ## Implementado
 
 - [x] Esqueleto do workspace, lint, typecheck e teste verdes (F0-01)
@@ -27,5 +35,5 @@
 
 - Taxonomia em F1-01; `studyKitSchema`, `extractionResultSchema`, `materialProfileSchema`, `kitPlanSchema`, `reviewResultSchema` e `validateStudyKit` em F1-03 (`order.materialProfile` fica `unknown` até lá)
 - Payloads da API (`POST /orders`, `confirm`) em F2-01; mapeamento estado → rota no web em F2-09
-- F0-06: payload de job nunca vai para log; linhas concluídas de `whatsapp.inbound` (telefone e texto) são expurgadas na conclusão
+- F0-07: payload de job nunca vai para log; o loop do worker loga só `jobId`, `name`, `attemptCount`, `outcome` e `errorCode` de `workJob`
 - F0-07: `config.ts` da api rejeita `PAYMENT_GATEWAY=fake` com `NODE_ENV=production`
