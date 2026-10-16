@@ -12,6 +12,7 @@ export const jobErrorCodeMap = {
   payloadInvalid: "payload_invalid",
   lockExpired: "lock_expired",
   unhandledError: "unhandled_error",
+  handlerNotFound: "handler_not_found",
 } as const;
 
 export function jobRetryDelaySeconds(

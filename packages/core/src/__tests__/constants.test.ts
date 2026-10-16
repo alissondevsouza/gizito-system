@@ -16,6 +16,7 @@ import {
   PRACTICE_QUESTION_COUNT,
   PUBLIC_TOKEN_BYTES,
   PUBLIC_TOKEN_LENGTH,
+  RETENTION_PURGE_INTERVAL_HOURS,
   SHORT_CODE_ALPHABET,
   SHORT_CODE_LENGTH,
   WORKED_EXAMPLE_COUNT,
@@ -63,6 +64,7 @@ describe("constantes de negócio (PRD §5, §6 e §7)", () => {
     expect(CHARGE_TTL_MINUTES).toBe(30);
     expect(PHOTO_RETENTION_DAYS).toBe(30);
     expect(KIT_RETENTION_MONTHS).toBe(12);
+    expect(RETENTION_PURGE_INTERVAL_HOURS).toBe(24);
   });
 
   it("identificadores do pedido", () => {

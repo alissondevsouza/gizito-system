@@ -1,16 +1,16 @@
 import { err, type JobName, jobErrorCodeMap, type OutcomeCode, type Result } from "@gizito/core";
 import type { Executor } from "#src/client.ts";
-import { type ClaimedJob, claimJob } from "#src/queue/claim.ts";
+import { type ClaimedJob, type ClaimJobOptions, claimJob } from "#src/queue/claim.ts";
 import { completeJob, type FailJobOutcome, failJob, type JobFailure } from "#src/queue/finish.ts";
 
 export type JobHandler = (claimedJob: ClaimedJob) => Promise<Result<unknown, JobFailure>>;
 
-export type WorkJobOptions = {
-  nameList: readonly JobName[];
-  workerId: string;
+export type WorkJobOptions = Pick<
+  ClaimJobOptions,
+  "nameList" | "workerId" | "lockTimeoutSeconds" | "onPayloadInvalid"
+> & {
   handler: JobHandler;
   clock?: () => Date;
-  lockTimeoutSeconds?: number;
 };
 
 export type WorkedJobOutcome = {
@@ -40,13 +40,21 @@ async function runHandler(
 
 export async function workJob(
   executor: Executor,
-  { nameList, workerId, handler, clock = () => new Date(), lockTimeoutSeconds }: WorkJobOptions,
+  {
+    nameList,
+    workerId,
+    handler,
+    clock = () => new Date(),
+    lockTimeoutSeconds,
+    onPayloadInvalid,
+  }: WorkJobOptions,
 ): Promise<WorkJobOutcome> {
   const claimedJob = await claimJob(executor, {
     nameList,
     workerId,
     now: clock(),
     lockTimeoutSeconds,
+    onPayloadInvalid,
   });
   if (!claimedJob) return { outcome: "idle" };
   const summary = {

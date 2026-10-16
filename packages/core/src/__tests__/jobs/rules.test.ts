@@ -84,6 +84,7 @@ describe("códigos de erro da fila", () => {
       "payload_invalid",
       "lock_expired",
       "unhandled_error",
+      "handler_not_found",
     ]);
     for (const code of Object.values(jobErrorCodeMap)) {
       expect(outcomeCodeSchema.safeParse(code).success).toBe(true);

@@ -11,11 +11,17 @@ import { failJob } from "#src/queue/finish.ts";
 import type { JobLease } from "#src/queue/lease.ts";
 import { job } from "#src/schema/job.ts";
 
+export type InvalidPayloadJob = {
+  jobId: string;
+  name: JobName;
+};
+
 export type ClaimJobOptions = {
   nameList: readonly JobName[];
   workerId: string;
   now?: Date;
   lockTimeoutSeconds?: number;
+  onPayloadInvalid?: (invalidPayloadJob: InvalidPayloadJob) => void;
 };
 
 export type ClaimedJob = JobLease & {
@@ -30,7 +36,7 @@ async function lockNextPendingJob(
     workerId,
     now,
     lockTimeoutSeconds,
-  }: Required<Omit<ClaimJobOptions, "lockTimeoutSeconds">> &
+  }: Required<Pick<ClaimJobOptions, "nameList" | "workerId" | "now">> &
     Pick<ClaimJobOptions, "lockTimeoutSeconds">,
 ) {
   const nextJobIdQuery = executor
@@ -67,7 +73,7 @@ async function lockNextPendingJob(
 
 export async function claimJob(
   executor: Executor,
-  { nameList, workerId, now = new Date(), lockTimeoutSeconds }: ClaimJobOptions,
+  { nameList, workerId, now = new Date(), lockTimeoutSeconds, onPayloadInvalid }: ClaimJobOptions,
 ): Promise<ClaimedJob | null> {
   if (nameList.length === 0) return null;
   let row = await lockNextPendingJob(executor, { nameList, workerId, now, lockTimeoutSeconds });
@@ -80,6 +86,7 @@ export async function claimJob(
       { errorCode: jobErrorCodeMap.payloadInvalid, retryable: false },
       { now },
     );
+    onPayloadInvalid?.({ jobId: row.jobId, name: row.name });
     row = await lockNextPendingJob(executor, { nameList, workerId, now, lockTimeoutSeconds });
   }
   return null;

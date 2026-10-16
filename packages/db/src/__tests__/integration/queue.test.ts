@@ -216,14 +216,23 @@ describe("claimJob", () => {
       sql`INSERT INTO job (name, payload, run_after_datetime) VALUES ('whatsapp.inbound', ${{ ...whatsappPayload, text: "a".repeat(1001) }}::jsonb, ${secondsAfter(-20)})`,
     );
     const valid = await enqueueAt(generatePayload(), -10);
+    const invalidPayloadJobList: { jobId: string; name: JobName }[] = [];
     const claimed = await claimJob(testDatabase.db, {
       nameList: ["order.generate", "whatsapp.inbound"],
       workerId: WORKER_ID,
       now: baseNow,
+      onPayloadInvalid: (invalidPayloadJob) => invalidPayloadJobList.push(invalidPayloadJob),
     });
     expect(claimed?.jobId).toBe(valid.jobId);
     const failedRowList = await testDatabase.db.select().from(job).where(eq(job.status, "failed"));
     expect(failedRowList).toHaveLength(2);
+    expect(invalidPayloadJobList.map((invalidPayloadJob) => invalidPayloadJob.name)).toEqual([
+      "order.generate",
+      "whatsapp.inbound",
+    ]);
+    expect(
+      invalidPayloadJobList.map((invalidPayloadJob) => invalidPayloadJob.jobId).sort(),
+    ).toEqual(failedRowList.map((row) => row.jobId).sort());
     for (const row of failedRowList) {
       expect(row.lastErrorCode).toBe(jobErrorCodeMap.payloadInvalid);
       expect(row.finishDatetime).toEqual(baseNow);
@@ -448,6 +457,20 @@ describe("workJob", () => {
     });
     expect(outcome).toEqual({ outcome: "idle" });
     expect(called).toBe(false);
+  });
+
+  it("repassa onPayloadInvalid ao claim", async () => {
+    await testDatabase.db.execute(
+      sql`INSERT INTO job (name, payload, run_after_datetime) VALUES ('order.generate', '{"name":"order.generate","orderId":"x"}', ${secondsAfter(-30)})`,
+    );
+    const invalidPayloadNameList: JobName[] = [];
+    const outcome = await workJob(testDatabase.db, {
+      ...workOptions,
+      handler: async () => ok(null),
+      onPayloadInvalid: ({ name }) => invalidPayloadNameList.push(name),
+    });
+    expect(outcome).toEqual({ outcome: "idle" });
+    expect(invalidPayloadNameList).toEqual(["order.generate"]);
   });
 
   it("handler ok conclui o job e recebe o payload validado", async () => {
