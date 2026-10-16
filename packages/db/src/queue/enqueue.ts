@@ -4,7 +4,6 @@ import { activeSingletonPredicate, job } from "#src/schema/job.ts";
 
 export type EnqueueJobOptions = {
   runAfterDatetime?: Date;
-  singletonKey?: string;
   maxAttemptCount?: number;
 };
 
@@ -14,25 +13,53 @@ export type EnqueuedJob = {
   runAfterDatetime: Date;
 };
 
+const enqueuedJobColumnMap = {
+  jobId: job.jobId,
+  name: job.name,
+  runAfterDatetime: job.runAfterDatetime,
+};
+
+function buildJobInsert(
+  payload: JobPayload,
+  { runAfterDatetime, maxAttemptCount }: EnqueueJobOptions,
+  singletonKey?: string,
+) {
+  const parsedPayload = jobPayloadSchema.parse(payload);
+  return {
+    name: parsedPayload.name,
+    payload: parsedPayload,
+    singletonKey,
+    maxAttemptCount,
+    runAfterDatetime,
+  };
+}
+
 export async function enqueueJob(
   executor: Executor,
   payload: JobPayload,
-  { runAfterDatetime, singletonKey, maxAttemptCount }: EnqueueJobOptions = {},
-): Promise<EnqueuedJob | null> {
-  const parsedPayload = jobPayloadSchema.parse(payload);
+  options: EnqueueJobOptions = {},
+): Promise<EnqueuedJob> {
   const [row] = await executor
     .insert(job)
-    .values({
-      name: parsedPayload.name,
-      payload: parsedPayload,
-      singletonKey,
-      maxAttemptCount,
-      runAfterDatetime,
-    })
+    .values(buildJobInsert(payload, options))
+    .returning(enqueuedJobColumnMap);
+  if (!row) throw new Error("job insert returned no row");
+  return row;
+}
+
+export async function enqueueSingletonJob(
+  executor: Executor,
+  payload: JobPayload,
+  singletonKey: string,
+  options: EnqueueJobOptions = {},
+): Promise<EnqueuedJob | null> {
+  const [row] = await executor
+    .insert(job)
+    .values(buildJobInsert(payload, options, singletonKey))
     .onConflictDoNothing({
       target: [job.name, job.singletonKey],
       where: activeSingletonPredicate(job),
     })
-    .returning({ jobId: job.jobId, name: job.name, runAfterDatetime: job.runAfterDatetime });
+    .returning(enqueuedJobColumnMap);
   return row ?? null;
 }

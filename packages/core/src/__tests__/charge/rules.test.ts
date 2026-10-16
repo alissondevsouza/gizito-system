@@ -1,11 +1,15 @@
 import { describe, expect, it } from "bun:test";
 import { buildCharge, FIXED_NOW } from "#src/__tests__/__fixtures__/entities.ts";
 import {
+  ChargePaymentMismatchError,
   chargeExpireDatetime,
+  decidePaymentConfirmation,
   deriveAwaitingPaymentSubstate,
   isChargeActive,
   isChargeExpired,
 } from "#src/charge/rules.ts";
+import { orderStatusList } from "#src/enums.ts";
+import { InvalidTransitionError, postPaymentOrderStatusList } from "#src/order/state-machine.ts";
 
 const EXPIRE = new Date("2026-10-15T12:30:00.000Z");
 
@@ -43,5 +47,71 @@ describe("regras de cobrança (PRD §9.1)", () => {
     expect(deriveAwaitingPaymentSubstate(buildCharge({ status: "expired" }), FIXED_NOW)).toBe(
       "charge_expired",
     );
+  });
+});
+
+describe("decidePaymentConfirmation (PRD §5, state-machine.md §4)", () => {
+  const pendingWithPaymentId = buildCharge({ gatewayPaymentId: "pay-1" });
+
+  it("pedido aguardando pagamento e cobrança pendente ou expirada: marca pago", () => {
+    expect(decidePaymentConfirmation("awaiting_payment", pendingWithPaymentId, "pay-1")).toEqual({
+      ok: true,
+      value: { kind: "paid", nextOrderStatus: "paid" },
+    });
+    expect(decidePaymentConfirmation("awaiting_payment", buildCharge(), "pay-1")).toEqual({
+      ok: true,
+      value: { kind: "paid", nextOrderStatus: "paid" },
+    });
+    expect(
+      decidePaymentConfirmation("awaiting_payment", buildCharge({ status: "expired" }), "pay-1"),
+    ).toEqual({ ok: true, value: { kind: "paid", nextOrderStatus: "paid" } });
+  });
+
+  it("cobrança já paga ou reembolsada com o mesmo pagamento: no-op", () => {
+    for (const status of ["paid", "refunded"] as const) {
+      expect(
+        decidePaymentConfirmation(
+          "paid",
+          buildCharge({ status, gatewayPaymentId: "pay-1" }),
+          "pay-1",
+        ),
+      ).toEqual({ ok: true, value: { kind: "already_paid" } });
+    }
+  });
+
+  it("outra cobrança paga com o pedido já pago ou posterior: pagamento duplicado", () => {
+    for (const status of postPaymentOrderStatusList) {
+      expect(
+        decidePaymentConfirmation(status, buildCharge({ status: "expired" }), "pay-2"),
+      ).toEqual({ ok: true, value: { kind: "duplicate_payment" } });
+    }
+  });
+
+  it("cobrança ligada a outro pagamento: erro, nunca sobrescreve", () => {
+    for (const status of ["pending", "paid"] as const) {
+      const result = decidePaymentConfirmation(
+        "awaiting_payment",
+        buildCharge({ status, gatewayPaymentId: "pay-1" }),
+        "pay-2",
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) continue;
+      expect(result.error).toBeInstanceOf(ChargePaymentMismatchError);
+      expect(result.error.code).toBe("charge_payment_mismatch");
+      expect(result.error.message).toContain(pendingWithPaymentId.chargeId);
+    }
+  });
+
+  it("pedido antes de awaiting_payment: transição inválida", () => {
+    const prePaymentList = orderStatusList.filter(
+      (status) => status !== "awaiting_payment" && !postPaymentOrderStatusList.includes(status),
+    );
+    expect(prePaymentList).toEqual(["draft", "analyzing", "preview_ready"]);
+    for (const status of prePaymentList) {
+      const result = decidePaymentConfirmation(status, pendingWithPaymentId, "pay-1");
+      expect(result.ok).toBe(false);
+      if (result.ok) continue;
+      expect(result.error).toBeInstanceOf(InvalidTransitionError);
+    }
   });
 });

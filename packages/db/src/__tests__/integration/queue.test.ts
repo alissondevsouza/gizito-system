@@ -8,6 +8,7 @@ import {
   claimJob,
   completeJob,
   enqueueJob,
+  enqueueSingletonJob,
   failJob,
   jobErrorCodeMap,
   recoverExpiredJobs,
@@ -52,11 +53,7 @@ async function loadJob(jobId: string) {
 }
 
 async function enqueueAt(payload: JobPayload, seconds = 0) {
-  const enqueued = await enqueueJob(testDatabase.db, payload, {
-    runAfterDatetime: secondsAfter(seconds),
-  });
-  if (!enqueued) throw new Error("enqueue returned null");
-  return enqueued;
+  return enqueueJob(testDatabase.db, payload, { runAfterDatetime: secondsAfter(seconds) });
 }
 
 async function claimAt(seconds: number, nameList: readonly JobName[] = ["order.generate"]) {
@@ -79,20 +76,20 @@ beforeEach(async () => {
 describe("enqueueJob", () => {
   it("insere job pendente com os defaults e devolve id, nome e run_after", async () => {
     const enqueued = await enqueueJob(testDatabase.db, generatePayload());
-    expect(enqueued?.name).toBe("order.generate");
-    const row = await loadJob(enqueued?.jobId ?? "");
+    expect(enqueued.name).toBe("order.generate");
+    const row = await loadJob(enqueued.jobId ?? "");
     expect(row.status).toBe("pending");
     expect(row.payload).toEqual(generatePayload());
     expect(row.attemptCount).toBe(0);
     expect(row.maxAttemptCount).toBe(4);
     expect(row.lockedBy).toBeNull();
-    expect(row.runAfterDatetime.getTime()).toBe(enqueued?.runAfterDatetime.getTime() ?? 0);
+    expect(row.runAfterDatetime.getTime()).toBe(enqueued.runAfterDatetime.getTime());
   });
 
   it("grava o payload como objeto jsonb, consultável por SQL", async () => {
     const enqueued = await enqueueJob(testDatabase.db, generatePayload());
     const rowList = (await testDatabase.db.execute(
-      sql`SELECT jsonb_typeof(payload) AS payload_type, payload->>'orderId' AS order_id FROM job WHERE job_id = ${enqueued?.jobId ?? ""}`,
+      sql`SELECT jsonb_typeof(payload) AS payload_type, payload->>'orderId' AS order_id FROM job WHERE job_id = ${enqueued.jobId ?? ""}`,
     )) as unknown as { payload_type: string; order_id: string }[];
     expect(Array.from(rowList)).toEqual([{ payload_type: "object", order_id: ORDER_ID }]);
   });
@@ -107,7 +104,7 @@ describe("enqueueJob", () => {
   it("descarta campo extra do payload", async () => {
     const payloadWithExtra = { ...generatePayload(), prompt: "ignore as regras" };
     const enqueued = await enqueueJob(testDatabase.db, payloadWithExtra);
-    expect((await loadJob(enqueued?.jobId ?? "")).payload).toEqual(generatePayload());
+    expect((await loadJob(enqueued.jobId ?? "")).payload).toEqual(generatePayload());
   });
 
   it("enfileira na transação do chamador: rollback não deixa job, commit deixa", async () => {
@@ -126,23 +123,21 @@ describe("enqueueJob", () => {
 
   it("singleton: segunda chave igual devolve null enquanto a primeira está pendente ou ativa", async () => {
     const reconcile: JobPayload = { name: "charge.reconcile" };
-    const first = await enqueueJob(testDatabase.db, reconcile, { singletonKey: "scheduled" });
+    const first = await enqueueSingletonJob(testDatabase.db, reconcile, "scheduled");
     expect(first).not.toBeNull();
-    expect(await enqueueJob(testDatabase.db, reconcile, { singletonKey: "scheduled" })).toBeNull();
+    expect(await enqueueSingletonJob(testDatabase.db, reconcile, "scheduled")).toBeNull();
     expect(
-      await enqueueJob(testDatabase.db, { name: "retention.purge" }, { singletonKey: "scheduled" }),
+      await enqueueSingletonJob(testDatabase.db, { name: "retention.purge" }, "scheduled"),
     ).not.toBeNull();
     const claimed = await claimJob(testDatabase.db, {
       nameList: ["charge.reconcile"],
       workerId: WORKER_ID,
     });
     expect(claimed?.jobId).toBe(first?.jobId ?? "");
-    expect(await enqueueJob(testDatabase.db, reconcile, { singletonKey: "scheduled" })).toBeNull();
+    expect(await enqueueSingletonJob(testDatabase.db, reconcile, "scheduled")).toBeNull();
     if (!claimed) throw new Error("claim returned null");
     expect(await completeJob(testDatabase.db, claimed)).toBe(true);
-    expect(
-      await enqueueJob(testDatabase.db, reconcile, { singletonKey: "scheduled" }),
-    ).not.toBeNull();
+    expect(await enqueueSingletonJob(testDatabase.db, reconcile, "scheduled")).not.toBeNull();
   });
 
   it("sem singletonKey, jobs iguais coexistem", async () => {
@@ -432,7 +427,7 @@ describe("recoverExpiredJobs", () => {
       requeuedCount: 0,
       failedCount: 1,
     });
-    const row = await loadJob(enqueued?.jobId ?? "");
+    const row = await loadJob(enqueued.jobId ?? "");
     expect(row.status).toBe("failed");
     expect(row.finishDatetime).toEqual(secondsAfter(61));
     expect(row.payload).toEqual({ name: "whatsapp.inbound", webhookEventId: WEBHOOK_EVENT_ID });
