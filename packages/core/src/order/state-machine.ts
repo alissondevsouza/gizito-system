@@ -63,6 +63,25 @@ export function allowedEventList(status: OrderStatus): readonly OrderEvent[] {
   return orderTransitionList.filter((t) => t.from === status).map((t) => t.event);
 }
 
+function collectReachableStatusList(start: OrderStatus): readonly OrderStatus[] {
+  const reachedList: OrderStatus[] = [start];
+  for (let index = 0; index < reachedList.length; index++) {
+    for (const transition of orderTransitionList) {
+      if (transition.from === reachedList[index] && !reachedList.includes(transition.to)) {
+        reachedList.push(transition.to);
+      }
+    }
+  }
+  return orderStatusList.filter((status) => reachedList.includes(status));
+}
+
+export const postPaymentOrderStatusList: readonly OrderStatus[] =
+  collectReachableStatusList("paid");
+
+export function isPostPaymentOrderStatus(status: OrderStatus): boolean {
+  return postPaymentOrderStatusList.includes(status);
+}
+
 export const terminalOrderStatusList: readonly OrderStatus[] = orderStatusList.filter(
   (status) => allowedEventList(status).length === 0,
 );

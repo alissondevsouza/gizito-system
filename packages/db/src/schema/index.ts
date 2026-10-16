@@ -1,5 +1,6 @@
 import { aiCall } from "#src/schema/ai-call.ts";
 import { charge } from "#src/schema/charge.ts";
+import { job } from "#src/schema/job.ts";
 import { kit } from "#src/schema/kit.ts";
 import { notification } from "#src/schema/notification.ts";
 import { order } from "#src/schema/order.ts";
@@ -10,6 +11,7 @@ import { webhookEvent } from "#src/schema/webhook-event.ts";
 export * from "#src/schema/ai-call.ts";
 export * from "#src/schema/charge.ts";
 export * from "#src/schema/enums.ts";
+export * from "#src/schema/job.ts";
 export * from "#src/schema/kit.ts";
 export * from "#src/schema/notification.ts";
 export * from "#src/schema/order.ts";
@@ -27,4 +29,5 @@ export const tableList = [
   webhookEvent,
   notification,
   supportTicket,
+  job,
 ] as const;

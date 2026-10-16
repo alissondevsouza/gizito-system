@@ -5,6 +5,7 @@ import * as schema from "#src/schema/index.ts";
 export type DatabaseSchema = typeof schema;
 export type Database = BunSQLDatabase<DatabaseSchema>;
 export type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+export type Executor = Database | Transaction;
 
 export type CreateDatabaseOptions = {
   databaseUrl: string;

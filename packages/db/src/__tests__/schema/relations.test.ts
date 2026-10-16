@@ -45,7 +45,8 @@ describe("relations", () => {
     expect(relation?.referencedTableName).toBe("kit");
   });
 
-  it("webhook_event não tem relations: não pertence a um pedido", () => {
+  it("webhook_event e job não têm relations: não pertencem a um pedido", () => {
     expect(Object.keys(relationMapOf("webhookEvent"))).toHaveLength(0);
+    expect(Object.keys(relationMapOf("job"))).toHaveLength(0);
   });
 });

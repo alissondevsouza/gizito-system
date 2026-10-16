@@ -2,6 +2,8 @@ import {
   aiStageList,
   chargeStatusList,
   gradeList,
+  jobNameList,
+  jobStatusList,
   notificationChannelList,
   notificationKindList,
   notificationStatusList,
@@ -28,3 +30,5 @@ export const notificationStatusEnum = pgEnum("notification_status", notification
 export const webhookSourceEnum = pgEnum("webhook_source", webhookSourceList);
 export const supportTicketKindEnum = pgEnum("support_ticket_kind", supportTicketKindList);
 export const supportTicketStatusEnum = pgEnum("support_ticket_status", supportTicketStatusList);
+export const jobNameEnum = pgEnum("job_name", jobNameList);
+export const jobStatusEnum = pgEnum("job_status", jobStatusList);

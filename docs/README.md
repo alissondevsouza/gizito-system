@@ -36,7 +36,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [0005](engineering/adr/0005-evolution-api-whatsapp.md) | WhatsApp por Evolution API (Baileys), somente resposta, desligável por flag | aceito | 2026-10-15 |
 | [0006](engineering/adr/0006-tanstack-start-e-elysia.md) | TanStack Start no web, Elysia na API, worker Bun puro; HTTP como única fronteira | aceito | 2026-10-15 |
 | [0007](engineering/adr/0007-dois-pdfs-html-katex-playwright.md) | Dois PDFs gerados de HTML/CSS com KaTeX no servidor e Playwright | aceito | 2026-10-15 |
-| — | ADR-0008 (pg-boss ou fila própria) sai do spike de F0-06 | — | — |
+| [0008](engineering/adr/0008-fila-propria-skip-locked.md) | Fila própria com `FOR UPDATE SKIP LOCKED` em vez de pg-boss, decidida pelo spike de F0-06 | aceito | 2026-10-15 |
 
 > Para criar um novo ADR: copie `engineering/adr/_template.md` → `engineering/adr/NNNN-titulo.md` e adicione a linha aqui.
 

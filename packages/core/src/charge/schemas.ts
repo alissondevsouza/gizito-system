@@ -19,3 +19,12 @@ export const chargeSchema = timestampFieldsSchema.extend({
   refundDatetime: z.date().nullable(),
 });
 export type Charge = z.infer<typeof chargeSchema>;
+
+export const markOrderPaidInputSchema = z.object({
+  orderId: guidSchema,
+  chargeId: guidSchema,
+  gatewayPaymentId: z.string().min(1),
+  paidDatetime: z.date(),
+  webhookEventId: guidSchema.optional(),
+});
+export type MarkOrderPaidInput = z.infer<typeof markOrderPaidInputSchema>;

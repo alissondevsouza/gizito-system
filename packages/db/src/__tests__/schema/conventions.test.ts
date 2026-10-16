@@ -41,14 +41,19 @@ const expectedIndexMap: Record<string, { name: string; unique: boolean; partial?
     { name: "support_ticket_order_id_idx", unique: false },
     { name: "support_ticket_status_idx", unique: false },
   ],
+  job: [
+    { name: "job_status_name_run_after_datetime_idx", unique: false },
+    { name: "job_status_lock_expire_datetime_idx", unique: false },
+    { name: "job_name_singleton_key_idx", unique: true, partial: true },
+  ],
 };
 
 describe("convenções do schema", () => {
-  it("tableList contém exatamente as oito tabelas exportadas", () => {
+  it("tableList contém exatamente as nove tabelas exportadas", () => {
     const exportedNameList = exportedTableEntryList.map(([, table]) => getTableName(table)).sort();
     const listedNameList: string[] = tableList.map((table) => getTableName(table)).sort();
     expect(listedNameList).toEqual(exportedNameList);
-    expect(tableList).toHaveLength(8);
+    expect(tableList).toHaveLength(9);
   });
 
   it("export Drizzle é o camelCase singular do nome da tabela", () => {
@@ -135,6 +140,21 @@ describe("convenções do schema", () => {
       });
     });
   }
+
+  it("toda coluna jsonb usa a coluna própria: o jsonb do Drizzle grava string no bun-sql", () => {
+    const jsonbColumnList = tableList.flatMap((table) =>
+      getTableConfig(table).columns.filter((column) => column.getSQLType() === "jsonb"),
+    );
+    expect(jsonbColumnList.map((column) => column.name).sort()).toEqual([
+      "material_profile",
+      "payload",
+      "study_kit",
+      "topic_id_list",
+    ]);
+    for (const column of jsonbColumnList) {
+      expect(column.columnType).toBe("PgCustomColumn");
+    }
+  });
 
   it("toda FK para order usa restrict e a autorreferência de kit usa set null", () => {
     for (const table of tableList) {

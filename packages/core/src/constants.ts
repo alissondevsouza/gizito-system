@@ -36,6 +36,10 @@ export const MIN_QUESTION_COUNT_PER_TOPIC_PER_BLOCK: Readonly<Record<TopicCount,
 
 export const MAX_REGENERATION_COUNT = 1;
 
+export const JOB_RETRY_DELAY_SECONDS_LIST = [30, 120, 480] as const;
+export const JOB_MAX_ATTEMPT_COUNT = JOB_RETRY_DELAY_SECONDS_LIST.length + 1;
+export const JOB_LOCK_TIMEOUT_SECONDS = 15 * 60;
+
 export const CHARGE_TTL_MINUTES = 30;
 export const CHARGE_RECONCILE_INTERVAL_MINUTES = 2;
 export const CHARGE_RECONCILE_MIN_AGE_MINUTES = 1;

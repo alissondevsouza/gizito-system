@@ -3,11 +3,13 @@ import { orderStatusList } from "#src/enums.ts";
 import {
   allowedEventList,
   InvalidTransitionError,
+  isPostPaymentOrderStatus,
   isTerminalOrderStatus,
   isWhatsappLinkableOrderStatus,
   type OrderTransition,
   orderEventList,
   orderTransitionList,
+  postPaymentOrderStatusList,
   terminalOrderStatusList,
   transitionOrder,
 } from "#src/order/state-machine.ts";
@@ -89,6 +91,19 @@ describe("máquina de estados do pedido (PRD §5)", () => {
       "refund",
     ]);
     expect(allowedEventList("draft")).toEqual(["start_analysis"]);
+  });
+
+  it("estados pós-pagamento são os alcançáveis a partir de paid, nunca os anteriores", () => {
+    expect(postPaymentOrderStatusList).toEqual([
+      "paid",
+      "processing",
+      "ready",
+      "failed",
+      "refunded",
+    ]);
+    expect(isPostPaymentOrderStatus("awaiting_payment")).toBe(false);
+    expect(isPostPaymentOrderStatus("draft")).toBe(false);
+    expect(isPostPaymentOrderStatus("refunded")).toBe(true);
   });
 
   it("vínculo de WhatsApp só em paid, processing e ready (PRD §9.2)", () => {

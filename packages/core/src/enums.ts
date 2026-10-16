@@ -71,6 +71,10 @@ export const jobNameList = [
 export const jobNameSchema = z.enum(jobNameList);
 export type JobName = z.infer<typeof jobNameSchema>;
 
+export const jobStatusList = ["pending", "active", "completed", "failed"] as const;
+export const jobStatusSchema = z.enum(jobStatusList);
+export type JobStatus = z.infer<typeof jobStatusSchema>;
+
 export const aiStageList = ["extract", "plan", "generate", "review"] as const;
 export const aiStageSchema = z.enum(aiStageList);
 export type AiStage = z.infer<typeof aiStageSchema>;

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import { buildCharge } from "#src/__tests__/__fixtures__/entities.ts";
-import { chargeSchema } from "#src/charge/schemas.ts";
+import {
+  buildCharge,
+  CHARGE_ID,
+  ORDER_ID,
+  WEBHOOK_EVENT_ID,
+} from "#src/__tests__/__fixtures__/entities.ts";
+import { chargeSchema, markOrderPaidInputSchema } from "#src/charge/schemas.ts";
 
 describe("chargeSchema", () => {
   it("aceita cobrança pendente e cobrança paga", () => {
@@ -22,5 +27,34 @@ describe("chargeSchema", () => {
     expect(chargeSchema.safeParse({ ...buildCharge(), gateway: "paypal" }).success).toBe(false);
     expect(chargeSchema.safeParse(buildCharge({ qrCode: "" })).success).toBe(false);
     expect(chargeSchema.safeParse(buildCharge({ ticketUrl: "ticket" })).success).toBe(false);
+  });
+});
+
+describe("markOrderPaidInputSchema", () => {
+  const input = {
+    orderId: ORDER_ID,
+    chargeId: CHARGE_ID,
+    gatewayPaymentId: "pay-1",
+    paidDatetime: new Date("2026-10-15T12:10:00.000Z"),
+  };
+
+  it("aceita confirmação com e sem webhook_event", () => {
+    expect(markOrderPaidInputSchema.safeParse(input).success).toBe(true);
+    expect(
+      markOrderPaidInputSchema.safeParse({ ...input, webhookEventId: WEBHOOK_EVENT_ID }).success,
+    ).toBe(true);
+  });
+
+  it("rejeita id de pagamento vazio, data ausente e ids fora do formato", () => {
+    expect(markOrderPaidInputSchema.safeParse({ ...input, gatewayPaymentId: "" }).success).toBe(
+      false,
+    );
+    expect(markOrderPaidInputSchema.safeParse({ ...input, paidDatetime: undefined }).success).toBe(
+      false,
+    );
+    expect(markOrderPaidInputSchema.safeParse({ ...input, orderId: "1" }).success).toBe(false);
+    expect(markOrderPaidInputSchema.safeParse({ ...input, webhookEventId: "x" }).success).toBe(
+      false,
+    );
   });
 });

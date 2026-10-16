@@ -4,6 +4,7 @@ import {
   gradeList,
   gradeSchema,
   jobNameList,
+  jobStatusList,
   orderStatusList,
   orderStatusSchema,
   subjectLabelMap,
@@ -38,6 +39,10 @@ describe("enums", () => {
         "whatsapp.inbound",
       ].sort(),
     );
+  });
+
+  it("job passa por pending, active e termina em completed ou failed", () => {
+    expect(jobStatusList).toEqual(["pending", "active", "completed", "failed"]);
   });
 
   it("tickets de suporte incluem pagamento duplicado (Pix antigo pago depois de novo Pix)", () => {

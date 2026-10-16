@@ -3,6 +3,8 @@ import {
   aiStageList,
   chargeStatusList,
   gradeList,
+  jobNameList,
+  jobStatusList,
   notificationChannelList,
   notificationKindList,
   notificationStatusList,
@@ -20,6 +22,8 @@ import {
   aiStageEnum,
   chargeStatusEnum,
   gradeEnum,
+  jobNameEnum,
+  jobStatusEnum,
   notificationChannelEnum,
   notificationKindEnum,
   notificationStatusEnum,
@@ -47,11 +51,13 @@ const enumCaseList = [
   { pgEnum: webhookSourceEnum, name: "webhook_source", list: webhookSourceList },
   { pgEnum: supportTicketKindEnum, name: "support_ticket_kind", list: supportTicketKindList },
   { pgEnum: supportTicketStatusEnum, name: "support_ticket_status", list: supportTicketStatusList },
+  { pgEnum: jobNameEnum, name: "job_name", list: jobNameList },
+  { pgEnum: jobStatusEnum, name: "job_status", list: jobStatusList },
 ] as const;
 
 describe("enums do banco", () => {
-  it("são treze", () => {
-    expect(enumCaseList).toHaveLength(13);
+  it("são quinze", () => {
+    expect(enumCaseList).toHaveLength(15);
   });
 
   for (const { pgEnum, name, list } of enumCaseList) {
@@ -61,7 +67,7 @@ describe("enums do banco", () => {
     });
   }
 
-  it("toda coluna enum do schema usa um dos treze enums", () => {
+  it("toda coluna enum do schema usa um dos quinze enums", () => {
     const knownNameList: string[] = enumCaseList.map((enumCase) => enumCase.name);
     for (const table of schema.tableList) {
       for (const column of Object.values(table)) {
