@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
-import { err, type JobName, type JobPayload, jobErrorCodeMap, ok } from "@gizito/core";
+import {
+  err,
+  JOB_LOCK_TIMEOUT_SECONDS,
+  type JobName,
+  type JobPayload,
+  jobErrorCodeMap,
+  ok,
+} from "@gizito/core";
 import { eq, sql } from "drizzle-orm";
 import { ZodError } from "zod";
 import { expectSqlState, SQL_STATE } from "#src/__tests__/integration/helpers.ts";
@@ -161,7 +168,7 @@ describe("claimJob", () => {
     const row = await loadJob(earlier.jobId);
     expect(row.status).toBe("active");
     expect(row.lockedBy).toBe(WORKER_ID);
-    expect(row.lockExpireDatetime).toEqual(secondsAfter(900));
+    expect(row.lockExpireDatetime).toEqual(secondsAfter(JOB_LOCK_TIMEOUT_SECONDS));
     expect((await loadJob(later.jobId)).status).toBe("pending");
   });
 
@@ -404,10 +411,12 @@ describe("recoverExpiredJobs", () => {
     expect(await recoverExpiredJobs(testDatabase.db, { now: secondsAfter(59) })).toEqual({
       requeuedCount: 0,
       failedCount: 0,
+      compensationFailureList: [],
     });
     expect(await recoverExpiredJobs(testDatabase.db, { now: secondsAfter(60) })).toEqual({
       requeuedCount: 1,
       failedCount: 0,
+      compensationFailureList: [],
     });
     const row = await loadJob(enqueued.jobId);
     expect(row.status).toBe("pending");
@@ -434,6 +443,7 @@ describe("recoverExpiredJobs", () => {
     expect(await recoverExpiredJobs(testDatabase.db, { now: secondsAfter(61) })).toEqual({
       requeuedCount: 0,
       failedCount: 1,
+      compensationFailureList: [],
     });
     const row = await loadJob(enqueued.jobId ?? "");
     expect(row.status).toBe("failed");

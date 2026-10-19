@@ -1,5 +1,10 @@
-import { personalDataJobNameList, personalDataJobRetainedFieldMap } from "@gizito/core";
+import {
+  jobLockExpireDatetime,
+  personalDataJobNameList,
+  personalDataJobRetainedFieldMap,
+} from "@gizito/core";
 import { and, eq, type SQL, sql } from "drizzle-orm";
+import type { Executor } from "#src/client.ts";
 import { job } from "#src/schema/job.ts";
 
 export type JobLease = {
@@ -24,4 +29,22 @@ export function finishedPayloadSql(): SQL {
     return sql`WHEN ${name} THEN jsonb_build_object(${sql.join(pairList, sql`, `)})`;
   });
   return sql`CASE ${job.name} ${sql.join(whenList, sql` `)} ELSE ${job.payload} END`;
+}
+
+export type RenewJobLeaseOptions = {
+  now?: Date;
+  lockTimeoutSeconds?: number;
+};
+
+export async function renewJobLease(
+  executor: Executor,
+  lease: JobLease,
+  { now = new Date(), lockTimeoutSeconds }: RenewJobLeaseOptions = {},
+): Promise<boolean> {
+  const rowList = await executor
+    .update(job)
+    .set({ lockExpireDatetime: jobLockExpireDatetime(now, lockTimeoutSeconds) })
+    .where(activeLeaseCondition(lease))
+    .returning({ jobId: job.jobId });
+  return rowList.length > 0;
 }

@@ -36,7 +36,7 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
   - `orderSchema` recusa mais de `MAX_TOPIC_COUNT` assuntos contando o "outro";
   - a partir de `awaiting_payment` (alcançáveis pela máquina), exige ao menos `MIN_TOPIC_COUNT`.
 
-  · Aceite: testes com repetido, 3 + outro, 0 assuntos em `paid` e 0 assuntos em `draft` (aceito).
+  · Aceite: testes com repetido, 3 + outro, 0 assuntos em `paid` (recusado), só "outro" em `paid` (aceito) e 0 assuntos em `draft` (aceito).
 - **RF-05** — URLs e e-mail:
   - `ticketUrl` (cobrança e `createdChargeSchema`) aceita só `https`;
   - as URLs de notificação aceitam só `http`/`https`;
@@ -53,28 +53,34 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 
 ### Fila (db)
 - **RF-08** — `renewJobLease(executor, lease, { now?, lockTimeoutSeconds? })` estende `lock_expire_datetime` só se o lease ainda for o ativo e devolve `boolean`. · Aceite: integração: renova o próprio lease; devolve `false` depois de recuperado e reclamado por outro.
-- **RF-09** — `releaseJob(executor, lease, { now? })` devolve o job a `pending`, com `run_after = now`, `attempt_count - 1` e `last_error_code = worker_shutdown`, sem consumir tentativa; devolve `boolean`. · Aceite: integração: depois de liberado, o claim seguinte recebe o mesmo `attemptCount`.
+- **RF-09** — `releaseJob(executor, lease, { now? })` devolve o job a `pending`, com `run_after = now`, `attempt_count - 1` e `last_error_code = worker_shutdown`, sem consumir tentativa; devolve `boolean`. Como o par `(job_id, attempt_count)` se repete depois da liberação, `workJob` para a renovação e espera a que estiver em curso antes de chamar `releaseJob`. · Aceite: integração: depois de liberado, o claim seguinte recebe o mesmo `attemptCount`; nenhuma renovação do worker que liberou acontece depois da liberação.
 - **RF-10** — `workJob` passa ao handler `{ signal }` e cuida do lease:
   - **Renovação:** a cada `leaseRenewIntervalMs`, até `maxRunMs`. Lease perdido aborta o handler com `lease_lost`; erro de banco na renovação não aborta e tenta de novo no próximo intervalo.
-  - **Tempo máximo:** passado `maxRunMs`, aborta o handler e para de renovar. O resultado não-ok vira falha retryable `job_timeout`.
-  - **Desligamento:** `signal` externo aborta o handler. Resultado não-ok com o desligamento já pedido vira `releaseJob` (outcome `released`); resultado ok conclui normalmente.
+  - **Tempo máximo:** passado `maxRunMs`, aborta o handler e para de renovar. Falha retryable (ou exceção) vira falha retryable `job_timeout`.
+  - **Desligamento:** `signal` externo aborta o handler. Falha retryable (ou exceção) com o desligamento já pedido vira `releaseJob` (outcome `released`); resultado ok conclui normalmente.
+  - **Precedência:** falha não retryable do handler vence o desligamento e o tempo máximo e vira `failed`, porque o handler já tratou o pedido.
   - **Código de erro:** um `errorCode` que não passa em `outcomeCodeSchema` vira `invalid_error_code` retryable, sem lançar.
+  - **Erro na renovação:** é repassado ao chamador por `onLeaseRenewError` para log; não aborta.
 
   · Aceite: integração cobre:
   - renovação mantendo o job fora do `recoverExpiredJobs`;
   - lease perdido abortando o handler;
   - `job_timeout`;
   - `released` com tentativa preservada;
+  - falha não retryable durante desligamento e depois do tempo máximo vira `failed`;
   - código inválido sem deixar o job `active`.
 - **RF-11** — Esgotamento com compensação atômica. `workJob` e `recoverExpiredJobs` aceitam `onExhausted(tx, exhaustedJob)`. Ele é chamado na **mesma transação** que grava o `failed` definitivo de uma falha transitória (retentativas esgotadas, `unhandled_error`, `job_timeout`, `invalid_error_code`, `lock_expired` esgotado). Não é chamado em falha não retryable (o handler já tratou), `payload_invalid` ou `lease_lost`. Se `onExhausted` lança, nada é gravado: o job continua `active` e o lock vencido o devolve à varredura.
   - `exhaustedJob = { jobId, name, payload, attemptCount, errorCode }` com o payload ainda completo.
-  - `recoverExpiredJobs` trata um esgotado por vez com `FOR UPDATE SKIP LOCKED` e revalida o payload (inválido → `failed` `payload_invalid`, sem callback).
+  - `recoverExpiredJobs` primeiro devolve à fila os jobs vencidos com tentativas restantes. Depois trata os esgotados um por vez com `FOR UPDATE SKIP LOCKED` e revalida o payload (inválido → `failed` `payload_invalid`, sem callback).
+  - Se o callback de um esgotado lança, a varredura não aborta: pula esse job pelo resto da execução, segue para os demais e devolve a lista `compensationFailureList` (`jobId`, `name`, `cause`). A manutenção loga `error` com `job_compensation_failed`. O job fica `active` com o lock vencido e é tentado de novo na próxima varredura.
+  - Contrato do callback (vale para os handlers da F2): estado de pedido inesperado é no-op; ele só lança em erro de infraestrutura. Quando a compensação é refeita pela varredura, o código recebido é `lock_expired`, e não o código original.
 
   · Aceite: integração cobre:
   - callback chamado uma vez na 4ª falha transitória e no lock esgotado;
   - não chamado em não retryable;
   - callback que lança deixa o job `active` sem `failed`;
-  - escrita do callback (linha em `support_ticket` como sonda) some no rollback.
+  - na varredura, um callback que sempre lança não impede a devolução de outro job vencido nem a compensação de outro esgotado;
+  - escrita do callback (um `enqueueJob` como sonda) some no rollback.
 - **RF-12** — Migration `0002_revisao_f0`, índices da tabela `job` (o claim, a recuperação e as métricas do `/health` usam os parciais):
 
   | Antes | Depois |
@@ -90,9 +96,9 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
   - unique parcial `charge (gateway, gateway_order_id) WHERE gateway_order_id IS NOT NULL`;
   - índice parcial `order (whatsapp_phone) WHERE whatsapp_phone IS NOT NULL`;
   - índice `order_photo (content_hash)`;
-  - check `order_topic_id_list_check`: `jsonb_typeof = 'array'` e comprimento ≤ `MAX_TOPIC_COUNT`.
+  - check `order_topic_id_list_check`: `jsonb_typeof = 'array'` e `jsonb_array_length(topic_id_list) + (other_topic_text IS NOT NULL)::int` ≤ `MAX_TOPIC_COUNT`.
 
-  · Aceite: integração: duas cobranças com o mesmo `gateway_order_id` falham no unique; `topic_id_list` como string JSON ou com 4 itens é recusado.
+  · Aceite: integração: duas cobranças com o mesmo `gateway_order_id` falham no unique; `topic_id_list` como string JSON, com 4 itens ou com 3 itens e "outro" é recusado; `migration.test.ts` encontra os índices de `whatsapp_phone` e `content_hash`.
 - **RF-14** — Tabela `notification`:
   - `order_id` nulo só com `kind = 'whatsapp_help'` (check);
   - `recipient_hash text NOT NULL` com check de 64 hex (HMAC do destinatário normalizado, nunca o valor);
@@ -128,16 +134,16 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
   | `analyze` | `order.analyze` | 2 |
   | `default` | `order.notify`, `whatsapp.inbound` | 2 |
 
-  O pool do worker tem o tamanho da soma das vagas + 2. · Aceite: teste unit de `buildJobLaneList` e do tamanho do pool; config recusa `GENERATE_CONCURRENCY=9`.
+  O pool do worker tem 2 × a soma das vagas + 2, porque cada vaga pode usar ao mesmo tempo a conexão do handler e a da renovação. · Aceite: teste unit de `buildJobLaneList` e do tamanho do pool; config recusa `GENERATE_CONCURRENCY=9`.
 - **RF-17** — O mapa de handlers vira `JobDefinition = { handle, onExhausted? }`. O runner passa o sinal de desligamento a `workJob` e loga `released` em `warn`. A manutenção roda a cada 30 s, com `onExhausted` do mapa. · Aceite: integração do runner: `SIGTERM` com handler em curso aborta o sinal e libera o job; a manutenção chama o `onExhausted` do nome certo.
 
 ### Config, logs, api, web
-- **RF-18** — `NODE_ENV` obrigatório, sem default; os processos de teste passam `NODE_ENV=test`. · Aceite: config sem `NODE_ENV` falha nomeando o campo (core, api, worker); boot e integração verdes.
+- **RF-18** — `NODE_ENV` obrigatório, sem default; os processos de teste passam `NODE_ENV=test`; os scripts `dev` de api e worker fixam `NODE_ENV=development`, para que o `bun run dev` não dependa do `.env` local. · Aceite: config sem `NODE_ENV` falha nomeando o campo (core, api, worker); boot, integração e `bun run dev` verdes.
 - **RF-19** — Logs (invariante 9, rule `privacy-security.md`):
   - `serializeLogError` troca a mensagem de erro com `query` e `params` (Drizzle) por `Failed query` e tira a linha da stack;
   - regexes limitadas (e-mail com partes de tamanho máximo e domínio só com letras, dígitos, ponto e hífen; telefone no formato brasileiro ou E.164; token que não casa UUID);
   - texto truncado em 4.000 caracteres antes de mascarar;
-  - o logger mascara em qualquer profundidade, inclusive dentro de arrays, as chaves sensíveis do domínio. Lista: `email`, `phone`, `whatsappPhone`, `payerEmail`, `recipient`, `token`, `publicToken`, `payload`, `text`, `textBody`, `noteText`, `otherTopicText`, `userText`, `qrCode`, `qrCodeBase64`, `rawBody`, `authorization`, `cookie`, `secret`, `apiKey`, `accessToken`, `password`;
+  - o logger mascara em qualquer profundidade, inclusive dentro de arrays, as chaves sensíveis do domínio. Lista: `email`, `phone`, `whatsappPhone`, `payerEmail`, `recipient`, `token`, `publicToken`, `payload`, `text`, `textBody`, `noteText`, `otherTopicText`, `userText`, `qrCode`, `qrCodeBase64`, `rawBody`, `authorization`, `cookie`, `secret`, `apiKey`, `accessToken`, `password`, `shortCode`, `orderUrl`, `url`, `signedUrl`, `downloadUrl`, `mediaUrl`;
   - qualquer `Error` em qualquer chave passa por `serializeLogError`.
 
   · Aceite: unit:
@@ -147,7 +153,7 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
   - `{ order: { whatsappPhone, noteText }, list: [{ email }] }` e `{ error: pgError }` saem mascarados.
 - **RF-20** — API:
   - o log `request` usa o status real quando o handler devolve um `Response`;
-  - inclui `code` nas respostas de erro;
+  - o log `request` inclui o `code` das respostas de erro;
   - `listen` com `reusePort: false`;
   - o desligamento fecha o banco com teto de 5 s.
 
@@ -164,7 +170,7 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
   | `data-model.md` 1.3 | índices, `notification`, timeouts do pool |
   | `state-machine.md` | duas transições |
   | `api.md` | webhook com `webhookEventId`, log `request` |
-  | design doc §7.2 | erro genérico, com histórico |
+  | design doc §7.2 | erro genérico, com versão subida no cabeçalho e entrada no histórico (texto fica para o humano revisar no handoff) |
   | `known-issues.md` | resolve lock sem renovação e desligamento sem teto; abre retenção de dados de contato (decisão do humano) |
   | roadmap | F2-04 (cancelar Pix antigos no gateway, `webhookEventId`) e F2-06 (expurgo de jobs e lote até esvaziar) |
 
@@ -177,6 +183,8 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 - Ajustes BAIXOS que a revisão não listou para correção: config frouxa (`HOST`, porta hex, `http` em produção), pin de imagens do compose, `@types/bun`, CI (permissões, SHA das actions), regra do Biome para `.`/`..`, `storageKeySchema` em maiúsculas e `ObjectStorage` com `StorageKey`.
 - Checks por status (cobrança `paid` com `paid_datetime`, etc.), unique de cobrança `pending` por pedido, kit vigente único, conferência do valor pago e `text` + `CHECK` no lugar de `pgEnum`: sugestões não incluídas na revisão.
 - Limpar `last_error_code` ao concluir: mantido, porque registra que o job passou por retentativa.
+- Aviso de republicação do kit (F2-11): o unique novo de `notification` barra um segundo `kit_ready` ao mesmo destinatário. A F2-11 decide entre um kind próprio e `kit_id` na chave.
+- Relógio do Postgres no lease: mantido o relógio do processo. Com renovação a cada 30 s, alguns segundos de diferença entre réplicas não importam, e o relógio injetado é o que torna a fila testável. Registrado no ADR-0009.
 
 ## Plano
 - **Lease curto renovado (ADR-0009).** Lock de 2 min renovado a cada 30 s por `UPDATE ... WHERE (job_id, attempt_count, status='active')`. Worker morto volta à fila em ≤ 2,5 min (lock + manutenção de 30 s), não em ~16 min. Teto de 15 min por execução (`JOB_MAX_RUN_SECONDS`): depois dele a renovação para e o handler é abortado. Assim um handler que ignora o sinal ainda perde o lease e o job é recuperado, sem renovar para sempre. Renovação, tempo máximo e desligamento vivem em `workJob` (db), que já compõe claim → handler → fim. Os intervalos são injetáveis para teste (`leaseRenewIntervalMs`, `maxRunMs`).
@@ -187,7 +195,7 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 - **Logger.** `formatters.log` com caminhada recursiva (profundidade 6) substitui o `redact` do Pino, que só cobre caminhos fixos. `serializers.err` continua, porque o Pino aplica o próprio serializer em `err` antes do formatter.
 - **Timeouts.** `connection` do Bun.SQL aceita parâmetros de runtime. Conferido em 19/10/2026: `SHOW` devolve os valores e `pg_sleep(3)` com `statement_timeout=1500` falha com 57014. O teto do ping é `Promise.race` porque a espera por conexão livre no pool não tem limite no Bun.SQL.
 - **Testes.** Unit no core (máquina, schemas, regras), integrations (log) e worker (raias, pool). Integração no db (fila, migration, dados) e no worker (runner, scheduler, health). A web roda Vitest no teste da raiz.
-- **Paralelismo.** M5 (config, logs, api, web) não compartilha arquivos com M1–M4 e vai para um `gizito-implementer` em paralelo, depois do commit de M1. M1 a M4 ficam com o orquestrador, porque a fila é a zona sensível.
+- **Paralelismo.** M5 (config, logs, api, web) vai para um `gizito-implementer` depois do commit de M4. Assim os testes de config do worker e o `close` com teto (3.2) já existem quando ele começa. M1 a M4 ficam com o orquestrador, porque a fila é a zona sensível.
 - **Riscos:**
   - o check de `topic_id_list` precisa do número no DDL: `sql.raw(String(MAX_TOPIC_COUNT))` no schema, para não repetir o número à mão;
   - discriminar `outboundNotificationSchema` por `z.enum` em `discriminatedUnion` (Zod 4 aceita);
@@ -195,24 +203,24 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 
 ## Tasks
 ### M1 — Core
-- [ ] 1.1 Máquina de estados (`paid → failed`, `preview_ready → draft`), testes exaustivos · Arquivos: `core/src/order/state-machine.ts`, teste · Verificação: `cd packages/core && bun test`
-- [ ] 1.2 Constantes e códigos da fila, `chargeReconcileJobPayloadSchema` com `webhookEventId` · Arquivos: `core/src/constants.ts`, `core/src/jobs/{rules,schemas}.ts`, testes
-- [ ] 1.3 Assuntos, URLs, e-mail, `isPhotoDueForPurge`, notificação discriminada, `recipientHashSchema` · Arquivos: `core/src/order/schemas.ts`, `charge/schemas.ts`, `interfaces/{payment-gateway,notification-channel}.ts`, `retention/rules.ts`, testes
+- [x] 1.1 Máquina de estados (`paid → failed`, `preview_ready → draft`), testes exaustivos · Arquivos: `core/src/order/state-machine.ts`, teste · Verificação: `cd packages/core && bun test`
+- [x] 1.2 Constantes e códigos da fila, `chargeReconcileJobPayloadSchema` com `webhookEventId` · Arquivos: `core/src/constants.ts`, `core/src/jobs/{rules,schemas}.ts`, testes · Verificação: `cd packages/core && bun test`
+- [x] 1.3 Assuntos, URLs, e-mail, `isPhotoDueForPurge`, notificação discriminada, `recipientHashSchema` · Arquivos: `core/src/order/schemas.ts`, `charge/schemas.ts`, `interfaces/{payment-gateway,notification-channel}.ts`, `retention/rules.ts`, testes · Verificação: `cd packages/core && bun test && bunx tsc --noEmit`
 ### M2 — Fila
 - [ ] 2.1 `renewJobLease`, `releaseJob`, `workJob` com sinal, renovação, teto, desligamento, código inválido e `onExhausted`; `recoverExpiredJobs` com `onExhausted` · Arquivos: `db/src/queue/{lease,finish,work,recover,index}.ts` · Verificação: `tsc`
 - [ ] 2.2 Integração da fila (RF-08 a RF-11) · Arquivos: `db/src/__tests__/integration/queue.test.ts` (e arquivo novo se crescer) · Verificação: `bun run test:integration`
 ### M3 — Schema e migration
-- [ ] 3.1 Índices parciais da `job`, índices e checks de `charge`, `order`, `order_photo`, `notification`; `0002_revisao_f0` · Arquivos: `db/src/schema/*.ts`, `db/drizzle/0002_*`, testes unit de convenções e integração de migration e dados
-- [ ] 3.2 `createDatabase` com timeouts, `pingDatabase` e métricas com teto, `close` com teto, `migrate.ts` · Arquivos: `db/src/{client,health,migrate}.ts`, `db/src/queue/metrics.ts`, testes
+- [ ] 3.1 Índices parciais da `job`, índices e checks de `charge`, `order`, `order_photo`, `notification`; `0002_revisao_f0` · Arquivos: `db/src/schema/*.ts`, `db/drizzle/0002_*`, testes unit de convenções e integração de migration e dados · Verificação: `cd packages/db && bun run db:generate && bun run test && bun run test:integration`
+- [ ] 3.2 `createDatabase` com timeouts, `pingDatabase` e métricas com teto, `close` com teto, `migrate.ts` · Arquivos: `db/src/{client,health,migrate}.ts`, `db/src/queue/metrics.ts`, testes · Verificação: `cd packages/db && bun run test:integration`
 ### M4 — Worker
-- [ ] 4.1 Raias, `MAX_GENERATE_CONCURRENCY`, pool pelo total de vagas, `JobDefinition`, sinal de desligamento, manutenção de 30 s com `onExhausted` · Arquivos: `apps/worker/src/{config,index,scheduler}.ts`, `runner/*`, `jobs/index.ts`, testes
+- [ ] 4.1 Raias, `MAX_GENERATE_CONCURRENCY`, pool pelo total de vagas, `JobDefinition`, sinal de desligamento, manutenção de 30 s com `onExhausted` · Arquivos: `apps/worker/src/{config,index,scheduler}.ts`, `runner/*`, `jobs/index.ts`, testes · Verificação: `cd apps/worker && bun test` (unit e integração)
 ### M5 — Config, logs, api, web (implementer em paralelo)
-- [ ] 5.1 `NODE_ENV` obrigatório; processos de teste com `NODE_ENV=test` · Arquivos: `core/src/config/schemas.ts`, testes de config em core/api/worker, testes que fazem spawn
-- [ ] 5.2 `log-error.ts` e `logger.ts` (RF-19), testes · Arquivos: `packages/integrations/src/*`
-- [ ] 5.3 API: status real e `code` no log, `reusePort: false`, `close` com teto · Arquivos: `apps/api/src/{app,index}.ts`, testes
-- [ ] 5.4 Web: `shellComponent`, `errorComponent` pt-BR, copy · Arquivos: `apps/web/src/routes/__root.tsx`, `src/copy/`, teste
+- [ ] 5.1 `NODE_ENV` obrigatório; processos de teste com `NODE_ENV=test` · Arquivos: `core/src/config/schemas.ts`, testes de config em core/api/worker, testes que fazem spawn, scripts `dev` · Verificação: `bun run test` na raiz e testes de integração de api e worker
+- [ ] 5.2 `log-error.ts` e `logger.ts` (RF-19), testes · Arquivos: `packages/integrations/src/*` · Verificação: `cd packages/integrations && bun test`
+- [ ] 5.3 API: status real e `code` no log, `reusePort: false`, `close` com teto · Arquivos: `apps/api/src/{app,index}.ts`, testes · Depende de 3.2 · Verificação: `cd apps/api && bun test`
+- [ ] 5.4 Web: `shellComponent`, `errorComponent` pt-BR, copy · Arquivos: `apps/web/src/routes/__root.tsx`, `src/copy/`, teste · Verificação: `cd apps/web && bun run test`
 ### M6 — Docs e revisão
-- [ ] 6.1 ADR-0009, `jobs.md`, `data-model.md`, `state-machine.md`, `api.md`, design doc §7.2, known-issues, roadmap, README (índice de ADR) · Verificação: leitura
+- [ ] 6.1 ADR-0009, `jobs.md`, `data-model.md`, `state-machine.md`, `api.md`, design doc §7.2, known-issues, roadmap, README (índice de ADR) · Verificação: cada doc com data de 2026-10-19 e versão subida no cabeçalho; ADR-0009 indexado em `docs/README.md`; `grep` sem "15 min" de lock em `jobs.md`
 - [ ] 6.2 `bun run lint && bun run typecheck && bun run test && bun run test:integration` na raiz; revisão neutra; `review.md`; correções
 
 ## Decisões
@@ -227,7 +235,8 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 | 2026-10-19 | Compensação de esgotamento na transação do `failed`, por callback | atômica e sem estado novo; a alternativa (varredura de pedidos parados ou job de compensação) exigiria consulta por payload ou enum novo |
 | 2026-10-19 | `releaseJob` não consome tentativa no desligamento | interrupção é nossa; quatro deploys durante uma geração não podem esgotar o pedido |
 | 2026-10-19 | `charge.reconcile` com 2 vagas; `order.analyze` em raia própria | o webhook pago não espera a varredura de 2 min; a prévia não espera rajada de WhatsApp; a varredura é singleton e o pedido é travado em `markOrderPaidAndEnqueue` |
+| 2026-10-19 | Revisão da spec (rodada 1, APROVADO com 9 ALERTAs): aceitos todos, menos o relógio do Postgres no lease (contestado em Fora de escopo) | compensação que falha não trava a varredura; falha definitiva vence desligamento e tempo máximo; renovação para antes do `releaseJob`; pool 2× vagas; `shortCode` e URLs no log; M5 depois do M4; verificação por task; republicação para F2-11; design doc com versão |
 | 2026-10-19 | Lista de chaves sensíveis no `logger.ts` de integrations, não no core | é política de log do adaptador; o teste confere os nomes reais dos campos do core |
 
 ## Status
-Fase: spec escrita; próxima etapa é a revisão da spec (`gizito-spec-verifier`, rodada 1). Pendências para o humano: nenhuma até o handoff.
+Fase: spec revisada (APROVADO, rodada 1, ALERTAs incorporados); M1 concluído em `f81d88b`; próximo passo M2 (fila).

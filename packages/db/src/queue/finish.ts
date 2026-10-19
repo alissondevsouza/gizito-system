@@ -1,4 +1,10 @@
-import { nextJobRunAfterDatetime, type OutcomeCode, outcomeCodeSchema } from "@gizito/core";
+import {
+  jobErrorCodeMap,
+  nextJobRunAfterDatetime,
+  type OutcomeCode,
+  outcomeCodeSchema,
+} from "@gizito/core";
+import { sql } from "drizzle-orm";
 import type { Executor } from "#src/client.ts";
 import { activeLeaseCondition, finishedPayloadSql, type JobLease } from "#src/queue/lease.ts";
 import { job } from "#src/schema/job.ts";
@@ -55,4 +61,24 @@ export async function failJob(
     .returning({ jobId: job.jobId });
   if (rowList.length === 0) return "lease_lost";
   return retryRunAfterDatetime ? "retry_scheduled" : "failed";
+}
+
+export async function releaseJob(
+  executor: Executor,
+  lease: JobLease,
+  { now = new Date() }: FinishJobOptions = {},
+): Promise<boolean> {
+  const rowList = await executor
+    .update(job)
+    .set({
+      status: "pending",
+      runAfterDatetime: now,
+      lockedBy: null,
+      lockExpireDatetime: null,
+      attemptCount: sql`${job.attemptCount} - 1`,
+      lastErrorCode: jobErrorCodeMap.workerShutdown,
+    })
+    .where(activeLeaseCondition(lease))
+    .returning({ jobId: job.jobId });
+  return rowList.length > 0;
 }
