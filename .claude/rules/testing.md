@@ -42,6 +42,6 @@ paths:
 - Fixtures em `__fixtures__/` ao lado do teste.
 
 ## Regressão pedagógica
-- Casos em `tests/pedagogy/cases/{grade}-{subject}-{slug}/` com `case.json` (ano, disciplina, assuntos esperados por id, perfil esperado, bloqueadores esperados, se deve ser recusado por legibilidade) e `photos/`.
-- O runner executa extração → geração → validação para cada caso e produz um relatório com: assuntos acertados, bloqueadores disparados, custo e tempo por caso.
+- Casos em `tests/pedagogy/cases/{grade}-{subject}-{slug}/` com `case.json` (formato em `docs/pedagogy/spec-pedagogica.md` §12: prévia esperada, assuntos obrigatórios e aceitáveis, não atendidos, legibilidade por foto, avisos, confirmação e resultado do kit) e `photos/`.
+- O runner executa o pipeline inteiro (extração → plano → geração → validação → revisão → render) para cada caso e produz um relatório com: verificações do caso, bloqueadores disparados, regeneração, custo e tempo por caso.
 - Critério: zero bloqueador crítico não esperado. Asserções são **estruturais** (contagens, cobertura, recálculo, schema), nunca igualdade textual com saída anterior.

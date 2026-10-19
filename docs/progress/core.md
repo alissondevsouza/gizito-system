@@ -49,7 +49,7 @@
 
 ## Pendências
 
-- Taxonomia em F1-01; `studyKitSchema`, `extractionResultSchema`, `materialProfileSchema`, `kitPlanSchema`, `reviewResultSchema` e `validateStudyKit` em F1-03 (`order.materialProfile` fica `unknown` até lá)
+- Schemas do kit, alocação, composição e validações em F1-03, conforme `docs/pedagogy/spec-pedagogica.md` §14 (`order.materialProfile` fica `unknown` até lá)
 - Payloads da API (`POST /orders`, `confirm`) em F2-01; mapeamento estado → rota no web em F2-09
 - Contratos HTTP de cada rota nova entram em `api/` conforme F2 avança
 
@@ -59,3 +59,9 @@
 - `schemas.ts`: `topicDefinitionSchema`, `topicSchema`, `topicValidationRuleList` (6 regras, 3 por disciplina) com descrição e disciplina. `bncc.ts`: faixas `EF04MA`…`EF07LP` com o último número de cada uma e `isBnccSkillOfGrade`. `integrity.ts`: `checkTaxonomyIntegrity` com 11 códigos. `lookup.ts`: `createTaxonomyLookup`. `index.ts`: `TAXONOMY_VERSION`, `taxonomyTopicList`, `listTopics`, `findTopic`, `isSelectableTopic`, `taxonomyExclusionList`. `markdown.ts`: `renderTaxonomyMarkdown`.
 - `scripts/write-taxonomy-doc.ts` e `bun run taxonomy:doc` geram `docs/pedagogy/taxonomia.md`; teste de sincronia e input do turbo pegam edição à mão. Fingerprint por versão em `__fixtures__/taxonomy-history.ts`: mudar o conteúdo exige novo `TAXONOMY_VERSION`; ids publicados nunca somem.
 - Testes: 331, cobertura 100%. Revisada e aprovada pelo professor em 19/10/2026, sem mudanças. Pendência: regressão pedagógica (`known-issues.md`).
+
+## Ajustes em spec-pedagogica-executavel (2026-10-19, `f25169c`)
+
+- `pedagogy/taxonomy/unsupported.ts`: `unsupportedTopicSchema`, `unsupportedTopicList` (7 áreas ainda não atendidas, ids `{ma|lp}-{slug}`, com o texto aprovado pelo professor, rótulo curto, motivo, como a extração reconhece e palavras do "outro"), `normalizeKeywordText` e `findUnsupportedTopicList(text, subject)`. Substitui `taxonomyExclusionList`.
+- `schemas.ts` exporta `topicSubjectPrefixMap` e `uniqueListSchema`. `markdown.ts` publica a tabela de não atendidos em `taxonomia.md`. O histórico da `tax-v1` congela também a lista (`unsupportedFingerprint`).
+- Testes: 346.

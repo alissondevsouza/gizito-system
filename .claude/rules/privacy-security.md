@@ -8,7 +8,7 @@ paths:
 # Privacidade e Segurança (detalha os invariantes 4, 5, 9 e 10 do CLAUDE.md)
 
 ## Dados pessoais (LGPD)
-- O comprador é adulto. Nunca pedir, inferir ou armazenar nome da criança, escola, turma ou telefone da criança. Se aparecer em foto, marcar em `sourceWarningList` e não propagar.
+- O comprador é adulto. Nunca pedir, inferir ou armazenar nome da criança, escola, turma ou telefone da criança. Se aparecer em foto, marcar `personal_data_visible` em `sourceWarningCodeList`, sem copiar o dado, e não propagar.
 - E-mail e telefone são do responsável: coletados com aceite explícito nunca pré-marcado, usados só para o pedido, exibidos mascarados no admin (domínio do e-mail, 4 últimos dígitos do telefone), removíveis a pedido.
 - Retenção: fotos originais 30 dias (`PHOTO_RETENTION_DAYS`); PDFs e `study_kit` 12 meses (`KIT_RETENTION_MONTHS`); `ai_call` sem conteúdo fica para métricas. Remoção registra `delete_datetime`, nunca apaga a linha em silêncio.
 

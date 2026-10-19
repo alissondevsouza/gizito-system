@@ -1,4 +1,4 @@
-# Gizito — Roadmap de Implementação v1.2
+# Gizito — Roadmap de Implementação v1.4
 
 **Status:** em execução  
 **Fase atual:** F1 — Prova técnica e pedagógica  
@@ -139,11 +139,12 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
   - Pronto quando: testes de integridade (ids únicos, pré-requisitos existentes); amostra revisada pelo professor
   - Concluída em: 19/10/2026. `tax-v1` com 179 assuntos (22/20/25/23 em Matemática e 24/23/22/20 em Português), 6 regras de validação por assunto, faixas BNCC por ano, checagem de integridade com 11 códigos, consulta `listTopics`/`findTopic`/`isSelectableTopic`; fingerprint por versão impede mudar conteúdo sem novo `TAXONOMY_VERSION` e ids publicados nunca somem; `docs/pedagogy/taxonomia.md` gerado por `bun run taxonomy:doc`, revisado e aprovado pelo professor sem mudanças (6º ano segue sem raiz quadrada). 331 testes no core. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-02 `spec-pedagogica-executavel`** — docs, pedagogy · M · depende: F1-01
+- [ ] **F1-02 `spec-pedagogica-executavel`** **em andamento** — docs, pedagogy · M · depende: F1-01
   - Entrega: `docs/pedagogy/`: schema do kit campo a campo, regras de validação com severidade e código, formato dos casos de teste, prompts v1 em texto, critério de homologação; lista de assuntos ainda não atendidos com id e como a extração e o “outro” os reconhecem (PRD 7.7)
   - Pronto quando: aprovada por você; é a spec de F1-03 a F1-07
+  - Feito até agora: `docs/pedagogy/spec-pedagogica.md` (contratos, alocação das questões, validações com código e severidade, regeneração, casos, homologação e o que cada feature implementa no §14) e `docs/pedagogy/prompts-v1.md`; assuntos ainda não atendidos com id, palavras do “outro” e `findUnsupportedTopicList` no core, publicados em `taxonomia.md` (`specs/pedagogy/spec-pedagogica-executavel/`). Falta a sua aprovação, inclusive das metas propostas do gate no §13.2
 - [ ] **F1-03 `schemas-e-validacoes-do-kit`** — core · L · depende: F1-02
-  - Entrega: `studyKitSchema`, `extractionResultSchema`, `materialProfileSchema`, `kitPlanSchema`, `expectedAnswerSchema`, `reviewResultSchema`; `validateStudyKit` com contagens, cobertura, dificuldade, duplicatas, alternativas, dependência de figura, dado pessoal
+  - Entrega: o que `docs/pedagogy/spec-pedagogica.md` §14 atribui à F1-03: `photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema`, `studyKitSchema`, `reviewResultSchema`; `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `validateStudyKit` com contagens, cobertura, dificuldade, duplicatas, alternativas, dependência de figura, dado pessoal, e `interpretReview`
   - Pronto quando: cada regra com teste e fixture válida e inválida
 - [ ] **F1-04 `avaliador-matematico`** — integrations · P · depende: F1-03
   - Entrega: `MathEvaluator` com mathjs: expressões, frações simplificadas, unidades, tolerância, equivalência entre alternativas
@@ -270,6 +271,7 @@ Marcar o item só quando entregue; anotar ao lado a data em que o gatilho dispar
 
 ## 10. Histórico de revisões
 
+- **1.4 (19/10/2026):** F1-02 em andamento; a entrega da F1-03 passa a apontar o §14 da spec pedagógica, com os nomes de schema da spec (`photoExtractionSchema` no lugar de `extractionResultSchema`) e as funções de alocação, composição e revisão.
 - **1.3 (19/10/2026):** assuntos ainda não atendidos (PRD 1.3, seção 7.7): F1-02 define a lista com id e o reconhecimento; F1-06 sinaliza; F2-02 volta a `draft` sem assunto atendido; F2-03 recusa na confirmação.
 - **1.2 (19/10/2026):** revisão da F0 (`specs/cross/revisao-f0/`): F2-04 passa a citar `webhookEventId` no `charge.reconcile` e o cancelamento dos outros Pix no gateway; F2-06 passa a citar a regra de purge dentro dos 30 dias, os lotes até esvaziar e o expurgo de jobs `completed`.
 - **1.1 (14/10/2026):** roadmap vira checklist de acompanhamento: features, pendências do humano, atividades do piloto, itens por gatilho e gates com checkbox; bloco "Estado atual" e coluna Estado na visão geral; estado inicial marcado (só `git init` e primeiro commit feitos, F0-01 em andamento). Numeração dos ADRs de F0-03 e F0-06 ajustada porque o 0001 já é o harness (ADR-0001).

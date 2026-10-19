@@ -8,6 +8,7 @@ Leia **a seção que a tarefa toca**, não o documento inteiro:
 |---|---|
 | Jornada e estados do pedido | PRD §5 — `docs/product/product-doc-v1.md` |
 | Pedagogia, contagens, bloqueadores | PRD §7 |
+| Schemas do kit, validações, prompts v1, casos, homologação | `docs/pedagogy/spec-pedagogica.md` (§14 diz o que cada feature lê), `docs/pedagogy/prompts-v1.md` |
 | Pagamento (Mercado Pago, Orders API) | PRD §9.1 |
 | WhatsApp (Evolution API, somente resposta) | PRD §9.2 |
 | Telas, rotas, estado → rota, textos | Design doc §5–6 — `docs/design/design-doc-v1.md` |

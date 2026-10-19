@@ -15,7 +15,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [`product/`](product/) | PRD (`product-doc-v1.md`): escopo, jornada, pedagogia, arquitetura decidida, decisões em aberto; roadmap por fases (`roadmap-v1.md`) |
 | [`design/`](design/) | Guia de design, identidade, mascote, telas, PDFs (`design-doc-v1.md`) |
 | [`gizito-image/`](gizito-image/) | Referências visuais do mascote |
-| [`pedagogy/`](pedagogy/) | [`taxonomia.md`](pedagogy/taxonomia.md) (gerado do core por `bun run taxonomy:doc`); schema do kit, prompts, regras de validação e casos de teste (a criar) |
+| [`pedagogy/`](pedagogy/) | [`taxonomia.md`](pedagogy/taxonomia.md) (gerado do core por `bun run taxonomy:doc`, com os assuntos ainda não atendidos); [`spec-pedagogica.md`](pedagogy/spec-pedagogica.md) (schemas do kit, alocação das questões, validações com código e severidade, regeneração, casos de regressão, homologação); [`prompts-v1.md`](pedagogy/prompts-v1.md) |
 | [`engineering/`](engineering/) | [`architecture.md`](engineering/architecture.md), [`data-model.md`](engineering/data-model.md), [`state-machine.md`](engineering/state-machine.md), [`api.md`](engineering/api.md), [`jobs.md`](engineering/jobs.md), [`adr/`](engineering/adr/), [`known-issues.md`](engineering/known-issues.md) |
 | [`ops/`](ops/) | Runbook e deploy (a criar) |
 | [`legal/`](legal/) | Termos, privacidade, ajuda (a criar) |

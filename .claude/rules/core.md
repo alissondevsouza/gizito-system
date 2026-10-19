@@ -22,16 +22,17 @@ paths:
 ## Taxonomia de assuntos
 - `pedagogy/taxonomy/{grade}-{subject}.ts` com `topic` = `{ topicId, label, description, bnccSkillList, prerequisiteList, validationRuleList }`. Ids estáveis, nunca renomeados; descontinuar com `deprecated: true`.
 - `taxonomyVersion` exportado e gravado no kit.
+- Assuntos ainda não atendidos em `pedagogy/taxonomy/unsupported.ts` (`unsupportedTopicList`, ids `{ma|lp}-{slug}`, `findUnsupportedTopicList` para o "outro"); congelados junto da versão da taxonomia.
 
 ## Pipeline pedagógico (contratos)
-- Schemas: `topicCandidateSchema`, `materialProfileSchema`, `extractionResultSchema`, `kitPlanSchema`, `studyKitSchema` (com `practiceQuestionList[10]`, `mockQuestionList[10]`, `answerKeyList[20]`, `workedExampleList[2]`, `materialProfile`, `topicIdList`, `sourceWarningList`, `qualityCheckList`, `generationVersion`, `taxonomyVersion`), `expectedAnswerSchema` (`number | fraction | expression | set | text`, com `unit` e `tolerance`), `reviewResultSchema`.
+- Schemas (campo a campo em `docs/pedagogy/spec-pedagogica.md`): `photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema`, `studyKitSchema` (com `practiceQuestionList[10]` e `mockQuestionList[10]` com a resposta dentro de cada questão, `workedExampleList[2]`, `topicList`, `materialProfile`, `sourceWarningCodeList`, `qualityCheckList`, `formatVersion`, `generationVersion`, `taxonomyVersion`), `expectedAnswerSchema` (`number | fraction | expression | set | text`, com `unit` e `tolerance`), `reviewResultSchema`. O gabarito é derivado por `listAnswerKey`, nunca uma lista separada.
 - Validações em `pedagogy/validation/`: cada regra é uma função `(kit) => ValidationIssue[]` com `severity: "blocker" | "warning"` e `code` estável. `validateStudyKit(kit)` agrega. Recálculo matemático recebe o avaliador por parâmetro (`MathEvaluator`), implementado em `integrations` com mathjs.
 - Prompts **não** vivem no core; vivem em `apps/worker/src/pipeline/prompts/` versionados. O core só define o formato de saída.
 
 ## Interfaces de integração
 - `PaymentGateway`: `createCharge`, `getChargeStatus`, `refund`, `parseWebhook`.
 - `NotificationChannel`: `send(notification)`; implementações `email` e `whatsapp`.
-- `AiProvider`: `extract`, `generate`, `review`, cada uma devolvendo `{ output, usage: { inputTokens, outputTokens, costCents }, model, promptVersion }`.
+- `AiProvider`: `extract`, `plan`, `generate`, `review`, cada uma devolvendo `{ output, usage: { inputTokens, outputTokens, costCents }, model, promptVersion }`.
 - `ObjectStorage`: `putPrivate`, `getSignedUrl(ttlSeconds)`, `delete`.
 - `MathEvaluator`: `evaluate(expression) → ExpectedAnswer`.
 - Interfaces não carregam detalhes de fornecedor (nenhum campo chamado `mercadoPagoOrderId` aqui; isso é do adaptador e do `db`).
