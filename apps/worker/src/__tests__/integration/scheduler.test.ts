@@ -1,9 +1,13 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { jobErrorCodeMap } from "@gizito/core";
 import { claimJob, enqueueJob, job } from "@gizito/db";
 import { createTestDatabase, type TestDatabase, truncateAllTables } from "@gizito/db/test-helpers";
 import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { eq } from "drizzle-orm";
 import { ORDER_ID } from "#src/__tests__/integration/helpers.ts";
+
+const OTHER_ORDER_ID = "22222222-2222-4222-8222-222222222222";
+
 import {
   enqueueScheduledJob,
   runMaintenance,
@@ -81,6 +85,43 @@ describe("agendador com banco", () => {
     expect(readEntryList().find((entry) => entry.level === 40)).toMatchObject({
       requeuedCount: 1,
       failedCount: 0,
+    });
+  });
+
+  it("manutenção compensa o job esgotado pelo onExhausted e loga a compensação que falha", async () => {
+    const claimNow = new Date(Date.now() - 20 * 60 * 1000);
+    for (const orderId of [ORDER_ID, OTHER_ORDER_ID]) {
+      await enqueueJob(
+        testDatabase.db,
+        { name: "order.generate", orderId },
+        { runAfterDatetime: claimNow, maxAttemptCount: 1 },
+      );
+      await claimJob(testDatabase.db, {
+        nameList: ["order.generate"],
+        workerId: "worker-morto",
+        now: claimNow,
+      });
+    }
+    const compensatedOrderIdList: string[] = [];
+    const { logger, readEntryList } = createMemoryLogger();
+    await runMaintenance({
+      db: testDatabase.db,
+      logger,
+      onExhausted: async (_tx, exhaustedJob) => {
+        if (exhaustedJob.payload.name !== "order.generate") return;
+        if (exhaustedJob.payload.orderId === OTHER_ORDER_ID) throw new Error("sempre falha");
+        compensatedOrderIdList.push(exhaustedJob.payload.orderId);
+      },
+    });
+    expect(compensatedOrderIdList).toEqual([ORDER_ID]);
+    const failure = readEntryList().find(
+      (entry) => entry.errorCode === jobErrorCodeMap.compensationFailed,
+    );
+    expect(failure).toMatchObject({ level: 50, jobName: "order.generate", errorName: "Error" });
+    expect(JSON.stringify(failure)).not.toContain("sempre falha");
+    expect(readEntryList().find((entry) => entry.level === 40)).toMatchObject({
+      requeuedCount: 0,
+      failedCount: 1,
     });
   });
 

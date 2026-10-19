@@ -7,7 +7,12 @@ import { readWorkerHealth } from "#src/health.ts";
 import { startHealthServer } from "#src/health-server.ts";
 import { jobHandlerMap } from "#src/jobs/index.ts";
 import { startJobRunner } from "#src/runner/job-runner.ts";
-import { buildJobLaneList, listHandledJobNames } from "#src/runner/lanes.ts";
+import {
+  buildExhaustedJobDispatcher,
+  buildJobLaneList,
+  countWorkerConnections,
+  listHandledJobNames,
+} from "#src/runner/lanes.ts";
 import { startScheduler } from "#src/scheduler.ts";
 
 const parsedConfig = workerConfigSchema.safeParse(process.env);
@@ -19,11 +24,14 @@ if (!parsedConfig.success) {
 }
 const config = parsedConfig.data;
 const logger = createLogger({ service: "worker", level: config.LOG_LEVEL });
-const database = createDatabase({ databaseUrl: config.DATABASE_URL });
 const workerId = `${hostname()}-${process.pid}`;
 const handledNameList = listHandledJobNames(jobHandlerMap);
 const laneList = buildJobLaneList(handledNameList, {
   generateConcurrency: config.GENERATE_CONCURRENCY,
+});
+const database = createDatabase({
+  databaseUrl: config.DATABASE_URL,
+  maxConnections: countWorkerConnections(laneList),
 });
 
 const healthServer = startHealthServer({
@@ -38,7 +46,12 @@ const runner = startJobRunner({
   workerId,
   logger,
 });
-const scheduler = startScheduler({ db: database.db, logger, handledNameList });
+const scheduler = startScheduler({
+  db: database.db,
+  logger,
+  handledNameList,
+  onExhausted: buildExhaustedJobDispatcher(jobHandlerMap),
+});
 logger.info(
   {
     workerId,

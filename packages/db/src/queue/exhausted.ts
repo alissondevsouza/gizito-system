@@ -1,4 +1,4 @@
-import type { JobName, JobPayload, OutcomeCode } from "@gizito/core";
+import { type JobName, type JobPayload, jobErrorCodeMap, type OutcomeCode } from "@gizito/core";
 import type { Transaction } from "#src/client.ts";
 
 export type ExhaustedJob = {
@@ -12,7 +12,7 @@ export type ExhaustedJob = {
 export type ExhaustedJobHandler = (tx: Transaction, exhaustedJob: ExhaustedJob) => Promise<void>;
 
 export class JobCompensationError extends Error {
-  readonly code = "job_compensation_failed";
+  readonly code = jobErrorCodeMap.compensationFailed;
 
   constructor(
     readonly jobId: string,

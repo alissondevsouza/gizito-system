@@ -16,6 +16,7 @@ export const jobErrorCodeMap = {
   jobTimeout: "job_timeout",
   invalidErrorCode: "invalid_error_code",
   workerShutdown: "worker_shutdown",
+  compensationFailed: "job_compensation_failed",
 } as const;
 
 export function jobRetryDelaySeconds(

@@ -2,13 +2,18 @@ import { setTimeout as delay } from "node:timers/promises";
 import { err, errorNameOf, jobErrorCodeMap } from "@gizito/core";
 import {
   type Executor,
+  JobCompensationError,
   type JobHandler,
   type WorkedJobOutcome,
   type WorkJobOutcome,
   workJob,
 } from "@gizito/db";
 import type { Logger } from "@gizito/integrations";
-import type { JobHandlerMap, JobLane } from "#src/runner/lanes.ts";
+import {
+  buildExhaustedJobDispatcher,
+  type JobHandlerMap,
+  type JobLane,
+} from "#src/runner/lanes.ts";
 
 export type JobRunnerState = "running" | "stopping" | "stopped";
 
@@ -31,12 +36,14 @@ export type StartJobRunnerOptions = {
 export const DEFAULT_POLL_INTERVAL_MS = 1000;
 export const DEFAULT_ERROR_BACKOFF_MS = 5000;
 export const JOB_LOOP_FAILED_ERROR_CODE = "job_loop_failed";
+export const LEASE_RENEW_FAILED_ERROR_CODE = "lease_renew_failed";
 
 type SlotIteration = "idle" | "worked" | "failed";
 
 const outcomeLogLevelMap = {
   completed: "info",
   retry_scheduled: "warn",
+  released: "warn",
   lease_lost: "warn",
   failed: "error",
 } as const satisfies Record<WorkedJobOutcome["outcome"], "info" | "warn" | "error">;
@@ -62,11 +69,12 @@ export function startJobRunner({
   const controller = new AbortController();
   let state: JobRunnerState = "running";
 
-  const dispatch: JobHandler = async (claimedJob) => {
-    const handler = handlerMap[claimedJob.name];
-    if (!handler) return err({ errorCode: jobErrorCodeMap.handlerNotFound, retryable: false });
-    return handler(claimedJob);
+  const dispatch: JobHandler = async (claimedJob, context) => {
+    const definition = handlerMap[claimedJob.name];
+    if (!definition) return err({ errorCode: jobErrorCodeMap.handlerNotFound, retryable: false });
+    return definition.handle(claimedJob, context);
   };
+  const onExhausted = buildExhaustedJobDispatcher(handlerMap);
 
   function logOutcome(outcome: WorkedJobOutcome, orderId: string | undefined, durationMs: number) {
     const { cause, ...summary } = outcome;
@@ -92,10 +100,21 @@ export function startJobRunner({
         nameList: lane.nameList,
         workerId,
         clock,
-        handler: (claimedJob) => {
+        signal: controller.signal,
+        onExhausted,
+        handler: (claimedJob, context) => {
           orderId = "orderId" in claimedJob.payload ? claimedJob.payload.orderId : undefined;
-          return dispatch(claimedJob);
+          return dispatch(claimedJob, context);
         },
+        onLeaseRenewError: (error) =>
+          logger.warn(
+            {
+              lane: lane.key,
+              errorCode: LEASE_RENEW_FAILED_ERROR_CODE,
+              errorName: errorNameOf(error),
+            },
+            "falha ao renovar o lease",
+          ),
         onPayloadInvalid: ({ jobId, name }) =>
           logger.error(
             { jobId, jobName: name, errorCode: jobErrorCodeMap.payloadInvalid },
@@ -103,6 +122,21 @@ export function startJobRunner({
           ),
       });
     } catch (error) {
+      if (error instanceof JobCompensationError) {
+        logger.error(
+          {
+            lane: lane.key,
+            jobId: error.jobId,
+            jobName: error.jobName,
+            orderId,
+            errorCode: error.code,
+            errorName: errorNameOf(error.cause),
+          },
+          "falha na compensação do job esgotado",
+        );
+        logger.debug({ jobId: error.jobId, err: error.cause }, "detalhe da falha na compensação");
+        return "failed";
+      }
       logger.error(
         { lane: lane.key, errorCode: JOB_LOOP_FAILED_ERROR_CODE, errorName: errorNameOf(error) },
         "falha no laço da fila",

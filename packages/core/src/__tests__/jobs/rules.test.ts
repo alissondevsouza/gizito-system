@@ -96,6 +96,7 @@ describe("códigos de erro da fila", () => {
       "job_timeout",
       "invalid_error_code",
       "worker_shutdown",
+      "job_compensation_failed",
     ]);
     for (const code of Object.values(jobErrorCodeMap)) {
       expect(outcomeCodeSchema.safeParse(code).success).toBe(true);

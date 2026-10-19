@@ -3,9 +3,15 @@ import {
   errorNameOf,
   type JobName,
   type JobPayload,
+  jobErrorCodeMap,
   RETENTION_PURGE_INTERVAL_HOURS,
 } from "@gizito/core";
-import { type Executor, enqueueSingletonJob, recoverExpiredJobs } from "@gizito/db";
+import {
+  type Executor,
+  type ExhaustedJobHandler,
+  enqueueSingletonJob,
+  recoverExpiredJobs,
+} from "@gizito/db";
 import type { Logger } from "@gizito/integrations";
 
 const MILLISECONDS_PER_SECOND = 1000;
@@ -13,7 +19,7 @@ const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 3600;
 
 export const SCHEDULED_JOB_SINGLETON_KEY = "scheduled";
-export const MAINTENANCE_INTERVAL_SECONDS = 60;
+export const MAINTENANCE_INTERVAL_SECONDS = 30;
 export const SCHEDULER_TASK_FAILED_ERROR_CODE = "scheduler_task_failed";
 
 export type ScheduledJob = {
@@ -36,6 +42,7 @@ export type SchedulerDependencies = {
   db: Executor;
   logger: Logger;
   clock?: () => Date;
+  onExhausted?: ExhaustedJobHandler;
 };
 
 export async function enqueueScheduledJob(
@@ -51,10 +58,26 @@ export async function runMaintenance({
   db,
   logger,
   clock = () => new Date(),
+  onExhausted,
 }: SchedulerDependencies): Promise<void> {
-  const { requeuedCount, failedCount } = await recoverExpiredJobs(db, { now: clock() });
+  const { requeuedCount, failedCount, compensationFailureList } = await recoverExpiredJobs(db, {
+    now: clock(),
+    onExhausted,
+  });
   if (requeuedCount + failedCount > 0) {
     logger.warn({ requeuedCount, failedCount }, "jobs com lock vencido recuperados");
+  }
+  for (const { jobId, name, cause } of compensationFailureList) {
+    logger.error(
+      {
+        jobId,
+        jobName: name,
+        errorCode: jobErrorCodeMap.compensationFailed,
+        errorName: errorNameOf(cause),
+      },
+      "falha na compensação do job esgotado",
+    );
+    logger.debug({ jobId, err: cause }, "detalhe da falha na compensação");
   }
 }
 

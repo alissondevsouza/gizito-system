@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   DEFAULT_GENERATE_CONCURRENCY,
   DEFAULT_WORKER_HEALTH_PORT,
+  MAX_GENERATE_CONCURRENCY,
   workerConfigSchema,
 } from "#src/config.ts";
 
@@ -31,8 +32,14 @@ describe("config do worker", () => {
     expect(z.prettifyError(result.error)).toContain("DATABASE_URL");
   });
 
-  it("recusa GENERATE_CONCURRENCY menor que 1 ou fracionária", () => {
-    for (const GENERATE_CONCURRENCY of ["0", "-1", "1.5", "muitos"]) {
+  it("recusa GENERATE_CONCURRENCY menor que 1, acima do teto ou fracionária", () => {
+    expect(
+      workerConfigSchema.safeParse({
+        ...validEnvironment,
+        GENERATE_CONCURRENCY: String(MAX_GENERATE_CONCURRENCY),
+      }).success,
+    ).toBe(true);
+    for (const GENERATE_CONCURRENCY of ["0", "-1", "1.5", "muitos", "9"]) {
       expect(
         workerConfigSchema.safeParse({ ...validEnvironment, GENERATE_CONCURRENCY }).success,
       ).toBe(false);

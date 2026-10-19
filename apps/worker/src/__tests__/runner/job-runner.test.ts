@@ -18,7 +18,7 @@ describe("runner sem banco", () => {
     const { logger, readEntryList, waitForEntryList } = createMemoryLogger({ level: "info" });
     const runner = startJobRunner({
       db: unreachableDatabase.db,
-      handlerMap: { "order.generate": async () => ok(null) },
+      handlerMap: { "order.generate": { handle: async () => ok(null) } },
       laneList: [{ key: "generate", nameList: ["order.generate"], concurrency: 1 }],
       workerId: "worker-test",
       logger,

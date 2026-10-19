@@ -213,7 +213,7 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 - [x] 3.1 Índices parciais da `job`, índices e checks de `charge`, `order`, `order_photo`, `notification`; `0002_revisao_f0` · Arquivos: `db/src/schema/*.ts`, `db/drizzle/0002_*`, testes unit de convenções e integração de migration e dados · Verificação: `cd packages/db && bun run db:generate && bun run test && bun run test:integration`
 - [x] 3.2 `createDatabase` com timeouts, `pingDatabase` e métricas com teto, `close` com teto, `migrate.ts` · Arquivos: `db/src/{client,health,migrate}.ts`, `db/src/queue/metrics.ts`, testes · Verificação: `cd packages/db && bun run test:integration`
 ### M4 — Worker
-- [ ] 4.1 Raias, `MAX_GENERATE_CONCURRENCY`, pool pelo total de vagas, `JobDefinition`, sinal de desligamento, manutenção de 30 s com `onExhausted` · Arquivos: `apps/worker/src/{config,index,scheduler}.ts`, `runner/*`, `jobs/index.ts`, testes · Verificação: `cd apps/worker && bun test` (unit e integração)
+- [x] 4.1 Raias, `MAX_GENERATE_CONCURRENCY`, pool pelo total de vagas, `JobDefinition`, sinal de desligamento, manutenção de 30 s com `onExhausted` · Arquivos: `apps/worker/src/{config,index,scheduler}.ts`, `runner/*`, `jobs/index.ts`, testes · Verificação: `cd apps/worker && bun test` (unit e integração)
 ### M5 — Config, logs, api, web (implementer em paralelo)
 - [ ] 5.1 `NODE_ENV` obrigatório; processos de teste com `NODE_ENV=test` · Arquivos: `core/src/config/schemas.ts`, testes de config em core/api/worker, testes que fazem spawn, scripts `dev` · Verificação: `bun run test` na raiz e testes de integração de api e worker
 - [ ] 5.2 `log-error.ts` e `logger.ts` (RF-19), testes · Arquivos: `packages/integrations/src/*` · Verificação: `cd packages/integrations && bun test`
@@ -241,4 +241,4 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 | 2026-10-19 | Lista de chaves sensíveis no `logger.ts` de integrations, não no core | é política de log do adaptador; o teste confere os nomes reais dos campos do core |
 
 ## Status
-Fase: spec revisada (APROVADO, rodada 1, ALERTAs incorporados); M1 concluído em `f81d88b`; M2 em `d770f90` (fila: 47 testes de integração estáveis em 3 rodadas); M3 concluído (migration `0002_revisao_f0`, timeouts; db 98 unit e 129 integração); próximo passo M4 (worker).
+Fase: spec revisada (APROVADO, rodada 1, ALERTAs incorporados); M1 concluído em `f81d88b`; M2 em `d770f90` (fila: 47 testes de integração estáveis em 3 rodadas); M3 concluído (migration `0002_revisao_f0`, timeouts; db 98 unit e 129 integração); M4 concluído (worker 36 testes); próximo passo M5 por `gizito-implementer` e M6 (docs) em paralelo pelo orquestrador.

@@ -54,9 +54,11 @@ describe("runner sobre a fila", () => {
     });
     const handled = createGate();
     const { runner, readEntryList, waitForEntryList } = startTestRunner({
-      "order.notify": async () => {
-        handled.open();
-        return ok(null);
+      "order.notify": {
+        handle: async () => {
+          handled.open();
+          return ok(null);
+        },
       },
     });
     await handled.opened;
@@ -89,14 +91,16 @@ describe("runner sobre a fila", () => {
     let maxActiveCount = 0;
     const { runner } = startTestRunner(
       {
-        "order.generate": async () => {
-          activeCount += 1;
-          maxActiveCount = Math.max(maxActiveCount, activeCount);
-          twoStarted.tick();
-          await release.opened;
-          activeCount -= 1;
-          allFinished.tick();
-          return ok(null);
+        "order.generate": {
+          handle: async () => {
+            activeCount += 1;
+            maxActiveCount = Math.max(maxActiveCount, activeCount);
+            twoStarted.tick();
+            await release.opened;
+            activeCount -= 1;
+            allFinished.tick();
+            return ok(null);
+          },
         },
       },
       { generateConcurrency: 2 },
@@ -116,9 +120,11 @@ describe("runner sobre a fila", () => {
     await enqueueJob(testDatabase.db, { name: "order.generate", orderId: ORDER_ID });
     const handled = createGate();
     const { runner, waitForEntryList } = startTestRunner({
-      "order.generate": async () => {
-        handled.open();
-        return ok(null);
+      "order.generate": {
+        handle: async () => {
+          handled.open();
+          return ok(null);
+        },
       },
     });
     await handled.opened;
@@ -134,10 +140,12 @@ describe("runner sobre a fila", () => {
     const started = createGate();
     const release = createGate();
     const { runner } = startTestRunner({
-      "order.generate": async () => {
-        started.open();
-        await release.opened;
-        return ok(null);
+      "order.generate": {
+        handle: async () => {
+          started.open();
+          await release.opened;
+          return ok(null);
+        },
       },
     });
     await started.opened;
@@ -154,14 +162,111 @@ describe("runner sobre a fila", () => {
     expect(await countJobsBy("completed")).toBe(1);
   });
 
+  it("stop aborta o sinal do handler e devolve o job à fila sem gastar tentativa", async () => {
+    const enqueued = await enqueueJob(testDatabase.db, {
+      name: "order.generate",
+      orderId: ORDER_ID,
+    });
+    const started = createGate();
+    const { runner, readEntryList } = startTestRunner({
+      "order.generate": {
+        handle: async (_claimedJob, { signal }) => {
+          started.open();
+          await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }));
+          return err({ errorCode: "provider_unavailable", retryable: true });
+        },
+      },
+    });
+    await started.opened;
+    await runner.stop();
+    const [row] = await testDatabase.db.select().from(job).where(eq(job.jobId, enqueued.jobId));
+    expect(row).toMatchObject({
+      status: "pending",
+      attemptCount: 0,
+      lastErrorCode: "worker_shutdown",
+    });
+    expect(readEntryList().find((entry) => entry.msg === "job")).toMatchObject({
+      level: 40,
+      outcome: "released",
+      errorCode: jobErrorCodeMap.workerShutdown,
+    });
+  });
+
+  it("esgotamento chama o onExhausted do job na mesma transação do failed", async () => {
+    await enqueueJob(
+      testDatabase.db,
+      { name: "order.generate", orderId: ORDER_ID },
+      { maxAttemptCount: 1 },
+    );
+    const { runner, waitForEntryList } = startTestRunner({
+      "order.generate": {
+        handle: async () => err({ errorCode: "provider_unavailable", retryable: true }),
+        onExhausted: async (tx, exhaustedJob) => {
+          if (exhaustedJob.payload.name !== "order.generate") return;
+          await enqueueJob(tx, {
+            name: "order.notify",
+            orderId: exhaustedJob.payload.orderId,
+            kind: "kit_failed",
+          });
+        },
+      },
+    });
+    await waitForEntryList((entryList) => entryList.some((entry) => entry.outcome === "failed"));
+    await runner.stop();
+    const notifyList = await testDatabase.db.select().from(job).where(eq(job.name, "order.notify"));
+    expect(notifyList).toHaveLength(1);
+    expect(notifyList[0]?.payload).toEqual({
+      name: "order.notify",
+      orderId: ORDER_ID,
+      kind: "kit_failed",
+    });
+  });
+
+  it("compensação que falha vira log error com job_compensation_failed e o job fica ativo", async () => {
+    const enqueued = await enqueueJob(
+      testDatabase.db,
+      { name: "order.generate", orderId: ORDER_ID },
+      { maxAttemptCount: 1 },
+    );
+    const { runner, readEntryList, waitForEntryList } = startTestRunner({
+      "order.generate": {
+        handle: async () => err({ errorCode: "provider_unavailable", retryable: true }),
+        onExhausted: async () => {
+          throw new Error("banco caiu no meio");
+        },
+      },
+    });
+    await waitForEntryList((entryList) =>
+      entryList.some((entry) => entry.errorCode === jobErrorCodeMap.compensationFailed),
+    );
+    await runner.stop();
+    const entry = readEntryList().find(
+      (logEntry) => logEntry.errorCode === jobErrorCodeMap.compensationFailed,
+    );
+    expect(entry).toMatchObject({
+      level: 50,
+      jobId: enqueued.jobId,
+      jobName: "order.generate",
+      orderId: ORDER_ID,
+      errorName: "Error",
+    });
+    expect(JSON.stringify(entry)).not.toContain("banco caiu");
+    const [row] = await testDatabase.db.select().from(job).where(eq(job.jobId, enqueued.jobId));
+    expect(row?.status).toBe("active");
+  });
+
   it("falha transitória loga warn com errorCode; exceção só vai para debug", async () => {
     await enqueueJob(testDatabase.db, { name: "order.generate", orderId: ORDER_ID });
     await enqueueJob(testDatabase.db, { name: "order.analyze", orderId: ORDER_ID });
     const memoryLogger = createMemoryLogger({ level: "debug" });
     const handlerMap: JobHandlerMap = {
-      "order.generate": async () => err({ errorCode: "provider_unavailable", retryable: true }),
-      "order.analyze": async () => {
-        throw new Error("mensagem bruta do provedor");
+      "order.generate": {
+        handle: async () => err({ errorCode: "provider_unavailable", retryable: true }),
+      },
+      "order.analyze": {
+        handle: async () => {
+          throw new Error("mensagem bruta do provedor");
+        },
       },
     };
     const runner = startJobRunner({
@@ -206,7 +311,7 @@ describe("runner sobre a fila", () => {
       sql`INSERT INTO job (name, payload) VALUES ('order.generate', '{"name":"order.generate","orderId":"x"}')`,
     );
     const { runner, readEntryList, waitForEntryList } = startTestRunner({
-      "order.generate": async () => ok(null),
+      "order.generate": { handle: async () => ok(null) },
     });
     await waitForEntryList((entryList) =>
       entryList.some((entry) => entry.errorCode === jobErrorCodeMap.payloadInvalid),

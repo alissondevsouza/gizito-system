@@ -32,7 +32,7 @@ describe("health do worker", () => {
     const { logger } = createMemoryLogger();
     const runner = startJobRunner({
       db: testDatabase.db,
-      handlerMap: { "order.generate": async () => ok(null) },
+      handlerMap: { "order.generate": { handle: async () => ok(null) } },
       laneList: [{ key: "generate", nameList: ["order.generate"], concurrency: 1 }],
       workerId: "worker-test",
       logger,
