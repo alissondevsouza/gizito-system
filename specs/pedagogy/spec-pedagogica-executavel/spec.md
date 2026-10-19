@@ -44,8 +44,8 @@ Escrever em `docs/pedagogy/` a especificação pedagógica que as features F1-03
 - [x] 1.2 Trocar `taxonomyExclusionList` por `unsupportedTopicList` no index, render, script e testes; histórico e teste de versão (RF-03, RF-04); `bun run taxonomy:doc`; provar a falha do fingerprint alterando uma palavra · Verificação: `bun test` + `bun run typecheck`
 
 ### M2 — Spec pedagógica
-- [ ] 2.1 `docs/pedagogy/spec-pedagogica.md` (RF-05, RF-07)
-- [ ] 2.2 `docs/pedagogy/prompts-v1.md` (RF-06)
+- [x] 2.1 `docs/pedagogy/spec-pedagogica.md` (RF-05, RF-07)
+- [x] 2.2 `docs/pedagogy/prompts-v1.md` (RF-06)
 
 ### M3 — Fechamento
 - [ ] 3.1 Docs e rules (RF-08)
