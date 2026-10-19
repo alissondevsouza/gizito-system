@@ -22,13 +22,15 @@ paths:
 - Health check HTTP simples e métricas por etapa (duração, custo, tokens, resultado).
 - Logs estruturados com `orderId`, `jobName`, `stage`, duração, custo, `outcomeCode`. **NUNCA** logar imagens, texto extraído, prompt, resposta do modelo, observação ou mensagem de WhatsApp.
 
-## Pipeline de geração (ordem obrigatória, PRD 7.4)
-1. `plan`: objetivos, mapa assunto → questões (10 + 10), distribuição de dificuldade, diretrizes do `materialProfile`.
-2. `generate`: JSON completo do kit (modelo forte), validado por `studyKitSchema` antes de qualquer uso.
-3. `validate`: `validateStudyKit` do core + recálculo matemático (mathjs). Bloqueador → regenerar uma vez.
-4. `review`: segunda verificação por modelo; inconsistência marcada vira bloqueador.
-5. `render`: dois PDFs; conferir contagem de páginas e presença de todas as questões (regras em `pdf-render.md`).
-6. `publish`: upload dos dois arquivos → `publishKit` (transação) → enfileirar `order.notify`.
+## Pipeline de geração (ordem obrigatória, PRD 7.4; contrato em `docs/pedagogy/spec-pedagogica.md` §1 e §5–§10)
+1. Alocação: `planKitSlots` do core define assunto e dificuldade de cada vaga (10 + 10) e dos exemplos; o modelo não escolhe.
+2. `plan`: objetivos, tipo e foco de cada vaga, textos-base, diretrizes do `materialProfile`; saída em `kitPlanSchema`, conferida por `validateKitPlan`.
+3. `generate`: conteúdo do kit (modelo forte) em `kitContentSchema`; `composeStudyKit` junta vagas, plano e pedido em `studyKitSchema` antes de qualquer uso.
+4. `validate`: `validateStudyKit` do core com o `MathEvaluator` (mathjs) + `checkMathMarkup` (KaTeX).
+5. `review`: segunda verificação por modelo; `interpretReview` dá a severidade pelo código (bloqueador ou aviso, spec §8.5).
+6. `render`: dois PDFs; conferir contagem de páginas e presença de todas as questões (regras em `pdf-render.md`).
+7. `publish`: upload dos dois arquivos → `publishKit` (transação) → enfileirar `order.notify`.
+- Bloqueador em qualquer etapa usa a única regeneração, que refaz plano, kit ou só os itens marcados conforme o código (spec §10).
 - Cada chamada de IA grava uma linha em `ai_call` com modelo, versão do prompt, tokens, custo e `outcomeCode`.
 
 ## Estrutura

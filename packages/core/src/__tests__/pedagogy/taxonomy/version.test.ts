@@ -20,15 +20,17 @@ describe("versão da taxonomia (RF-07)", () => {
     expect(canonicalSha256(taxonomyTopicList)).toBe(current?.fingerprint ?? "");
   });
 
-  it("a versão atual registra exatamente os ids atuais, e cada versão tem fingerprint próprio", () => {
+  it("a versão atual registra exatamente os ids atuais, e cada versão tem conteúdo próprio", () => {
     const current = publishedTaxonomyList.find(
       (published) => published.taxonomyVersion === TAXONOMY_VERSION,
     );
     expect(current?.topicIdList).toEqual(taxonomyTopicList.map((topic) => topic.topicId));
     const versionList = publishedTaxonomyList.map((published) => published.taxonomyVersion);
-    const fingerprintList = publishedTaxonomyList.map((published) => published.fingerprint);
+    const contentFingerprintList = publishedTaxonomyList.map(
+      (published) => `${published.fingerprint}:${published.unsupportedFingerprint}`,
+    );
     expect(new Set(versionList).size).toBe(versionList.length);
-    expect(new Set(fingerprintList).size).toBe(fingerprintList.length);
+    expect(new Set(contentFingerprintList).size).toBe(contentFingerprintList.length);
   });
 
   it("a lista de assuntos ainda não atendidos não muda sem um novo TAXONOMY_VERSION", () => {

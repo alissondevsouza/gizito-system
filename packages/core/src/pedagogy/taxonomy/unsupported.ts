@@ -193,7 +193,6 @@ export const unsupportedTopicList: readonly UnsupportedTopic[] = [
       "redacao",
       "redacoes",
       "producao de texto",
-      "producao de textos",
       "producao textual",
       "escrever um texto",
       "escrita de texto",

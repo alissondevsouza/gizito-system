@@ -59,6 +59,14 @@ Escrever em `docs/pedagogy/` a especificação pedagógica que as features F1-03
 | 2026-10-19 | Lista de não atendidos com id no core, `taxonomia.md` gerado | uma fonte só; PRD §7.7 publica a lista em `taxonomia.md` |
 | 2026-10-19 | Estender o congelamento da `tax-v1` à lista, sem `tax-v2` | nenhuma extração usou a `tax-v1`; as 7 áreas aprovadas não mudam de texto |
 | 2026-10-19 | "Outro" reconhecido por palavra-chave normalizada, na disciplina do pedido | a recusa é na API (F2-03), sem IA (invariante 3); casar entre disciplinas recusaria termos legítimos |
+| 2026-10-19 | Assunto, dificuldade e ordem das questões calculados no core (`planKitSlots`); o modelo não escolhe | contagem e cobertura certas por construção; erro do modelo não gasta a regeneração (ADR-0010) |
+| 2026-10-19 | Fotos só na extração, uma chamada por foto, cache por foto que expira com ela | originalidade e dado pessoal (PRD §7.1.5, invariante 4); "Trocar foto" só paga a foto nova (ADR-0010) |
+| 2026-10-19 | Resposta dentro da questão; gabarito derivado por `listAnswerKey` | lista de gabarito separada poderia divergir das questões (ADR-0010) |
+| 2026-10-19 | Marcação matemática `\( … \)`, `$` literal | "R$" colidiria com `$` como delimitador |
+| 2026-10-19 | Regeneração por reparo (plano, kit ou itens) conforme o código mais forte; `não` para "outro" inviável e códigos de defesa | refazer o kit inteiro pode estragar itens certos sem segunda chance; refazer não corrige bug da alocação (ADR-0010) |
+| 2026-10-19 | Severidade fixa por código no core, inclusive para a revisão por modelo | o modelo não decide o que bloqueia; código → reparo é função |
+| 2026-10-19 | `expression_number_not_in_statement` e `non_computable_excess` como avisos | número por extenso e geometria conceitual dariam falso bloqueador; a revisão bloqueia a interpretação errada. Ponto para o humano (spec pedagógica §15) |
+| 2026-10-19 | Limites de tamanho fora do texto dos prompts, carregados pelo JSON Schema | número digitado no prompt divergiria do schema na recalibração (revisão neutra, rodada 1) |
 
 ## Status
-M1 concluído (346 testes no core; trava do fingerprint provada com uma palavra extra em `ma-flowcharts`). M2 em andamento. Pendência para o humano no handoff: aprovar a spec (pronto da F1-02 no roadmap) e as metas propostas de homologação, custo e tempo.
+M1 a M3 implementados. Revisão neutra rodada 1: REPROVADO com 3 CRÍTICOs, todos corrigidos, e ALERTAs corrigidos ou registrados (`review.md`). Próximo passo: revalidação dos pontos corrigidos por um verifier novo. Pendências para o humano no handoff: aprovar a spec (pronto da F1-02 no roadmap), o ADR-0010 e os pontos do §15 da spec pedagógica (metas do gate, dificuldade percebida, relevância, avisos e dois textos que faltam no design doc).

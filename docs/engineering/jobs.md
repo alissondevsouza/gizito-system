@@ -1,6 +1,6 @@
 # Jobs e fila (`apps/worker`)
 
-**Versão:** 1.3 · **Data:** 2026-10-19 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md` · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
+**Versão:** 1.4 · **Data:** 2026-10-19 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md`; `docs/pedagogy/spec-pedagogica.md` (contratos e códigos do pipeline) · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
 
 O worker é um processo Bun que consome a fila no Postgres. Cada job tem um handler em `src/jobs/{nome}.ts`, payload validado por `jobPayloadSchema` ao enfileirar e ao consumir, e é **idempotente**: checa o estado do pedido antes de agir e reexecução não duplica kit, cobrança, e-mail nem mensagem.
 
@@ -24,23 +24,28 @@ O worker agrupa os jobs em raias pela coluna Concorrência (`buildJobLaneList`):
 
 O pool do worker tem duas conexões por vaga (handler e renovação do lease) mais 2. Cada vaga é um laço sobre `workJob` que dorme 1 s com a fila vazia e 5 s depois de erro de banco, sem morrer. Só sobem raias com handler registrado em `src/jobs/index.ts`; enquanto um job não tem handler, ninguém o reclama nem o agenda.
 
-## 2. Fluxo de `order.generate` (PRD §7.4)
+## 2. Fluxo de `order.generate` (PRD §7.4; contratos e códigos na spec pedagógica, ADR-0010)
 
 ```mermaid
 flowchart TD
   A[pega job] --> S{status do pedido}
   S -->|outro| Z[no-op, log info]
   S -->|paid| B[generation_started → processing]
-  S -->|processing: worker caiu antes| C
-  B --> C[plan: objetivos, mapa assunto→questões, dificuldade]
-  C --> D[generate: JSON do kit, modelo forte]
-  D --> E{studyKitSchema.parse}
-  E -->|inválido| R{já regenerou uma vez?}
-  E -->|ok| F{validateStudyKit + recálculo mathjs}
+  S -->|processing: worker caiu antes| P
+  B --> P[planKitSlots: vagas de assunto e dificuldade, no core]
+  P --> C[plan: tipo e foco das vagas, textos-base, estilo]
+  C --> C2{validateKitPlan}
+  C2 -->|bloqueador| R{já regenerou uma vez?}
+  C2 -->|other_topic_unfeasible| X
+  C2 -->|ok| D[generate: conteúdo do kit, modelo forte]
+  D --> E{kitContentSchema + composeStudyKit}
+  E -->|inválido| R
+  E -->|ok| F{validateStudyKit + mathjs + KaTeX}
   F -->|bloqueador| R
-  F -->|ok| G{review por modelo}
-  G -->|inconsistência| R
-  R -->|não| D
+  F -->|ok| G{review por modelo + interpretReview}
+  G -->|bloqueador| R
+  R -->|não: reparo plano| C
+  R -->|não: reparo kit ou itens| D
   R -->|sim| X[generation_failed → failed; order.notify kit_failed]
   G -->|ok| H{render dos dois PDFs}
   H -->|falha| H2{já tentou render de novo?}
@@ -52,7 +57,7 @@ flowchart TD
 ```
 
 - Cada chamada de IA grava uma linha em `ai_call`; o custo acumulado do pedido é comparado a `MAX_AI_COST_CENTS_PER_ORDER` antes de cada chamada; exceder é falha segura.
-- Uma regeneração automática no total (`MAX_REGENERATION_COUNT = 1`), seja por saída inválida no `parse`, por bloqueador na validação ou por inconsistência na revisão; nenhuma delas é transitória nem entra no retry da fila. O render tem uma segunda tentativa própria (timeout do Playwright é comum e barato de repetir).
+- Uma regeneração automática no total (`MAX_REGENERATION_COUNT = 1`), seja por saída inválida, por bloqueador no plano ou na validação ou por bloqueador da revisão; nenhuma delas é transitória nem entra no retry da fila. O código mais forte decide o reparo: plano e kit, kit inteiro ou só os itens marcados (spec pedagógica §10). O "outro" inviável e os códigos de defesa da alocação falham sem regenerar. Saída inválida da revisão ganha uma nova chamada de revisão, que não gasta a regeneração. O render tem uma segunda tentativa própria (timeout do Playwright é comum e barato de repetir).
 - O handler tem três ramos pelo status: `paid` → `generation_started` e segue; `processing` (worker caiu no meio) → segue do `plan` sem transição, com o custo já gasto contando no teto; qualquer outro → no-op com log `info`.
 - O handler respeita `signal` (desligamento, teto de execução ou lease perdido): interrompe a etapa em curso e devolve falha transitória, sem publicar nada parcial.
 - `onExhausted` de `order.generate`: com o pedido em `paid` ou `processing`, `generation_failed` com o código do job em `fail_reason_code` e `order.notify` `kit_failed`, na transação do `failed`; qualquer outro estado é no-op.
@@ -81,7 +86,7 @@ flowchart TD
   - Falha transitória depois do teto vira `job_timeout`. Falha transitória no desligamento vira `releaseJob`: volta a `pending` com `worker_shutdown`, sem gastar tentativa; a renovação para antes da liberação.
   - Falha não retryable do handler vence desligamento e teto e vira `failed`.
   - Código de erro que não passa em `outcomeCodeSchema` vira `invalid_error_code`, mantendo o `retryable` do handler.
-- Falhas **definitivas**: `generation_failed` com `fail_reason_code` estável e `order.notify` `kit_failed`: `ai_output_invalid` (saída não passou em `studyKitSchema` também na regeneração), `generation_blocked` (bloqueador na validação ou inconsistência na revisão também na regeneração), `ai_cost_exceeded` (teto por pedido), `render_failed` (as duas tentativas de render falharam).
+- Falhas **definitivas**: `generation_failed` com `fail_reason_code` estável e `order.notify` `kit_failed`: `ai_output_invalid` (saída não passou em `studyKitSchema` também na regeneração), `generation_blocked` (bloqueador na validação ou inconsistência na revisão também na regeneração), `ai_cost_exceeded` (teto por pedido), `render_failed` (as duas tentativas de render falharam), `other_topic_unfeasible` (o plano julgou o "outro" inviável só com texto e tabela; não regenera).
 - Job com payload que não passa em `jobPayloadSchema` vai direto para `failed` com `last_error_code = payload_invalid` no claim, sem chamar handler, e o próximo job é entregue; nunca é "corrigido" em runtime. O pedido não muda de estado nem é notificado: é falha da fila, não da geração. O claim avisa o worker (`onPayloadInvalid`), que loga `error` com `payload_invalid`, e o `/health` conta os da janela (`payloadInvalidCount`) para o alerta. Código de erro passa em `outcomeCodeSchema` (minúsculas e `_`, até 64), então não carrega conteúdo.
 - **Esgotamento (ADR-0009):**
   - Cada job pode declarar `onExhausted(tx, exhaustedJob)` no mapa de handlers (`JobDefinition = { handle, onExhausted? }`).
@@ -112,3 +117,4 @@ flowchart TD
 - **1.1 (2026-10-15):** F0-06 e ADR-0008: fila própria; 4 tentativas com os atrasos do core; lock de 15 min com recuperação e lease por `(job_id, attempt_count)`; payload de `whatsapp.inbound` reduzido (não expurgado) ao terminar; agendador por `enqueueSingletonJob`.
 - **1.2 (2026-10-16):** F0-07: raias de concorrência, agendador só do que o worker consome, manutenção de locks a cada 60 s, log por job, `payload_invalid` em log `error`, `/health` com métricas da fila e desligamento por sinal.
 - **1.3 (2026-10-19):** revisão da F0 e ADR-0009: lease de 2 min renovado a cada 30 s, teto de 15 min por execução, sinal para o handler, liberação sem gastar tentativa no desligamento, código de erro inválido sem travar o job, compensação atômica por `onExhausted`, manutenção a cada 30 s; `charge.reconcile` com `webhookEventId` e 2 vagas; `order.analyze` em raia própria.
+- **1.4 (2026-10-19):** F1-02 e ADR-0010: alocação das vagas no core antes do `plan`, `validateKitPlan`, composição do kit, revisão com severidade pelo código, regeneração por reparo (plano, kit ou itens), nova chamada de revisão sem gastar a regeneração e `fail_reason_code` `other_topic_unfeasible`.

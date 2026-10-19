@@ -34,5 +34,5 @@ paths:
 - `NotificationChannel`: `send(notification)`; implementações `email` e `whatsapp`.
 - `AiProvider`: `extract`, `plan`, `generate`, `review`, cada uma devolvendo `{ output, usage: { inputTokens, outputTokens, costCents }, model, promptVersion }`.
 - `ObjectStorage`: `putPrivate`, `getSignedUrl(ttlSeconds)`, `delete`.
-- `MathEvaluator`: `evaluate(expression) → ExpectedAnswer`.
+- `MathEvaluator`: `evaluate(expression) → Result<ExpectedAnswer, MathEvaluationError>` e `equals(left, right)` (equivalência com unidade, fração e tolerância).
 - Interfaces não carregam detalhes de fornecedor (nenhum campo chamado `mercadoPagoOrderId` aqui; isso é do adaptador e do `db`).
