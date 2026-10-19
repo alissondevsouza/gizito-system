@@ -1,5 +1,5 @@
 {
-  "id": "d16b6ff5-bbee-4156-bdb5-26929ac3b268",
+  "id": "dfa9fff7-c517-40f4-a728-b846d751896f",
   "prevId": "e21dbb07-8944-4591-a442-7421e2f0a0b2",
   "version": "7",
   "dialect": "postgresql",
@@ -1095,7 +1095,7 @@
         },
         "order_topic_id_list_check": {
           "name": "order_topic_id_list_check",
-          "value": "jsonb_typeof(\"order\".\"topic_id_list\") = 'array' AND jsonb_array_length(\"order\".\"topic_id_list\") + (\"order\".\"other_topic_text\" IS NOT NULL)::int <= 3"
+          "value": "CASE WHEN jsonb_typeof(\"order\".\"topic_id_list\") = 'array' THEN jsonb_array_length(\"order\".\"topic_id_list\") + (\"order\".\"other_topic_text\" IS NOT NULL)::int <= 3 ELSE false END"
         }
       },
       "isRLSEnabled": false

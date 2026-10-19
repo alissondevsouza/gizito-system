@@ -2,7 +2,7 @@
 feature: revisao-f0
 module: cross
 size: L
-status: in_progress
+status: done
 branch: fix/cross/revisao-f0
 updated: 2026-10-19
 ---
@@ -59,8 +59,8 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
   - **Tempo máximo:** passado `maxRunMs`, aborta o handler e para de renovar. Falha retryable (ou exceção) vira falha retryable `job_timeout`.
   - **Desligamento:** `signal` externo aborta o handler. Falha retryable (ou exceção) com o desligamento já pedido vira `releaseJob` (outcome `released`); resultado ok conclui normalmente.
   - **Precedência:** falha não retryable do handler vence o desligamento e o tempo máximo e vira `failed`, porque o handler já tratou o pedido.
-  - **Código de erro:** um `errorCode` que não passa em `outcomeCodeSchema` vira `invalid_error_code` retryable, sem lançar.
-  - **Erro na renovação:** é repassado ao chamador por `onLeaseRenewError` para log; não aborta.
+  - **Código de erro:** um `errorCode` que não passa em `outcomeCodeSchema` vira `invalid_error_code`, mantendo o `retryable` do handler, sem lançar.
+  - **Erro na renovação:** é repassado ao chamador por `onLeaseRenewError` para log; não aborta. O callback só loga e não pode lançar.
 
   · Aceite: integração cobre:
   - renovação mantendo o job fora do `recoverExpiredJobs`;
@@ -221,7 +221,7 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 - [x] 5.4 Web: `shellComponent`, `errorComponent` pt-BR, copy · Arquivos: `apps/web/src/routes/__root.tsx`, `src/copy/`, teste · Verificação: `cd apps/web && bun run test`
 ### M6 — Docs e revisão
 - [x] 6.1 ADR-0009, `jobs.md`, `data-model.md`, `state-machine.md`, `api.md`, design doc §7.2, known-issues, roadmap, README (índice de ADR) · Verificação: cada doc com data de 2026-10-19 e versão subida no cabeçalho; ADR-0009 indexado em `docs/README.md`; `grep` sem "15 min" de lock em `jobs.md`
-- [ ] 6.2 `bun run lint && bun run typecheck && bun run test && bun run test:integration` na raiz; revisão neutra; `review.md`; correções
+- [x] 6.2 `bun run lint && bun run typecheck && bun run test && bun run test:integration` na raiz; revisão neutra; `review.md`; correções
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -241,7 +241,9 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 | 2026-10-19 | M5 (implementer): chaves sensíveis comparadas sem caixa, `_` nem `-`; binário vira `[binary]`; truncamento descarta a palavra cortada; log `request` usa o campo `errorCode`; copy em `src/copy/route-error.ts` | pega `note_text`, `Authorization` e `api-key`; meio e-mail não vaza no corte; `errorCode` é o nome usado nos demais logs |
 | 2026-10-19 | `RouteErrorPage` em `src/components/` e `defaultErrorComponent` no router | o M5 achou que erro de loader numa rota filha, no SSR, mostrava o componente padrão do TanStack em inglês com a mensagem do erro |
 | 2026-10-19 | `close` do banco com teto de 5 s também no worker | o M5 só tinha a api na lista de arquivos |
+| 2026-10-19 | Código de erro inválido mantém o `retryable` do handler | coerente com a regra de que falha não retryable vence; decidido na implementação (M2) e registrado na revisão neutra |
+| 2026-10-19 | Revisão neutra (rodada 1, APROVADO com 4 ALERTAs): todos aplicados; sugestões do `CASE` no check (0002 regerada, nunca aplicada fora de bancos descartáveis), contrato do `onLeaseRenewError` e import do teste aplicadas; espera acumulada do `withDatabaseTimeout` aceita | ver `review.md` |
 | 2026-10-19 | Lista de chaves sensíveis no `logger.ts` de integrations, não no core | é política de log do adaptador; o teste confere os nomes reais dos campos do core |
 
 ## Status
-Fase: implementação concluída (M1–M6); suíte da raiz verde (lint, typecheck, unit e integração); `bun run dev` conferido com banco descartável; próximo passo: revisão neutra (`gizito-implement-verifier`).
+Fase: concluída. Revisão neutra APROVADA (rodada 1, `review.md`); os 4 ALERTAs e 3 das 4 sugestões aplicados no commit de fechamento. Suíte da raiz verde: lint, typecheck, unit (core 254, db 98, integrations 25, api 25, worker 21, web 10) e integração (db 129, api 3, worker 17). Pendências para o humano: ler o ADR-0009, as duas transições novas (`paid → failed` e `preview_ready → draft`) e o texto da página de erro (design doc 1.4, `apps/web/src/copy/route-error.ts`); o `.env` local não tem `PAYMENT_GATEWAY` nem `WEB_PUBLIC_URL` (o `bun run dev` só subiu com elas no shell); push, PR e merge.

@@ -13,4 +13,4 @@ CREATE INDEX "order_whatsapp_phone_idx" ON "order" USING btree ("whatsapp_phone"
 CREATE INDEX "order_photo_content_hash_idx" ON "order_photo" USING btree ("content_hash");--> statement-breakpoint
 ALTER TABLE "notification" ADD CONSTRAINT "notification_order_id_check" CHECK (("notification"."order_id" IS NULL) = ("notification"."kind" = 'whatsapp_help'));--> statement-breakpoint
 ALTER TABLE "notification" ADD CONSTRAINT "notification_recipient_hash_check" CHECK ("notification"."recipient_hash" ~ '^[a-f0-9]{64}$');--> statement-breakpoint
-ALTER TABLE "order" ADD CONSTRAINT "order_topic_id_list_check" CHECK (jsonb_typeof("order"."topic_id_list") = 'array' AND jsonb_array_length("order"."topic_id_list") + ("order"."other_topic_text" IS NOT NULL)::int <= 3);
+ALTER TABLE "order" ADD CONSTRAINT "order_topic_id_list_check" CHECK (CASE WHEN jsonb_typeof("order"."topic_id_list") = 'array' THEN jsonb_array_length("order"."topic_id_list") + ("order"."other_topic_text" IS NOT NULL)::int <= 3 ELSE false END);

@@ -67,7 +67,14 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
       payerEmail: "mae@example.com",
       expireDatetime: charge.expireDatetime,
     });
-    expect(createdChargeSchema.safeParse(await gateway.createCharge(input)).success).toBe(true);
+    const created = await gateway.createCharge(input);
+    expect(createdChargeSchema.safeParse(created).success).toBe(true);
+    expect(
+      createdChargeSchema.safeParse({ ...created, ticketUrl: "javascript:alert(1)" }).success,
+    ).toBe(false);
+    expect(
+      createdChargeSchema.safeParse({ ...created, ticketUrl: "http://mp.example/t" }).success,
+    ).toBe(false);
     const status = await gateway.getChargeStatus({
       chargeId: CHARGE_ID,
       gatewayOrderId: "gw-1",

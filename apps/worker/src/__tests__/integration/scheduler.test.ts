@@ -1,13 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
-import { jobErrorCodeMap } from "@gizito/core";
+import { type JobPayload, jobErrorCodeMap, ok } from "@gizito/core";
 import { claimJob, enqueueJob, job } from "@gizito/db";
 import { createTestDatabase, type TestDatabase, truncateAllTables } from "@gizito/db/test-helpers";
 import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { eq } from "drizzle-orm";
 import { ORDER_ID } from "#src/__tests__/integration/helpers.ts";
-
-const OTHER_ORDER_ID = "22222222-2222-4222-8222-222222222222";
-
+import { buildExhaustedJobDispatcher } from "#src/runner/lanes.ts";
 import {
   enqueueScheduledJob,
   runMaintenance,
@@ -15,6 +13,8 @@ import {
   scheduledJobList,
   startScheduler,
 } from "#src/scheduler.ts";
+
+const OTHER_ORDER_ID = "22222222-2222-4222-8222-222222222222";
 
 let testDatabase: TestDatabase;
 
@@ -123,6 +123,39 @@ describe("agendador com banco", () => {
       requeuedCount: 0,
       failedCount: 1,
     });
+  });
+
+  it("manutenção despacha o esgotado para o onExhausted do próprio nome no mapa de handlers", async () => {
+    const claimNow = new Date(Date.now() - 20 * 60 * 1000);
+    const payloadList: JobPayload[] = [
+      { name: "order.analyze", orderId: ORDER_ID },
+      { name: "order.notify", orderId: ORDER_ID, kind: "kit_ready" },
+    ];
+    for (const payload of payloadList) {
+      await enqueueJob(testDatabase.db, payload, {
+        runAfterDatetime: claimNow,
+        maxAttemptCount: 1,
+      });
+      await claimJob(testDatabase.db, {
+        nameList: [payload.name],
+        workerId: "worker-morto",
+        now: claimNow,
+      });
+    }
+    const calledList: string[] = [];
+    const handle = async () => ok(null);
+    const { logger } = createMemoryLogger();
+    await runMaintenance({
+      db: testDatabase.db,
+      logger,
+      onExhausted: buildExhaustedJobDispatcher({
+        "order.generate": { handle, onExhausted: async () => void calledList.push("generate") },
+        "order.analyze": { handle, onExhausted: async () => void calledList.push("analyze") },
+        "order.notify": { handle },
+      }),
+    });
+    expect(calledList).toEqual(["analyze"]);
+    expect(await testDatabase.db.$count(job, eq(job.status, "failed"))).toBe(2);
   });
 
   it("manutenção sem lock vencido não loga", async () => {

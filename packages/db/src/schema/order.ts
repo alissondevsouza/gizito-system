@@ -46,7 +46,7 @@ export const order = pgTable(
     ),
     check(
       "order_topic_id_list_check",
-      sql`jsonb_typeof(${table.topicIdList}) = 'array' AND jsonb_array_length(${table.topicIdList}) + (${table.otherTopicText} IS NOT NULL)::int <= ${sql.raw(String(MAX_TOPIC_COUNT))}`,
+      sql`CASE WHEN jsonb_typeof(${table.topicIdList}) = 'array' THEN jsonb_array_length(${table.topicIdList}) + (${table.otherTopicText} IS NOT NULL)::int <= ${sql.raw(String(MAX_TOPIC_COUNT))} ELSE false END`,
     ),
   ],
 );

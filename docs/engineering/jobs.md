@@ -73,7 +73,7 @@ flowchart TD
 
 - Falhas **transitórias** (rede, 5xx, rate limit do provedor): 4 tentativas no total, a primeira e 3 retentativas após 30 s, 2 min e 8 min (`JOB_RETRY_DELAY_SECONDS_LIST` do core), mantendo o estado do pedido. Exceção não tratada no handler conta como transitória (`unhandled_error`).
 - **Lease (ADR-0009):**
-  - O claim grava `lock_expire_datetime` com 2 min (`JOB_LOCK_TIMEOUT_SECONDS`), e `workJob` renova a cada 30 s (`JOB_LEASE_RENEW_INTERVAL_SECONDS`). Erro de banco na renovação vira log `warn` `lease_renew_failed` e tenta de novo no intervalo seguinte.
+  - O claim grava `lock_expire_datetime` com 2 min (`JOB_LOCK_TIMEOUT_SECONDS`), e `workJob` renova a cada 30 s (`JOB_LEASE_RENEW_INTERVAL_SECONDS`). Erro de banco na renovação vira log `warn` `lease_renew_failed` (o callback `onLeaseRenewError` só loga e não pode lançar) e tenta de novo no intervalo seguinte.
   - Concluir, falhar, renovar ou liberar exige o par `(job_id, attempt_count)` do claim: worker atrasado recebe `lease_lost` e não fecha a tentativa de outro.
   - `recoverExpiredJobs`, chamado pela manutenção a cada 30 s, devolve a `pending` o job de worker morto, com `last_error_code = lock_expired`. Se o job estiver esgotado, vai para `failed` com compensação (abaixo).
 - **Sinal e teto:**
