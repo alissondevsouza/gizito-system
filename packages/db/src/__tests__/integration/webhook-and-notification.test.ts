@@ -39,8 +39,11 @@ describe("webhook_event", () => {
   });
 });
 
+const RECIPIENT_HASH = "a".repeat(64);
+const OTHER_RECIPIENT_HASH = "b".repeat(64);
+
 describe("notification", () => {
-  it("um envio por (order_id, kind, channel); retry atualiza a linha em vez de inserir outra", async () => {
+  it("um envio por (order_id, kind, channel, destinatário); retry atualiza a linha", async () => {
     const orderId = await insertOrderId();
     const [first] = await testDatabase.db
       .insert(notification)
@@ -48,17 +51,20 @@ describe("notification", () => {
         orderId,
         channel: "email",
         kind: "kit_ready",
+        recipientHash: RECIPIENT_HASH,
         status: "failed",
         errorCode: "timeout",
       })
       .returning();
     await expectSqlState(
-      testDatabase.db.insert(notification).values({ orderId, channel: "email", kind: "kit_ready" }),
+      testDatabase.db
+        .insert(notification)
+        .values({ orderId, channel: "email", kind: "kit_ready", recipientHash: RECIPIENT_HASH }),
       SQL_STATE.uniqueViolation,
     );
     await testDatabase.db
       .insert(notification)
-      .values({ orderId, channel: "whatsapp", kind: "kit_ready" });
+      .values({ orderId, channel: "whatsapp", kind: "kit_ready", recipientHash: RECIPIENT_HASH });
     const [retried] = await testDatabase.db
       .update(notification)
       .set({ status: "sent", errorCode: null, providerMessageId: "msg-1" })
@@ -70,6 +76,57 @@ describe("notification", () => {
       with: { notificationList: true },
     });
     expect(loaded?.notificationList).toHaveLength(2);
+  });
+
+  it("reenvio para outro destinatário (e-mail corrigido) é outra linha", async () => {
+    const orderId = await insertOrderId();
+    await testDatabase.db
+      .insert(notification)
+      .values({ orderId, channel: "email", kind: "order_link", recipientHash: RECIPIENT_HASH });
+    await testDatabase.db.insert(notification).values({
+      orderId,
+      channel: "email",
+      kind: "order_link",
+      recipientHash: OTHER_RECIPIENT_HASH,
+    });
+  });
+
+  it("só a ajuda do WhatsApp vive sem pedido, e ela nunca tem pedido", async () => {
+    await testDatabase.db
+      .insert(notification)
+      .values({ channel: "whatsapp", kind: "whatsapp_help", recipientHash: RECIPIENT_HASH });
+    await testDatabase.db
+      .insert(notification)
+      .values({ channel: "whatsapp", kind: "whatsapp_help", recipientHash: RECIPIENT_HASH });
+    await expectSqlState(
+      testDatabase.db
+        .insert(notification)
+        .values({ channel: "email", kind: "order_link", recipientHash: RECIPIENT_HASH }),
+      SQL_STATE.checkViolation,
+    );
+    const orderId = await insertOrderId();
+    await expectSqlState(
+      testDatabase.db.insert(notification).values({
+        orderId,
+        channel: "whatsapp",
+        kind: "whatsapp_help",
+        recipientHash: RECIPIENT_HASH,
+      }),
+      SQL_STATE.checkViolation,
+    );
+  });
+
+  it("recipient_hash é sempre um hash, nunca o destinatário", async () => {
+    const orderId = await insertOrderId();
+    await expectSqlState(
+      testDatabase.db.insert(notification).values({
+        orderId,
+        channel: "email",
+        kind: "kit_ready",
+        recipientHash: "mae@example.com",
+      }),
+      SQL_STATE.checkViolation,
+    );
   });
 });
 

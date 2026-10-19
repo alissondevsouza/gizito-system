@@ -1,4 +1,4 @@
-import type { TopicId } from "@gizito/core";
+import { MAX_TOPIC_COUNT, type TopicId } from "@gizito/core";
 import { sql } from "drizzle-orm";
 import { check, index, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import {
@@ -37,9 +37,16 @@ export const order = pgTable(
     uniqueIndex("order_short_code_idx").on(table.shortCode),
     index("order_status_update_datetime_idx").on(table.status, table.updateDatetime),
     index("order_email_idx").on(table.email),
+    index("order_whatsapp_phone_idx")
+      .on(table.whatsappPhone)
+      .where(sql`${table.whatsappPhone} IS NOT NULL`),
     check(
       "order_whatsapp_consent_check",
       sql`(${table.whatsappPhone} IS NULL) = (${table.whatsappConsentDatetime} IS NULL)`,
+    ),
+    check(
+      "order_topic_id_list_check",
+      sql`jsonb_typeof(${table.topicIdList}) = 'array' AND jsonb_array_length(${table.topicIdList}) + (${table.otherTopicText} IS NOT NULL)::int <= ${sql.raw(String(MAX_TOPIC_COUNT))}`,
     ),
   ],
 );

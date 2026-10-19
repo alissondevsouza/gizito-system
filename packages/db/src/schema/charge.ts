@@ -30,6 +30,9 @@ export const charge = pgTable(
     uniqueIndex("charge_gateway_payment_id_idx")
       .on(table.gatewayPaymentId)
       .where(sql`${table.gatewayPaymentId} IS NOT NULL`),
+    uniqueIndex("charge_gateway_gateway_order_id_idx")
+      .on(table.gateway, table.gatewayOrderId)
+      .where(sql`${table.gatewayOrderId} IS NOT NULL`),
     index("charge_status_expire_datetime_idx").on(table.status, table.expireDatetime),
     check("charge_amount_cents_check", sql`${table.amountCents} > 0`),
   ],

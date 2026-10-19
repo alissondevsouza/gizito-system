@@ -63,6 +63,22 @@ describe("charge", () => {
     );
   });
 
+  it("rejeita gateway_order_id repetido no mesmo gateway; outro gateway aceita", async () => {
+    const orderId = await insertOrderId();
+    await testDatabase.db
+      .insert(charge)
+      .values(buildChargeInsert(orderId, { gatewayOrderId: "ord-1" }));
+    await expectSqlState(
+      testDatabase.db
+        .insert(charge)
+        .values(buildChargeInsert(orderId, { gatewayOrderId: "ord-1" })),
+      SQL_STATE.uniqueViolation,
+    );
+    await testDatabase.db
+      .insert(charge)
+      .values(buildChargeInsert(orderId, { gateway: "asaas", gatewayOrderId: "ord-1" }));
+  });
+
   it("rejeita amount_cents zero ou negativo", async () => {
     const orderId = await insertOrderId();
     await expectSqlState(

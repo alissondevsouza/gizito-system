@@ -66,7 +66,7 @@ describe("migration do zero", () => {
     expect(nameList).toEqual(tableList.map((table) => getTableName(table)).sort());
   });
 
-  it("cria todo índice declarado no schema, com o unique parcial de gateway_payment_id", async () => {
+  it("cria todo índice declarado no schema, com os uniques e os parciais", async () => {
     const rowList = (await testDatabase.db.execute(
       sql`SELECT indexname, indexdef FROM pg_indexes WHERE schemaname = 'public'`,
     )) as unknown as { indexname: string; indexdef: string }[];
@@ -74,7 +74,7 @@ describe("migration do zero", () => {
     const declaredNameList = tableList.flatMap((table) =>
       getTableConfig(table).indexes.map((index) => index.config.name ?? ""),
     );
-    expect(declaredNameList).toHaveLength(19);
+    expect(declaredNameList).toHaveLength(24);
     for (const name of declaredNameList) {
       expect(indexMap.has(name)).toBe(true);
     }
@@ -85,6 +85,25 @@ describe("migration do zero", () => {
     expect(indexMap.get("order_public_token_idx")).toContain("UNIQUE");
     expect(indexMap.get("job_name_singleton_key_idx")).toContain("UNIQUE");
     expect(indexMap.get("job_name_singleton_key_idx")).toContain("singleton_key IS NOT NULL");
+    expect(indexMap.get("job_pending_name_run_after_datetime_idx")).toContain(
+      "WHERE (status = 'pending'::job_status)",
+    );
+    expect(indexMap.get("job_active_lock_expire_datetime_idx")).toContain(
+      "WHERE (status = 'active'::job_status)",
+    );
+    expect(indexMap.get("job_failed_finish_datetime_idx")).toContain(
+      "WHERE (status = 'failed'::job_status)",
+    );
+    expect(indexMap.has("job_status_name_run_after_datetime_idx")).toBe(false);
+    expect(indexMap.has("job_status_lock_expire_datetime_idx")).toBe(false);
+    expect(indexMap.get("charge_gateway_gateway_order_id_idx")).toContain("UNIQUE");
+    expect(indexMap.get("order_whatsapp_phone_idx")).toContain(
+      "WHERE (whatsapp_phone IS NOT NULL)",
+    );
+    expect(indexMap.get("order_photo_content_hash_idx")).toContain("(content_hash)");
+    expect(indexMap.get("notification_order_id_kind_channel_recipient_hash_idx")).toContain(
+      "UNIQUE",
+    );
   });
 
   it("rodar as migrations de novo é no-op", async () => {

@@ -20,6 +20,7 @@ export const orderPhoto = pgTable(
   },
   (table) => [
     index("order_photo_order_id_idx").on(table.orderId),
+    index("order_photo_content_hash_idx").on(table.contentHash),
     index("order_photo_delete_datetime_insert_datetime_idx").on(
       table.deleteDatetime,
       table.insertDatetime,

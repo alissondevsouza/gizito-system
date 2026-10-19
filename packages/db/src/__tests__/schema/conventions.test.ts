@@ -20,14 +20,17 @@ const expectedIndexMap: Record<string, { name: string; unique: boolean; partial?
     { name: "order_short_code_idx", unique: true },
     { name: "order_status_update_datetime_idx", unique: false },
     { name: "order_email_idx", unique: false },
+    { name: "order_whatsapp_phone_idx", unique: false, partial: true },
   ],
   order_photo: [
     { name: "order_photo_order_id_idx", unique: false },
+    { name: "order_photo_content_hash_idx", unique: false },
     { name: "order_photo_delete_datetime_insert_datetime_idx", unique: false },
   ],
   charge: [
     { name: "charge_order_id_idx", unique: false },
     { name: "charge_gateway_payment_id_idx", unique: true, partial: true },
+    { name: "charge_gateway_gateway_order_id_idx", unique: true, partial: true },
     { name: "charge_status_expire_datetime_idx", unique: false },
   ],
   kit: [
@@ -36,14 +39,18 @@ const expectedIndexMap: Record<string, { name: string; unique: boolean; partial?
   ],
   ai_call: [{ name: "ai_call_order_id_idx", unique: false }],
   webhook_event: [{ name: "webhook_event_source_external_id_idx", unique: true }],
-  notification: [{ name: "notification_order_id_kind_channel_idx", unique: true }],
+  notification: [
+    { name: "notification_order_id_kind_channel_recipient_hash_idx", unique: true },
+    { name: "notification_recipient_hash_kind_insert_datetime_idx", unique: false },
+  ],
   support_ticket: [
     { name: "support_ticket_order_id_idx", unique: false },
     { name: "support_ticket_status_idx", unique: false },
   ],
   job: [
-    { name: "job_status_name_run_after_datetime_idx", unique: false },
-    { name: "job_status_lock_expire_datetime_idx", unique: false },
+    { name: "job_pending_name_run_after_datetime_idx", unique: false, partial: true },
+    { name: "job_active_lock_expire_datetime_idx", unique: false, partial: true },
+    { name: "job_failed_finish_datetime_idx", unique: false, partial: true },
     { name: "job_name_singleton_key_idx", unique: true, partial: true },
   ],
 };

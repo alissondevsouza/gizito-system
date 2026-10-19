@@ -156,6 +156,11 @@ describe("orderSchema", () => {
         buildOrder({ status: "awaiting_payment", otherTopicText: "Sistema solar" }),
       ).success,
     ).toBe(true);
+    expect(
+      orderSchema.safeParse(
+        buildOrder({ status: "paid", paidDatetime: FIXED_NOW, otherTopicText: "Sistema solar" }),
+      ).success,
+    ).toBe(true);
   });
   it("rejeita failReasonCode fora do formato de código estável", () => {
     expect(

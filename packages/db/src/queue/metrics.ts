@@ -1,43 +1,56 @@
 import type { QueueMetrics } from "@gizito/core";
 import { jobErrorCodeMap } from "@gizito/core";
-import { and, eq, gte, inArray, lte, or, type SQL, sql } from "drizzle-orm";
+import { and, count, eq, gte, lte, min, sql } from "drizzle-orm";
 import type { Executor } from "#src/client.ts";
+import { DATABASE_HEALTH_TIMEOUT_MS, withDatabaseTimeout } from "#src/health.ts";
 import { job } from "#src/schema/job.ts";
+
+const MILLISECONDS_PER_SECOND = 1000;
 
 export type GetQueueMetricsOptions = {
   now: Date;
   failedSinceDatetime: Date;
+  timeoutMs?: number;
 };
-
-function countWhere(condition: SQL | undefined) {
-  return sql`count(*) FILTER (WHERE ${condition})`.mapWith(Number);
-}
 
 export async function getQueueMetrics(
   executor: Executor,
-  { now, failedSinceDatetime }: GetQueueMetricsOptions,
+  { now, failedSinceDatetime, timeoutMs = DATABASE_HEALTH_TIMEOUT_MS }: GetQueueMetricsOptions,
 ): Promise<QueueMetrics> {
-  const readyCondition = and(eq(job.status, "pending"), lte(job.runAfterDatetime, now));
-  const failedCondition = and(
-    eq(job.status, "failed"),
-    gte(job.finishDatetime, failedSinceDatetime),
+  const metricsQuery = Promise.all([
+    executor
+      .select({ readyCount: count(), oldestRunAfterDatetime: min(job.runAfterDatetime) })
+      .from(job)
+      .where(and(eq(job.status, "pending"), lte(job.runAfterDatetime, now))),
+    executor.select({ activeCount: count() }).from(job).where(eq(job.status, "active")),
+    executor
+      .select({
+        failedCount: count(),
+        payloadInvalidCount:
+          sql`count(*) FILTER (WHERE ${eq(job.lastErrorCode, jobErrorCodeMap.payloadInvalid)})`.mapWith(
+            Number,
+          ),
+      })
+      .from(job)
+      .where(and(eq(job.status, "failed"), gte(job.finishDatetime, failedSinceDatetime))),
+  ]);
+  const [readyRowList, activeRowList, failedRowList] = await withDatabaseTimeout(
+    metricsQuery,
+    timeoutMs,
   );
-  const [row] = await executor
-    .select({
-      readyCount: countWhere(readyCondition),
-      oldestReadyAgeSeconds: sql<
-        number | null
-      >`floor(extract(epoch FROM (${now.toISOString()}::timestamptz - min(${job.runAfterDatetime}) FILTER (WHERE ${readyCondition}))))`.mapWith(
-        Number,
-      ),
-      activeCount: countWhere(eq(job.status, "active")),
-      failedCount: countWhere(failedCondition),
-      payloadInvalidCount: countWhere(
-        and(failedCondition, eq(job.lastErrorCode, jobErrorCodeMap.payloadInvalid)),
-      ),
-    })
-    .from(job)
-    .where(or(inArray(job.status, ["pending", "active"]), failedCondition));
-  if (!row) throw new Error("queue metrics query returned no row");
-  return row;
+  const [readyRow] = readyRowList;
+  const [activeRow] = activeRowList;
+  const [failedRow] = failedRowList;
+  if (!readyRow || !activeRow || !failedRow) throw new Error("queue metrics query returned no row");
+  const { oldestRunAfterDatetime } = readyRow;
+  return {
+    readyCount: readyRow.readyCount,
+    oldestReadyAgeSeconds:
+      oldestRunAfterDatetime === null
+        ? null
+        : Math.floor((now.getTime() - oldestRunAfterDatetime.getTime()) / MILLISECONDS_PER_SECOND),
+    activeCount: activeRow.activeCount,
+    failedCount: failedRow.failedCount,
+    payloadInvalidCount: failedRow.payloadInvalidCount,
+  };
 }

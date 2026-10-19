@@ -6,6 +6,8 @@ import {
   buildOrderPhotoInsert,
   expectSqlState,
   FIXED_DATETIME,
+  randomPublicToken,
+  randomShortCode,
   SQL_STATE,
 } from "#src/__tests__/integration/helpers.ts";
 import { order, orderPhoto } from "#src/schema/index.ts";
@@ -103,6 +105,30 @@ describe("order", () => {
       testDatabase.db
         .insert(order)
         .values(buildOrderInsert({ whatsappConsentDatetime: FIXED_DATETIME })),
+      SQL_STATE.checkViolation,
+    );
+  });
+
+  it("topic_id_list é array e cobre até 3 assuntos contando o outro", async () => {
+    await testDatabase.db
+      .insert(order)
+      .values(buildOrderInsert({ topicIdList: ["a", "b"], otherTopicText: "Sistema solar" }));
+    await expectSqlState(
+      testDatabase.db.insert(order).values(buildOrderInsert({ topicIdList: ["a", "b", "c", "d"] })),
+      SQL_STATE.checkViolation,
+    );
+    await expectSqlState(
+      testDatabase.db
+        .insert(order)
+        .values(
+          buildOrderInsert({ topicIdList: ["a", "b", "c"], otherTopicText: "Sistema solar" }),
+        ),
+      SQL_STATE.checkViolation,
+    );
+    await expectSqlState(
+      testDatabase.db.execute(
+        sql`INSERT INTO "order" (public_token, short_code, grade, subject, topic_id_list) VALUES (${randomPublicToken()}, ${randomShortCode()}, '5', 'math', to_jsonb('["a"]'::text))`,
+      ),
       SQL_STATE.checkViolation,
     );
   });

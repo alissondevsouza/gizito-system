@@ -39,12 +39,15 @@ export const job = pgTable(
     ...timestampColumnMap,
   },
   (table) => [
-    index("job_status_name_run_after_datetime_idx").on(
-      table.status,
-      table.name,
-      table.runAfterDatetime,
-    ),
-    index("job_status_lock_expire_datetime_idx").on(table.status, table.lockExpireDatetime),
+    index("job_pending_name_run_after_datetime_idx")
+      .on(table.name, table.runAfterDatetime, table.insertDatetime)
+      .where(sql`${table.status} = 'pending'`),
+    index("job_active_lock_expire_datetime_idx")
+      .on(table.lockExpireDatetime)
+      .where(sql`${table.status} = 'active'`),
+    index("job_failed_finish_datetime_idx")
+      .on(table.finishDatetime)
+      .where(sql`${table.status} = 'failed'`),
     uniqueIndex("job_name_singleton_key_idx")
       .on(table.name, table.singletonKey)
       .where(activeSingletonPredicate(table)),

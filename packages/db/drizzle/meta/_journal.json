@@ -15,6 +15,13 @@
       "when": 1792116818458,
       "tag": "0001_fila",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792426415364,
+      "tag": "0002_revisao_f0",
+      "breakpoints": true
     }
   ]
 }

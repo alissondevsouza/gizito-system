@@ -207,11 +207,11 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 - [x] 1.2 Constantes e códigos da fila, `chargeReconcileJobPayloadSchema` com `webhookEventId` · Arquivos: `core/src/constants.ts`, `core/src/jobs/{rules,schemas}.ts`, testes · Verificação: `cd packages/core && bun test`
 - [x] 1.3 Assuntos, URLs, e-mail, `isPhotoDueForPurge`, notificação discriminada, `recipientHashSchema` · Arquivos: `core/src/order/schemas.ts`, `charge/schemas.ts`, `interfaces/{payment-gateway,notification-channel}.ts`, `retention/rules.ts`, testes · Verificação: `cd packages/core && bun test && bunx tsc --noEmit`
 ### M2 — Fila
-- [ ] 2.1 `renewJobLease`, `releaseJob`, `workJob` com sinal, renovação, teto, desligamento, código inválido e `onExhausted`; `recoverExpiredJobs` com `onExhausted` · Arquivos: `db/src/queue/{lease,finish,work,recover,index}.ts` · Verificação: `tsc`
-- [ ] 2.2 Integração da fila (RF-08 a RF-11) · Arquivos: `db/src/__tests__/integration/queue.test.ts` (e arquivo novo se crescer) · Verificação: `bun run test:integration`
+- [x] 2.1 `renewJobLease`, `releaseJob`, `workJob` com sinal, renovação, teto, desligamento, código inválido e `onExhausted`; `recoverExpiredJobs` com `onExhausted` · Arquivos: `db/src/queue/{lease,finish,work,recover,index}.ts` · Verificação: `tsc`
+- [x] 2.2 Integração da fila (RF-08 a RF-11) · Arquivos: `db/src/__tests__/integration/queue.test.ts` (e arquivo novo se crescer) · Verificação: `bun run test:integration`
 ### M3 — Schema e migration
-- [ ] 3.1 Índices parciais da `job`, índices e checks de `charge`, `order`, `order_photo`, `notification`; `0002_revisao_f0` · Arquivos: `db/src/schema/*.ts`, `db/drizzle/0002_*`, testes unit de convenções e integração de migration e dados · Verificação: `cd packages/db && bun run db:generate && bun run test && bun run test:integration`
-- [ ] 3.2 `createDatabase` com timeouts, `pingDatabase` e métricas com teto, `close` com teto, `migrate.ts` · Arquivos: `db/src/{client,health,migrate}.ts`, `db/src/queue/metrics.ts`, testes · Verificação: `cd packages/db && bun run test:integration`
+- [x] 3.1 Índices parciais da `job`, índices e checks de `charge`, `order`, `order_photo`, `notification`; `0002_revisao_f0` · Arquivos: `db/src/schema/*.ts`, `db/drizzle/0002_*`, testes unit de convenções e integração de migration e dados · Verificação: `cd packages/db && bun run db:generate && bun run test && bun run test:integration`
+- [x] 3.2 `createDatabase` com timeouts, `pingDatabase` e métricas com teto, `close` com teto, `migrate.ts` · Arquivos: `db/src/{client,health,migrate}.ts`, `db/src/queue/metrics.ts`, testes · Verificação: `cd packages/db && bun run test:integration`
 ### M4 — Worker
 - [ ] 4.1 Raias, `MAX_GENERATE_CONCURRENCY`, pool pelo total de vagas, `JobDefinition`, sinal de desligamento, manutenção de 30 s com `onExhausted` · Arquivos: `apps/worker/src/{config,index,scheduler}.ts`, `runner/*`, `jobs/index.ts`, testes · Verificação: `cd apps/worker && bun test` (unit e integração)
 ### M5 — Config, logs, api, web (implementer em paralelo)
@@ -236,7 +236,9 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 | 2026-10-19 | `releaseJob` não consome tentativa no desligamento | interrupção é nossa; quatro deploys durante uma geração não podem esgotar o pedido |
 | 2026-10-19 | `charge.reconcile` com 2 vagas; `order.analyze` em raia própria | o webhook pago não espera a varredura de 2 min; a prévia não espera rajada de WhatsApp; a varredura é singleton e o pedido é travado em `markOrderPaidAndEnqueue` |
 | 2026-10-19 | Revisão da spec (rodada 1, APROVADO com 9 ALERTAs): aceitos todos, menos o relógio do Postgres no lease (contestado em Fora de escopo) | compensação que falha não trava a varredura; falha definitiva vence desligamento e tempo máximo; renovação para antes do `releaseJob`; pool 2× vagas; `shortCode` e URLs no log; M5 depois do M4; verificação por task; republicação para F2-11; design doc com versão |
+| 2026-10-19 | `getQueueMetrics` em três consultas paralelas, uma por status | com os índices parciais, o `OR` de status da consulta única virou varredura da tabela (11 ms com 200 mil jobs `completed`); por status, cada consulta usa o seu índice parcial (~1 ms) |
+| 2026-10-19 | Teste do servidor mudo espera a tentativa de conexão expirar antes do `close` | `close()` do Bun.SQL chamado com uma conexão ainda pendente não resolve (medido em 19/10/2026); vai para `lessons.md` |
 | 2026-10-19 | Lista de chaves sensíveis no `logger.ts` de integrations, não no core | é política de log do adaptador; o teste confere os nomes reais dos campos do core |
 
 ## Status
-Fase: spec revisada (APROVADO, rodada 1, ALERTAs incorporados); M1 concluído em `f81d88b`; próximo passo M2 (fila).
+Fase: spec revisada (APROVADO, rodada 1, ALERTAs incorporados); M1 concluído em `f81d88b`; M2 em `d770f90` (fila: 47 testes de integração estáveis em 3 rodadas); M3 concluído (migration `0002_revisao_f0`, timeouts; db 98 unit e 129 integração); próximo passo M4 (worker).
