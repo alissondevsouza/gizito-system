@@ -15,7 +15,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [`product/`](product/) | PRD (`product-doc-v1.md`): escopo, jornada, pedagogia, arquitetura decidida, decisões em aberto; roadmap por fases (`roadmap-v1.md`) |
 | [`design/`](design/) | Guia de design, identidade, mascote, telas, PDFs (`design-doc-v1.md`) |
 | [`gizito-image/`](gizito-image/) | Referências visuais do mascote |
-| [`pedagogy/`](pedagogy/) | Taxonomia, schema do kit, prompts, regras de validação, casos de teste (a criar) |
+| [`pedagogy/`](pedagogy/) | [`taxonomia.md`](pedagogy/taxonomia.md) (gerado do core por `bun run taxonomy:doc`); schema do kit, prompts, regras de validação e casos de teste (a criar) |
 | [`engineering/`](engineering/) | [`architecture.md`](engineering/architecture.md), [`data-model.md`](engineering/data-model.md), [`state-machine.md`](engineering/state-machine.md), [`api.md`](engineering/api.md), [`jobs.md`](engineering/jobs.md), [`adr/`](engineering/adr/), [`known-issues.md`](engineering/known-issues.md) |
 | [`ops/`](ops/) | Runbook e deploy (a criar) |
 | [`legal/`](legal/) | Termos, privacidade, ajuda (a criar) |
@@ -45,11 +45,11 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-16 (fechamento da F0; fase atual F1). Monorepo e infra local criados; core com domínio puro; db com schema, migrations, fila e as transações obrigatórias; api, worker e web sobem com `bun run dev` e respondem health; integrations só com o logger. Detalhes em `progress/{modulo}.md`.
+> Atualizado em 2026-10-19 (F1 em andamento; taxonomia v1 no core). Monorepo e infra local criados; core com domínio puro; db com schema, migrations, fila e as transações obrigatórias; api, worker e web sobem com `bun run dev` e respondem health; integrations só com o logger. Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
-| Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia em F1-01, schemas do kit em F1-03 |
+| Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia `tax-v1` com 179 assuntos, integridade e consulta (F1-01, aguarda revisão do professor); schemas do kit em F1-03 |
 | Database | `@gizito/db` | schema das 8 tabelas, conexão Bun.SQL e test-helpers (F0-05); tabela `job` e fila própria com `SKIP LOCKED`, `markOrderPaidAndEnqueue` e `publishKit` (F0-06) |
 | Integrations | `@gizito/integrations` | logger Pino com redação e fake em memória (F0-07); adaptadores a partir de F1 |
 | API | `@gizito/api` | Elysia com config fail-fast, `/health`, erros `{ error, code }`, CORS e log por rota (F0-07); rotas de pedido a partir de F2-01 |

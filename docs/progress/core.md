@@ -52,3 +52,10 @@
 - Taxonomia em F1-01; `studyKitSchema`, `extractionResultSchema`, `materialProfileSchema`, `kitPlanSchema`, `reviewResultSchema` e `validateStudyKit` em F1-03 (`order.materialProfile` fica `unknown` até lá)
 - Payloads da API (`POST /orders`, `confirm`) em F2-01; mapeamento estado → rota no web em F2-09
 - Contratos HTTP de cada rota nova entram em `api/` conforme F2 avança
+
+## Feature taxonomia-v1 (2026-10-19, `0f4f4e5`)
+
+- `pedagogy/taxonomy/`: 8 arquivos `{4..7}-{math,portuguese}.ts` com 179 assuntos (`tax-v1`): id `{ma|lp}{ano}-{slug}`, nome de até 40 caracteres, descrição, habilidades BNCC da própria faixa, pré-requisitos (podem vir de anos anteriores) e regras aplicáveis.
+- `schemas.ts`: `topicDefinitionSchema`, `topicSchema`, `topicValidationRuleList` (6 regras, 3 por disciplina) com descrição e disciplina. `bncc.ts`: faixas `EF04MA`…`EF07LP` com o último número de cada uma e `isBnccSkillOfGrade`. `integrity.ts`: `checkTaxonomyIntegrity` com 11 códigos. `lookup.ts`: `createTaxonomyLookup`. `index.ts`: `TAXONOMY_VERSION`, `taxonomyTopicList`, `listTopics`, `findTopic`, `isSelectableTopic`, `taxonomyExclusionList`. `markdown.ts`: `renderTaxonomyMarkdown`.
+- `scripts/write-taxonomy-doc.ts` e `bun run taxonomy:doc` geram `docs/pedagogy/taxonomia.md`; teste de sincronia e input do turbo pegam edição à mão. Fingerprint por versão em `__fixtures__/taxonomy-history.ts`: mudar o conteúdo exige novo `TAXONOMY_VERSION`; ids publicados nunca somem.
+- Testes: 330, cobertura 100%. Pendências: revisão do professor e regressão pedagógica (`known-issues.md`).

@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 0 | 0 | 11 |
+| F1 Prova técnica e pedagógica | 11 | 0 | 1 | 10 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -74,7 +74,7 @@ flowchart LR
 - [x] `git init` e primeiro commit — necessário em F0-01 — feito em 14/10/2026
 - [ ] Chave do provedor de IA — necessário em F1-05 — começar no início de F1
 - [ ] 40 materiais fotografados (4 anos × 2 disciplinas × 5), com manuscritos, fotos ruins e dados pessoais a cobrir — necessário em F1-10 — começar no início de F1; leva semanas
-- [ ] Professor(a) para revisar amostra — necessário em F1-11 — combinar em F1
+- [ ] Professor(a) para revisar amostra — necessário em F1-11 — combinar em F1; a taxonomia da F1-01 (`docs/pedagogy/taxonomia.md`) já espera essa revisão
 - [ ] Conta Mercado Pago pessoa física, chave Pix, aplicação e credenciais de teste — necessário em F2-03 — começar em F0, para a conta envelhecer
 - [ ] Domínio e consulta de anterioridade no INPI — necessário em F2-07 e antes de divulgar — começar em F0
 - [ ] Bucket R2 — necessário em F2-01 — começar no início de F2
@@ -89,7 +89,7 @@ flowchart LR
 | Fase | Objetivo | Saída principal | Critério de saída | Esforço estimado | Estado |
 |---|---|---|---|---|---|
 | F0 Fundação | Repositório pronto para construir | monorepo, infra local, core e db com máquina de estados e fila, docs técnicos | lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos | 1 a 2 semanas | concluída |
-| F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 40 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | pendente |
+| F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 40 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | em andamento |
 | F2 Fluxo comercial | Compra ponta a ponta em produção | API, worker, web, WhatsApp, admin, legal, deploy | checklist da seção 10 do PRD completa; compra real feita por você e entregue num celular real | 4 a 6 semanas | pendente |
 | F3 Piloto pago | Validar H1 a H4 com dinheiro real | 10 a 20 responsáveis, auditoria semanal, métricas | memo de decisão com evidência das hipóteses | 3 a 4 semanas de calendário | pendente |
 | F4 Pós-validação | Crescer só com gatilho | 8º e 9º ano, preço, WhatsApp oficial, novas matérias | por gatilho, item a item | aberto | pendente |
@@ -133,11 +133,12 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** pendente · 0 de 11 concluídas
+**Estado:** em andamento · 0 de 11 concluídas
 
-- [ ] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04
+- [ ] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · **em andamento**
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
   - Pronto quando: testes de integridade (ids únicos, pré-requisitos existentes); amostra revisada pelo professor
+  - Feito até agora: implementada em 19/10/2026 (`tax-v1`, 179 assuntos, `0f4f4e5`, spec `specs/pedagogy/taxonomia-v1/`); documento de revisão em `docs/pedagogy/taxonomia.md`; falta a revisão do professor
 - [ ] **F1-02 `spec-pedagogica-executavel`** — docs, pedagogy · M · depende: F1-01
   - Entrega: `docs/pedagogy/`: schema do kit campo a campo, regras de validação com severidade e código, formato dos casos de teste, prompts v1 em texto, critério de homologação
   - Pronto quando: aprovada por você; é a spec de F1-03 a F1-07
