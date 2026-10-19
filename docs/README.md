@@ -49,7 +49,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
-| Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia `tax-v1` com 179 assuntos, integridade e consulta (F1-01, aguarda revisão do professor); schemas do kit em F1-03 |
+| Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia `tax-v1` com 179 assuntos, integridade e consulta (F1-01, revisada pelo professor); schemas do kit em F1-03 |
 | Database | `@gizito/db` | schema das 8 tabelas, conexão Bun.SQL e test-helpers (F0-05); tabela `job` e fila própria com `SKIP LOCKED`, `markOrderPaidAndEnqueue` e `publishKit` (F0-06) |
 | Integrations | `@gizito/integrations` | logger Pino com redação e fake em memória (F0-07); adaptadores a partir de F1 |
 | API | `@gizito/api` | Elysia com config fail-fast, `/health`, erros `{ error, code }`, CORS e log por rota (F0-07); rotas de pedido a partir de F2-01 |

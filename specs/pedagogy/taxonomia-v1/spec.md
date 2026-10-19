@@ -73,6 +73,7 @@ Criar a lista canônica de assuntos por ano × disciplina (4º a 7º × Matemát
 | 2026-10-19 | Descrições de geometria reescritas sem malha, planificação ou medição com instrumento | a descrição vai para o prompt da geração (F1-07); pedir figura levaria ao bloqueador depois do Pix (revisão neutra) |
 | 2026-10-19 | `validationRuleList` com 6 regras específicas de assunto; regras gerais ficam na F1-03 | evita repetir em 170 assuntos o que vale para todo kit |
 | 2026-10-19 | Documento de revisão gerado do código, com teste de sincronia | o professor revisa um documento legível que nunca diverge da taxonomia em uso |
+| 2026-10-19 | Professor aprovou a `tax-v1` sem mudanças | F1-01 concluída; `ma6-powers` segue sem raiz quadrada e não há `tax-v2` |
 
 ## Status
-Spec revisada (APROVADO com alertas, todos incorporados em 2026-10-19). M1 a M4 implementados e revisados (revisão neutra APROVADO, achados aplicados; `review.md`). Pronta para o humano. Pendências do humano: revisão da v1 pelo professor (roadmap §1.4; a F1-01 fica aberta até ela, ou o humano move o critério para a F1-11); `bun run test:pedagogy` só existirá na F1-10, e liberar a `main` com essa exceção registrada em known-issues é decisão do humano; pergunta sobre assuntos excluídos na prévia (Decisões).
+Spec revisada (APROVADO com alertas, todos incorporados em 2026-10-19). M1 a M4 implementados e revisados (revisão neutra APROVADO, achados aplicados; `review.md`). Mesclada na `main` (`92cbec0`) pelo humano, com a exceção do `bun run test:pedagogy` registrada em known-issues (F1-10). Professor revisou e aprovou a v1 sem mudanças em 2026-10-19: F1-01 concluída. Segue aberta a pergunta sobre assuntos excluídos na prévia (Decisões), que passa para a F1-02.
