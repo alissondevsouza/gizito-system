@@ -1,5 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import { gradeList, subjectList } from "#src/enums.ts";
+import { grade4MathTopicList } from "#src/pedagogy/taxonomy/4-math.ts";
+import { grade4PortugueseTopicList } from "#src/pedagogy/taxonomy/4-portuguese.ts";
+import { grade5MathTopicList } from "#src/pedagogy/taxonomy/5-math.ts";
+import { grade5PortugueseTopicList } from "#src/pedagogy/taxonomy/5-portuguese.ts";
+import { grade6MathTopicList } from "#src/pedagogy/taxonomy/6-math.ts";
+import { grade6PortugueseTopicList } from "#src/pedagogy/taxonomy/6-portuguese.ts";
+import { grade7MathTopicList } from "#src/pedagogy/taxonomy/7-math.ts";
+import { grade7PortugueseTopicList } from "#src/pedagogy/taxonomy/7-portuguese.ts";
 import {
   findTopic,
   isSelectableTopic,
@@ -87,6 +95,7 @@ const requiredRuleBySlugPatternList: readonly {
       "sentences?",
       "predicate",
       "adverbs",
+      "conjunctions",
     ]),
   },
   { rule: "linguistic_variety_respect", pattern: slugSegmentPattern("lp", ["variety"]) },
@@ -151,8 +160,22 @@ describe("regras aplicáveis por assunto (RF-02)", () => {
 });
 
 describe("consulta sobre a taxonomia real (RF-06)", () => {
-  it("lista na ordem do arquivo e acha por id", () => {
-    expect(listTopics("4", "math")[0]?.topicId).toBe("ma4-natural-numbers");
+  it("lista cada seção na ordem do seu arquivo e acha por id", () => {
+    const sectionList = [
+      { grade: "4", subject: "math", topicList: grade4MathTopicList },
+      { grade: "5", subject: "math", topicList: grade5MathTopicList },
+      { grade: "6", subject: "math", topicList: grade6MathTopicList },
+      { grade: "7", subject: "math", topicList: grade7MathTopicList },
+      { grade: "4", subject: "portuguese", topicList: grade4PortugueseTopicList },
+      { grade: "5", subject: "portuguese", topicList: grade5PortugueseTopicList },
+      { grade: "6", subject: "portuguese", topicList: grade6PortugueseTopicList },
+      { grade: "7", subject: "portuguese", topicList: grade7PortugueseTopicList },
+    ] as const;
+    for (const section of sectionList) {
+      expect(listTopics(section.grade, section.subject).map((topic) => topic.topicId)).toEqual(
+        section.topicList.map((topic) => topic.topicId),
+      );
+    }
     expect(findTopic("lp7-subject-predicate")?.label).toBe("Sujeito e predicado");
   });
 

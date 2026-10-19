@@ -27,11 +27,11 @@ export const grade6MathTopicList: readonly TopicDefinition[] = [
     validationRuleList: [],
   },
   {
-    topicId: "ma6-powers-roots",
-    label: "Potenciação e raiz quadrada",
+    topicId: "ma6-powers",
+    label: "Potenciação",
     description:
-      "Potências de naturais, quadrados perfeitos e raiz quadrada exata, com potências de 10.",
-    bnccSkillList: ["EF06MA03"],
+      "Potências de naturais e de decimais, quadrados, cubos e potências de 10 em cálculos e estimativas.",
+    bnccSkillList: ["EF06MA11", "EF06MA12"],
     prerequisiteList: ["ma6-natural-operations"],
     validationRuleList: [],
   },
@@ -40,7 +40,7 @@ export const grade6MathTopicList: readonly TopicDefinition[] = [
     label: "Expressões numéricas",
     description: "Ordem das operações em expressões com parênteses, colchetes, chaves e potências.",
     bnccSkillList: ["EF06MA03"],
-    prerequisiteList: ["ma6-natural-operations", "ma6-powers-roots"],
+    prerequisiteList: ["ma6-natural-operations", "ma6-powers"],
     validationRuleList: [],
   },
   {
@@ -160,7 +160,8 @@ export const grade6MathTopicList: readonly TopicDefinition[] = [
   {
     topicId: "ma6-angles",
     label: "Ângulos",
-    description: "Ângulo como abertura; medida em graus; ângulos agudos, retos e obtusos.",
+    description:
+      "Ângulo como abertura, medidas em graus dadas no enunciado e classificação em agudo, reto e obtuso.",
     bnccSkillList: ["EF06MA25", "EF06MA26", "EF06MA27"],
     prerequisiteList: ["ma4-right-angles"],
     validationRuleList: ["measurement_unit", "figure_free_statement"],

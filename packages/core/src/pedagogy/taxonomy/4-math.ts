@@ -127,7 +127,7 @@ export const grade4MathTopicList: readonly TopicDefinition[] = [
     topicId: "ma4-area-units",
     label: "Área com unidades quadradas",
     description:
-      "Medir e comparar áreas contando quadradinhos; figuras de formatos diferentes com a mesma área.",
+      "Área como número de unidades quadradas de um retângulo descrito por fileiras e colunas; figuras diferentes com a mesma área.",
     bnccSkillList: ["EF04MA21"],
     prerequisiteList: ["ma4-multiplication"],
     validationRuleList: ["measurement_unit", "figure_free_statement"],
@@ -152,7 +152,7 @@ export const grade4MathTopicList: readonly TopicDefinition[] = [
     topicId: "ma4-location-movement",
     label: "Localização e deslocamento",
     description:
-      "Direita, esquerda, mudanças de direção, ruas paralelas e perpendiculares em descrições de trajetos.",
+      "Direita, esquerda, mudanças de direção e ruas paralelas e perpendiculares em trajetos descritos só em texto.",
     bnccSkillList: ["EF04MA16"],
     prerequisiteList: [],
     validationRuleList: ["figure_free_statement"],
@@ -168,7 +168,8 @@ export const grade4MathTopicList: readonly TopicDefinition[] = [
   {
     topicId: "ma4-prisms-pyramids",
     label: "Prismas e pirâmides",
-    description: "Faces, vértices, arestas e planificações de prismas e pirâmides.",
+    description:
+      "Faces, vértices e arestas de prismas e pirâmides e os polígonos que formam suas faces.",
     bnccSkillList: ["EF04MA17"],
     prerequisiteList: [],
     validationRuleList: ["figure_free_statement"],

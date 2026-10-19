@@ -2,7 +2,7 @@
 feature: F1-01 taxonomia-v1
 module: pedagogy
 size: L
-status: in_progress
+status: done
 branch: feat/pedagogy/taxonomia-v1
 updated: 2026-10-19
 ---
@@ -20,7 +20,7 @@ Criar a lista canônica de assuntos por ano × disciplina (4º a 7º × Matemát
 - **RF-05** — Conteúdo v1: 8 arquivos `pedagogy/taxonomy/{grade}-{subject}.ts` (`4-math.ts` … `7-portuguese.ts`), cada um com 15 a 30 assuntos derivados da BNCC e dos sumários usuais de livros didáticos, só assuntos que geram 10 + 10 questões sem figura (fora da v1: simetria, ampliação em malha, vistas e plantas, fluxogramas, oralidade, produção de vídeo e gêneros que dependem de imagem, como tirinha e cartum); pré-requisitos podem apontar para anos anteriores da mesma disciplina · Aceite: `checkTaxonomyIntegrity(taxonomyTopicList)` vazio; cada ano × disciplina com 15 a 30 assuntos ativos; todo assunto passa em `topicSchema`.
 - **RF-06** — Consulta: fábrica pura `createTaxonomyLookup(topicList)` em `pedagogy/taxonomy/lookup.ts` devolvendo `listTopics(grade, subject)` (ativos, na ordem do arquivo), `findTopic(topicId)` (inclui descontinuados, porque kits antigos os citam) e `isSelectableTopic(topicId, grade, subject)` (existe, ativo, mesmo ano e disciplina); `pedagogy/taxonomy/index.ts` exporta `TAXONOMY_VERSION = "tax-v1"`, `taxonomyTopicList` (todos, com `grade` e `subject`), as três funções ligadas a ela e `taxonomyExclusionList` (áreas fora da v1, pt-BR) · Aceite: na fábrica com fixture, id de outro ano, de outra disciplina, descontinuado e inexistente não são selecionáveis e `findTopic` devolve o descontinuado; na instância real, `listTopics` devolve as seções na ordem do arquivo.
 - **RF-07** — Versão e ids estáveis por teste: `__tests__/__fixtures__/taxonomy-history.ts` com `{ taxonomyVersion, fingerprint, topicIdList }` por versão publicada; o teste falha se o conteúdo mudar sem novo `TAXONOMY_VERSION` (SHA-256 do JSON de `taxonomyTopicList` serializado com chaves em ordem fixa, diferente do registrado na versão atual) e se algum id de versão publicada sumir · Aceite: o teste passa na v1; alterar um rótulo localmente faz o teste falhar (verificado à mão na implementação e registrado na review).
-- **RF-08** — Documento de revisão para o professor: `renderTaxonomyMarkdown(topicList, taxonomyVersion)` pura no core gera `docs/pedagogy/taxonomia.md` (por ano × disciplina: id, nome, descrição, BNCC, pré-requisitos por nome, validações; legenda das regras; `taxonomyExclusionList`; link para a BNCC oficial); `bun run taxonomy:doc` grava o arquivo · Aceite: teste compara o arquivo commitado com o render e falha se divergir; o `test` do core no turbo tem o documento como input.
+- **RF-08** — Documento de revisão para o professor: `renderTaxonomyMarkdown({ topicList, taxonomyVersion, exclusionList })` pura no core gera `docs/pedagogy/taxonomia.md` (por ano × disciplina: id, nome, descrição, BNCC, pré-requisitos por nome, validações; legenda das regras; `taxonomyExclusionList`; link para a BNCC oficial); `bun run taxonomy:doc` grava o arquivo · Aceite: teste compara o arquivo commitado com o render e falha se divergir; o `test` do core no turbo tem o documento como input.
 - **RF-09** — Exportação e docs: `index.ts` reexporta schemas, consulta, BNCC, integridade e render; `docs/README.md` aponta `pedagogy/taxonomia.md`; `docs/progress/core.md`; roadmap F1-01 fica `[ ]` **em andamento** com "Feito até agora: implementada; falta a revisão do professor" (o "pronto quando" do roadmap exige a revisão); `known-issues.md` registra a regressão pendente com a condição "F1-10 roda `bun run test:pedagogy` com `tax-v1`" · Aceite: teste do entrypoint acessa `listTopics` e `TAXONOMY_VERSION`; `bun run lint`, `bun run typecheck` e `bun run test` verdes na raiz; cobertura do core ≥ 70%.
 
 ## Fora de escopo
@@ -58,7 +58,7 @@ Criar a lista canônica de assuntos por ano × disciplina (4º a 7º × Matemát
 - [x] 4.1 Fixture `taxonomy-history.ts` e teste de versão (RF-07); provar a falha alterando um rótulo localmente · Verificação: `bun test`
 - [x] 4.2 `markdown.ts`, script, tarefas `taxonomy:doc`, `docs/pedagogy/taxonomia.md` e teste de sincronia (RF-08) · Verificação: `bun run taxonomy:doc` na raiz + `bun test`
 - [x] 4.3 Rodar `bun run test:pedagogy` — não existe até a F1-10: pendência registrada em `known-issues.md` e na review
-- [ ] 4.4 Docs (RF-09); `bun run lint`, `bun run typecheck`, `bun run test` na raiz; revisão neutra (zona sensível: pedagogia)
+- [x] 4.4 Docs (RF-09); `bun run lint`, `bun run typecheck`, `bun run test` na raiz; revisão neutra (zona sensível: pedagogia)
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -67,8 +67,12 @@ Criar a lista canônica de assuntos por ano × disciplina (4º a 7º × Matemát
 | 2026-10-19 | Fora da v1 os assuntos que só funcionam com figura ou oralidade | PRD §7.2: nenhuma questão depende de figura ausente; o PDF não desenha figura. **Pergunta ao humano (destino F1-02/F1-06):** caderno com esses assuntos hoje só tem o caminho "outro", que pode bater no bloqueador de figura e virar `failed`/reembolso depois do Pix; a prévia deve avisar ou recusar antes do pagamento? |
 | 2026-10-19 | Regras de assunto por disciplina e conferidas por padrão de slug | uma marcação esquecida desligaria a checagem da F1-03 sem aviso (revisão da spec) |
 | 2026-10-19 | Consulta por fábrica `createTaxonomyLookup` | testar descontinuado sem `mock.module` (process-wide, `docs/lessons.md`) |
+| 2026-10-19 | `ma7-cartesian-symmetry` (EF07MA19/20) entra; sai só a simetria desenhada em malha | o simétrico de um ponto por coordenadas se resolve em texto; a exclusão no documento diz isso (revisão neutra) |
+| 2026-10-19 | `ma6-powers` só com potenciação, sem raiz quadrada | a raiz quadrada está na BNCC no 8º ano (EF08MA02) e o PRD §7.3 proíbe conceito além do ano; muitos livros do 6º a trazem, então fica como ponto para o professor (revisão neutra) |
+| 2026-10-19 | `lp5-conjunctions` com `single_normative_answer` | "mas" e "porém" cabem na mesma lacuna: distrator também correto é o risco do assunto (revisão neutra) |
+| 2026-10-19 | Descrições de geometria reescritas sem malha, planificação ou medição com instrumento | a descrição vai para o prompt da geração (F1-07); pedir figura levaria ao bloqueador depois do Pix (revisão neutra) |
 | 2026-10-19 | `validationRuleList` com 6 regras específicas de assunto; regras gerais ficam na F1-03 | evita repetir em 170 assuntos o que vale para todo kit |
 | 2026-10-19 | Documento de revisão gerado do código, com teste de sincronia | o professor revisa um documento legível que nunca diverge da taxonomia em uso |
 
 ## Status
-Spec revisada (APROVADO com alertas, todos incorporados em 2026-10-19). M1 a M4.3 implementados (`0f4f4e5`); docs da 4.4 feitos; próximo passo: revisão neutra do diff. Pendências do humano: revisão da v1 pelo professor (roadmap §1.4; a F1-01 fica aberta até ela, ou o humano move o critério para a F1-11); `bun run test:pedagogy` só existirá na F1-10, e liberar a `main` com essa exceção registrada em known-issues é decisão do humano; pergunta sobre assuntos excluídos na prévia (Decisões).
+Spec revisada (APROVADO com alertas, todos incorporados em 2026-10-19). M1 a M4 implementados e revisados (revisão neutra APROVADO, achados aplicados; `review.md`). Pronta para o humano. Pendências do humano: revisão da v1 pelo professor (roadmap §1.4; a F1-01 fica aberta até ela, ou o humano move o critério para a F1-11); `bun run test:pedagogy` só existirá na F1-10, e liberar a `main` com essa exceção registrada em known-issues é decisão do humano; pergunta sobre assuntos excluídos na prévia (Decisões).

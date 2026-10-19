@@ -117,7 +117,8 @@ export const grade5MathTopicList: readonly TopicDefinition[] = [
   {
     topicId: "ma5-solids",
     label: "Figuras espaciais",
-    description: "Prismas, pirâmides, cilindros e cones: atributos e planificações.",
+    description:
+      "Prismas, pirâmides, cilindros e cones: faces, vértices, arestas e superfícies planas ou arredondadas.",
     bnccSkillList: ["EF05MA16"],
     prerequisiteList: ["ma4-prisms-pyramids"],
     validationRuleList: ["figure_free_statement"],

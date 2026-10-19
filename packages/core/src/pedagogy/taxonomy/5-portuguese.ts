@@ -56,7 +56,7 @@ export const grade5PortugueseTopicList: readonly TopicDefinition[] = [
     description: "Conjunções que indicam adição, oposição, tempo, causa, condição e finalidade.",
     bnccSkillList: ["EF05LP07"],
     prerequisiteList: [],
-    validationRuleList: ["text_evidence"],
+    validationRuleList: ["single_normative_answer", "text_evidence"],
   },
   {
     topicId: "lp5-narrative",

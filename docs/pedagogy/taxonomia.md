@@ -2,7 +2,7 @@
 
 > Gerado por `bun run taxonomy:doc` a partir de `packages/core/src/pedagogy/taxonomy/`. Não edite à mão: o teste do core falha se este arquivo divergir do código.
 
-Lista canônica de assuntos por ano e disciplina (PRD §7.7). A extração mapeia as fotos do caderno para estes assuntos, o responsável confirma até três deles como chips e a geração e as validações do kit partem deles. Um id nunca muda de sentido: assunto que sai da lista fica marcado como descontinuado.
+Lista canônica de assuntos por ano e disciplina (PRD §7.7). A extração mapeia as fotos do caderno para estes assuntos, o responsável confirma até 3 deles como chips e a geração e as validações do kit partem deles. Um id nunca muda de sentido: assunto que sai da lista fica marcado como descontinuado.
 
 **Como revisar.** Para cada assunto, confira se ele cabe no ano, se o nome é o que a criança vê no caderno e no livro, se as habilidades correspondem ao assunto (busque o código na [BNCC oficial](https://basenacionalcomum.mec.gov.br/)), se os pré-requisitos fazem sentido e se dá para fazer 10 exercícios e 10 questões de prova sobre ele sem desenho. Falta ou sobra de assunto também conta.
 
@@ -23,7 +23,7 @@ Marcam o que a validação automática do kit confere a mais quando o assunto es
 
 Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma questão do kit pode depender de figura ausente (PRD §7.2):
 
-- Simetria de reflexão, translação e rotação desenhada em malha
+- Simetria de reflexão, translação e rotação desenhada em malha (a simetria por coordenadas do 7º ano entra)
 - Ampliação e redução de figuras em malha quadriculada
 - Vistas, plantas baixas e croquis
 - Algoritmos e fluxogramas
@@ -49,12 +49,12 @@ Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma
 | `ma4-shopping` | Compras, troco e desconto | Problemas de compra e venda, formas de pagamento, troco e desconto. | EF04MA25 | Adição e subtração; Décimos, centésimos e dinheiro | `measurement_unit` |
 | `ma4-length-mass-capacity` | Comprimento, massa e capacidade | Medir e estimar com metro, centímetro, quilograma, grama, litro e mililitro; conversões simples. | EF04MA20 | Multiplicação | `measurement_unit` |
 | `ma4-perimeter` | Perímetro | Perímetro de figuras planas a partir das medidas dos lados. | EF04MA20 | Adição e subtração; Comprimento, massa e capacidade | `measurement_unit`, `figure_free_statement` |
-| `ma4-area-units` | Área com unidades quadradas | Medir e comparar áreas contando quadradinhos; figuras de formatos diferentes com a mesma área. | EF04MA21 | Multiplicação | `measurement_unit`, `figure_free_statement` |
+| `ma4-area-units` | Área com unidades quadradas | Área como número de unidades quadradas de um retângulo descrito por fileiras e colunas; figuras diferentes com a mesma área. | EF04MA21 | Multiplicação | `measurement_unit`, `figure_free_statement` |
 | `ma4-time` | Medidas de tempo | Horas, minutos e segundos; horário de início e de fim e duração de atividades. | EF04MA22 | Adição e subtração | `measurement_unit` |
 | `ma4-temperature` | Temperatura | Grau Celsius, comparação de temperaturas e variação entre máxima e mínima. | EF04MA23, EF04MA24 | Adição e subtração | `measurement_unit` |
-| `ma4-location-movement` | Localização e deslocamento | Direita, esquerda, mudanças de direção, ruas paralelas e perpendiculares em descrições de trajetos. | EF04MA16 | — | `figure_free_statement` |
+| `ma4-location-movement` | Localização e deslocamento | Direita, esquerda, mudanças de direção e ruas paralelas e perpendiculares em trajetos descritos só em texto. | EF04MA16 | — | `figure_free_statement` |
 | `ma4-right-angles` | Ângulos retos e não retos | Reconhecer ângulos retos e não retos em figuras e objetos do dia a dia. | EF04MA18 | — | `figure_free_statement` |
-| `ma4-prisms-pyramids` | Prismas e pirâmides | Faces, vértices, arestas e planificações de prismas e pirâmides. | EF04MA17 | — | `figure_free_statement` |
+| `ma4-prisms-pyramids` | Prismas e pirâmides | Faces, vértices e arestas de prismas e pirâmides e os polígonos que formam suas faces. | EF04MA17 | — | `figure_free_statement` |
 | `ma4-chance` | Chance de acontecer | Eventos certos, impossíveis, mais prováveis e menos prováveis, sem usar frações. | EF04MA26 | — | — |
 | `ma4-tables-graphs` | Tabelas e gráficos de colunas | Ler e interpretar tabelas simples e de dupla entrada e gráficos de colunas e pictóricos. | EF04MA27, EF04MA28 | Números até a dezena de milhar | `figure_free_statement` |
 
@@ -75,7 +75,7 @@ Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma
 | `ma5-direct-proportion` | Proporcionalidade | Quantidades que variam na mesma proporção: preço por unidade, receitas e escalas de mapa. | EF05MA12 | Multiplicação e divisão com decimais | `measurement_unit` |
 | `ma5-unequal-sharing` | Partilha em partes desiguais | Dividir uma quantidade em duas partes em que uma é o dobro ou o triplo da outra. | EF05MA13 | Divisão (4º ano) | — |
 | `ma5-coordinates` | Coordenadas no plano | Localizar pontos e descrever deslocamentos no 1º quadrante do plano cartesiano por coordenadas. | EF05MA14, EF05MA15 | Localização e deslocamento (4º ano) | `figure_free_statement` |
-| `ma5-solids` | Figuras espaciais | Prismas, pirâmides, cilindros e cones: atributos e planificações. | EF05MA16 | Prismas e pirâmides (4º ano) | `figure_free_statement` |
+| `ma5-solids` | Figuras espaciais | Prismas, pirâmides, cilindros e cones: faces, vértices, arestas e superfícies planas ou arredondadas. | EF05MA16 | Prismas e pirâmides (4º ano) | `figure_free_statement` |
 | `ma5-polygons` | Polígonos | Reconhecer, nomear e comparar polígonos pelo número de lados, vértices e ângulos. | EF05MA17 | Ângulos retos e não retos (4º ano) | `figure_free_statement` |
 | `ma5-measurement-conversions` | Medidas e conversões | Comprimento, massa, capacidade, tempo e temperatura com conversões entre as unidades usuais. | EF05MA19 | Comprimento, massa e capacidade (4º ano); Medidas de tempo (4º ano) | `measurement_unit` |
 | `ma5-perimeter-area` | Perímetro e área | Perímetro e área de retângulos; figuras com o mesmo perímetro e áreas diferentes, e vice-versa. | EF05MA19, EF05MA20 | Perímetro (4º ano); Área com unidades quadradas (4º ano) | `measurement_unit`, `figure_free_statement` |
@@ -90,8 +90,8 @@ Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma
 | `ma6-natural-decimal-numbers` | Números naturais e decimais | Ler, escrever, comparar e ordenar naturais e decimais usando a reta numérica. | EF06MA01 | Números até a centena de milhar (5º ano); Números decimais (5º ano) | `rational_equivalence` |
 | `ma6-numeral-systems` | Sistemas de numeração | Características do sistema decimal comparadas às de outros sistemas, como o romano. | EF06MA02 | Números até a centena de milhar (5º ano) | — |
 | `ma6-natural-operations` | Operações com números naturais | As quatro operações com naturais por cálculo mental, escrito e estimativa. | EF06MA03 | Multiplicação e divisão com decimais (5º ano) | — |
-| `ma6-powers-roots` | Potenciação e raiz quadrada | Potências de naturais, quadrados perfeitos e raiz quadrada exata, com potências de 10. | EF06MA03 | Operações com números naturais | — |
-| `ma6-numeric-expressions` | Expressões numéricas | Ordem das operações em expressões com parênteses, colchetes, chaves e potências. | EF06MA03 | Operações com números naturais; Potenciação e raiz quadrada | — |
+| `ma6-powers` | Potenciação | Potências de naturais e de decimais, quadrados, cubos e potências de 10 em cálculos e estimativas. | EF06MA11, EF06MA12 | Operações com números naturais | — |
+| `ma6-numeric-expressions` | Expressões numéricas | Ordem das operações em expressões com parênteses, colchetes, chaves e potências. | EF06MA03 | Operações com números naturais; Potenciação | — |
 | `ma6-multiples-divisors` | Múltiplos, divisores e primos | Múltiplos, divisores, critérios de divisibilidade e números primos e compostos. | EF06MA05, EF06MA06 | Múltiplos e sequências numéricas (4º ano); Operações com números naturais | — |
 | `ma6-lcm-gcd` | MMC e MDC | Decomposição em fatores primos, mínimo múltiplo comum e máximo divisor comum em problemas. | EF06MA06 | Múltiplos, divisores e primos | — |
 | `ma6-fractions` | Frações: comparação e equivalência | Fração como parte e como divisão, frações equivalentes, simplificação e comparação. | EF06MA07 | Frações equivalentes (5º ano); Comparação de frações e decimais (5º ano) | `rational_equivalence` |
@@ -105,7 +105,7 @@ Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma
 | `ma6-cartesian-plane` | Plano cartesiano | Pares ordenados e localização de pontos e de vértices de polígonos no 1º quadrante. | EF06MA16 | Coordenadas no plano (5º ano) | `figure_free_statement` |
 | `ma6-prisms-pyramids` | Vértices, faces e arestas | Relação entre o número de vértices, faces e arestas de prismas e pirâmides e o polígono da base. | EF06MA17 | Figuras espaciais (5º ano) | `figure_free_statement` |
 | `ma6-polygons` | Polígonos regulares | Classificar polígonos em regulares e não regulares por lados, vértices e ângulos. | EF06MA18 | Polígonos (5º ano) | `figure_free_statement` |
-| `ma6-angles` | Ângulos | Ângulo como abertura; medida em graus; ângulos agudos, retos e obtusos. | EF06MA25, EF06MA26, EF06MA27 | Ângulos retos e não retos (4º ano) | `measurement_unit`, `figure_free_statement` |
+| `ma6-angles` | Ângulos | Ângulo como abertura, medidas em graus dadas no enunciado e classificação em agudo, reto e obtuso. | EF06MA25, EF06MA26, EF06MA27 | Ângulos retos e não retos (4º ano) | `measurement_unit`, `figure_free_statement` |
 | `ma6-triangles` | Classificação de triângulos | Classificar triângulos quanto às medidas dos lados e dos ângulos. | EF06MA19 | Polígonos regulares; Ângulos | `figure_free_statement` |
 | `ma6-quadrilaterals` | Quadriláteros | Classificar quadriláteros por lados e ângulos: paralelogramos, retângulos, losangos, quadrados e trapézios. | EF06MA20 | Polígonos regulares | `figure_free_statement` |
 | `ma6-measurement` | Grandezas e medidas | Problemas de comprimento, massa, tempo, temperatura, capacidade e volume com conversões. | EF06MA24 | Medidas e conversões (5º ano) | `measurement_unit` |
@@ -130,7 +130,7 @@ Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma
 | `ma7-linear-equations` | Equações do 1º grau | Resolver e montar problemas com equações do tipo ax + b = c. | EF07MA18 | Expressões algébricas; Igualdades e valor desconhecido (6º ano); Adição e subtração de inteiros | — |
 | `ma7-proportionality` | Grandezas proporcionais | Grandezas direta e inversamente proporcionais e regra de três simples. | EF07MA17 | Proporcionalidade (5º ano); Frações: razão e operador | `measurement_unit` |
 | `ma7-cartesian-symmetry` | Simetria no plano cartesiano | Simétrico de um ponto em relação aos eixos e à origem e coordenadas multiplicadas por um inteiro. | EF07MA19, EF07MA20 | Plano cartesiano (6º ano); Números inteiros | `figure_free_statement` |
-| `ma7-circle` | Circunferência e o número π | Centro, raio e diâmetro; π como razão entre o comprimento e o diâmetro. | EF07MA22, EF07MA33 | Operações com decimais (6º ano) | `measurement_unit`, `figure_free_statement` |
+| `ma7-circle` | Circunferência e o número π | Raio, diâmetro e comprimento da circunferência calculado com π a partir de medidas dadas. | EF07MA22, EF07MA33 | Operações com decimais (6º ano) | `measurement_unit`, `figure_free_statement` |
 | `ma7-parallel-lines-angles` | Ângulos e retas paralelas | Ângulos opostos pelo vértice, complementares, suplementares e os formados por paralelas e uma transversal. | EF07MA23 | Ângulos (6º ano) | `measurement_unit`, `figure_free_statement` |
 | `ma7-triangles` | Triângulos: existência e ângulos | Condição de existência de um triângulo e soma dos ângulos internos igual a 180°. | EF07MA24, EF07MA25 | Classificação de triângulos (6º ano) | `measurement_unit`, `figure_free_statement` |
 | `ma7-polygon-angles` | Ângulos de polígonos | Ângulos internos e externos de polígonos regulares, sem fórmula pronta. | EF07MA27 | Triângulos: existência e ângulos; Polígonos regulares (6º ano) | `measurement_unit`, `figure_free_statement` |
@@ -180,7 +180,7 @@ Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma
 | `lp5-word-meaning` | Sentido das palavras e polissemia | Sentido de palavras pelo contexto e palavras com mais de um significado. | EF35LP05, EF05LP02 | Sentido das palavras pelo contexto (4º ano) | `text_evidence` |
 | `lp5-dictionary` | Verbete de dicionário | Estrutura do verbete, abreviaturas e escolha do significado adequado ao contexto. | EF05LP22 | Sentido das palavras pelo contexto (4º ano) | `text_evidence` |
 | `lp5-text-cohesion` | Retomadas no texto | Pronomes e sinônimos que retomam termos já citados e dão continuidade ao texto. | EF35LP06, EF05LP27 | Pronomes que retomam palavras (4º ano) | `text_evidence` |
-| `lp5-conjunctions` | Conjunções e relações de sentido | Conjunções que indicam adição, oposição, tempo, causa, condição e finalidade. | EF05LP07 | — | `text_evidence` |
+| `lp5-conjunctions` | Conjunções e relações de sentido | Conjunções que indicam adição, oposição, tempo, causa, condição e finalidade. | EF05LP07 | — | `single_normative_answer`, `text_evidence` |
 | `lp5-narrative` | Narrativa e narrador | Enredo, personagens, tempo, espaço e narrador em 1ª e 3ª pessoa em contos e lendas. | EF35LP26, EF35LP29 | Elementos da narrativa (4º ano) | `text_evidence` |
 | `lp5-direct-indirect-speech` | Discurso direto e indireto | Diferenciar discurso direto e indireto e o efeito dos verbos de dizer. | EF35LP30 | Discurso direto e indireto (4º ano) | `text_evidence` |
 | `lp5-poems` | Poemas e linguagem figurada | Rimas, ritmo, sentido figurado e metáforas em poemas. | EF35LP27, EF35LP31 | Poemas: versos, estrofes e rimas (4º ano) | `text_evidence` |

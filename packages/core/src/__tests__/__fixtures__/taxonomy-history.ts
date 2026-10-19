@@ -7,7 +7,7 @@ export type PublishedTaxonomy = {
 export const publishedTaxonomyList: readonly PublishedTaxonomy[] = [
   {
     taxonomyVersion: "tax-v1",
-    fingerprint: "7afa7a66b4ac5ad8e6021bdf45ec5825b03dfb4bbe16785c1be31f0c1863a894",
+    fingerprint: "c30c6636f48a13ced9417d6fbd7bb82414f6015efe981258c8db72b4386808a7",
     topicIdList: [
       "ma4-natural-numbers",
       "ma4-place-value",
@@ -54,7 +54,7 @@ export const publishedTaxonomyList: readonly PublishedTaxonomy[] = [
       "ma6-natural-decimal-numbers",
       "ma6-numeral-systems",
       "ma6-natural-operations",
-      "ma6-powers-roots",
+      "ma6-powers",
       "ma6-numeric-expressions",
       "ma6-multiples-divisors",
       "ma6-lcm-gcd",

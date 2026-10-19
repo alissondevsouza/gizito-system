@@ -34,7 +34,7 @@ export const taxonomyTopicList: readonly Topic[] = taxonomySectionList.flatMap((
 );
 
 export const taxonomyExclusionList: readonly string[] = [
-  "Simetria de reflexão, translação e rotação desenhada em malha",
+  "Simetria de reflexão, translação e rotação desenhada em malha (a simetria por coordenadas do 7º ano entra)",
   "Ampliação e redução de figuras em malha quadriculada",
   "Vistas, plantas baixas e croquis",
   "Algoritmos e fluxogramas",

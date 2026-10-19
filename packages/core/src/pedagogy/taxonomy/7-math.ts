@@ -124,7 +124,8 @@ export const grade7MathTopicList: readonly TopicDefinition[] = [
   {
     topicId: "ma7-circle",
     label: "Circunferência e o número π",
-    description: "Centro, raio e diâmetro; π como razão entre o comprimento e o diâmetro.",
+    description:
+      "Raio, diâmetro e comprimento da circunferência calculado com π a partir de medidas dadas.",
     bnccSkillList: ["EF07MA22", "EF07MA33"],
     prerequisiteList: ["ma6-decimal-operations"],
     validationRuleList: ["measurement_unit", "figure_free_statement"],

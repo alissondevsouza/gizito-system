@@ -15,6 +15,17 @@ describe("versão da taxonomia (RF-07)", () => {
     expect(canonicalSha256(taxonomyTopicList)).toBe(current?.fingerprint ?? "");
   });
 
+  it("a versão atual registra exatamente os ids atuais, e cada versão tem fingerprint próprio", () => {
+    const current = publishedTaxonomyList.find(
+      (published) => published.taxonomyVersion === TAXONOMY_VERSION,
+    );
+    expect(current?.topicIdList).toEqual(taxonomyTopicList.map((topic) => topic.topicId));
+    const versionList = publishedTaxonomyList.map((published) => published.taxonomyVersion);
+    const fingerprintList = publishedTaxonomyList.map((published) => published.fingerprint);
+    expect(new Set(versionList).size).toBe(versionList.length);
+    expect(new Set(fingerprintList).size).toBe(fingerprintList.length);
+  });
+
   it("nenhum id de versão publicada some; descontinuar é deprecated: true", () => {
     const currentIdSet = new Set(taxonomyTopicList.map((topic) => topic.topicId));
     const missingIdList = publishedTaxonomyList

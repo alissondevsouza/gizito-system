@@ -1,4 +1,4 @@
-import { MOCK_QUESTION_COUNT, PRACTICE_QUESTION_COUNT } from "#src/constants.ts";
+import { MAX_TOPIC_COUNT, MOCK_QUESTION_COUNT, PRACTICE_QUESTION_COUNT } from "#src/constants.ts";
 import {
   gradeLabelMap,
   gradeList,
@@ -70,7 +70,7 @@ export function renderTaxonomyMarkdown(input: TaxonomyMarkdownInput): string {
     "",
     "> Gerado por `bun run taxonomy:doc` a partir de `packages/core/src/pedagogy/taxonomy/`. Não edite à mão: o teste do core falha se este arquivo divergir do código.",
     "",
-    "Lista canônica de assuntos por ano e disciplina (PRD §7.7). A extração mapeia as fotos do caderno para estes assuntos, o responsável confirma até três deles como chips e a geração e as validações do kit partem deles. Um id nunca muda de sentido: assunto que sai da lista fica marcado como descontinuado.",
+    `Lista canônica de assuntos por ano e disciplina (PRD §7.7). A extração mapeia as fotos do caderno para estes assuntos, o responsável confirma até ${MAX_TOPIC_COUNT} deles como chips e a geração e as validações do kit partem deles. Um id nunca muda de sentido: assunto que sai da lista fica marcado como descontinuado.`,
     "",
     `**Como revisar.** Para cada assunto, confira se ele cabe no ano, se o nome é o que a criança vê no caderno e no livro, se as habilidades correspondem ao assunto (busque o código na [BNCC oficial](${BNCC_OFFICIAL_URL})), se os pré-requisitos fazem sentido e se dá para fazer ${PRACTICE_QUESTION_COUNT} exercícios e ${MOCK_QUESTION_COUNT} questões de prova sobre ele sem desenho. Falta ou sobra de assunto também conta.`,
     "",
