@@ -2,7 +2,7 @@
 
 **Workspace:** `@gizito/db`
 **Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-16
+**Última atualização:** 2026-10-19
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -32,6 +32,13 @@
 - `src/health.ts`: `pingDatabase`. `src/queue/metrics.ts`: `getQueueMetrics` (prontos, idade do mais antigo pronto, ativos, falhas e `payload_invalid` na janela, numa consulta com `FILTER`, lendo só `pending`, `active` e as falhas da janela).
 - `claimJob` e `workJob` aceitam `onPayloadInvalid({ jobId, name })`.
 - Testes: 98 unit e 101 de integração.
+
+## Ajustes em revisao-f0 (2026-10-19, `d770f90`, `c21064e`, `ee17e8c`)
+
+- `src/queue/`: lease curto renovado (`renewJobLease`), `releaseJob` sem gastar tentativa, `workJob` com `{ signal }` para o handler, teto por execução, código de erro inválido sem travar o job e `onExhausted` na transação do `failed` (`compensateExhaustedJob`, `JobCompensationError`); `recoverExpiredJobs` devolve primeiro os que têm tentativa e compensa os esgotados um por vez, sem travar nos que falham (`compensationFailureList`). ADR-0009.
+- `getQueueMetrics` em três consultas por status, com teto de 2 s; `pingDatabase` com teto (`DatabaseTimeoutError`); `createDatabase` com `connectionTimeout` 5 s, `statement_timeout` 30 s, `lock_timeout` 10 s e `idle_in_transaction_session_timeout` 60 s; `close({ timeoutSeconds })`.
+- Migration `0002_revisao_f0`: índices parciais da `job` (`pending`, `active`, `failed`); unique `(gateway, gateway_order_id)` em `charge`; índices de `order.whatsapp_phone` e `order_photo.content_hash`; check de `topic_id_list` contando o "outro"; `notification` com `recipient_hash`, `order_id` nulo só em `whatsapp_help` e unique por destinatário.
+- Testes: 98 unit e 129 de integração.
 
 ## Implementado
 

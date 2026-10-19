@@ -6,6 +6,12 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-19] Pino roda `formatters.log` antes dos serializers e não formata bindings de filho; TanStack manda o erro do loader no HTML — revisão da F0 (M5)
+
+No Pino 10.4, `formatters.log` recebe o objeto **antes** de `serializers`; por isso a máscara do `createLogger` deixa a chave `err` para o `serializers.err` e serializa `Error` nas outras chaves. Bindings de `logger.child({...})` não passam pelo formatter (o `redact` antigo cobria): o `createLogger` envolve o `child` para mascará-las. No TanStack Start, o `errorComponent` da raiz não vale para rotas filhas no SSR (vale o `defaultErrorComponent` do router), e o `Error` lançado num loader vai serializado no payload do HTML mesmo com a página de erro própria: loaders lançam erro com mensagem neutra, nunca com dado do pedido.
+
+---
+
 ## [2026-10-19] `close()` do Bun.SQL não resolve com uma conexão ainda pendente — revisão da F0
 
 Contra um servidor que aceita o TCP e nunca responde, a consulta falha em `connectionTimeout` (padrão de 30 s, agora 5 s no `createDatabase`) e o `close()` seguinte volta na hora. Se o `close()` for chamado enquanto a tentativa de conexão ainda está pendente, porém, ele não resolve, nem com `{ timeout: 0 }` (medido em 19/10/2026, Bun 1.3.11). Em teste, espere a consulta pendente falhar antes de fechar; no desligamento, a espera fica limitada pelo `connectionTimeout`. Achado também: com índices parciais por status, consulta com `status IN (...) OR ...` não usa nenhum deles e varre a tabela; separe por status.

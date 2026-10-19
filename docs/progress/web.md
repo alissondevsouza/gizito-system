@@ -2,7 +2,7 @@
 
 **Workspace:** `@gizito/web`
 **Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-16
+**Última atualização:** 2026-10-19
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -14,6 +14,11 @@
 - `src/routes/__root.tsx` (`lang="pt-BR"`, título, 404 neutra em pt-BR) e `src/routes/index.tsx` (faixa `bg-board` com a marca, `main` vazio). Textos em `src/copy/`.
 - `routeTree.gen.ts` versionado (o typecheck da CI roda sem build); Biome com `tailwindDirectives` e import `#src/**/*.css?url` liberado.
 - Testes Vitest + Testing Library em jsdom: 6 (rota `/`, 404, tokens contra a tabela do design doc, router).
+
+## Ajustes em revisao-f0 (2026-10-19, `ecdd15e`)
+
+- `src/routes/__root.tsx`: documento HTML em `shellComponent`; `errorComponent` e `defaultErrorComponent` do router com `RouteErrorPage` (`src/components/route-error-page.tsx`, copy em `src/copy/route-error.ts`, design doc 1.4 §7.2).
+- Testes: 10.
 
 ## Implementado
 

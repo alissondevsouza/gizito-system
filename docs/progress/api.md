@@ -2,7 +2,7 @@
 
 **Workspace:** `@gizito/api`
 **Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-16
+**Última atualização:** 2026-10-19
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -15,6 +15,11 @@
 - `GET /health`: `routes/health.ts` → `services/health.ts` → `pingDatabase`; `200 ok` ou `503 unavailable` com `warn` só do nome do erro.
 - `dev` lê o `.env` da raiz (`bun --env-file=../../.env`); `exports` aponta para `src/app.ts` para importar a api não subir o servidor.
 - Testes: 23 unit (config, erros, app com banco inalcançável, status lançado, exceção, corpo inválido, CORS, log sem token, boot sem env) e 2 de integração (health com banco, processo com `SIGTERM`).
+
+## Ajustes em revisao-f0 (2026-10-19, `ecdd15e`)
+
+- `src/app.ts`: log `request` com o status real (inclusive `Response` devolvido) e `errorCode` nas respostas de erro. `src/index.ts`: `listen` com `reusePort: false`; desligamento fecha o banco com teto de 5 s. Script `dev` fixa `NODE_ENV=development`.
+- Testes: 25 unit e 3 de integração.
 
 ## Implementado
 

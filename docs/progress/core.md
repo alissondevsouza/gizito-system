@@ -2,7 +2,7 @@
 
 **Workspace:** `@gizito/core`
 **Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-16
+**Última atualização:** 2026-10-19
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -32,6 +32,15 @@
 - `api/errors.ts`: `apiErrorCodeList` (com `not_found` e `internal_error`) e `apiErrorSchema`. `health/schemas.ts`: `healthStatusList`, `apiHealthSchema`, `queueMetricsSchema`, `workerHealthSchema`.
 - `constants.ts`: `RETENTION_PURGE_INTERVAL_HOURS` (24) e `JOB_FAILED_METRIC_WINDOW_HOURS` (24). `jobErrorCodeMap.handlerNotFound`. `common.ts`: `errorNameOf`. `health/schemas.ts`: `DATABASE_UNAVAILABLE_ERROR_CODE`.
 - Testes: 233.
+
+## Ajustes em revisao-f0 (2026-10-19, `f81d88b`, `ecdd15e`)
+
+- `order/state-machine.ts`: `preview_ready → draft` (`photos_changed`, "Trocar foto") e `paid → failed` (`generation_failed`, esgotamento antes de gerar); `confirmedOrderStatusList` (alcançáveis de `awaiting_payment`).
+- `order/schemas.ts`: `topicIdListSchema` sem repetidos; `countOrderTopics`; `orderSchema` com até 3 assuntos contando o "outro" e ao menos 1 a partir de `awaiting_payment`; `emailSchema` apara e põe em minúsculas.
+- `common.ts`: `httpsUrlSchema` (`ticketUrl`) e `webUrlSchema` (URLs de notificação). `interfaces/notification-channel.ts`: `outboundNotificationSchema` discriminado por `kind` (`whatsapp_help` sem pedido, só WhatsApp) e `recipientHashSchema`.
+- `constants.ts`: `JOB_LOCK_TIMEOUT_SECONDS` 120, `JOB_LEASE_RENEW_INTERVAL_SECONDS` 30, `JOB_MAX_RUN_SECONDS` 900. `jobErrorCodeMap` ganha `job_timeout`, `invalid_error_code`, `worker_shutdown` e `job_compensation_failed`. `chargeReconcileJobPayloadSchema` com `webhookEventId` (só junto com `orderId`).
+- `retention/rules.ts`: `isPhotoDueForPurge` (vence antes da próxima execução do purge). `config/schemas.ts`: `NODE_ENV` obrigatório.
+- Testes: 254, cobertura 100%.
 
 ## Implementado
 
