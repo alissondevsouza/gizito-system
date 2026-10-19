@@ -1,6 +1,6 @@
 # API HTTP (`apps/api`)
 
-**Versão:** 1.1 · **Data:** 2026-10-16 · **Fonte:** PRD §5, §6, §9.1, §9.2; design doc §6; `.claude/rules/api.md` · **Implementação:** F0-07 (`/health`), F2-01 a F2-11
+**Versão:** 1.2 · **Data:** 2026-10-19 · **Fonte:** PRD §5, §6, §9.1, §9.2; design doc §6; `.claude/rules/api.md` · **Implementação:** F0-07 (`/health`), F2-01 a F2-11
 
 Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos chamam services; services usam Drizzle e `transitionOrder` dentro de transação. A API não chama IA. Prefixo sem versão no MVP (`/orders`, não `/v1/orders`); versionar quando houver segundo consumidor.
 
@@ -12,7 +12,7 @@ Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos
 - Token inexistente ou inválido → **404 neutro** `order_not_found`, sem revelar se o token existiu.
 - CORS restrito a `WEB_PUBLIC_URL`. HTTPS atrás do proxy.
 - Rate limit: prévia gratuita por IP + cookie de dispositivo (`PREVIEW_RATE_LIMIT_PER_HOUR`, `PREVIEW_RATE_LIMIT_PER_DAY`); webhooks por IP.
-- Logs com `orderId`, padrão da rota (`/orders/:token`, nunca a URL, que leva o token), método, status, duração, `code`; um log `request` por resposta. Nunca foto, texto extraído, observação, `qr_code`, token, e-mail, telefone completo ou corpo de webhook.
+- Logs com `orderId`, padrão da rota (`/orders/:token`, nunca a URL, que leva o token), método, status real da resposta (inclusive quando o handler devolve um `Response`), duração e o `code` das respostas de erro; um log `request` por resposta. Nunca foto, texto extraído, observação, `qr_code`, token, e-mail, telefone completo ou corpo de webhook.
 
 ## 2. Rotas públicas (comprador)
 
@@ -50,7 +50,7 @@ O web usa só `status` (e `substate`) para decidir a rota (design doc §6.8).
 
 | Rota | Validação | Efeito | Resposta |
 |---|---|---|---|
-| `POST /webhooks/mercadopago` | header `x-signature` (HMAC com `ts` e `v1`, segredo por env) | registra `webhook_event` (unique por `source` + `external_id`) e enfileira `charge.reconcile { orderId }` na mesma transação; duplicado → 200 sem efeito; a consulta ao gateway e `markOrderPaidAndEnqueue` acontecem no worker; o corpo serve só para localizar o pedido, nunca como prova de pagamento | `200` em menos de 22 s |
+| `POST /webhooks/mercadopago` | header `x-signature` (HMAC com `ts` e `v1`, segredo por env) | registra `webhook_event` (unique por `source` + `external_id`) e enfileira `charge.reconcile { orderId, webhookEventId }` na mesma transação; localiza a cobrança pelo unique `(gateway, gateway_order_id)`; duplicado → 200 sem efeito; a consulta ao gateway e `markOrderPaidAndEnqueue` acontecem no worker; o corpo serve só para localizar o pedido, nunca como prova de pagamento | `200` em menos de 22 s |
 | `POST /webhooks/whatsapp` | segredo na URL ou header; ignora `fromMe`, grupos e mensagens sem texto; desligado com `WHATSAPP_ENABLED=false` | registra `webhook_event`; enfileira `whatsapp.inbound` com telefone e texto limitados | `200` |
 
 Nada acontece inline além de validar, registrar e enfileirar: o webhook responde 200 e o worker faz o resto.
@@ -80,3 +80,4 @@ Operador único com sessão (login por senha forte em env, cookie `HttpOnly`, ex
 
 - **1.0 (2026-10-15):** versão inicial (F0-03). Os schemas de entrada e resposta entram em `packages/core` conforme as rotas forem implementadas (F2-01 em diante).
 - **1.1 (2026-10-16):** F0-07: `/health` com `503 unavailable`, códigos `not_found` e `internal_error`, erros genéricos do `onError` (status lançado com corpo do contrato passa como está), log por padrão de rota, config com obrigatórias e defaults, desligamento por sinal.
+- **1.2 (2026-10-19):** revisão da F0: o webhook do Mercado Pago enfileira `charge.reconcile` com `webhookEventId`, para o worker marcar `processed_datetime` em `markOrderPaidAndEnqueue`; log `request` com status real e `code`; `listen` sem `reusePort`; desligamento fecha o banco com teto.

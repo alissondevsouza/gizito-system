@@ -6,6 +6,10 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-19] `close()` do Bun.SQL não resolve com uma conexão ainda pendente — revisão da F0
+
+Contra um servidor que aceita o TCP e nunca responde, a consulta falha em `connectionTimeout` (padrão de 30 s, agora 5 s no `createDatabase`) e o `close()` seguinte volta na hora. Se o `close()` for chamado enquanto a tentativa de conexão ainda está pendente, porém, ele não resolve, nem com `{ timeout: 0 }` (medido em 19/10/2026, Bun 1.3.11). Em teste, espere a consulta pendente falhar antes de fechar; no desligamento, a espera fica limitada pelo `connectionTimeout`. Achado também: com índices parciais por status, consulta com `status IN (...) OR ...` não usa nenhum deles e varre a tabela; separe por status.
+
 ## [2026-10-16] Turbo 2 em strict mode descarta variáveis do shell nas tasks — revisão da F0-07
 
 Por padrão o Turbo só repassa às tasks as variáveis declaradas em `env`/`passThroughEnv` do `turbo.json`. `DATABASE_URL=... bun run dev` chegava às apps sem `DATABASE_URL` e o config derrubava o processo; o caminho com `.env` funcionava só porque o próprio Bun lê o arquivo. A task `dev` usa `passThroughEnv: ["*"]` (não tem cache, então não muda hash); tasks com cache declaram cada variável em `env`.

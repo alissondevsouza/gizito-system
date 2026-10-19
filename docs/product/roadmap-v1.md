@@ -1,9 +1,9 @@
-# Gizito — Roadmap de Implementação v1.1
+# Gizito — Roadmap de Implementação v1.2
 
 **Status:** em execução  
 **Fase atual:** F1 — Prova técnica e pedagógica  
 **Data:** 14/10/2026  
-**Estado atualizado em:** 16/10/2026  
+**Estado atualizado em:** 19/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
 **Como usar:** cada feature vira uma spec em `specs/{modulo}/{slug}/` executada pelo fluxo `gizito-spec-driven`; as fases só avançam quando o critério de saída é atendido  
 **Como marcar:** `[x]` concluída, com data e commit ou spec ao lado · `[ ]` com **em andamento** no título quando iniciada, com o sub-item "Feito até agora" · `[ ]` sem marca é pendente. Ao concluir uma feature, marcar o item e trocar "Feito até agora" por "Concluída em". Ao fechar uma fase, marcar o gate, atualizar a coluna Estado da seção 2, o bloco "Estado atual" abaixo e a tabela de estado de `docs/README.md`
@@ -185,14 +185,14 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `POST /orders/:token/confirm`; `MercadoPagoGateway` (createCharge via Orders API, getChargeStatus, parseWebhook, refund) e fake; renovação de cobrança expirada
   - Pronto quando: no sandbox: cobrança criada, expira em 30 min, renova sem duplicar pedido
 - [ ] **F2-04 `webhook-e-reconciliacao`** — api, worker · M · depende: F2-03
-  - Entrega: `POST /webhooks/mercadopago` com assinatura, `webhook_event`, GET do recurso, `markOrderPaidAndEnqueue`; job `charge.reconcile`
+  - Entrega: `POST /webhooks/mercadopago` com assinatura, `webhook_event`, GET do recurso, `markOrderPaidAndEnqueue`; job `charge.reconcile` (o webhook passa `webhookEventId` no payload; ao marcar pago, cancelar no gateway os outros Pix ainda pendentes do pedido, depois do commit)
   - Pronto quando: webhook duplicado é no-op; pagamento sem webhook é detectado pela reconciliação
 - [ ] **F2-05 `job-geracao-e-publicacao`** — worker · M · depende: F1-07, F1-08, F2-04
   - Entrega: `order.generate`: pipeline, render, `publishKit`; `failed` com `outcome_code`; limite de custo
   - Pronto quando: `ready` só com dois PDFs no storage; reexecução idempotente
 - [ ] **F2-06 `downloads-e-retencao`** — api, worker · P · depende: F2-05
-  - Entrega: `GET /orders/:token/downloads/:kind` com URL assinada curta; `retention.purge`
-  - Pronto quando: URL expira; purge respeita 30 dias e 12 meses com relógio injetado
+  - Entrega: `GET /orders/:token/downloads/:kind` com URL assinada curta; `retention.purge` com `isPhotoDueForPurge`, lotes até esvaziar e expurgo de jobs `completed` antigos
+  - Pronto quando: URL expira; purge respeita 30 dias e 12 meses com relógio injetado; nenhuma foto passa de 30 dias
 - [ ] **F2-07 `notificacao-email`** — worker, integrations · P · depende: F2-05
   - Entrega: adaptador Resend e fake; templates `kit_ready`, `kit_failed`; `order.notify`
   - Pronto quando: um e-mail por evento; domínio autenticado em produção
@@ -269,5 +269,6 @@ Marcar o item só quando entregue; anotar ao lado a data em que o gatilho dispar
 
 ## 10. Histórico de revisões
 
+- **1.2 (19/10/2026):** revisão da F0 (`specs/cross/revisao-f0/`): F2-04 passa a citar `webhookEventId` no `charge.reconcile` e o cancelamento dos outros Pix no gateway; F2-06 passa a citar a regra de purge dentro dos 30 dias, os lotes até esvaziar e o expurgo de jobs `completed`.
 - **1.1 (14/10/2026):** roadmap vira checklist de acompanhamento: features, pendências do humano, atividades do piloto, itens por gatilho e gates com checkbox; bloco "Estado atual" e coluna Estado na visão geral; estado inicial marcado (só `git init` e primeiro commit feitos, F0-01 em andamento). Numeração dos ADRs de F0-03 e F0-06 ajustada porque o 0001 já é o harness (ADR-0001).
 - **1.0 (14/10/2026):** versão inicial, derivada da seção 11 do PRD e das decisões da revisão 1.2.

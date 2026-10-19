@@ -1,7 +1,7 @@
-# Gizito — Guia de Design, Identidade Visual e Experiência (v1.3)
+# Gizito — Guia de Design, Identidade Visual e Experiência (v1.4)
 
 **Tipo:** complemento de UI/UX e branding ao `product-doc-v1.md`  
-**Data:** 14/10/2026 · revisão 1.3 em 14/10/2026 (ver seção 15)  
+**Data:** 14/10/2026 · revisão 1.4 em 19/10/2026 (ver seção 15)  
 **Status:** especificação proposta, pronta para orientar design e implementação  
 **Produto:** kit de reforço escolar personalizado, adquirido por Pix a cada necessidade  
 **Marca escolhida:** **Gizito**
@@ -361,6 +361,7 @@ Cada componente terá estados `default`, `hover` quando aplicável, `focus-visib
 - Texto objetivo + solução: “Esta foto está acima de 8 MB. Escolha uma imagem menor.”
 - Não depender de cor: incluir texto, ícone e `aria-describedby`.
 - Evitar mensagens genéricas “Ops! Algo deu errado” sem orientação.
+- Erro inesperado ao abrir uma página: a página mantém o documento em pt-BR, explica em uma frase que não foi possível abrir agora e que o pedido continua salvo, e oferece duas saídas (tentar de novo e voltar ao início); nunca mostra mensagem técnica nem detalhe do erro.
 
 ### 7.3 Estados vazios e carregamento
 
@@ -493,6 +494,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 ## 15. Histórico de revisões
 
+- **1.4 (19/10/2026):** erro inesperado de página (7.2): texto objetivo com as saídas "tentar de novo" e "voltar ao início", sem detalhe técnico. Motivo: a raiz do web passa a ter `errorComponent` (revisão da F0); o texto exato fica em `apps/web/src/copy/`.
 - **1.3 (14/10/2026):** aviso obrigatório do recebedor na tela do Pix (6.4), com o nome do titular vindo de configuração; linha de transparência na landing (6.1); pergunta obrigatória na FAQ (6.7); microcopy do recebedor (5.2); item de confiança (10) e critério de aceite (12). Motivo: conta pessoa física no Mercado Pago exibe o nome civil do titular no app do banco do pagador, e MEI não resolve.
 - **1.2 (14/10/2026):** checkout com detalhes do Mercado Pago (validade de 30 minutos, QR, copia e cola, `ticket_url`); botão “Receber no WhatsApp” nas telas de processamento e entrega, com estados de vínculo e remoção; microcopy das mensagens de WhatsApp e regra de canal somente resposta; componente `WhatsAppOptIn`; critério de aceite do vínculo.
 - **1.1 (14/10/2026):** anos 4º–7º; preço R$ 29,90; kit em dois PDFs com 10 + 10 = 20 questões; campos opcionais na tela de confirmação; bloco “O que entendi do material”; kit de amostra completo na landing; seção 3.4 com referências e decisões do personagem baseadas em `docs/gizito-image/`; spec do mascote alinhada ao estilo 2.5D das referências e assets em PNG/WebP; token `--color-gizito-blue`; lettering de referência para o logotipo; rota `/pedido/:id/assuntos`; tabela estado → rota (6.8); tela de entrega com dois downloads e links de curta duração; simulado com formato de prova nos PDFs; textos somente em português.

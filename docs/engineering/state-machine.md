@@ -1,6 +1,6 @@
 # Máquina de estados do pedido
 
-**Versão:** 1.0 · **Data:** 2026-10-15 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
+**Versão:** 1.1 · **Data:** 2026-10-19 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
 
 O estado do pedido só muda pela função `transitionOrder(status, event)` do core, chamada por um service **dentro de uma transação** (invariante 1). A máquina é dado (`orderTransitionList`), não código: toda transição válida está na tabela abaixo e toda combinação fora dela devolve `InvalidTransitionError` sem lançar.
 
@@ -13,8 +13,10 @@ stateDiagram-v2
   analyzing --> preview_ready: analysis_succeeded
   analyzing --> draft: analysis_failed
   preview_ready --> awaiting_payment: confirm
+  preview_ready --> draft: photos_changed
   awaiting_payment --> paid: payment_confirmed
   paid --> processing: generation_started
+  paid --> failed: generation_failed
   processing --> ready: kit_published
   processing --> failed: generation_failed
   failed --> paid: reprocess
@@ -33,10 +35,12 @@ stateDiagram-v2
 | `analyzing` | `analysis_succeeded` | `preview_ready` | worker, `order.analyze` | extração devolveu ao menos um candidato e material suficiente; o teto de 3 assuntos é da confirmação |
 | `analyzing` | `analysis_failed` | `draft` | worker, `order.analyze` | fotos insuficientes ou ilegíveis; avisos por foto gravados |
 | `preview_ready` | `confirm` | `awaiting_payment` | api, `POST /orders/:token/confirm` | assuntos, e-mail e aceite válidos; a cobrança é criada no gateway antes (idempotente por `chargeId`) e gravada na mesma transação da transição |
+| `preview_ready` | `photos_changed` | `draft` | api, rota de fotos (F2-01) | o responsável troca uma foto pela ação "Trocar foto" (design doc §6.3, PRD §5 "foto ruim: nova foto antes do Pix"); os assuntos confirmados são descartados e a análise recomeça por `start_analysis` |
 | `awaiting_payment` | `payment_confirmed` | `paid` | worker, `charge.reconcile` (disparado pelo webhook com `orderId` ou pelo agendador) | **após consultar o gateway**; `markOrderPaidAndEnqueue` enfileira `order.generate` e expira as demais cobranças `pending` do pedido na mesma transação |
 | `paid` | `generation_started` | `processing` | worker, `order.generate` | ao pegar o job |
+| `paid` | `generation_failed` | `failed` | worker, `onExhausted` de `order.generate` (ADR-0009) | o job esgotou as tentativas antes de começar a gerar; `fail_reason_code` do job e `order.notify` `kit_failed` na mesma transação |
 | `processing` | `kit_published` | `ready` | worker, `publishKit` | os dois PDFs no storage e validações críticas verdes |
-| `processing` | `generation_failed` | `failed` | worker, `order.generate` | bloqueador persistente após uma regeneração, custo excedido ou erro não transitório; `fail_reason_code` gravado |
+| `processing` | `generation_failed` | `failed` | worker, `order.generate` ou o `onExhausted` dele | bloqueador persistente após uma regeneração, custo excedido, erro não transitório ou tentativas esgotadas; `fail_reason_code` gravado |
 | `failed` | `reprocess` | `paid` | admin | reenfileira `order.generate`; o job sempre parte de `paid` |
 | `paid`, `processing`, `ready`, `failed` | `refund` | `refunded` | admin, com motivo | após reembolso no gateway; `refund_id` gravado na cobrança |
 
@@ -55,6 +59,7 @@ Não é um status do pedido. Com o pedido em `awaiting_payment`, o sub-estado de
 | Pix pago depois da cobrança expirar | ainda vale: `payment_confirmed` segue e as demais cobranças `pending` do pedido viram `expired` (canceladas no gateway quando a API permitir), para um segundo Pix já gerado não ser pago também |
 | Webhook atrasado ou perdido | `charge.reconcile` consulta o gateway a cada 2 minutos para cobranças `awaiting_payment` com mais de 1 minuto |
 | Falha de geração | uma regeneração automática dentro do mesmo job; persistindo, `generation_failed` e aviso ao responsável (`kit_failed`) |
+| Falha transitória até esgotar a fila | o `onExhausted` de `order.generate` aplica `generation_failed` (de `paid` ou `processing`) e enfileira `kit_failed` na transação do `failed` do job; o admin pode reprocessar a partir de `failed` |
 | Reembolso durante `processing` | `refund` leva a `refunded`; quando o job tentar `kit_published`, a máquina recusa e o kit não é publicado |
 | Arquivo final indisponível | `publishKit` só roda com as duas keys; sem elas o pedido não chega a `ready` |
 
@@ -64,8 +69,9 @@ O web decide a rota canônica a partir do status devolvido por `GET /orders/:tok
 
 ## 6. Testes
 
-`packages/core/src/__tests__/order/state-machine.test.ts`: a tabela é comparada com a lista literal da jornada do PRD; cada transição válida é testada; todas as 77 combinações status × evento fora da tabela devolvem `InvalidTransitionError` com `from` e `event`; `payment_confirmed` só é aceito de `awaiting_payment`. Services que persistem transições têm teste de integração com Postgres real (F0-05 em diante).
+`packages/core/src/__tests__/order/state-machine.test.ts`: a tabela é comparada com a lista literal da jornada do PRD; cada transição válida é testada; todas as 84 combinações status × evento fora da tabela devolvem `InvalidTransitionError` com `from` e `event`; `payment_confirmed` só é aceito de `awaiting_payment`. Services que persistem transições têm teste de integração com Postgres real (F0-05 em diante).
 
 ## Histórico
 
+- **1.1 (2026-10-19):** `preview_ready → draft` por `photos_changed` ("Trocar foto") e `paid → failed` por `generation_failed` (esgotamento antes de gerar), decididos pelo humano na revisão da F0 (`specs/cross/revisao-f0/`); `confirmedOrderStatusList` (alcançáveis de `awaiting_payment`) exige ao menos um assunto.
 - **1.0 (2026-10-15):** versão inicial (F0-03), espelhando o código de F0-04.
