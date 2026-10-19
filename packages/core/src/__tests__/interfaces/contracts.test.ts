@@ -15,7 +15,9 @@ import {
 import type { MathEvaluator } from "#src/interfaces/math-evaluator.ts";
 import {
   type NotificationChannel,
+  type OutboundNotification,
   outboundNotificationSchema,
+  recipientHashSchema,
   sendResultSchema,
 } from "#src/interfaces/notification-channel.ts";
 import { type ObjectStorage, putObjectInputSchema } from "#src/interfaces/object-storage.ts";
@@ -117,6 +119,41 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
         channel: "whatsapp",
       }).success,
     ).toBe(true);
+    expect(
+      outboundNotificationSchema.safeParse({ ...notification, orderUrl: "javascript:alert(1)" })
+        .success,
+    ).toBe(false);
+    expect(
+      outboundNotificationSchema.safeParse({
+        ...notification,
+        orderId: undefined,
+        shortCode: undefined,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("NotificationChannel: ajuda do WhatsApp não tem pedido e só vai por WhatsApp", () => {
+    const help: OutboundNotification = {
+      kind: "whatsapp_help",
+      channel: "whatsapp",
+      recipient: "+5511999998888",
+      textBody: "Envie o código do pedido, por exemplo GZ-7K3M9Q.",
+      attachmentList: [],
+    };
+    expect(outboundNotificationSchema.parse(help)).toEqual(help);
+    expect(
+      outboundNotificationSchema.safeParse({ ...help, orderId: ORDER_ID, shortCode: SHORT_CODE })
+        .success,
+    ).toBe(false);
+    expect(
+      outboundNotificationSchema.safeParse({
+        ...help,
+        channel: "email",
+        recipient: "mae@example.com",
+      }).success,
+    ).toBe(false);
+    expect(recipientHashSchema.safeParse("a".repeat(64)).success).toBe(true);
+    expect(recipientHashSchema.safeParse("mae@example.com").success).toBe(false);
   });
 
   it("AiProvider devolve output tipado pelo schema pedido, com usage e versão do prompt", async () => {

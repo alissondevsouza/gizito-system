@@ -65,6 +65,25 @@ describe("jobPayloadSchema", () => {
     );
   });
 
+  it("charge.reconcile do webhook leva webhookEventId, sempre junto com orderId", () => {
+    expect(
+      jobPayloadSchema.safeParse({
+        name: "charge.reconcile",
+        orderId: ORDER_ID,
+        webhookEventId: WEBHOOK_EVENT_ID,
+      }),
+    ).toMatchObject({
+      success: true,
+      data: { name: "charge.reconcile", orderId: ORDER_ID, webhookEventId: WEBHOOK_EVENT_ID },
+    });
+    const withoutOrder = jobPayloadSchema.safeParse({
+      name: "charge.reconcile",
+      webhookEventId: WEBHOOK_EVENT_ID,
+    });
+    expect(withoutOrder.success).toBe(false);
+    expect(withoutOrder.error?.issues[0]?.path).toEqual(["webhookEventId"]);
+  });
+
   it("campo extra é descartado, nunca propagado", () => {
     const parsed = jobPayloadSchema.parse({
       name: "order.generate",

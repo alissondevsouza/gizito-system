@@ -27,6 +27,12 @@ describe("chargeSchema", () => {
     expect(chargeSchema.safeParse({ ...buildCharge(), gateway: "paypal" }).success).toBe(false);
     expect(chargeSchema.safeParse(buildCharge({ qrCode: "" })).success).toBe(false);
     expect(chargeSchema.safeParse(buildCharge({ ticketUrl: "ticket" })).success).toBe(false);
+    expect(chargeSchema.safeParse(buildCharge({ ticketUrl: "javascript:alert(1)" })).success).toBe(
+      false,
+    );
+    expect(chargeSchema.safeParse(buildCharge({ ticketUrl: "http://mp.example/t" })).success).toBe(
+      false,
+    );
   });
 });
 

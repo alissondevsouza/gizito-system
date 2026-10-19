@@ -5,6 +5,7 @@ import {
   MAX_NOTE_LENGTH,
   MAX_OTHER_TOPIC_LENGTH,
   MAX_TOPIC_COUNT,
+  MIN_TOPIC_COUNT,
   PUBLIC_TOKEN_LENGTH,
   SHORT_CODE_ALPHABET,
   SHORT_CODE_LENGTH,
@@ -16,6 +17,7 @@ import {
   perceivedDifficultySchema,
   subjectSchema,
 } from "#src/enums.ts";
+import { isConfirmedOrderStatus } from "#src/order/state-machine.ts";
 
 const PUBLIC_TOKEN_CANONICAL_LAST_CHAR_CLASS = "[AEIMQUYcgkosw048]";
 
@@ -33,7 +35,7 @@ export const shortCodeSchema = z
   .regex(new RegExp(`^${SHORT_CODE_PREFIX}[${SHORT_CODE_ALPHABET}]{${SHORT_CODE_LENGTH}}$`));
 export type ShortCode = z.infer<typeof shortCodeSchema>;
 
-export const emailSchema = z.email().max(MAX_EMAIL_LENGTH);
+export const emailSchema = z.string().trim().toLowerCase().pipe(z.email().max(MAX_EMAIL_LENGTH));
 export type Email = z.infer<typeof emailSchema>;
 
 export const phoneSchema = z.string().regex(/^\+[1-9]\d{9,14}$/);
@@ -47,7 +49,19 @@ export const topicIdSchema = z
   .regex(/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/)
   .max(64);
 export type TopicId = z.infer<typeof topicIdSchema>;
-export const topicIdListSchema = z.array(topicIdSchema).max(MAX_TOPIC_COUNT);
+export const topicIdListSchema = z
+  .array(topicIdSchema)
+  .max(MAX_TOPIC_COUNT)
+  .refine((topicIdList) => new Set(topicIdList).size === topicIdList.length, {
+    message: "topicIdList must not repeat a topic",
+  });
+
+export function countOrderTopics(
+  topicIdList: readonly TopicId[],
+  otherTopicText: string | null,
+): number {
+  return topicIdList.length + (otherTopicText === null ? 0 : 1);
+}
 
 export const orderSchema = timestampFieldsSchema
   .extend({
@@ -72,7 +86,20 @@ export const orderSchema = timestampFieldsSchema
   .refine((order) => (order.whatsappPhone === null) === (order.whatsappConsentDatetime === null), {
     message: "whatsappPhone and whatsappConsentDatetime must be set together",
     path: ["whatsappConsentDatetime"],
-  });
+  })
+  .refine((order) => countOrderTopics(order.topicIdList, order.otherTopicText) <= MAX_TOPIC_COUNT, {
+    message: "an order covers at most MAX_TOPIC_COUNT topics, other topic included",
+    path: ["topicIdList"],
+  })
+  .refine(
+    (order) =>
+      !isConfirmedOrderStatus(order.status) ||
+      countOrderTopics(order.topicIdList, order.otherTopicText) >= MIN_TOPIC_COUNT,
+    {
+      message: "a confirmed order covers at least MIN_TOPIC_COUNT topic",
+      path: ["topicIdList"],
+    },
+  );
 export type Order = z.infer<typeof orderSchema>;
 
 export const contentHashSchema = z.string().regex(/^[a-f0-9]{64}$/);

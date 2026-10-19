@@ -13,6 +13,9 @@ export const jobErrorCodeMap = {
   lockExpired: "lock_expired",
   unhandledError: "unhandled_error",
   handlerNotFound: "handler_not_found",
+  jobTimeout: "job_timeout",
+  invalidErrorCode: "invalid_error_code",
+  workerShutdown: "worker_shutdown",
 } as const;
 
 export function jobRetryDelaySeconds(

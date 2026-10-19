@@ -3,6 +3,9 @@ import { z } from "zod";
 export const guidSchema = z.guid();
 export type Guid = z.infer<typeof guidSchema>;
 
+export const httpsUrlSchema = z.url({ protocol: /^https$/ });
+export const webUrlSchema = z.url({ protocol: /^https?$/ });
+
 export const outcomeCodeSchema = z
   .string()
   .regex(/^[a-z][a-z0-9_]*$/)

@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { buildOrder, buildOrderPhoto, FIXED_NOW } from "#src/__tests__/__fixtures__/entities.ts";
 import { PUBLIC_TOKEN_BYTES } from "#src/constants.ts";
 import {
+  countOrderTopics,
   emailSchema,
   noteTextSchema,
   orderPhotoSchema,
@@ -69,6 +70,10 @@ describe("campos de texto do responsável", () => {
     expect(emailSchema.safeParse("mae@").success).toBe(false);
     expect(emailSchema.safeParse(`${"a".repeat(250)}@b.co`).success).toBe(false);
   });
+  it("e-mail chega aparado e em minúsculas, como o autocompletar do celular deixa", () => {
+    expect(emailSchema.parse("  Mae.Do.Aluno@Example.COM ")).toBe("mae.do.aluno@example.com");
+    expect(emailSchema.safeParse("   ").success).toBe(false);
+  });
   it("observação aceita até 300 caracteres e recusa 301", () => {
     expect(noteTextSchema.safeParse("a".repeat(300)).success).toBe(true);
     expect(noteTextSchema.safeParse("a".repeat(301)).success).toBe(false);
@@ -93,6 +98,9 @@ describe("topicIdSchema", () => {
     expect(topicIdSchema.safeParse("mat--5").success).toBe(false);
     expect(topicIdListSchema.safeParse(["a", "b", "c"]).success).toBe(true);
     expect(topicIdListSchema.safeParse(["a", "b", "c", "d"]).success).toBe(false);
+  });
+  it("recusa o mesmo assunto repetido", () => {
+    expect(topicIdListSchema.safeParse(["fracoes", "fracoes"]).success).toBe(false);
   });
 });
 
@@ -128,6 +136,26 @@ describe("orderSchema", () => {
     expect(orderSchema.safeParse(buildOrder({ topicIdList: ["a", "b", "c", "d"] })).success).toBe(
       false,
     );
+  });
+  it("o assunto 'outro' conta no teto de 3 (PRD §7.1)", () => {
+    const withOther = (topicIdList: string[]) =>
+      orderSchema.safeParse(buildOrder({ topicIdList, otherTopicText: "Sistema solar" })).success;
+    expect(withOther(["a", "b"])).toBe(true);
+    expect(withOther(["a", "b", "c"])).toBe(false);
+    expect(countOrderTopics(["a", "b"], "Sistema solar")).toBe(3);
+    expect(countOrderTopics([], null)).toBe(0);
+  });
+  it("pedido confirmado cobre ao menos um assunto; rascunho pode não ter nenhum", () => {
+    expect(orderSchema.safeParse(buildOrder({ status: "draft" })).success).toBe(true);
+    expect(orderSchema.safeParse(buildOrder({ status: "preview_ready" })).success).toBe(true);
+    expect(
+      orderSchema.safeParse(buildOrder({ status: "paid", paidDatetime: FIXED_NOW })).success,
+    ).toBe(false);
+    expect(
+      orderSchema.safeParse(
+        buildOrder({ status: "awaiting_payment", otherTopicText: "Sistema solar" }),
+      ).success,
+    ).toBe(true);
   });
   it("rejeita failReasonCode fora do formato de código estável", () => {
     expect(

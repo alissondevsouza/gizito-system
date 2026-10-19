@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   isKitExpired,
+  isPhotoDueForPurge,
   isPhotoExpired,
   kitDeleteDeadline,
   photoDeleteDeadline,
@@ -31,5 +32,14 @@ describe("retenção (invariante 10)", () => {
     expect(isPhotoExpired(inserted, new Date("2026-11-14T12:00:00.000Z"))).toBe(true);
     expect(isKitExpired(inserted, new Date("2027-10-15T11:59:59.999Z"))).toBe(false);
     expect(isKitExpired(inserted, new Date("2027-10-15T12:00:00.000Z"))).toBe(true);
+  });
+
+  it("purge diário apaga a foto cujo prazo cai antes da próxima execução (PRD §8, até 30 dias)", () => {
+    const inserted = new Date("2026-10-15T12:00:00.000Z");
+    expect(isPhotoDueForPurge(inserted, new Date("2026-11-13T11:59:59.999Z"))).toBe(false);
+    expect(isPhotoDueForPurge(inserted, new Date("2026-11-13T12:00:00.000Z"))).toBe(true);
+    const lastRunBeforeDeadline = new Date("2026-11-13T12:00:00.000Z");
+    expect(isPhotoExpired(inserted, lastRunBeforeDeadline)).toBe(false);
+    expect(isPhotoDueForPurge(inserted, lastRunBeforeDeadline)).toBe(true);
   });
 });

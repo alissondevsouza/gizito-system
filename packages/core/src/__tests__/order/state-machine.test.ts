@@ -2,7 +2,9 @@ import { describe, expect, it } from "bun:test";
 import { orderStatusList } from "#src/enums.ts";
 import {
   allowedEventList,
+  confirmedOrderStatusList,
   InvalidTransitionError,
+  isConfirmedOrderStatus,
   isPostPaymentOrderStatus,
   isTerminalOrderStatus,
   isWhatsappLinkableOrderStatus,
@@ -19,8 +21,10 @@ const expectedTransitionList: readonly OrderTransition[] = [
   { from: "analyzing", event: "analysis_succeeded", to: "preview_ready" },
   { from: "analyzing", event: "analysis_failed", to: "draft" },
   { from: "preview_ready", event: "confirm", to: "awaiting_payment" },
+  { from: "preview_ready", event: "photos_changed", to: "draft" },
   { from: "awaiting_payment", event: "payment_confirmed", to: "paid" },
   { from: "paid", event: "generation_started", to: "processing" },
+  { from: "paid", event: "generation_failed", to: "failed" },
   { from: "processing", event: "kit_published", to: "ready" },
   { from: "processing", event: "generation_failed", to: "failed" },
   { from: "failed", event: "reprocess", to: "paid" },
@@ -91,6 +95,33 @@ describe("máquina de estados do pedido (PRD §5)", () => {
       "refund",
     ]);
     expect(allowedEventList("draft")).toEqual(["start_analysis"]);
+    expect(allowedEventList("preview_ready")).toEqual(["confirm", "photos_changed"]);
+    expect(allowedEventList("paid")).toEqual(["generation_started", "generation_failed", "refund"]);
+  });
+
+  it("trocar foto na prévia volta a draft e a análise recomeça por start_analysis", () => {
+    const changed = transitionOrder("preview_ready", "photos_changed");
+    expect(changed).toEqual({ ok: true, value: "draft" });
+    expect(transitionOrder("draft", "start_analysis")).toEqual({ ok: true, value: "analyzing" });
+    expect(transitionOrder("awaiting_payment", "photos_changed").ok).toBe(false);
+  });
+
+  it("geração que falha antes de começar leva o pedido pago a failed, de onde sai reprocess", () => {
+    expect(transitionOrder("paid", "generation_failed")).toEqual({ ok: true, value: "failed" });
+    expect(transitionOrder("failed", "reprocess")).toEqual({ ok: true, value: "paid" });
+  });
+
+  it("estados confirmados são os alcançáveis a partir de awaiting_payment", () => {
+    expect(confirmedOrderStatusList).toEqual([
+      "awaiting_payment",
+      "paid",
+      "processing",
+      "ready",
+      "failed",
+      "refunded",
+    ]);
+    expect(isConfirmedOrderStatus("preview_ready")).toBe(false);
+    expect(isConfirmedOrderStatus("draft")).toBe(false);
   });
 
   it("estados pós-pagamento são os alcançáveis a partir de paid, nunca os anteriores", () => {

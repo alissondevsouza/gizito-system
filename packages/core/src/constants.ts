@@ -38,7 +38,9 @@ export const MAX_REGENERATION_COUNT = 1;
 
 export const JOB_RETRY_DELAY_SECONDS_LIST = [30, 120, 480] as const;
 export const JOB_MAX_ATTEMPT_COUNT = JOB_RETRY_DELAY_SECONDS_LIST.length + 1;
-export const JOB_LOCK_TIMEOUT_SECONDS = 15 * 60;
+export const JOB_LOCK_TIMEOUT_SECONDS = 2 * 60;
+export const JOB_LEASE_RENEW_INTERVAL_SECONDS = 30;
+export const JOB_MAX_RUN_SECONDS = 15 * 60;
 export const JOB_FAILED_METRIC_WINDOW_HOURS = 24;
 
 export const CHARGE_TTL_MINUTES = 30;

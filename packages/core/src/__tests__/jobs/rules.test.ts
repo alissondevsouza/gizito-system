@@ -2,8 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { FIXED_NOW } from "#src/__tests__/__fixtures__/entities.ts";
 import { outcomeCodeSchema } from "#src/common.ts";
 import {
+  JOB_LEASE_RENEW_INTERVAL_SECONDS,
   JOB_LOCK_TIMEOUT_SECONDS,
   JOB_MAX_ATTEMPT_COUNT,
+  JOB_MAX_RUN_SECONDS,
   JOB_RETRY_DELAY_SECONDS_LIST,
 } from "#src/constants.ts";
 import { jobNameList } from "#src/enums.ts";
@@ -52,10 +54,16 @@ describe("retry de jobs (jobs.md §4)", () => {
 });
 
 describe("lock de job", () => {
-  it("expira 15 minutos depois do claim por padrão e aceita timeout próprio", () => {
-    expect(JOB_LOCK_TIMEOUT_SECONDS).toBe(900);
-    expect(jobLockExpireDatetime(FIXED_NOW)).toEqual(secondsAfter(900));
+  it("expira 2 minutos depois do claim por padrão e aceita timeout próprio", () => {
+    expect(JOB_LOCK_TIMEOUT_SECONDS).toBe(120);
+    expect(jobLockExpireDatetime(FIXED_NOW)).toEqual(secondsAfter(120));
     expect(jobLockExpireDatetime(FIXED_NOW, 60)).toEqual(secondsAfter(60));
+  });
+
+  it("renova com folga antes de vencer e limita a execução a 15 minutos (ADR-0009)", () => {
+    expect(JOB_LEASE_RENEW_INTERVAL_SECONDS * 3).toBeLessThanOrEqual(JOB_LOCK_TIMEOUT_SECONDS);
+    expect(JOB_MAX_RUN_SECONDS).toBe(900);
+    expect(JOB_MAX_RUN_SECONDS).toBeGreaterThan(JOB_LOCK_TIMEOUT_SECONDS);
   });
 });
 
@@ -85,6 +93,9 @@ describe("códigos de erro da fila", () => {
       "lock_expired",
       "unhandled_error",
       "handler_not_found",
+      "job_timeout",
+      "invalid_error_code",
+      "worker_shutdown",
     ]);
     for (const code of Object.values(jobErrorCodeMap)) {
       expect(outcomeCodeSchema.safeParse(code).success).toBe(true);

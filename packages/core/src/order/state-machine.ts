@@ -7,6 +7,7 @@ export const orderEventList = [
   "analysis_succeeded",
   "analysis_failed",
   "confirm",
+  "photos_changed",
   "payment_confirmed",
   "generation_started",
   "kit_published",
@@ -28,8 +29,10 @@ export const orderTransitionList: readonly OrderTransition[] = [
   { from: "analyzing", event: "analysis_succeeded", to: "preview_ready" },
   { from: "analyzing", event: "analysis_failed", to: "draft" },
   { from: "preview_ready", event: "confirm", to: "awaiting_payment" },
+  { from: "preview_ready", event: "photos_changed", to: "draft" },
   { from: "awaiting_payment", event: "payment_confirmed", to: "paid" },
   { from: "paid", event: "generation_started", to: "processing" },
+  { from: "paid", event: "generation_failed", to: "failed" },
   { from: "processing", event: "kit_published", to: "ready" },
   { from: "processing", event: "generation_failed", to: "failed" },
   { from: "failed", event: "reprocess", to: "paid" },
@@ -80,6 +83,13 @@ export const postPaymentOrderStatusList: readonly OrderStatus[] =
 
 export function isPostPaymentOrderStatus(status: OrderStatus): boolean {
   return postPaymentOrderStatusList.includes(status);
+}
+
+export const confirmedOrderStatusList: readonly OrderStatus[] =
+  collectReachableStatusList("awaiting_payment");
+
+export function isConfirmedOrderStatus(status: OrderStatus): boolean {
+  return confirmedOrderStatusList.includes(status);
 }
 
 export const terminalOrderStatusList: readonly OrderStatus[] = orderStatusList.filter(

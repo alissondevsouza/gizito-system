@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { guidSchema, outcomeCodeSchema } from "#src/common.ts";
+import { guidSchema, outcomeCodeSchema, webUrlSchema } from "#src/common.ts";
 import {
   type NotificationChannelName,
   notificationChannelSchema,
@@ -7,22 +7,39 @@ import {
 } from "#src/enums.ts";
 import { emailSchema, phoneSchema, shortCodeSchema } from "#src/order/schemas.ts";
 
+export const recipientHashSchema = z.string().regex(/^[a-f0-9]{64}$/);
+export type RecipientHash = z.infer<typeof recipientHashSchema>;
+
 export const notificationAttachmentSchema = z.object({
   fileName: z.string().trim().min(1).max(100),
-  url: z.url(),
+  url: webUrlSchema,
 });
 export type NotificationAttachment = z.infer<typeof notificationAttachmentSchema>;
 
-export const outboundNotificationSchema = z.object({
-  orderId: guidSchema,
-  kind: notificationKindSchema,
-  channel: notificationChannelSchema,
-  recipient: z.union([emailSchema, phoneSchema]),
-  shortCode: shortCodeSchema,
-  orderUrl: z.url().nullable(),
+export const orderNotificationKindSchema = notificationKindSchema.exclude(["whatsapp_help"]);
+
+const notificationBodyShape = {
   textBody: z.string().max(4000).nullable(),
   attachmentList: z.array(notificationAttachmentSchema).max(2),
-});
+};
+
+export const outboundNotificationSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: orderNotificationKindSchema,
+    orderId: guidSchema,
+    channel: notificationChannelSchema,
+    recipient: z.union([emailSchema, phoneSchema]),
+    shortCode: shortCodeSchema,
+    orderUrl: webUrlSchema.nullable(),
+    ...notificationBodyShape,
+  }),
+  z.strictObject({
+    kind: z.literal("whatsapp_help"),
+    channel: z.literal("whatsapp"),
+    recipient: phoneSchema,
+    ...notificationBodyShape,
+  }),
+]);
 export type OutboundNotification = z.infer<typeof outboundNotificationSchema>;
 
 export const sendResultSchema = z.discriminatedUnion("status", [

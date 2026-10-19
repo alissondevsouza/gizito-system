@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { guidSchema } from "#src/common.ts";
+import { guidSchema, httpsUrlSchema } from "#src/common.ts";
 import { chargeStatusSchema, type PaymentGatewayName } from "#src/enums.ts";
 import { emailSchema } from "#src/order/schemas.ts";
 
@@ -17,7 +17,7 @@ export const createdChargeSchema = z.object({
   gatewayPaymentId: z.string().min(1).nullable(),
   qrCode: z.string().min(1),
   qrCodeBase64: z.string().min(1),
-  ticketUrl: z.url().nullable(),
+  ticketUrl: httpsUrlSchema.nullable(),
   expireDatetime: z.date(),
 });
 export type CreatedCharge = z.infer<typeof createdChargeSchema>;
