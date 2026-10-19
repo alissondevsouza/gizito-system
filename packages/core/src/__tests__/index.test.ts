@@ -10,6 +10,7 @@ it("o entrypoint exporta constantes, máquina de estados, schemas e payloads de 
   expect(core.TAXONOMY_VERSION).toBe("tax-v1");
   expect(core.listTopics("5", "math").length).toBeGreaterThan(0);
   expect(typeof core.renderTaxonomyMarkdown).toBe("function");
+  expect(core.findUnsupportedTopicList("tirinha", "portuguese")).toHaveLength(1);
 });
 
 it("errorNameOf devolve o nome do erro, nunca a mensagem", () => {

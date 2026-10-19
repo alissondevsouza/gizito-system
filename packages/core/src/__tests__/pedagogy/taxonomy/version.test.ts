@@ -2,6 +2,11 @@ import { describe, expect, it } from "bun:test";
 import { canonicalSha256 } from "#src/__tests__/__fixtures__/canonical-json.ts";
 import { publishedTaxonomyList } from "#src/__tests__/__fixtures__/taxonomy-history.ts";
 import { TAXONOMY_VERSION, taxonomyTopicList } from "#src/pedagogy/taxonomy/index.ts";
+import { unsupportedTopicList } from "#src/pedagogy/taxonomy/unsupported.ts";
+
+const currentTaxonomy = publishedTaxonomyList.find(
+  (published) => published.taxonomyVersion === TAXONOMY_VERSION,
+);
 
 describe("versão da taxonomia (RF-07)", () => {
   it("TAXONOMY_VERSION é a última versão publicada", () => {
@@ -24,6 +29,23 @@ describe("versão da taxonomia (RF-07)", () => {
     const fingerprintList = publishedTaxonomyList.map((published) => published.fingerprint);
     expect(new Set(versionList).size).toBe(versionList.length);
     expect(new Set(fingerprintList).size).toBe(fingerprintList.length);
+  });
+
+  it("a lista de assuntos ainda não atendidos não muda sem um novo TAXONOMY_VERSION", () => {
+    expect(canonicalSha256(unsupportedTopicList)).toBe(
+      currentTaxonomy?.unsupportedFingerprint ?? "",
+    );
+    expect(currentTaxonomy?.unsupportedTopicIdList).toEqual(
+      unsupportedTopicList.map((topic) => topic.unsupportedTopicId),
+    );
+  });
+
+  it("nenhum id de não atendido de versão publicada some", () => {
+    const currentIdSet = new Set(unsupportedTopicList.map((topic) => topic.unsupportedTopicId));
+    const missingIdList = publishedTaxonomyList
+      .flatMap((published) => published.unsupportedTopicIdList)
+      .filter((unsupportedTopicId) => !currentIdSet.has(unsupportedTopicId));
+    expect(missingIdList).toEqual([]);
   });
 
   it("nenhum id de versão publicada some; descontinuar é deprecated: true", () => {

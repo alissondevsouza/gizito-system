@@ -12,13 +12,17 @@ import {
   topicValidationRuleList,
   topicValidationRuleSubjectMap,
 } from "#src/pedagogy/taxonomy/schemas.ts";
+import {
+  type UnsupportedTopic,
+  unsupportedTopicReasonLabelMap,
+} from "#src/pedagogy/taxonomy/unsupported.ts";
 
 export const BNCC_OFFICIAL_URL = "https://basenacionalcomum.mec.gov.br/";
 
 export type TaxonomyMarkdownInput = {
   readonly topicList: readonly Topic[];
   readonly taxonomyVersion: string;
-  readonly exclusionList: readonly string[];
+  readonly unsupportedTopicList: readonly UnsupportedTopic[];
 };
 
 function escapeCell(text: string): string {
@@ -85,11 +89,16 @@ export function renderTaxonomyMarkdown(input: TaxonomyMarkdownInput): string {
         `| \`${rule}\` | ${subjectLabelMap[topicValidationRuleSubjectMap[rule]]} | ${escapeCell(topicValidationRuleDescriptionMap[rule])} |`,
     ),
     "",
-    "## Fora desta versão",
+    "## Assuntos ainda não atendidos",
     "",
-    "Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma questão do kit pode depender de figura ausente (PRD §7.2):",
+    "Ficam fora desta versão porque dependem de figura, imagem, fala ou correção de texto livre, e nenhuma questão do kit pode depender de figura ausente (PRD §7.2). A extração sinaliza quando o material trata deles pela coluna “Como a extração reconhece”; a prévia os mostra à parte, sem deixar confirmá-los; o “outro” que contém uma das palavras da área, na mesma disciplina do pedido, é recusado antes do Pix (PRD §7.7). As palavras casam inteiras, sem acento e sem diferença de maiúsculas.",
     "",
-    ...input.exclusionList.map((exclusion) => `- ${exclusion}`),
+    "| Id | Nome | Disciplina | Motivo | O que fica de fora | Como a extração reconhece | Palavras que recusam o “outro” |",
+    "|---|---|---|---|---|---|---|",
+    ...input.unsupportedTopicList.map(
+      (topic) =>
+        `| \`${topic.unsupportedTopicId}\` | ${escapeCell(topic.label)} | ${subjectLabelMap[topic.subject]} | ${unsupportedTopicReasonLabelMap[topic.reason]} | ${escapeCell(topic.description)} | ${escapeCell(topic.recognitionCue)} | ${escapeCell(topic.keywordList.join(", "))} |`,
+    ),
     "",
     ...subjectList.flatMap((subject) =>
       gradeList.flatMap((grade) =>

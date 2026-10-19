@@ -33,14 +33,4 @@ export const taxonomyTopicList: readonly Topic[] = taxonomySectionList.flatMap((
   section.topicList.map((topic) => ({ ...topic, grade: section.grade, subject: section.subject })),
 );
 
-export const taxonomyExclusionList: readonly string[] = [
-  "Simetria de reflexão, translação e rotação desenhada em malha (a simetria por coordenadas do 7º ano entra)",
-  "Ampliação e redução de figuras em malha quadriculada",
-  "Vistas, plantas baixas e croquis",
-  "Algoritmos e fluxogramas",
-  "Histórias em quadrinhos, tirinhas, charges, cartuns e anúncios que dependem da imagem",
-  "Oralidade, exposição oral, declamação e produção de vídeo ou podcast",
-  "Produção de texto avaliada como redação",
-];
-
 export const { listTopics, findTopic, isSelectableTopic } = createTaxonomyLookup(taxonomyTopicList);

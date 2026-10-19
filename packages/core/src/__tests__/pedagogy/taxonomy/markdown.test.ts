@@ -2,12 +2,9 @@ import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildTopic } from "#src/__tests__/__fixtures__/entities.ts";
-import {
-  TAXONOMY_VERSION,
-  taxonomyExclusionList,
-  taxonomyTopicList,
-} from "#src/pedagogy/taxonomy/index.ts";
+import { TAXONOMY_VERSION, taxonomyTopicList } from "#src/pedagogy/taxonomy/index.ts";
 import { renderTaxonomyMarkdown } from "#src/pedagogy/taxonomy/markdown.ts";
+import { unsupportedTopicList } from "#src/pedagogy/taxonomy/unsupported.ts";
 
 const taxonomyDocPath = join(import.meta.dir, "../../../../../../docs/pedagogy/taxonomia.md");
 
@@ -16,7 +13,7 @@ describe("documento da taxonomia (RF-08)", () => {
     const rendered = renderTaxonomyMarkdown({
       topicList: taxonomyTopicList,
       taxonomyVersion: TAXONOMY_VERSION,
-      exclusionList: taxonomyExclusionList,
+      unsupportedTopicList,
     });
     expect(readFileSync(taxonomyDocPath, "utf8")).toBe(rendered);
   });
@@ -35,13 +32,25 @@ describe("documento da taxonomia (RF-08)", () => {
         buildTopic({ topicId: "ma5-old", label: "Antigo | velho", deprecated: true }),
       ],
       taxonomyVersion: "tax-test",
-      exclusionList: ["Fluxogramas"],
+      unsupportedTopicList: [
+        {
+          unsupportedTopicId: "ma-flowcharts",
+          subject: "math",
+          label: "Fluxogramas",
+          description: "Caixas | setas",
+          reason: "figure",
+          recognitionCue: "Diagramas de caixas e setas.",
+          keywordList: ["fluxograma", "fluxogramas"],
+        },
+      ],
     });
     expect(markdown).toContain("# Taxonomia de assuntos — tax-test");
     expect(markdown).toContain("Frações unitárias (4º ano); `ma4-missing`");
     expect(markdown).toContain("Antigo \\| velho (descontinuado)");
     expect(markdown).toContain("## Matemática — 5º ano (1 assunto)");
-    expect(markdown).toContain("- Fluxogramas");
+    expect(markdown).toContain(
+      "| `ma-flowcharts` | Fluxogramas | Matemática | depende de figura ou imagem | Caixas \\| setas | Diagramas de caixas e setas. | fluxograma, fluxogramas |",
+    );
     expect(markdown).not.toContain("Língua Portuguesa — ");
   });
 });

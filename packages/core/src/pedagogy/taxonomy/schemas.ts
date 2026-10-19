@@ -40,7 +40,7 @@ export const topicValidationRuleSubjectMap: Readonly<Record<TopicValidationRule,
   linguistic_variety_respect: "portuguese",
 };
 
-const topicSubjectPrefixMap = { math: "ma", portuguese: "lp" } as const;
+export const topicSubjectPrefixMap = { math: "ma", portuguese: "lp" } as const;
 
 export function topicIdPrefixOf(grade: Grade, subject: Subject): string {
   return `${topicSubjectPrefixMap[subject]}${grade}-`;
@@ -53,7 +53,7 @@ export const taxonomyTopicIdSchema = topicIdSchema.regex(
 export const bnccSkillCodeSchema = z.string().regex(/^EF\d{2}(?:MA|LP)\d{2}$/);
 export type BnccSkillCode = z.infer<typeof bnccSkillCodeSchema>;
 
-function uniqueListSchema<T extends z.ZodType>(itemSchema: T) {
+export function uniqueListSchema<T extends z.ZodType>(itemSchema: T) {
   return z.array(itemSchema).refine((itemList) => new Set(itemList).size === itemList.length, {
     message: "list must not repeat an item",
   });

@@ -12,11 +12,11 @@ import {
   findTopic,
   isSelectableTopic,
   listTopics,
-  taxonomyExclusionList,
   taxonomyTopicList,
 } from "#src/pedagogy/taxonomy/index.ts";
 import { checkTaxonomyIntegrity } from "#src/pedagogy/taxonomy/integrity.ts";
 import { type TopicValidationRule, topicSchema } from "#src/pedagogy/taxonomy/schemas.ts";
+import { unsupportedTopicList } from "#src/pedagogy/taxonomy/unsupported.ts";
 
 const MIN_TOPIC_COUNT_PER_SECTION = 15;
 const MAX_TOPIC_COUNT_PER_SECTION = 30;
@@ -127,7 +127,7 @@ describe("taxonomia v1 (RF-05)", () => {
   }
 
   it("nenhum assunto ativo cobre área excluída da v1", () => {
-    expect(taxonomyExclusionList.length).toBeGreaterThan(0);
+    expect(unsupportedTopicList.length).toBeGreaterThan(0);
     const excludedSlugPattern =
       /symmetry-(reflection|translation|rotation)|enlarge|blueprint|flowchart|comic|cartoon|oral|podcast|video/;
     const offenderList = taxonomyTopicList.filter((topic) =>

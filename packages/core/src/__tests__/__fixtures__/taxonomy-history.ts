@@ -2,6 +2,8 @@ export type PublishedTaxonomy = {
   readonly taxonomyVersion: string;
   readonly fingerprint: string;
   readonly topicIdList: readonly string[];
+  readonly unsupportedFingerprint: string;
+  readonly unsupportedTopicIdList: readonly string[];
 };
 
 export const publishedTaxonomyList: readonly PublishedTaxonomy[] = [
@@ -188,6 +190,16 @@ export const publishedTaxonomyList: readonly PublishedTaxonomy[] = [
       "lp7-spelling-accentuation",
       "lp7-punctuation",
       "lp7-linguistic-variety",
+    ],
+    unsupportedFingerprint: "9e2c7f77c967229ba9ab3e24bf4945a1654f977dfb602fb13f8fb35e9198ed09",
+    unsupportedTopicIdList: [
+      "ma-grid-symmetry",
+      "ma-grid-scaling",
+      "ma-views-plans",
+      "ma-flowcharts",
+      "lp-image-genres",
+      "lp-orality",
+      "lp-essay-writing",
     ],
   },
 ];

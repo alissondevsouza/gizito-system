@@ -19,17 +19,19 @@ Marcam o que a validação automática do kit confere a mais quando o assunto es
 | `single_normative_answer` | Língua Portuguesa | Norma-padrão: uma só resposta correta; nenhum distrator também aceito pela norma (grafia dupla, pontuação opcional). |
 | `linguistic_variety_respect` | Língua Portuguesa | Variedades linguísticas: nenhuma variedade tratada como erro; adequação ao contexto formal ou informal. |
 
-## Fora desta versão
+## Assuntos ainda não atendidos
 
-Assuntos que dependem de figura, imagem ou oralidade não entram, porque nenhuma questão do kit pode depender de figura ausente (PRD §7.2):
+Ficam fora desta versão porque dependem de figura, imagem, fala ou correção de texto livre, e nenhuma questão do kit pode depender de figura ausente (PRD §7.2). A extração sinaliza quando o material trata deles pela coluna “Como a extração reconhece”; a prévia os mostra à parte, sem deixar confirmá-los; o “outro” que contém uma das palavras da área, na mesma disciplina do pedido, é recusado antes do Pix (PRD §7.7). As palavras casam inteiras, sem acento e sem diferença de maiúsculas.
 
-- Simetria de reflexão, translação e rotação desenhada em malha (a simetria por coordenadas do 7º ano entra)
-- Ampliação e redução de figuras em malha quadriculada
-- Vistas, plantas baixas e croquis
-- Algoritmos e fluxogramas
-- Histórias em quadrinhos, tirinhas, charges, cartuns e anúncios que dependem da imagem
-- Oralidade, exposição oral, declamação e produção de vídeo ou podcast
-- Produção de texto avaliada como redação
+| Id | Nome | Disciplina | Motivo | O que fica de fora | Como a extração reconhece | Palavras que recusam o “outro” |
+|---|---|---|---|---|---|---|
+| `ma-grid-symmetry` | Simetria desenhada em malha | Matemática | depende de figura ou imagem | Simetria de reflexão, translação e rotação desenhada em malha (a simetria por coordenadas do 7º ano entra) | Figuras para espelhar, completar, girar ou deslocar em malha ou papel quadriculado, com eixo de simetria desenhado. Simétrico de ponto dado por coordenadas é atendido. | simetria, simetrico, simetrica, simetricos, simetricas, reflexao, translacao, rotacao |
+| `ma-grid-scaling` | Ampliação e redução em malha | Matemática | depende de figura ou imagem | Ampliação e redução de figuras em malha quadriculada | Figuras desenhadas em malha para ampliar, reduzir ou copiar em outra malha, comparando os tamanhos dos desenhos. | malha, ampliacao de figura, ampliacao de figuras, reducao de figura, reducao de figuras, ampliar figura, ampliar figuras, reduzir figura, reduzir figuras |
+| `ma-views-plans` | Vistas, plantas e croquis | Matemática | depende de figura ou imagem | Vistas, plantas baixas e croquis | Desenhos de objetos vistos de frente, de lado ou de cima, plantas de casa ou de sala, maquetes e croquis de trajeto para interpretar. | vistas, vista frontal, vista lateral, vista superior, planta baixa, plantas baixas, croqui, croquis, maquete, maquetes |
+| `ma-flowcharts` | Algoritmos e fluxogramas | Matemática | depende de figura ou imagem | Algoritmos e fluxogramas | Diagramas de caixas e setas que representam os passos de um procedimento. O algoritmo usual das operações (conta armada) é atendido. | fluxograma, fluxogramas |
+| `lp-image-genres` | Quadrinhos, tirinhas e charges | Língua Portuguesa | depende de figura ou imagem | Histórias em quadrinhos, tirinhas, charges, cartuns e anúncios que dependem da imagem | Quadrinhos com balões, tirinhas, charges, cartuns, memes ou anúncios em que o sentido depende do desenho ou da foto. Texto escrito sem imagem é atendido. | tirinha, tirinhas, quadrinho, quadrinhos, hq, hqs, gibi, gibis, charge, charges, cartum, cartuns, cartoon, meme, memes |
+| `lp-orality` | Oralidade, vídeo e podcast | Língua Portuguesa | depende de fala | Oralidade, exposição oral, declamação e produção de vídeo ou podcast | Propostas de apresentar, declamar, debater ou ler em voz alta, roteiros de seminário, de vídeo ou de podcast. | oralidade, exposicao oral, apresentacao oral, seminario, seminarios, declamacao, declamar, sarau, debate, debates, leitura em voz alta, podcast, podcasts, video, videos, vlog |
+| `lp-essay-writing` | Redação e produção de texto | Língua Portuguesa | depende de correção de texto livre | Produção de texto avaliada como redação | Propostas de escrita livre (redação, escrever um conto, uma carta ou uma notícia) para corrigir como texto do aluno. Ler e analisar esses gêneros é atendido. | redacao, redacoes, producao de texto, producao de textos, producao textual, escrever um texto, escrita de texto |
 
 ## Matemática — 4º ano (22 assuntos)
 

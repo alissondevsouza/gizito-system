@@ -23,6 +23,7 @@ export * from "#src/pedagogy/taxonomy/integrity.ts";
 export * from "#src/pedagogy/taxonomy/lookup.ts";
 export * from "#src/pedagogy/taxonomy/markdown.ts";
 export * from "#src/pedagogy/taxonomy/schemas.ts";
+export * from "#src/pedagogy/taxonomy/unsupported.ts";
 export * from "#src/result.ts";
 export * from "#src/retention/rules.ts";
 export * from "#src/storage/keys.ts";
