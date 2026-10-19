@@ -1,5 +1,6 @@
 import type { Charge } from "#src/charge/schemas.ts";
 import type { Order, OrderPhoto } from "#src/order/schemas.ts";
+import type { Topic } from "#src/pedagogy/taxonomy/schemas.ts";
 
 export const ORDER_ID = "11111111-1111-4111-8111-111111111111";
 export const PHOTO_ID = "22222222-2222-4222-8222-222222222222";
@@ -69,6 +70,20 @@ export function buildCharge(overrides: Partial<Charge> = {}): Charge {
     refundDatetime: null,
     insertDatetime: FIXED_NOW,
     updateDatetime: FIXED_NOW,
+    ...overrides,
+  };
+}
+
+export function buildTopic(overrides: Partial<Topic> = {}): Topic {
+  return {
+    topicId: "ma5-equivalent-fractions",
+    grade: "5",
+    subject: "math",
+    label: "Frações equivalentes",
+    description: "Reconhecer e obter frações equivalentes.",
+    bnccSkillList: ["EF05MA04"],
+    prerequisiteList: [],
+    validationRuleList: ["rational_equivalence"],
     ...overrides,
   };
 }

@@ -11,7 +11,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "taxonomy:doc": "bun scripts/write-taxonomy-doc.ts"
   },
   "dependencies": {
     "zod": "^4.6.7"

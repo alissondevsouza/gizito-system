@@ -6,9 +6,14 @@
     "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".output/**"] },
     "typecheck": { "dependsOn": ["transit"] },
     "test": { "dependsOn": ["transit"] },
+    "@gizito/core#test": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/docs/pedagogy/taxonomia.md"]
+    },
     "test:integration": { "dependsOn": ["transit"], "cache": false, "env": ["TEST_DATABASE_URL"] },
     "db:generate": { "cache": false },
     "db:migrate": { "cache": false, "env": ["DATABASE_URL"] },
+    "taxonomy:doc": { "cache": false },
     "dev": { "cache": false, "persistent": true, "passThroughEnv": ["*"] }
   }
 }

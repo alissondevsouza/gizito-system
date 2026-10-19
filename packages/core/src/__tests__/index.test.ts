@@ -7,6 +7,9 @@ it("o entrypoint exporta constantes, máquina de estados, schemas e payloads de 
   expect(core.orderSchema.safeParse(null).success).toBe(false);
   expect(core.jobPayloadSchema.safeParse({ name: "charge.reconcile" }).success).toBe(true);
   expect(core.orderStatusList).toHaveLength(9);
+  expect(core.TAXONOMY_VERSION).toBe("tax-v1");
+  expect(core.listTopics("5", "math").length).toBeGreaterThan(0);
+  expect(typeof core.renderTaxonomyMarkdown).toBe("function");
 });
 
 it("errorNameOf devolve o nome do erro, nunca a mensagem", () => {
