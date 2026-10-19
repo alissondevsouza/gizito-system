@@ -140,7 +140,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Pronto quando: testes de integridade (ids únicos, pré-requisitos existentes); amostra revisada pelo professor
   - Concluída em: 19/10/2026. `tax-v1` com 179 assuntos (22/20/25/23 em Matemática e 24/23/22/20 em Português), 6 regras de validação por assunto, faixas BNCC por ano, checagem de integridade com 11 códigos, consulta `listTopics`/`findTopic`/`isSelectableTopic`; fingerprint por versão impede mudar conteúdo sem novo `TAXONOMY_VERSION` e ids publicados nunca somem; `docs/pedagogy/taxonomia.md` gerado por `bun run taxonomy:doc`, revisado e aprovado pelo professor sem mudanças (6º ano segue sem raiz quadrada). 331 testes no core. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
 - [ ] **F1-02 `spec-pedagogica-executavel`** — docs, pedagogy · M · depende: F1-01
-  - Entrega: `docs/pedagogy/`: schema do kit campo a campo, regras de validação com severidade e código, formato dos casos de teste, prompts v1 em texto, critério de homologação
+  - Entrega: `docs/pedagogy/`: schema do kit campo a campo, regras de validação com severidade e código, formato dos casos de teste, prompts v1 em texto, critério de homologação; lista de assuntos ainda não atendidos com id e como a extração e o “outro” os reconhecem (PRD 7.7)
   - Pronto quando: aprovada por você; é a spec de F1-03 a F1-07
 - [ ] **F1-03 `schemas-e-validacoes-do-kit`** — core · L · depende: F1-02
   - Entrega: `studyKitSchema`, `extractionResultSchema`, `materialProfileSchema`, `kitPlanSchema`, `expectedAnswerSchema`, `reviewResultSchema`; `validateStudyKit` com contagens, cobertura, dificuldade, duplicatas, alternativas, dependência de figura, dado pessoal
@@ -152,7 +152,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `AiProvider` real com dois modelos configuráveis, saída JSON validada, `usage` com tokens e custo em centavos, redução de imagem, retries só transitórios; `FakeAiProvider`
   - Pronto quando: suíte de contrato passa no real (com chave) e no fake
 - [ ] **F1-06 `pipeline-extracao`** — worker · M · depende: F1-01, F1-05
-  - Entrega: prompt `extract` v1; mapeamento para a taxonomia com confiança; `material_profile`; legibilidade por foto; cache por hash; aviso de dado pessoal
+  - Entrega: prompt `extract` v1; mapeamento para a taxonomia com confiança; `material_profile`; legibilidade por foto; cache por hash; aviso de dado pessoal; assuntos ainda não atendidos sinalizados (PRD 7.7)
   - Pronto quando: em 10 casos reais, assuntos corretos; foto ilegível recusada; sem transcrição integral
 - [ ] **F1-07 `pipeline-geracao`** — worker · L · depende: F1-03, F1-04, F1-05, F1-06
   - Entrega: prompts `plan`, `generate`, `review` v1; orquestração das etapas; uma regeneração; `ai_call` por chamada; limite de custo por pedido
@@ -180,10 +180,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `POST /orders` (fotos, EXIF removido, redução, hash, R2 privado), `GET /orders/:token`, token e código curto, rate limit da prévia; `ObjectStorage` R2 e fake
   - Pronto quando: upload de Android e iPhone (HEIC) testado em aparelho; 404 neutro; rate limit em integração
 - [ ] **F2-02 `job-analise`** — worker · M · depende: F2-01, F1-06
-  - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto
+  - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida
   - Pronto quando: transições e avisos testados; reexecução idempotente
 - [ ] **F2-03 `confirmacao-e-cobranca-pix`** — api, integrations · L · depende: F2-02
-  - Entrega: `POST /orders/:token/confirm`; `MercadoPagoGateway` (createCharge via Orders API, getChargeStatus, parseWebhook, refund) e fake; renovação de cobrança expirada
+  - Entrega: `POST /orders/:token/confirm` (recusa assunto ainda não atendido, também como “outro”); `MercadoPagoGateway` (createCharge via Orders API, getChargeStatus, parseWebhook, refund) e fake; renovação de cobrança expirada
   - Pronto quando: no sandbox: cobrança criada, expira em 30 min, renova sem duplicar pedido
 - [ ] **F2-04 `webhook-e-reconciliacao`** — api, worker · M · depende: F2-03
   - Entrega: `POST /webhooks/mercadopago` com assinatura, `webhook_event`, GET do recurso, `markOrderPaidAndEnqueue`; job `charge.reconcile` (o webhook passa `webhookEventId` no payload; ao marcar pago, cancelar no gateway os outros Pix ainda pendentes do pedido, depois do commit)
@@ -270,6 +270,7 @@ Marcar o item só quando entregue; anotar ao lado a data em que o gatilho dispar
 
 ## 10. Histórico de revisões
 
+- **1.3 (19/10/2026):** assuntos ainda não atendidos (PRD 1.3, seção 7.7): F1-02 define a lista com id e o reconhecimento; F1-06 sinaliza; F2-02 volta a `draft` sem assunto atendido; F2-03 recusa na confirmação.
 - **1.2 (19/10/2026):** revisão da F0 (`specs/cross/revisao-f0/`): F2-04 passa a citar `webhookEventId` no `charge.reconcile` e o cancelamento dos outros Pix no gateway; F2-06 passa a citar a regra de purge dentro dos 30 dias, os lotes até esvaziar e o expurgo de jobs `completed`.
 - **1.1 (14/10/2026):** roadmap vira checklist de acompanhamento: features, pendências do humano, atividades do piloto, itens por gatilho e gates com checkbox; bloco "Estado atual" e coluna Estado na visão geral; estado inicial marcado (só `git init` e primeiro commit feitos, F0-01 em andamento). Numeração dos ADRs de F0-03 e F0-06 ajustada porque o 0001 já é o harness (ADR-0001).
 - **1.0 (14/10/2026):** versão inicial, derivada da seção 11 do PRD e das decisões da revisão 1.2.

@@ -1,7 +1,7 @@
-# PRD — Gizito | MVP v1.2
+# PRD — Gizito | MVP v1.3
 
 **Status:** especificação proposta para implementação  
-**Data:** 14/10/2026 · revisão 1.2 em 14/10/2026 (ver seção 13)  
+**Data:** 14/10/2026 · revisão 1.3 em 19/10/2026 (ver seção 13)  
 **Produto:** gerador de kits personalizados para preparação de provas escolares  
 **Modelo de receita:** pagamento único por kit via Pix  
 **Nome:** **Gizito**
@@ -79,7 +79,7 @@ O Gizito permite que um adulto responsável transforme **fotos da matéria escol
 |---|---|---|---|
 | 1. Entrada | Abre landing page | Explica resultado, oferece kit de amostra e mostra preço | CTA evidente no mobile; sem promessas de nota garantida |
 | 2. Dados | Seleciona ano, disciplina e envia fotos | Cria pedido `rascunho`; valida formato/tamanho, remove metadados de localização, reduz resolução, gera miniaturas | Não prossegue com arquivos inválidos |
-| 3. Identificação | Aguarda leitura inicial | Pedido em `analisando`; mostra 1–3 assuntos da taxonomia, o perfil do material e sinaliza trechos ilegíveis | Sem checkout se material insuficiente (volta a `rascunho` com avisos) |
+| 3. Identificação | Aguarda leitura inicial | Pedido em `analisando`; mostra 1–3 assuntos da taxonomia, o perfil do material e sinaliza trechos ilegíveis e assuntos ainda não atendidos | Sem checkout se material insuficiente ou sem assunto atendido (volta a `rascunho` com avisos) |
 | 4. Confirmação | Corrige/seleciona assuntos, preenche opcionais e informa e-mail | Mostra escopo exato do kit e preço | Ano, disciplina e assuntos confirmados; aceite explícito |
 | 5. Pagamento | Paga **R$ 29,90** por Pix | Cria cobrança com expiração; exibe QR/Copia e Cola | Não usa estado do navegador como prova de pagamento |
 | 6. Geração | Pode acompanhar, fechar a página ou tocar em “Receber no WhatsApp” | Confirma Pix e enfileira geração **na mesma transação**; atualiza status; vincula o WhatsApp se o responsável iniciar a conversa | Repetição de webhook não gera kits duplicados; vínculo de WhatsApp só por mensagem iniciada pelo responsável |
@@ -88,7 +88,7 @@ O Gizito permite que um adulto responsável transforme **fotos da matéria escol
 
 **Estados do pedido:** `rascunho` → `analisando` → `previa_pronta` → `aguardando_pagamento` → `pago` → `processando` → `pronto` ou `falhou` → eventual `reembolsado`.
 
-- `analisando` que falha (fotos insuficientes) retorna a `rascunho` com avisos por foto.
+- `analisando` que falha (fotos insuficientes, ou material só com assuntos ainda não atendidos, seção 7.7) retorna a `rascunho` com avisos.
 - `aguardando_pagamento` tem o sub-estado `cobranca_expirada`; “Gerar novo Pix” cria nova cobrança no mesmo pedido.
 - A transição `aguardando_pagamento → pago` só ocorre por confirmação server-side do gateway (webhook verificado ou consulta ativa).
 - O mapeamento estado → rota está no guia de design, seção 6.8.
@@ -98,6 +98,7 @@ O Gizito permite que um adulto responsável transforme **fotos da matéria escol
 **Exceções obrigatórias:**
 - Foto ruim: solicitar nova foto **antes do Pix**; não inventar texto ausente.
 - Mais de 3 assuntos: solicitar seleção dos assuntos a cobrir neste kit.
+- Assunto ainda não atendido (seção 7.7): sinalizar na prévia, sem permitir confirmá-lo nem pedi-lo como “outro”; o kit sai com os demais assuntos e, se nenhum sobrar, não há checkout. Tudo **antes do Pix**.
 - Pagamento expirado: oferecer nova cobrança sem duplicar pedido pago.
 - Pix recebido e webhook atrasado: conciliação por consulta segura ao provedor.
 - Falha de geração: uma tentativa automática de reprocessamento; depois atendimento/reembolso conforme política.
@@ -113,7 +114,7 @@ O Gizito permite que um adulto responsável transforme **fotos da matéria escol
 | Ano escolar | Enum | 4º, 5º, 6º ou 7º ano |
 | Disciplina | Enum | Matemática ou Língua Portuguesa |
 | Fotos | Arquivos | 1–5 imagens; JPG/PNG; HEIC se conversão implementada e testada (ver nota abaixo); até 8 MB cada antes de compressão |
-| Assuntos | Seleção/edição | 1–3 assuntos da taxonomia após pré-análise, com opção “outro” em texto livre; confirmação explícita |
+| Assuntos | Seleção/edição | 1–3 assuntos da taxonomia após pré-análise, com opção “outro” em texto livre; confirmação explícita; assunto ainda não atendido não pode ser confirmado (seção 7.7) |
 | E-mail de entrega | Texto | Formato válido; exibido de forma destacada para conferência antes do Pix; sem exigir conta ou nome do aluno |
 | Aceite | Checkbox | Termos, privacidade, confirmação de envio autorizado de material para estudo pessoal; nunca pré-marcado |
 
@@ -205,7 +206,7 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 - Evitar julgamentos normativos simplistas sobre variedades linguísticas; diferenciar contexto formal/informal quando pertinente.
 
 ### 7.4 Pipeline pedagógico obrigatório
-1. **Extrair:** o modelo multimodal lê as fotos e devolve `topic_candidates[]` mapeados para a taxonomia (id, confiança, evidência curta), `material_profile` (terminologia, notação, tipos de exercício observados, nível aparente, presença de figuras), legibilidade por foto e `source_warnings[]`. Sem transcrição integral do material.
+1. **Extrair:** o modelo multimodal lê as fotos e devolve `topic_candidates[]` mapeados para a taxonomia (id, confiança, evidência curta), `material_profile` (terminologia, notação, tipos de exercício observados, nível aparente, presença de figuras), legibilidade por foto, `source_warnings[]` e os assuntos ainda não atendidos de que o material trata (seção 7.7). Sem transcrição integral do material.
 2. **Confirmar:** responsável aprova ano, disciplina e 1–3 assuntos (chips da taxonomia ou “outro” em texto livre) e, opcionalmente, observação e dificuldade percebida. A geração não prossegue sem confirmação.
 3. **Planejar:** produzir objetivos de aprendizagem, mapa assunto→questões (10 + 10), distribuição de dificuldade, pré-requisitos e diretrizes de estilo derivadas do `material_profile`.
 4. **Gerar:** retornar JSON estruturado com resumo, 2 exemplos, 20 questões, alternativas (quando houver), `expected_answer` e explicação.
@@ -236,6 +237,7 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 - Lista canônica por **ano × disciplina** (4º–7º × Matemática/Língua Portuguesa), versionada em `packages/core`, com: id estável, nome exibível, descrição curta, habilidades da BNCC relacionadas, pré-requisitos e validações aplicáveis (por exemplo, assuntos de frações acionam checagem de equivalência).
 - Primeira versão com cerca de 15–30 assuntos por combinação, derivada da BNCC e de livros didáticos comuns, revisada pelo professor da homologação.
 - A extração mapeia o material para a taxonomia. “Outro” em texto livre é permitido, mas kits com assunto fora da taxonomia recebem validação extra e entram em métricas separadas.
+- **Assuntos ainda não atendidos:** os que a v1 deixa de fora por dependerem de figura ou oralidade (por exemplo, tirinhas, malha quadriculada, fluxogramas, oralidade e redação) formam uma lista mantida junto da taxonomia e publicada em `docs/pedagogy/taxonomia.md`. A extração sinaliza quando o material trata deles; a prévia os mostra como “ainda não atendidos”, sem permitir confirmá-los nem pedi-los como “outro”; o kit sai com os assuntos atendidos e, se nenhum sobrar, não há checkout. Motivo: pelo caminho “outro”, o kit bateria no bloqueador de figura ausente e falharia depois do Pix.
 - Métricas, custos e biblioteca de testes indexados por id de assunto.
 
 ## 8. Requisitos não funcionais
@@ -321,7 +323,7 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 
 - [ ] O responsável consegue iniciar a compra e receber os PDFs pelo celular, sem criar senha.
 - [ ] Upload funciona para fotos tiradas por Android/iPhone nos formatos anunciados.
-- [ ] A prévia apresenta assuntos da taxonomia e o perfil do material, permite corrigir, e fotos insuficientes são recusadas antes da compra.
+- [ ] A prévia apresenta assuntos da taxonomia e o perfil do material, permite corrigir, e fotos insuficientes e assuntos ainda não atendidos são recusados antes da compra.
 - [ ] Pix só é considerado pago mediante confirmação válida do provedor, mesmo com webhook duplicado; pagamento e enfileiramento são atômicos.
 - [ ] Cada compra bem-sucedida produz exatamente **um kit em dois PDFs**: atividades (revisão, 2 exemplos, 10 exercícios, simulado de 10) e gabarito (20 respostas comentadas).
 - [ ] Todas as questões passaram por verificações estruturais, recálculo matemático quando aplicável e as validações críticas.
@@ -361,6 +363,7 @@ Detalhamento em features, dependências, pendências do humano e critérios de p
 
 ## 13. Histórico de revisões
 
+- **1.3 (19/10/2026):** assuntos ainda não atendidos (7.7): o material que trata de assunto deixado fora da taxonomia v1 por depender de figura ou oralidade é sinalizado na prévia; esse assunto não pode ser confirmado nem pedido como “outro”, o kit sai com os demais e, sem nenhum atendido, não há checkout (5, 6, 7.4, 10). Motivo: pelo caminho “outro”, o kit falharia depois do Pix no bloqueador de figura ausente. Decisão do humano na F1-01.
 - **1.2 (14/10/2026):** gateway Pix decidido: Mercado Pago via Orders API, conta pessoa física, com tabela comparativa e roteiro de integração (9.1); WhatsApp entra no MVP via Evolution API com Baileys em modo somente resposta, com fluxo, salvaguardas e caminho de migração para a API oficial (9.2); botão “Receber no WhatsApp” nas páginas de processamento e entrega; código curto do pedido; feature flag do canal; interfaces `PaymentGateway` e `NotificationChannel`; Redis e Evolution API no Compose; seção 12 reorganizada em decididas e em aberto.
 - **1.1 (14/10/2026):** nome definitivo Gizito; preço R$ 29,90; anos 4º–7º; kit com 10 + 10 = 20 questões em dois PDFs (atividades e gabarito); campos opcionais mantidos e tratados como texto não confiável; funil completo nas métricas; taxonomia de assuntos (7.7); perfil do material e personalização real; simulado com formato de prova; recálculo matemático com mathjs; KaTeX no servidor; fila em Postgres com transação única; stack decidida (TanStack Start, Bun + Elysia, worker Bun, `packages/core`); link do pedido separado do link de download; estado `analisando`; economia da prévia; homologação sem revisão humana no fluxo, com regressão e auditoria amostral; decisões abertas sobre gateway para CPF e WhatsApp.
 - **1.0 (14/10/2026):** versão inicial.

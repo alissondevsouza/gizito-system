@@ -64,7 +64,7 @@ Criar a lista canônica de assuntos por ano × disciplina (4º a 7º × Matemát
 | Data | Decisão | Justificativa |
 |---|---|---|
 | 2026-10-19 | Id `{ma\|lp}{ano}-{slug-em-inglês}` | unicidade global com pré-requisito entre anos; código em inglês (CLAUDE.md); `ma`/`lp` espelham os componentes da BNCC |
-| 2026-10-19 | Fora da v1 os assuntos que só funcionam com figura ou oralidade | PRD §7.2: nenhuma questão depende de figura ausente; o PDF não desenha figura. **Pergunta ao humano (destino F1-02/F1-06):** caderno com esses assuntos hoje só tem o caminho "outro", que pode bater no bloqueador de figura e virar `failed`/reembolso depois do Pix; a prévia deve avisar ou recusar antes do pagamento? |
+| 2026-10-19 | Fora da v1 os assuntos que só funcionam com figura ou oralidade | PRD §7.2: nenhuma questão depende de figura ausente; o PDF não desenha figura. Pergunta ao humano, respondida em 2026-10-19: a prévia sinaliza esses assuntos como ainda não atendidos, sem deixar confirmá-los nem pedi-los como "outro"; o kit sai com os demais e, sem nenhum, não há checkout (PRD 1.3 §7.7, design doc 1.5 §6.3) |
 | 2026-10-19 | Regras de assunto por disciplina e conferidas por padrão de slug | uma marcação esquecida desligaria a checagem da F1-03 sem aviso (revisão da spec) |
 | 2026-10-19 | Consulta por fábrica `createTaxonomyLookup` | testar descontinuado sem `mock.module` (process-wide, `docs/lessons.md`) |
 | 2026-10-19 | `ma7-cartesian-symmetry` (EF07MA19/20) entra; sai só a simetria desenhada em malha | o simétrico de um ponto por coordenadas se resolve em texto; a exclusão no documento diz isso (revisão neutra) |
@@ -76,4 +76,4 @@ Criar a lista canônica de assuntos por ano × disciplina (4º a 7º × Matemát
 | 2026-10-19 | Professor aprovou a `tax-v1` sem mudanças | F1-01 concluída; `ma6-powers` segue sem raiz quadrada e não há `tax-v2` |
 
 ## Status
-Spec revisada (APROVADO com alertas, todos incorporados em 2026-10-19). M1 a M4 implementados e revisados (revisão neutra APROVADO, achados aplicados; `review.md`). Mesclada na `main` (`92cbec0`) pelo humano, com a exceção do `bun run test:pedagogy` registrada em known-issues (F1-10). Professor revisou e aprovou a v1 sem mudanças em 2026-10-19: F1-01 concluída. Segue aberta a pergunta sobre assuntos excluídos na prévia (Decisões), que passa para a F1-02.
+Spec revisada (APROVADO com alertas, todos incorporados em 2026-10-19). M1 a M4 implementados e revisados (revisão neutra APROVADO, achados aplicados; `review.md`). Mesclada na `main` (`92cbec0`) pelo humano, com a exceção do `bun run test:pedagogy` registrada em known-issues (F1-10). Professor revisou e aprovou a v1 sem mudanças em 2026-10-19: F1-01 concluída. A pergunta sobre assuntos excluídos foi respondida (Decisões) e vira regra na F1-02 e na F1-06.

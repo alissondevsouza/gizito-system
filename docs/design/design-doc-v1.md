@@ -1,7 +1,7 @@
-# Gizito — Guia de Design, Identidade Visual e Experiência (v1.4)
+# Gizito — Guia de Design, Identidade Visual e Experiência (v1.5)
 
 **Tipo:** complemento de UI/UX e branding ao `product-doc-v1.md`  
-**Data:** 14/10/2026 · revisão 1.4 em 19/10/2026 (ver seção 15)  
+**Data:** 14/10/2026 · revisão 1.5 em 19/10/2026 (ver seção 15)  
 **Status:** especificação proposta, pronta para orientar design e implementação  
 **Produto:** kit de reforço escolar personalizado, adquirido por Pix a cada necessidade  
 **Marca escolhida:** **Gizito**
@@ -212,6 +212,8 @@ Estados visuais circunstanciais: `boas-vindas`, `orientação`, `pensando`, `suc
 | Foto ilegível | “Não consegui ler bem esta foto. Quer tirar outra?” |
 | Assuntos detectados | “Encontrei estes assuntos. Confere se estão certinhos?” |
 | Mais de 3 assuntos | “Vamos escolher até três assuntos para este kit.” |
+| Assunto ainda não atendido | “Ainda não consigo preparar {assunto}, porque depende de imagem ou de fala. O kit sai com os outros assuntos.” |
+| Nenhum assunto atendido | “Esta matéria fala de {assunto}, que eu ainda não consigo preparar. Quer enviar fotos de outra matéria?” |
 | Checkout | “Tudo pronto! O material começa a ser preparado depois da confirmação do Pix.” |
 | Pix aguardando | “Ainda estou aguardando a confirmação do pagamento.” |
 | Pix, nome do recebedor | “No seu banco, o pagamento aparece em nome de {nome civil do titular da conta Mercado Pago}, responsável pelo Gizito, pela instituição Mercado Pago. Está correto.” |
@@ -280,6 +282,7 @@ A navegação deve parecer uma sequência de passos simples, com contexto e prog
 - Bloco curto **“O que entendi do material”**: perfil detectado em linguagem simples (por exemplo, “exercícios com problemas do dia a dia”, “frações escritas como a/b”, “texto manuscrito”). Não exibir trechos do material nem conteúdo inventado.
 - Aviso destacado e ação **“Trocar foto”** para páginas insuficientes.
 - Limitar a três assuntos e mostrar o que entrará no kit.
+- Assuntos **ainda não atendidos** (PRD 7.7) aparecem à parte, sem chip selecionável e fora do limite de três, com o texto da seção 5.2; o campo “outro” também não os aceita. Se nenhum assunto atendido sobrar, não há CTA de pagamento: o pedido volta a `rascunho` com o aviso e a ação **“Trocar foto”**.
 - Mostrar composição da entrega (revisão + 2 exemplos + 10 exercícios + simulado de 10 + gabarito das 20 em arquivo separado) e preço de forma transparente.
 - **Campos opcionais** em área recolhível “Quer contar algo a mais?”: observação curta (até 300 caracteres) e dificuldade percebida (básica, intermediária, não sei). Nunca bloqueiam o CTA.
 - Coletar **e-mail** do responsável, exibido em destaque para conferência, e aceite dos termos; o aceite não pode vir pré-marcado.
@@ -332,7 +335,7 @@ O `:id` é o token público do pedido (PRD, seção 5). A API informa o estado; 
 | Estado do pedido | Rota canônica | Ao abrir outra rota do pedido |
 |---|---|---|
 | (sem pedido) | `/`, `/criar` | — |
-| `rascunho` | `/criar` (fotos ainda sendo escolhidas) ou `/pedido/:id/assuntos` com aviso de fotos insuficientes | — |
+| `rascunho` | `/criar` (fotos ainda sendo escolhidas) ou `/pedido/:id/assuntos` com aviso de fotos insuficientes ou de matéria ainda não atendida | — |
 | `analisando` | `/pedido/:id/assuntos` em modo carregando | redireciona para assuntos |
 | `previa_pronta` | `/pedido/:id/assuntos` | redireciona para assuntos |
 | `aguardando_pagamento` | `/pedido/:id/pagamento` | `/kit` e `/preparando` redirecionam para pagamento |
@@ -465,6 +468,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 - [ ] Acessibilidade básica validada, inclusive teclado, contraste e redução de movimento.
 - [ ] Upload, Pix e download funcionam confortavelmente no mobile.
 - [ ] Estados de erro têm mensagens úteis; falhas após pagamento indicam solução.
+- [ ] Assunto ainda não atendido aparece sinalizado na prévia e nunca chega ao Pix.
 - [ ] Os PDFs mantêm prioridade pedagógica, imprimem bem e o gabarito é um arquivo separado.
 - [ ] Nenhum componente promete nota garantida, revisão humana inexistente ou prazo irreal.
 - [ ] Materiais comerciais não estimulam crianças a realizar compras.
@@ -494,6 +498,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 ## 15. Histórico de revisões
 
+- **1.5 (19/10/2026):** assuntos ainda não atendidos na prévia (6.3): aparecem à parte, sem chip selecionável e sem entrar como “outro”; sem assunto atendido, o pedido volta a `rascunho` com aviso (6.8); microcopy das duas situações (5.2) e critério de aceite (12). Motivo: PRD 1.3, seção 7.7.
 - **1.4 (19/10/2026):** erro inesperado de página (7.2): texto objetivo com as saídas "tentar de novo" e "voltar ao início", sem detalhe técnico. Motivo: a raiz do web passa a ter `errorComponent` (revisão da F0); o texto exato fica em `apps/web/src/copy/`.
 - **1.3 (14/10/2026):** aviso obrigatório do recebedor na tela do Pix (6.4), com o nome do titular vindo de configuração; linha de transparência na landing (6.1); pergunta obrigatória na FAQ (6.7); microcopy do recebedor (5.2); item de confiança (10) e critério de aceite (12). Motivo: conta pessoa física no Mercado Pago exibe o nome civil do titular no app do banco do pagador, e MEI não resolve.
 - **1.2 (14/10/2026):** checkout com detalhes do Mercado Pago (validade de 30 minutos, QR, copia e cola, `ticket_url`); botão “Receber no WhatsApp” nas telas de processamento e entrega, com estados de vínculo e remoção; microcopy das mensagens de WhatsApp e regra de canal somente resposta; componente `WhatsAppOptIn`; critério de aceite do vínculo.
