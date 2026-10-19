@@ -8,6 +8,7 @@ import {
 } from "#src/config.ts";
 
 const validEnvironment = {
+  NODE_ENV: "test",
   DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito",
   PAYMENT_GATEWAY: "fake",
 };
@@ -25,11 +26,21 @@ describe("config do worker", () => {
     ).toBe(3);
   });
 
-  it("nomeia DATABASE_URL quando falta", () => {
+  it("nomeia NODE_ENV e DATABASE_URL quando faltam", () => {
     const result = workerConfigSchema.safeParse({});
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(z.prettifyError(result.error)).toContain("DATABASE_URL");
+    const message = z.prettifyError(result.error);
+    expect(message).toContain("NODE_ENV");
+    expect(message).toContain("DATABASE_URL");
+  });
+
+  it("NODE_ENV é obrigatória e sem default", () => {
+    const { NODE_ENV: _omitted, ...withoutNodeEnv } = validEnvironment;
+    const result = workerConfigSchema.safeParse(withoutNodeEnv);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["NODE_ENV"]);
   });
 
   it("recusa GENERATE_CONCURRENCY menor que 1, acima do teto ou fracionária", () => {

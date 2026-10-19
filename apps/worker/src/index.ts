@@ -15,6 +15,8 @@ import {
 } from "#src/runner/lanes.ts";
 import { startScheduler } from "#src/scheduler.ts";
 
+const DATABASE_CLOSE_TIMEOUT_SECONDS = 5;
+
 const parsedConfig = workerConfigSchema.safeParse(process.env);
 if (!parsedConfig.success) {
   process.stderr.write(
@@ -71,7 +73,7 @@ async function shutdown(signal: NodeJS.Signals) {
   await scheduler.stop();
   await runner.stop();
   await healthServer.stop();
-  await database.close();
+  await database.close({ timeoutSeconds: DATABASE_CLOSE_TIMEOUT_SECONDS });
   process.exit(0);
 }
 

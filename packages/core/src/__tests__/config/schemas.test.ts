@@ -4,36 +4,59 @@ import {
   checkProductionEnvironment,
   isLogLevelAllowed,
   isPaymentGatewayAllowed,
+  nodeEnvList,
   paymentEnvironmentSchema,
   portSchema,
   sharedEnvironmentSchema,
 } from "#src/config/schemas.ts";
 
-const validEnvironment = { DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito" };
+const validEnvironment = {
+  NODE_ENV: "test",
+  DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito",
+} as const;
 
 describe("ambiente compartilhado das apps (api.md §6)", () => {
-  it("aplica os defaults de NODE_ENV, LOG_LEVEL e HOST", () => {
+  it("aplica os defaults de LOG_LEVEL e HOST", () => {
     expect(sharedEnvironmentSchema.parse(validEnvironment)).toEqual({
       ...validEnvironment,
-      NODE_ENV: "development",
       LOG_LEVEL: "info",
       HOST: "127.0.0.1",
     });
   });
 
-  it("nomeia DATABASE_URL quando falta", () => {
+  it("nomeia NODE_ENV e DATABASE_URL quando faltam", () => {
     const result = sharedEnvironmentSchema.safeParse({});
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["DATABASE_URL"]);
-    expect(z.prettifyError(result.error)).toContain("DATABASE_URL");
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual([
+      "NODE_ENV",
+      "DATABASE_URL",
+    ]);
+    const message = z.prettifyError(result.error);
+    expect(message).toContain("NODE_ENV");
+    expect(message).toContain("DATABASE_URL");
+  });
+
+  it("NODE_ENV é obrigatório e sem default, para a proteção de produção não ficar aberta", () => {
+    const { NODE_ENV: _omitted, ...withoutNodeEnv } = validEnvironment;
+    const result = sharedEnvironmentSchema.safeParse(withoutNodeEnv);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["NODE_ENV"]);
+    for (const NODE_ENV of nodeEnvList) {
+      expect(sharedEnvironmentSchema.parse({ ...validEnvironment, NODE_ENV }).NODE_ENV).toBe(
+        NODE_ENV,
+      );
+    }
   });
 
   it("recusa DATABASE_URL que não é postgres", () => {
     for (const DATABASE_URL of ["", "mysql://127.0.0.1/gizito", "não é url"]) {
-      expect(sharedEnvironmentSchema.safeParse({ DATABASE_URL }).success).toBe(false);
+      expect(sharedEnvironmentSchema.safeParse({ ...validEnvironment, DATABASE_URL }).success).toBe(
+        false,
+      );
     }
-    const postgresql = { DATABASE_URL: "postgresql://127.0.0.1/gizito" };
+    const postgresql = { ...validEnvironment, DATABASE_URL: "postgresql://127.0.0.1/gizito" };
     expect(sharedEnvironmentSchema.safeParse(postgresql).success).toBe(true);
   });
 

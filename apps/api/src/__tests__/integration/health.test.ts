@@ -36,21 +36,26 @@ describe("GET /health com banco", () => {
   });
 });
 
+function spawnApi(port: number) {
+  return Bun.spawn(["bun", entryPath], {
+    env: {
+      PATH: process.env.PATH ?? "",
+      NODE_ENV: "test",
+      DATABASE_URL: withDatabaseName(resolveTestDatabaseUrl(), testDatabase.databaseName),
+      WEB_PUBLIC_URL: "http://localhost:3000",
+      API_PORT: String(port),
+      LOG_LEVEL: "info",
+      PAYMENT_GATEWAY: "fake",
+    },
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+}
+
 describe("processo da api", () => {
   it("sobe, responde /health e sai com 0 no SIGTERM", async () => {
     const port = await findFreePort();
-    const child = Bun.spawn(["bun", entryPath], {
-      env: {
-        PATH: process.env.PATH ?? "",
-        DATABASE_URL: withDatabaseName(resolveTestDatabaseUrl(), testDatabase.databaseName),
-        WEB_PUBLIC_URL: "http://localhost:3000",
-        API_PORT: String(port),
-        LOG_LEVEL: "info",
-        PAYMENT_GATEWAY: "fake",
-      },
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+    const child = spawnApi(port);
     try {
       const response = await waitForHttpStatus(`http://127.0.0.1:${port}/health`, 200, child);
       expect(await response.json()).toEqual({ status: "ok" });
@@ -65,6 +70,24 @@ describe("processo da api", () => {
       expect(messageList).toContain("api parando");
     } finally {
       child.kill("SIGKILL");
+    }
+  });
+
+  it("segundo processo na mesma porta não sobe, porque reusePort está desligado", async () => {
+    const port = await findFreePort();
+    const first = spawnApi(port);
+    try {
+      await waitForHttpStatus(`http://127.0.0.1:${port}/health`, 200, first);
+      const second = spawnApi(port);
+      try {
+        expect(await second.exited).not.toBe(0);
+        expect(await new Response(second.stdout).text()).not.toContain("api no ar");
+      } finally {
+        second.kill("SIGKILL");
+      }
+      expect((await fetch(`http://127.0.0.1:${port}/health`)).status).toBe(200);
+    } finally {
+      first.kill("SIGKILL");
     }
   });
 });

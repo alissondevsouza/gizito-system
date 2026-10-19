@@ -67,6 +67,7 @@ describe("processo do worker", () => {
     const child = Bun.spawn(["bun", entryPath], {
       env: {
         PATH: process.env.PATH ?? "",
+        NODE_ENV: "test",
         DATABASE_URL: withDatabaseName(resolveTestDatabaseUrl(), testDatabase.databaseName),
         WORKER_HEALTH_PORT: String(port),
         LOG_LEVEL: "info",

@@ -361,7 +361,7 @@ Cada componente terá estados `default`, `hover` quando aplicável, `focus-visib
 - Texto objetivo + solução: “Esta foto está acima de 8 MB. Escolha uma imagem menor.”
 - Não depender de cor: incluir texto, ícone e `aria-describedby`.
 - Evitar mensagens genéricas “Ops! Algo deu errado” sem orientação.
-- Erro inesperado ao abrir uma página: a página mantém o documento em pt-BR, explica em uma frase que não foi possível abrir agora e que o pedido continua salvo, e oferece duas saídas (tentar de novo e voltar ao início); nunca mostra mensagem técnica nem detalhe do erro.
+- Erro inesperado ao abrir uma página: a página mantém o documento em pt-BR, explica em uma frase que não foi possível abrir agora, e oferece duas saídas (tentar de novo e voltar ao início); nunca mostra mensagem técnica nem detalhe do erro.
 
 ### 7.3 Estados vazios e carregamento
 

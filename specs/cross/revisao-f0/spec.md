@@ -192,7 +192,7 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 - **`releaseJob` no desligamento.** Decrementar `attempt_count` é seguro porque a liberação exige o lease ativo. Um deploy não queima tentativa.
 - **Código de erro inválido.** Trocado em `workJob` antes de `failJob`; `failJob` mantém o `parse` como guarda para chamadores diretos.
 - **Migration única `0002_revisao_f0`.** Gerada pelo drizzle-kit (`--name revisao_f0`). Só índices, checks e colunas novas: não é destrutiva. A coluna `notification.recipient_hash NOT NULL` entra sem default porque a tabela está vazia em todo banco (nenhum handler grava `notification` ainda; produção não existe).
-- **Logger.** `formatters.log` com caminhada recursiva (profundidade 6) substitui o `redact` do Pino, que só cobre caminhos fixos. `serializers.err` continua, porque o Pino aplica o próprio serializer em `err` antes do formatter.
+- **Logger.** `formatters.log` com caminhada recursiva (profundidade 6) substitui o `redact` do Pino, que só cobre caminhos fixos. `serializers.err` continua para a chave `err`, que a caminhada deixa passar: no Pino 10.4 o `formatters.log` roda antes dos serializers (conferido no M5). O `child` é envolvido para mascarar também as bindings, porque o Pino não aplica o formatter a elas.
 - **Timeouts.** `connection` do Bun.SQL aceita parâmetros de runtime. Conferido em 19/10/2026: `SHOW` devolve os valores e `pg_sleep(3)` com `statement_timeout=1500` falha com 57014. O teto do ping é `Promise.race` porque a espera por conexão livre no pool não tem limite no Bun.SQL.
 - **Testes.** Unit no core (máquina, schemas, regras), integrations (log) e worker (raias, pool). Integração no db (fila, migration, dados) e no worker (runner, scheduler, health). A web roda Vitest no teste da raiz.
 - **Paralelismo.** M5 (config, logs, api, web) vai para um `gizito-implementer` depois do commit de M4. Assim os testes de config do worker e o `close` com teto (3.2) já existem quando ele começa. M1 a M4 ficam com o orquestrador, porque a fila é a zona sensível.
@@ -215,12 +215,12 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 ### M4 — Worker
 - [x] 4.1 Raias, `MAX_GENERATE_CONCURRENCY`, pool pelo total de vagas, `JobDefinition`, sinal de desligamento, manutenção de 30 s com `onExhausted` · Arquivos: `apps/worker/src/{config,index,scheduler}.ts`, `runner/*`, `jobs/index.ts`, testes · Verificação: `cd apps/worker && bun test` (unit e integração)
 ### M5 — Config, logs, api, web (implementer em paralelo)
-- [ ] 5.1 `NODE_ENV` obrigatório; processos de teste com `NODE_ENV=test` · Arquivos: `core/src/config/schemas.ts`, testes de config em core/api/worker, testes que fazem spawn, scripts `dev` · Verificação: `bun run test` na raiz e testes de integração de api e worker
-- [ ] 5.2 `log-error.ts` e `logger.ts` (RF-19), testes · Arquivos: `packages/integrations/src/*` · Verificação: `cd packages/integrations && bun test`
-- [ ] 5.3 API: status real e `code` no log, `reusePort: false`, `close` com teto · Arquivos: `apps/api/src/{app,index}.ts`, testes · Depende de 3.2 · Verificação: `cd apps/api && bun test`
-- [ ] 5.4 Web: `shellComponent`, `errorComponent` pt-BR, copy · Arquivos: `apps/web/src/routes/__root.tsx`, `src/copy/`, teste · Verificação: `cd apps/web && bun run test`
+- [x] 5.1 `NODE_ENV` obrigatório; processos de teste com `NODE_ENV=test` · Arquivos: `core/src/config/schemas.ts`, testes de config em core/api/worker, testes que fazem spawn, scripts `dev` · Verificação: `bun run test` na raiz e testes de integração de api e worker
+- [x] 5.2 `log-error.ts` e `logger.ts` (RF-19), testes · Arquivos: `packages/integrations/src/*` · Verificação: `cd packages/integrations && bun test`
+- [x] 5.3 API: status real e `code` no log, `reusePort: false`, `close` com teto · Arquivos: `apps/api/src/{app,index}.ts`, testes · Depende de 3.2 · Verificação: `cd apps/api && bun test`
+- [x] 5.4 Web: `shellComponent`, `errorComponent` pt-BR, copy · Arquivos: `apps/web/src/routes/__root.tsx`, `src/copy/`, teste · Verificação: `cd apps/web && bun run test`
 ### M6 — Docs e revisão
-- [ ] 6.1 ADR-0009, `jobs.md`, `data-model.md`, `state-machine.md`, `api.md`, design doc §7.2, known-issues, roadmap, README (índice de ADR) · Verificação: cada doc com data de 2026-10-19 e versão subida no cabeçalho; ADR-0009 indexado em `docs/README.md`; `grep` sem "15 min" de lock em `jobs.md`
+- [x] 6.1 ADR-0009, `jobs.md`, `data-model.md`, `state-machine.md`, `api.md`, design doc §7.2, known-issues, roadmap, README (índice de ADR) · Verificação: cada doc com data de 2026-10-19 e versão subida no cabeçalho; ADR-0009 indexado em `docs/README.md`; `grep` sem "15 min" de lock em `jobs.md`
 - [ ] 6.2 `bun run lint && bun run typecheck && bun run test && bun run test:integration` na raiz; revisão neutra; `review.md`; correções
 
 ## Decisões
@@ -238,7 +238,10 @@ Fontes: revisão em conversa de 19/10/2026; PRD §5, §7.1, §8; design doc §6.
 | 2026-10-19 | Revisão da spec (rodada 1, APROVADO com 9 ALERTAs): aceitos todos, menos o relógio do Postgres no lease (contestado em Fora de escopo) | compensação que falha não trava a varredura; falha definitiva vence desligamento e tempo máximo; renovação para antes do `releaseJob`; pool 2× vagas; `shortCode` e URLs no log; M5 depois do M4; verificação por task; republicação para F2-11; design doc com versão |
 | 2026-10-19 | `getQueueMetrics` em três consultas paralelas, uma por status | com os índices parciais, o `OR` de status da consulta única virou varredura da tabela (11 ms com 200 mil jobs `completed`); por status, cada consulta usa o seu índice parcial (~1 ms) |
 | 2026-10-19 | Teste do servidor mudo espera a tentativa de conexão expirar antes do `close` | `close()` do Bun.SQL chamado com uma conexão ainda pendente não resolve (medido em 19/10/2026); vai para `lessons.md` |
+| 2026-10-19 | M5 (implementer): chaves sensíveis comparadas sem caixa, `_` nem `-`; binário vira `[binary]`; truncamento descarta a palavra cortada; log `request` usa o campo `errorCode`; copy em `src/copy/route-error.ts` | pega `note_text`, `Authorization` e `api-key`; meio e-mail não vaza no corte; `errorCode` é o nome usado nos demais logs |
+| 2026-10-19 | `RouteErrorPage` em `src/components/` e `defaultErrorComponent` no router | o M5 achou que erro de loader numa rota filha, no SSR, mostrava o componente padrão do TanStack em inglês com a mensagem do erro |
+| 2026-10-19 | `close` do banco com teto de 5 s também no worker | o M5 só tinha a api na lista de arquivos |
 | 2026-10-19 | Lista de chaves sensíveis no `logger.ts` de integrations, não no core | é política de log do adaptador; o teste confere os nomes reais dos campos do core |
 
 ## Status
-Fase: spec revisada (APROVADO, rodada 1, ALERTAs incorporados); M1 concluído em `f81d88b`; M2 em `d770f90` (fila: 47 testes de integração estáveis em 3 rodadas); M3 concluído (migration `0002_revisao_f0`, timeouts; db 98 unit e 129 integração); M4 concluído (worker 36 testes); próximo passo M5 por `gizito-implementer` e M6 (docs) em paralelo pelo orquestrador.
+Fase: implementação concluída (M1–M6); suíte da raiz verde (lint, typecheck, unit e integração); `bun run dev` conferido com banco descartável; próximo passo: revisão neutra (`gizito-implement-verifier`).

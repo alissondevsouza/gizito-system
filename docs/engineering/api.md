@@ -12,7 +12,7 @@ Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos
 - Token inexistente ou inválido → **404 neutro** `order_not_found`, sem revelar se o token existiu.
 - CORS restrito a `WEB_PUBLIC_URL`. HTTPS atrás do proxy.
 - Rate limit: prévia gratuita por IP + cookie de dispositivo (`PREVIEW_RATE_LIMIT_PER_HOUR`, `PREVIEW_RATE_LIMIT_PER_DAY`); webhooks por IP.
-- Logs com `orderId`, padrão da rota (`/orders/:token`, nunca a URL, que leva o token), método, status real da resposta (inclusive quando o handler devolve um `Response`), duração e o `code` das respostas de erro; um log `request` por resposta. Nunca foto, texto extraído, observação, `qr_code`, token, e-mail, telefone completo ou corpo de webhook.
+- Logs com `orderId`, padrão da rota (`/orders/:token`, nunca a URL, que leva o token), método, status real da resposta (inclusive quando o handler devolve um `Response`), duração e, nas respostas de erro, o `code` do corpo no campo `errorCode`; um log `request` por resposta. Nunca foto, texto extraído, observação, `qr_code`, token, e-mail, telefone completo ou corpo de webhook.
 
 ## 2. Rotas públicas (comprador)
 

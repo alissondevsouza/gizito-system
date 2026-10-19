@@ -79,6 +79,8 @@ describe("erros lançados por rotas", () => {
       .get("/lancado", () => {
         throw status(404, orderNotFound);
       })
+      .get("/devolvido", () => status(404, orderNotFound))
+      .get("/bule", () => new Response("sou um bule", { status: 418 }))
       .get("/excecao", () => {
         throw new TypeError("dado-do-cliente@example.com");
       })
@@ -112,6 +114,32 @@ describe("erros lançados por rotas", () => {
       expect(response.status).toBe(400);
       expect(apiErrorSchema.parse(await response.json()).code).toBe("validation_error");
     }
+  });
+
+  it("log request usa o status real do Response devolvido e o código das respostas de erro", async () => {
+    const { app, readEntryList, waitForEntryList } = createAppWithRouteList();
+    const pathList = ["/bule", "/lancado", "/devolvido", "/excecao", "/nada", "/corpo"];
+    for (const path of pathList) {
+      const response = await app.handle(
+        request(path, path === "/corpo" ? { method: "POST", body: "{quebrado" } : undefined),
+      );
+      await response.arrayBuffer();
+    }
+    await waitForEntryList(
+      (entryList) =>
+        entryList.filter((entry) => entry.msg === "request").length === pathList.length,
+    );
+    const requestEntryList = readEntryList()
+      .filter((entry) => entry.msg === "request")
+      .map(({ route, status, errorCode }) => ({ route, status, errorCode }));
+    expect(requestEntryList).toEqual([
+      { route: "/bule", status: 418, errorCode: undefined },
+      { route: "/lancado", status: 404, errorCode: "order_not_found" },
+      { route: "/devolvido", status: 404, errorCode: "order_not_found" },
+      { route: "/excecao", status: 500, errorCode: "internal_error" },
+      { route: UNMATCHED_ROUTE, status: 404, errorCode: "not_found" },
+      { route: "/corpo", status: 400, errorCode: "validation_error" },
+    ]);
   });
 });
 

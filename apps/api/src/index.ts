@@ -4,6 +4,8 @@ import { z } from "zod";
 import { createApp } from "#src/app.ts";
 import { apiConfigSchema } from "#src/config.ts";
 
+const DATABASE_CLOSE_TIMEOUT_SECONDS = 5;
+
 const parsedConfig = apiConfigSchema.safeParse(process.env);
 if (!parsedConfig.success) {
   process.stderr.write(`Configuração inválida da api:\n${z.prettifyError(parsedConfig.error)}\n`);
@@ -15,6 +17,7 @@ const database = createDatabase({ databaseUrl: config.DATABASE_URL });
 const app = createApp({ db: database.db, logger, webPublicUrl: config.WEB_PUBLIC_URL }).listen({
   hostname: config.HOST,
   port: config.API_PORT,
+  reusePort: false,
 });
 logger.info({ host: config.HOST, port: app.server?.port }, "api no ar");
 
@@ -25,7 +28,7 @@ async function shutdown(signal: NodeJS.Signals) {
   stopping = true;
   logger.info({ signal }, "api parando");
   await app.stop();
-  await database.close();
+  await database.close({ timeoutSeconds: DATABASE_CLOSE_TIMEOUT_SECONDS });
   process.exit(0);
 }
 

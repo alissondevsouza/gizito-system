@@ -13,6 +13,7 @@ describe("boot da api", () => {
     const exitCode = await child.exited;
     const stderr = await new Response(child.stderr).text();
     expect(exitCode).toBe(1);
+    expect(stderr).toContain("NODE_ENV");
     expect(stderr).toContain("DATABASE_URL");
     expect(stderr).toContain("WEB_PUBLIC_URL");
     expect(stderr).toContain("PAYMENT_GATEWAY");

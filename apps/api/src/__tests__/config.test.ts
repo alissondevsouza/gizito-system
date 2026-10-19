@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiConfigSchema, DEFAULT_API_PORT } from "#src/config.ts";
 
 const validEnvironment = {
+  NODE_ENV: "test",
   DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito",
   PAYMENT_GATEWAY: "fake",
   WEB_PUBLIC_URL: "http://localhost:3000",
@@ -23,8 +24,17 @@ describe("config da api (api.md §6)", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     const message = z.prettifyError(result.error);
+    expect(message).toContain("NODE_ENV");
     expect(message).toContain("DATABASE_URL");
     expect(message).toContain("WEB_PUBLIC_URL");
+  });
+
+  it("NODE_ENV é obrigatória e sem default", () => {
+    const { NODE_ENV: _omitted, ...withoutNodeEnv } = validEnvironment;
+    const result = apiConfigSchema.safeParse(withoutNodeEnv);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["NODE_ENV"]);
   });
 
   it("recusa WEB_PUBLIC_URL sem http(s) e porta inválida", () => {

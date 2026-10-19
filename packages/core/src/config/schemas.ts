@@ -14,7 +14,7 @@ export const portSchema = z.coerce.number().int().min(1).max(65535);
 export const postgresUrlSchema = z.url({ protocol: /^postgres(ql)?$/ });
 
 export const sharedEnvironmentSchema = z.object({
-  NODE_ENV: nodeEnvSchema.default("development"),
+  NODE_ENV: nodeEnvSchema,
   LOG_LEVEL: logLevelSchema.default("info"),
   DATABASE_URL: postgresUrlSchema,
   HOST: z.string().min(1).default("127.0.0.1"),

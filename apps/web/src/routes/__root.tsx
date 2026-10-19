@@ -1,5 +1,6 @@
-import { createRootRoute, HeadContent, Link, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Link, Scripts } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { RouteErrorPage } from "#src/components/route-error-page.tsx";
 import { BRAND_NAME } from "#src/copy/brand.ts";
 import { notFoundCopy } from "#src/copy/not-found.ts";
 import appCss from "#src/styles/app.css?url";
@@ -13,17 +14,10 @@ export const Route = createRootRoute({
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
-  component: RootComponent,
+  shellComponent: RootDocument,
   notFoundComponent: NotFoundPage,
+  errorComponent: RouteErrorPage,
 });
-
-function RootComponent() {
-  return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
-  );
-}
 
 function NotFoundPage() {
   return (
