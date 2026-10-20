@@ -1,7 +1,7 @@
-# Gizito — Guia de Design, Identidade Visual e Experiência (v1.5)
+# Gizito — Guia de Design, Identidade Visual e Experiência (v1.6)
 
 **Tipo:** complemento de UI/UX e branding ao `product-doc-v1.md`  
-**Data:** 14/10/2026 · revisão 1.5 em 19/10/2026 (ver seção 15)  
+**Data:** 14/10/2026 · revisão 1.6 em 20/10/2026 (ver seção 15)  
 **Status:** especificação proposta, pronta para orientar design e implementação  
 **Produto:** kit de reforço escolar personalizado, adquirido por Pix a cada necessidade  
 **Marca escolhida:** **Gizito**
@@ -210,9 +210,11 @@ Estados visuais circunstanciais: `boas-vindas`, `orientação`, `pensando`, `suc
 | Landing | “Oi! Eu sou o Gizito. Vamos transformar essa matéria em um reforço para estudar em casa?” |
 | Upload | “Fotografe com boa luz e tente mostrar a página inteira.” |
 | Foto ilegível | “Não consegui ler bem esta foto. Quer tirar outra?” |
+| Matéria de outra disciplina ou de outro ano | “Não encontrei nesta matéria um assunto de {disciplina} do {ano}. Confere o ano e a disciplina?” |
 | Assuntos detectados | “Encontrei estes assuntos. Confere se estão certinhos?” |
 | Mais de 3 assuntos | “Vamos escolher até três assuntos para este kit.” |
-| Assunto ainda não atendido | “Ainda não consigo preparar {assunto}, porque depende de imagem ou de fala. O kit sai com os outros assuntos.” |
+| Assunto ainda não atendido (imagem ou fala) | “Ainda não consigo preparar {assunto}, porque depende de imagem ou de fala. O kit sai com os outros assuntos.” |
+| Assunto ainda não atendido (redação) | “Ainda não consigo preparar {assunto}, porque é produção de texto que precisa de correção. O kit sai com os outros assuntos.” |
 | Nenhum assunto atendido | “Esta matéria fala de {assunto}, que eu ainda não consigo preparar. Quer enviar fotos de outra matéria?” |
 | Checkout | “Tudo pronto! O material começa a ser preparado depois da confirmação do Pix.” |
 | Pix aguardando | “Ainda estou aguardando a confirmação do pagamento.” |
@@ -335,7 +337,7 @@ O `:id` é o token público do pedido (PRD, seção 5). A API informa o estado; 
 | Estado do pedido | Rota canônica | Ao abrir outra rota do pedido |
 |---|---|---|
 | (sem pedido) | `/`, `/criar` | — |
-| `rascunho` | `/criar` (fotos ainda sendo escolhidas) ou `/pedido/:id/assuntos` com aviso de fotos insuficientes ou de matéria ainda não atendida | — |
+| `rascunho` | `/criar` (fotos ainda sendo escolhidas) ou `/pedido/:id/assuntos` com aviso de fotos insuficientes, de matéria ainda não atendida ou de matéria de outra disciplina ou ano | — |
 | `analisando` | `/pedido/:id/assuntos` em modo carregando | redireciona para assuntos |
 | `previa_pronta` | `/pedido/:id/assuntos` | redireciona para assuntos |
 | `aguardando_pagamento` | `/pedido/:id/pagamento` | `/kit` e `/preparando` redirecionam para pagamento |
@@ -498,6 +500,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 ## 15. Histórico de revisões
 
+- **1.6 (20/10/2026):** microcopy (5.2) para matéria legível de outra disciplina ou de outro ano, que antes caía no texto de foto ilegível, e para redação como assunto ainda não atendido, que não depende de imagem nem de fala; aviso correspondente em `rascunho` (6.8). Motivo: spec pedagógica §15, aprovada na F1-02.
 - **1.5 (19/10/2026):** assuntos ainda não atendidos na prévia (6.3): aparecem à parte, sem chip selecionável e sem entrar como “outro”; sem assunto atendido, o pedido volta a `rascunho` com aviso (6.8); microcopy das duas situações (5.2) e critério de aceite (12). Motivo: PRD 1.3, seção 7.7.
 - **1.4 (19/10/2026):** erro inesperado de página (7.2): texto objetivo com as saídas "tentar de novo" e "voltar ao início", sem detalhe técnico. Motivo: a raiz do web passa a ter `errorComponent` (revisão da F0); o texto exato fica em `apps/web/src/copy/`.
 - **1.3 (14/10/2026):** aviso obrigatório do recebedor na tela do Pix (6.4), com o nome do titular vindo de configuração; linha de transparência na landing (6.1); pergunta obrigatória na FAQ (6.7); microcopy do recebedor (5.2); item de confiança (10) e critério de aceite (12). Motivo: conta pessoa física no Mercado Pago exibe o nome civil do titular no app do banco do pagador, e MEI não resolve.

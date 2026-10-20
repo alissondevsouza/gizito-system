@@ -38,7 +38,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [0007](engineering/adr/0007-dois-pdfs-html-katex-playwright.md) | Dois PDFs gerados de HTML/CSS com KaTeX no servidor e Playwright | aceito | 2026-10-15 |
 | [0008](engineering/adr/0008-fila-propria-skip-locked.md) | Fila própria com `FOR UPDATE SKIP LOCKED` em vez de pg-boss, decidida pelo spike de F0-06 | aceito (lock substituído pelo 0009) | 2026-10-15 |
 | [0009](engineering/adr/0009-lease-renovado-e-compensacao.md) | Lease curto renovado, teto por execução e compensação atômica do job esgotado | aceito | 2026-10-19 |
-| [0010](engineering/adr/0010-pipeline-pedagogico-deterministico.md) | Pipeline pedagógico com regras no core, fotos só na extração e regeneração por reparo | proposto (F1-02) | 2026-10-19 |
+| [0010](engineering/adr/0010-pipeline-pedagogico-deterministico.md) | Pipeline pedagógico com regras no core, fotos só na extração e regeneração por reparo | aceito | 2026-10-19 |
 
 > Para criar um novo ADR: copie `engineering/adr/_template.md` → `engineering/adr/NNNN-titulo.md` e adicione a linha aqui.
 

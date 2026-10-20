@@ -1,7 +1,7 @@
 # ADR-0010: Pipeline pedagógico com regras no core, fotos só na extração e regeneração por reparo
 
 **Data:** 2026-10-19
-**Status:** proposto (vira aceito com a aprovação da F1-02)
+**Status:** aceito em 2026-10-20, com a aprovação da F1-02
 **Decidido por:** Alisson
 
 ## Contexto

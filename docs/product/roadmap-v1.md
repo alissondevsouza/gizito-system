@@ -3,7 +3,7 @@
 **Status:** em execução  
 **Fase atual:** F1 — Prova técnica e pedagógica  
 **Data:** 14/10/2026  
-**Estado atualizado em:** 19/10/2026  
+**Estado atualizado em:** 20/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
 **Como usar:** cada feature vira uma spec em `specs/{modulo}/{slug}/` executada pelo fluxo `gizito-spec-driven`; as fases só avançam quando o critério de saída é atendido  
 **Como marcar:** `[x]` concluída, com data e commit ou spec ao lado · `[ ]` com **em andamento** no título quando iniciada, com o sub-item "Feito até agora" · `[ ]` sem marca é pendente. Ao concluir uma feature, marcar o item e trocar "Feito até agora" por "Concluída em". Ao fechar uma fase, marcar o gate, atualizar a coluna Estado da seção 2, o bloco "Estado atual" abaixo e a tabela de estado de `docs/README.md`
@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 1 | 0 | 10 |
+| F1 Prova técnica e pedagógica | 11 | 2 | 0 | 9 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -133,16 +133,16 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 1 de 11 concluídas
+**Estado:** em andamento · 2 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
   - Pronto quando: testes de integridade (ids únicos, pré-requisitos existentes); amostra revisada pelo professor
   - Concluída em: 19/10/2026. `tax-v1` com 179 assuntos (22/20/25/23 em Matemática e 24/23/22/20 em Português), 6 regras de validação por assunto, faixas BNCC por ano, checagem de integridade com 11 códigos, consulta `listTopics`/`findTopic`/`isSelectableTopic`; fingerprint por versão impede mudar conteúdo sem novo `TAXONOMY_VERSION` e ids publicados nunca somem; `docs/pedagogy/taxonomia.md` gerado por `bun run taxonomy:doc`, revisado e aprovado pelo professor sem mudanças (6º ano segue sem raiz quadrada). 331 testes no core. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-02 `spec-pedagogica-executavel`** **em andamento** — docs, pedagogy · M · depende: F1-01
+- [x] **F1-02 `spec-pedagogica-executavel`** — docs, pedagogy · M · depende: F1-01 · 20/10/2026 · `9aefe15` · `specs/pedagogy/spec-pedagogica-executavel/`
   - Entrega: `docs/pedagogy/`: schema do kit campo a campo, regras de validação com severidade e código, formato dos casos de teste, prompts v1 em texto, critério de homologação; lista de assuntos ainda não atendidos com id e como a extração e o “outro” os reconhecem (PRD 7.7)
   - Pronto quando: aprovada por você; é a spec de F1-03 a F1-07
-  - Feito até agora: `docs/pedagogy/spec-pedagogica.md` (contratos, alocação das questões, validações com código e severidade, regeneração, casos, homologação e o que cada feature implementa no §14) e `docs/pedagogy/prompts-v1.md`; assuntos ainda não atendidos com id, palavras do “outro” e `findUnsupportedTopicList` no core, publicados em `taxonomia.md` (`specs/pedagogy/spec-pedagogica-executavel/`). Falta a sua aprovação, inclusive das metas propostas do gate no §13.2
+  - Concluída em: 20/10/2026. `docs/pedagogy/spec-pedagogica.md` 1.0 (contratos, alocação das questões no core, validações com código, severidade e reparo, regeneração por reparo, casos, homologação e o que cada feature implementa no §14) e `docs/pedagogy/prompts-v1.md`; assuntos ainda não atendidos com id, palavras do “outro” e `findUnsupportedTopicList` no core, publicados em `taxonomia.md`; ADR-0010 aceito. Aprovada por você com os cinco pontos do §15 (metas do gate, dificuldade percebida, relevância pela ordem da prévia, dois avisos e dois textos que entraram no design doc 1.6). Três rodadas de revisão neutra, todas reprovadas e corrigidas; as correções da terceira não passaram por verifier e os padrões de texto são provados pelos testes da F1-03. Sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
 - [ ] **F1-03 `schemas-e-validacoes-do-kit`** — core · L · depende: F1-02
   - Entrega: o que `docs/pedagogy/spec-pedagogica.md` §14 atribui à F1-03: `photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema`, `studyKitSchema`, `reviewResultSchema`; `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `validateStudyKit` com contagens, cobertura, dificuldade, duplicatas, alternativas, dependência de figura, dado pessoal, e `interpretReview`
   - Pronto quando: cada regra com teste e fixture válida e inválida

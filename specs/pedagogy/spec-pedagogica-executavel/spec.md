@@ -2,9 +2,9 @@
 feature: F1-02 spec-pedagogica-executavel
 module: pedagogy
 size: M
-status: in_progress
+status: done
 branch: feat/pedagogy/spec-pedagogica-executavel
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # F1-02 spec-pedagogica-executavel
@@ -70,7 +70,8 @@ Escrever em `docs/pedagogy/` a especificação pedagógica que as features F1-03
 | 2026-10-20 | "produção de textos" recusa o "outro", aceitando a colisão com a descrição de `lp7-verb-moods` | é o nome BNCC da prática e o que o responsável digita; o PRD §7.7 proíbe pedir redação como "outro"; quem quer modos verbais tem o chip (revisão neutra, rodada 2) |
 | 2026-10-20 | `figure_reference` só com o objeto ausente explícito, com exceções testadas; `markup_forbidden` bloqueador; render escapa todo texto | "observe" sozinho bloquearia "observe a tabela"; Markdown e HTML não podem chegar à criança (revisão neutra, rodada 2) |
 | 2026-10-20 | Validadores de texto que bloqueiam usam lista fechada, com precisão antes de cobertura e testes de falso positivo; o resto fica com a revisão por modelo | bloqueador falso gasta a única regeneração e derruba pedido pago; foi o defeito das três rodadas (revisão neutra, rodada 3) |
+| 2026-10-20 | Sem rodada 4 de revisão; spec, ADR-0010 e os cinco pontos do §15 aprovados sem mudanças | decisão do humano; os padrões de texto são provados pelos testes de falso positivo da F1-03, que tem revisão neutra própria |
 | 2026-10-20 | `figure_reference` sem o item de página e sem casar posição seguida de complemento ("ao lado da janela") | "parou na página 48 do livro" e "o desenho ao lado da janela" são narrativa legítima; achado pelo orquestrador depois da rodada 3, corrigido a pedido do humano |
 
 ## Status
-M1 a M3 implementados. Revisão neutra: rodadas 1 e 2 REPROVADO, teto atingido e escalado; o humano pediu a rodada 3, também REPROVADO (bloqueador falso de `figure_reference` e padrão de marcação indefinido), corrigida em seguida; depois, a pedido do humano, saíram dois falsos positivos que ainda restavam em `figure_reference`. As correções da rodada 3 e esse ajuste não passaram por verifier. Pendências para o humano: decidir se quer a rodada 4; aprovar a spec (pronto da F1-02), o ADR-0010 e os pontos do §15 da spec pedagógica.
+M1 a M3 implementados. Revisão neutra: rodadas 1 e 2 REPROVADO, teto atingido e escalado; o humano pediu a rodada 3, também REPROVADO (bloqueador falso de `figure_reference` e padrão de marcação indefinido), corrigida em seguida; depois, a pedido do humano, saíram dois falsos positivos que ainda restavam em `figure_reference`. As correções da rodada 3 e esse ajuste não passaram por verifier. Em 2026-10-20 o humano aprovou a spec, o ADR-0010 (aceito) e os cinco pontos do §15 sem mudanças, sem rodada 4; os dois textos do §15 entraram no design doc 1.6 §5.2. F1-02 concluída; falta o push e o merge, que são do humano.

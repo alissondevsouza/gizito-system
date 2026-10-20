@@ -1,8 +1,8 @@
 # Spec pedagógica executável — v1.0
 
-> Contrato que as features F1-03 a F1-08 e F1-10 implementam, a partir do PRD 1.3 §6–7, do design doc 1.5 §5.2, §6.3 e §9 e de `docs/engineering/jobs.md` §2. Prompts v1 em [`prompts-v1.md`](prompts-v1.md); assuntos e assuntos ainda não atendidos em [`taxonomia.md`](taxonomia.md), gerado do core.
+> Contrato que as features F1-03 a F1-08 e F1-10 implementam, a partir do PRD 1.3 §6–7, do design doc 1.6 §5.2, §6.3 e §9 e de `docs/engineering/jobs.md` §2. Prompts v1 em [`prompts-v1.md`](prompts-v1.md); assuntos e assuntos ainda não atendidos em [`taxonomia.md`](taxonomia.md), gerado do core.
 >
-> **Estado:** aguardando a aprovação do humano (pronto da F1-02); os pontos que pedem decisão dele estão no §15. Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
+> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
 
 Leia a seção que a sua feature toca (§14 diz qual).
 
@@ -95,7 +95,7 @@ O bloco "O que entendi do material" da prévia (design doc §6.3) é montado na 
 | nenhuma foto utilizável | `analysis_failed` → `draft` | `photos_unreadable` | "Foto ilegível" + "Trocar foto" |
 | ao menos 1 candidato | `analysis_succeeded` → `preview_ready` | — | "Assuntos detectados"; foto não utilizável sinalizada; não atendidos à parte |
 | nenhum candidato e ao menos 1 não atendido | `analysis_failed` → `draft` | `only_unsupported_topics` | "Nenhum assunto atendido" |
-| nenhum candidato e nenhum não atendido | `analysis_failed` → `draft` | `no_topic_found` | "Foto ilegível" + "Trocar foto"; com `subject_mismatch` ou `grade_mismatch`, texto próprio a decidir (§15) |
+| nenhum candidato e nenhum não atendido | `analysis_failed` → `draft` | `no_topic_found` | "Foto ilegível" + "Trocar foto"; com `subject_mismatch` ou `grade_mismatch`, "Matéria de outra disciplina ou de outro ano" + "Trocar foto" |
 
 Saída de modelo inválida numa foto: uma nova chamada para a mesma foto; persistindo, a foto conta como não utilizável, com o aviso interno `extraction_output_invalid`, e o responsável vê para ela o texto de foto ilegível (trocar a foto costuma resolver). É falha definitiva da foto e não volta à fila. Erro de rede, 5xx e limite de taxa do provedor são transitórios e seguem o retry do job `order.analyze` (`jobs.md` §1).
 
@@ -120,7 +120,7 @@ Entrada: `topicRefList` (1 a 3, na ordem do §4) e `perceivedDifficulty`. Saída
 
 Algoritmo, por bloco:
 
-1. **Dificuldades do bloco:** `PRACTICE_DIFFICULTY_DISTRIBUTION` (4/4/2) e `MOCK_DIFFICULTY_DISTRIBUTION` (3/4/3), deslocadas pela direção de `PERCEIVED_DIFFICULTY_SHIFT_DIRECTION_MAP` (*nova*): `basic` → +1, `intermediate` → −1, `unknown` ou ausente → 0. O bloco ganha `direção × MAX_PERCEIVED_DIFFICULTY_SHIFT` fáceis e perde o mesmo número de intermediárias (proposta para aprovação, §15).
+1. **Dificuldades do bloco:** `PRACTICE_DIFFICULTY_DISTRIBUTION` (4/4/2) e `MOCK_DIFFICULTY_DISTRIBUTION` (3/4/3), deslocadas pela direção de `PERCEIVED_DIFFICULTY_SHIFT_DIRECTION_MAP` (*nova*): `basic` → +1, `intermediate` → −1, `unknown` ou ausente → 0. O bloco ganha `direção × MAX_PERCEIVED_DIFFICULTY_SHIFT` fáceis e perde o mesmo número de intermediárias (aprovado, §15).
 2. **Questões por assunto:** cada assunto recebe `MIN_QUESTION_COUNT_PER_TOPIC_PER_BLOCK[n]`; as que sobram vão uma a uma aos assuntos na ordem, recomeçando do primeiro. Com 3 assuntos: 4/3/3; com 2: 5/5; com 1: 10.
 3. **Assentos:** percorrer os assuntos em rodízio, pulando quem já completou a sua quantidade, até 10 assentos.
 4. **Dificuldade por assento:** as dificuldades do bloco ordenadas (fáceis, intermediárias, desafiadoras) são dadas aos assentos na ordem.
@@ -408,7 +408,7 @@ Relatório agregado (por caso e por `topicRef`, com o "outro" à parte): casos a
 
 4 anos × 2 disciplinas × 5 casos, com no mínimo: 10 manuscritos, 4 com foto ruim (1 totalmente ilegível, que deve ser recusada), 4 de Matemática com frações, 2 com enunciado ambíguo no material, 4 com dado pessoal inventado visível, 2 com assunto não atendido junto de assuntos atendidos, 1 só com assunto não atendido e 2 com "outro". Um caso pode somar tags.
 
-### 13.2 Critérios do gate (propostos; o humano aprova)
+### 13.2 Critérios do gate (aprovados em 20/10/2026)
 
 | # | Critério | Meta |
 |---|---|---|
@@ -450,16 +450,16 @@ A mesma rubrica serve à auditoria amostral semanal em produção (PRD §7.6).
 | F1-11 `homologacao-e-amostras` | §13 | auditoria e metas no PRD §3 |
 | F2-02, F2-03, F2-09 | §3.3, §4 | persistência da extração, decisão da prévia, recusa do "outro", bloco "O que entendi" |
 
-## 15. Pontos para aprovação do humano
+## 15. Pontos aprovados pelo humano
 
-Propostas desta spec que interpretam o PRD ou o design doc. A spec segue com elas; mudar qualquer uma é trocar o valor ou o texto aqui antes da F1-03.
+Propostas desta spec que interpretam o PRD ou o design doc, aprovadas pelo humano em 20/10/2026 sem mudanças. Mudar qualquer uma depois é decisão dele, com nova versão desta spec.
 
 1. **Metas do gate (§13.2):** extração em 36 dos 40 casos, custo por prévia ≤ R$ 0,10, amostra de 10 kits para o professor e a rubrica do §13.3.
 2. **Dificuldade percebida (§5):** "básica" troca uma intermediária por uma fácil em cada bloco; "intermediária" faz o contrário; "não sei" não muda nada. O PRD §6 só diz que ela desloca até 1 questão entre fácil e intermediária.
 3. **Relevância (§4, §5):** a ordem da prévia é a relevância, e as questões que sobram do mínimo vão aos primeiros assuntos.
 4. **Avisos em vez de bloqueadores:** `expression_number_not_in_statement` e `non_computable_excess` (§8.2), pelos motivos da tabela. A regressão mede quantas vezes disparam e pode promovê-los.
-5. **Textos que faltam no design doc §5.2:** (a) material legível de outra disciplina ou de outro ano (`no_topic_found` com `subject_mismatch` ou `grade_mismatch`), hoje com o texto de foto ilegível; proposta: "Não encontrei nesta matéria um assunto de {disciplina} do {ano}. Confere o ano e a disciplina?"; (b) `lp-essay-writing` tem motivo `open_writing`, e o texto "porque depende de imagem ou de fala" não serve para redação; proposta: "Ainda não consigo preparar {assunto}, porque é produção de texto que precisa de correção. O kit sai com os outros assuntos."
+5. **Textos que faltam no design doc §5.2:** (a) material legível de outra disciplina ou de outro ano (`no_topic_found` com `subject_mismatch` ou `grade_mismatch`), antes com o texto de foto ilegível; aprovado: "Não encontrei nesta matéria um assunto de {disciplina} do {ano}. Confere o ano e a disciplina?"; (b) `lp-essay-writing` tem motivo `open_writing`, e o texto "porque depende de imagem ou de fala" não serve para redação; aprovado: "Ainda não consigo preparar {assunto}, porque é produção de texto que precisa de correção. O kit sai com os outros assuntos." Os dois textos entraram no design doc 1.6 §5.2.
 
 ## 16. Histórico
 
-- **1.0 (19/10/2026):** versão inicial (F1-02).
+- **1.0 (19/10/2026):** versão inicial (F1-02), aprovada pelo humano em 20/10/2026 com os pontos do §15.
