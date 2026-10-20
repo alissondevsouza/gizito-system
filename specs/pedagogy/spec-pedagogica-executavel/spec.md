@@ -51,7 +51,7 @@ Escrever em `docs/pedagogy/` a especificação pedagógica que as features F1-03
 - [x] 3.1 Docs e rules (RF-08)
 - [x] 3.2 `bun run lint`, `bun run typecheck`, `bun run test` na raiz
 - [x] 3.3 `bun run test:pedagogy`: não existe até a F1-10; pendência já em `known-issues.md` (linha da `tax-v1`), estendida à lista de não atendidos
-- [ ] 3.4 Revisão neutra (zona sensível: pedagogia)
+- [x] 3.4 Revisão neutra (zona sensível: pedagogia): 2 rodadas, ambas REPROVADO, achados corrigidos; teto atingido, escalado ao humano com o `review.md`
 
 ## Decisões
 | Data | Decisão | Justificativa |
