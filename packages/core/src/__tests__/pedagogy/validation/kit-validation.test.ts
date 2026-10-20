@@ -202,6 +202,46 @@ describe("validateStudyKit: estrutura e respostas (spec pedagógica §8.2)", () 
     expect(codeItemListOf(kit)).toEqual([["math_expression_invalid", "p2"]]);
   });
 
+  it("math_expression_invalid em resposta expression que o avaliador não aceita, uma vez por item", () => {
+    const kit = editMath((draft) => {
+      const answer = at(itemOf(draft, "p2"), "answer");
+      answer.expectedAnswer = { kind: "expression", expression: "2x +" };
+    });
+    expect(codeItemListOf(kit)).toEqual([["math_expression_invalid", "p2"]]);
+  });
+
+  it("math_expression_invalid em alternativa expression que o avaliador não aceita", () => {
+    let questionId = "";
+    const kit = editMath((draft) => {
+      const question = listAt(draft, "practiceQuestionList").find(
+        (candidate) => candidate.optionList !== null,
+      );
+      if (question === undefined) throw new Error("fixture has no multiple choice");
+      questionId = String(question.questionId);
+      const answer = at(question, "answer");
+      const distractor = listAt(question, "optionList").find(
+        (option) => option.label !== answer.correctOptionLabel,
+      );
+      if (distractor === undefined) throw new Error("fixture has no distractor");
+      distractor.value = { kind: "expression", expression: "2x +" };
+    });
+    expect(codeItemListOf(kit)).toEqual([["math_expression_invalid", questionId]]);
+  });
+
+  it("resposta expression que o avaliador aceita, sem cálculo, não gera código", () => {
+    const kit = editMath((draft) => {
+      const answer = at(itemOf(draft, "p2"), "answer");
+      answer.expectedAnswer = { kind: "expression", expression: "2 * x + 1" };
+      answer.computable = false;
+      answer.calculationExpression = null;
+    });
+    const evaluator = withEvaluation(math.mathEvaluator, "2 * x + 1", {
+      kind: "expression",
+      expression: "2 * x + 1",
+    });
+    expect(codeItemListOf(kit, evaluator)).toEqual([]);
+  });
+
   it("example_recalculation_mismatch", () => {
     const kit = editMath((draft) => {
       at(at(itemOf(draft, "e1"), "answer"), "expectedAnswer").value = 43;

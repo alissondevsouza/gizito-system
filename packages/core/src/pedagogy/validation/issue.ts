@@ -257,7 +257,8 @@ export const validationIssueDescriptionMap: Readonly<Record<ValidationIssueCode,
     "Um distrator é equivalente à resposta correta: troque-o por um erro plausível.",
   math_recalculation_mismatch:
     "A conta da resposta, refeita com os números do enunciado, dá outro resultado.",
-  math_expression_invalid: "A expressão de cálculo não pode ser avaliada: reescreva-a.",
+  math_expression_invalid:
+    "Uma expressão do cálculo, da resposta ou das alternativas não pode ser avaliada: reescreva-a.",
   example_recalculation_mismatch: "A conta do exemplo resolvido, refeita, dá outro resultado.",
   evidence_quote_not_found:
     "O trecho citado no gabarito não está, literalmente, no texto-base: copie o trecho exato.",

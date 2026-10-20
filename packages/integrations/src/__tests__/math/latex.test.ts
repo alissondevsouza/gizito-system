@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import type { MathEvaluationErrorCode } from "@gizito/core";
 import katex from "katex";
 import { mathExpressionToLatex } from "#src/math/latex.ts";
+import { createMathjsEvaluator } from "#src/math/mathjs-evaluator.ts";
 
 describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
   const latexTable: readonly [string, string][] = [
@@ -67,6 +68,29 @@ describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
       ok: false,
       error: { code, expression },
     });
+  });
+
+  it("toda expressão que o avaliador aceita converte para LaTeX (base do math_expression_invalid)", () => {
+    const evaluator = createMathjsEvaluator();
+    const expressionList = [
+      ...latexTable.map(([expression]) => expression),
+      "2*x + 1",
+      "x^2 - 1",
+      "b*h/2",
+      "4l",
+      "2t + 3",
+      "2 m + 3",
+      "8 m * 5 m",
+      "50 km/h to m/s",
+      "2 h + 30 min",
+      "25% * 80",
+    ];
+    for (const expression of expressionList) {
+      if (evaluator.evaluate(expression).ok) {
+        expect(mathExpressionToLatex(expression).ok).toBe(true);
+      }
+    }
+    expect(evaluator.evaluate("2x +").ok).toBe(false);
   });
 
   it("aninhamento fundo de função converte rápido", () => {

@@ -5,6 +5,7 @@ import {
 } from "#src/constants.ts";
 import type { ExpectedAnswer } from "#src/pedagogy/expected-answer.ts";
 import type {
+  MathOption,
   MathSolution,
   MathStudyKit,
   MathStudyQuestion,
@@ -97,6 +98,7 @@ type ComputableItem = {
   readonly statement: string;
   readonly table: KitTable | null;
   readonly answer: MathSolution;
+  readonly optionList: readonly MathOption[] | null;
   readonly mismatchCode: ValidationIssueCode;
 };
 
@@ -107,6 +109,7 @@ function listComputableItem(studyKit: MathStudyKit): readonly ComputableItem[] {
       statement: question.statement,
       table: question.table,
       answer: question.answer,
+      optionList: question.optionList,
       mismatchCode: "math_recalculation_mismatch" as const,
     })),
     ...studyKit.workedExampleList.map((example) => ({
@@ -114,9 +117,19 @@ function listComputableItem(studyKit: MathStudyKit): readonly ComputableItem[] {
       statement: example.statement,
       table: example.table,
       answer: example.answer,
+      optionList: null,
       mismatchCode: "example_recalculation_mismatch" as const,
     })),
   ];
+}
+
+function listAnswerExpression(
+  answer: MathSolution,
+  optionList: readonly MathOption[] | null,
+): readonly string[] {
+  return [answer.expectedAnswer, ...(optionList ?? []).map((option) => option.value)].flatMap(
+    (value) => (value.kind === "expression" ? [value.expression] : []),
+  );
 }
 
 export function checkRecalculation(
@@ -124,10 +137,16 @@ export function checkRecalculation(
   { mathEvaluator }: ValidationContext,
 ): ValidationIssue[] {
   if (studyKit.subject !== "math") return [];
-  return listComputableItem(studyKit).flatMap(({ itemId, answer, mismatchCode }) => {
-    if (!answer.computable || answer.calculationExpression === null) return [];
+  return listComputableItem(studyKit).flatMap(({ itemId, answer, optionList, mismatchCode }) => {
+    const invalidIssue = createValidationIssue("math_expression_invalid", { itemId });
+    const hasInvalidAnswerExpression = listAnswerExpression(answer, optionList).some(
+      (expression) => !mathEvaluator.evaluate(expression).ok,
+    );
+    if (!answer.computable || answer.calculationExpression === null) {
+      return hasInvalidAnswerExpression ? [invalidIssue] : [];
+    }
     const evaluated = mathEvaluator.evaluate(answer.calculationExpression);
-    if (!evaluated.ok) return [createValidationIssue("math_expression_invalid", { itemId })];
+    if (!evaluated.ok || hasInvalidAnswerExpression) return [invalidIssue];
     return mathEvaluator.equals(evaluated.value, answer.expectedAnswer)
       ? []
       : [createValidationIssue(mismatchCode, { itemId })];
