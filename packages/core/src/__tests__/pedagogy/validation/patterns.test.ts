@@ -64,6 +64,8 @@ describe("marcação proibida (spec pedagógica §8.4)", () => {
     "R$ 12,50",
     "Complete com s ou ss: pá__aro",
     "Escreva a palavra: ca__a",
+    "Complete: __ato e pe__ da mesa",
+    "Lacuna no fim: pe__",
     "Se x<y, então y>x",
     "\\(2^{3} \\times 4\\)",
   ])("não casa: %s", (text) => {
@@ -72,7 +74,7 @@ describe("marcação proibida (spec pedagógica §8.4)", () => {
 
   it.each([
     ["Esta é a **resposta**", "**"],
-    ["Isto é __importante__", "__"],
+    ["Isto é __importante__", "__importante__"],
     ["# Título", "# "],
     ["## Seção", "## "],
     ["Veja [aqui](https://x.com)", "[aqui](https://x.com)"],
@@ -154,6 +156,7 @@ describe("termos bloqueados e dica no simulado (palavra inteira)", () => {
   it("termo bloqueado casa como palavra inteira, sem acento nem maiúscula", () => {
     expect(findBlockedTermExcerpt("Que MERDA de dia")).toBe("MERDA");
     expect(findBlockedTermExcerpt("Ele é um idiota.")).toBe("idiota");
+    expect(findBlockedTermExcerpt("Que merdas!")).toBe("merdas");
   });
 
   it("dica no simulado casa frase inteira", () => {

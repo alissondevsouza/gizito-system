@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { OTHER_TOPIC_REF } from "#src/constants.ts";
+import type { QuestionBlock } from "#src/enums.ts";
 import { taxonomyTopicIdSchema } from "#src/pedagogy/taxonomy/schemas.ts";
 
 export const topicRefSchema = z.union([taxonomyTopicIdSchema, z.literal(OTHER_TOPIC_REF)]);
@@ -34,6 +35,12 @@ export const questionIdSchema = z.enum(questionIdList);
 export type QuestionId = z.infer<typeof questionIdSchema>;
 export const practiceQuestionIdSchema = z.enum(practiceQuestionIdList);
 export const mockQuestionIdSchema = z.enum(mockQuestionIdList);
+
+const practiceQuestionIdSet: ReadonlySet<string> = new Set(practiceQuestionIdList);
+
+export function questionBlockOf(questionId: QuestionId): QuestionBlock {
+  return practiceQuestionIdSet.has(questionId) ? "practice" : "mock";
+}
 
 export const workedExampleIdList = ["e1", "e2"] as const;
 export const workedExampleIdSchema = z.enum(workedExampleIdList);
