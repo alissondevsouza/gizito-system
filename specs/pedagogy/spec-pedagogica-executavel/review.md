@@ -155,3 +155,10 @@ Tudo corrigido:
 - `reasonCode` = `figure`, `orality`, `open_writing` (os de `unsupportedTopicReasonList`) + `beyond_grade`, `other_subject`, `not_a_school_topic`, no §6 e no prompt `plan`.
 - `worker.md:21` remete à regeneração por reparo.
 - §8.7 registra que `unit_missing` não roda no "outro" e o que ainda pega unidade errada nele.
+
+### Ajuste pós-rodada 3 (pedido pelo humano, 20/10/2026)
+Ao explicar a lista de figura ao humano, o orquestrador achou dois falsos positivos que a correção da rodada 3 ainda deixava passar: "Júlia parou na página 48 do livro" (o item "na página N do livro/da apostila" casava narrativa) e "Lucas pendurou o desenho ao lado da janela" (objeto visual + posição seguido de complemento). O humano pediu a correção:
+- o item de página saiu da lista; ordem de página vem com "veja/abra/consulte/copie", que já é pego;
+- objeto visual + "abaixo/acima/ao lado" não casa quando a posição é seguida de "de/da/do/das/dos";
+- as duas frases, "Ana leu até a página 30 da apostila" e "a imagem acima da porta era antiga" entram nos testes de falso positivo; o §8.4 ganhou testes obrigatórios de acerto.
+Conferido com `bun` num script fora do repositório: 11 comandos pegos, 15 frases de falso positivo sem casar. Sem verifier.
