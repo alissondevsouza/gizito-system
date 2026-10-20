@@ -39,6 +39,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [0008](engineering/adr/0008-fila-propria-skip-locked.md) | Fila própria com `FOR UPDATE SKIP LOCKED` em vez de pg-boss, decidida pelo spike de F0-06 | aceito (lock substituído pelo 0009) | 2026-10-15 |
 | [0009](engineering/adr/0009-lease-renovado-e-compensacao.md) | Lease curto renovado, teto por execução e compensação atômica do job esgotado | aceito | 2026-10-19 |
 | [0010](engineering/adr/0010-pipeline-pedagogico-deterministico.md) | Pipeline pedagógico com regras no core, fotos só na extração e regeneração por reparo | aceito | 2026-10-19 |
+| [0011](engineering/adr/0011-anthropic-como-provedor-de-ia.md) | Anthropic como provedor de IA na F1, com adaptador por `Result`, saída estruturada e custo em centavos de dólar | aceito | 2026-10-20 |
 
 > Para criar um novo ADR: copie `engineering/adr/_template.md` → `engineering/adr/NNNN-titulo.md` e adicione a linha aqui.
 

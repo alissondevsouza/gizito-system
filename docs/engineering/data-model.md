@@ -1,6 +1,6 @@
 # Modelo de dados
 
-**Versão:** 1.3 · **Data:** 2026-10-19 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
+**Versão:** 1.4 · **Data:** 2026-10-20 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
 
 PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolamento é por pedido, e toda leitura pública passa pelo `public_token`.
 
@@ -17,6 +17,7 @@ PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolame
 - Colunas `jsonb` usam a coluna própria de `src/schema/jsonb.ts`, nunca o `jsonb` do `drizzle-orm`: com o driver `bun-sql` ele grava string JSON em vez de objeto (lessons de 2026-10-15). O teste de convenções exige a coluna própria e os testes de integração leem `jsonb_typeof`.
 - FKs para `order` são `ON DELETE RESTRICT` (o pedido nunca é apagado; remoção LGPD anonimiza, §5); `kit.superseded_by_kit_id` é `ON DELETE SET NULL`.
 - Checks no banco: `amount_cents > 0`; `whatsapp_phone` e `whatsapp_consent_datetime` nulos ou preenchidos juntos; `topic_id_list` é array e, somado ao "outro", cobre até `MAX_TOPIC_COUNT` assuntos; `notification.order_id` nulo só na ajuda do WhatsApp; `recipient_hash` com 64 hex; `legibility_score` em 0–1; `width`, `height` e `page_count_*` > 0; contagens de tokens, `cost_cents` e `duration_ms` ≥ 0.
+- `ai_call.cost_cents` é em **centavos de dólar**, a moeda da fatura do provedor de IA (ADR-0011); `input_token_count` soma os tokens sem cache, os escritos e os lidos do cache. Comparação com valores em reais (preço do kit, metas de custo) converte no relatório.
 
 ## 2. Diagrama
 
@@ -209,4 +210,5 @@ Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `l
 - **1.0 (2026-10-15):** versão inicial (F0-03). Colunas `kit.delete_datetime` e `charge.refund_datetime` e índices derivados das rules; a migration 0001 (F0-05) é a implementação.
 - **1.1 (2026-10-15):** F0-05 implementa o modelo em `packages/db/drizzle/0000_fundacao.sql` (numeração nativa do drizzle-kit: a "migration 0001" da 1.0 é esta); convenções de trigger, `onDelete` e checks acrescentadas em §1; `ai_call.cost_cents` é `numeric(12,6)` lido como número.
 - **1.2 (2026-10-15):** F0-06 acrescenta a tabela `job` (diagrama, índices, o que não guarda), a convenção da coluna `jsonb` própria e as assinaturas reais de `markOrderPaidAndEnqueue` e `publishKit` em §6.
+- **1.4 (2026-10-20):** F1-05: `ai_call.cost_cents` em centavos de dólar e `input_token_count` com os tokens de cache (§1, ADR-0011).
 - **1.3 (2026-10-19):** revisão da F0 (migration `0002_revisao_f0`): índices parciais da `job`; unique de `(gateway, gateway_order_id)`; índices de `whatsapp_phone` e `content_hash`; check de `topic_id_list` contando o "outro"; `notification` com `recipient_hash`, `order_id` nulo só na ajuda e unique por destinatário; timeouts do pool em §6.

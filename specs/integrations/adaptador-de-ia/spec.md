@@ -136,9 +136,9 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` no pacote; no fim d
 - [x] 3.3 `anthropic-live.test.ts` e script `test:ai-live` (RF-07)
 
 ### M4 — Fechamento
-- [ ] 4.1 Exportações, ADR-0011, `data-model.md`, `CLAUDE.md`, roadmap (RF-08)
-- [ ] 4.2 `bun run lint`, `typecheck`, `test`, `build` na raiz
-- [ ] 4.3 `bun run test:pedagogy`: não existe até a F1-10 (known-issues)
+- [x] 4.1 Exportações, ADR-0011, `data-model.md`, `CLAUDE.md`, roadmap (RF-08)
+- [x] 4.2 `bun run lint`, `typecheck`, `test`, `build` na raiz
+- [x] 4.3 `bun run test:pedagogy`: não existe até a F1-10 (known-issues)
 - [ ] 4.4 Revisão neutra (`review.md`)
 
 ## Decisões
@@ -152,4 +152,4 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` no pacote; no fim d
 | 2026-10-20 | Streaming em toda chamada | a geração pode passar de 30.000 tokens de saída com o raciocínio; o streaming evita o timeout HTTP |
 
 ## Status
-M1 em andamento.
+M1 a M4 implementados. Lint, typecheck, build e `bun run test` verdes na raiz (core 710, integrations 317 + 16 pulados do teste real, db 98, api 25, worker 21). O `test:ai-live` falha de propósito sem as chaves da IA no `.env` (lista as que faltam). Próximo: revisão neutra (4.4). Pendências do humano: conta Anthropic com limite de gasto, as chaves no `.env` e no `.env.example` (bloqueado para o agente) e rodar `bun run --cwd packages/integrations test:ai-live`.

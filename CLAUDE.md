@@ -38,6 +38,7 @@ bun run build | lint | typecheck | format
 bun run test                             # unit do monorepo (bun test no backend, Vitest no web)
 bun run test:integration                 # dentro do workspace; Postgres real via Docker
 bun run test:pedagogy                    # raiz; 40 casos; exige chave de IA; fora do CI
+bun run --cwd packages/integrations test:ai-live  # contrato real do AiProvider; lê o .env da raiz; custa centavos; fora do CI
 bun run db:generate --filter=@gizito/db  # migration
 bun run db:migrate --filter=@gizito/db
 docker compose up -d | down              # Postgres, Redis, Evolution API
