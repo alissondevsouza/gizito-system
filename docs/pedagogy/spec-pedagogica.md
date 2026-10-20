@@ -1,8 +1,8 @@
-# Spec pedagógica executável — v1.0
+# Spec pedagógica executável — v1.1
 
 > Contrato que as features F1-03 a F1-08 e F1-10 implementam, a partir do PRD 1.3 §6–7, do design doc 1.6 §5.2, §6.3 e §9 e de `docs/engineering/jobs.md` §2. Prompts v1 em [`prompts-v1.md`](prompts-v1.md); assuntos e assuntos ainda não atendidos em [`taxonomia.md`](taxonomia.md), gerado do core.
 >
-> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
+> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). A 1.1 registra as precisões da F1-03; as duas do §15.6 aguardam o aval do humano. Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
 
 Leia a seção que a sua feature toca (§14 diz qual).
 
@@ -81,12 +81,14 @@ O bloco "O que entendi do material" da prévia (design doc §6.3) é montado na 
 
 `mergePhotoExtractionList(photoExtractionList, { grade, subject })`:
 
-1. **Descartar** candidato cujo `topicId` não passa em `isSelectableTopic(topicId, grade, subject)` (aviso interno `extraction_unknown_topic`), id não atendido que não existe ou é de outra disciplina (`extraction_unknown_unsupported_topic`) e item de `evidence`, `terminologyList` ou `contextThemeList` que casa com os padrões de dado pessoal do §8.4 (`extraction_personal_data_dropped`). Esses avisos são métricas; o responsável não os vê.
+1. **Descartar** candidato cujo `topicId` não passa em `isSelectableTopic(topicId, grade, subject)` (aviso interno `extraction_unknown_topic`), id não atendido que não existe ou é de outra disciplina (`extraction_unknown_unsupported_topic`) e item de `terminologyList` ou `contextThemeList` que casa com os padrões de dado pessoal do §8.4 (`extraction_personal_data_dropped`). Candidato cuja `evidence` casa com esses padrões fica, com a `evidence` trocada por um texto fixo (`EVIDENCE_DROPPED_TEXT`, mesmo aviso): o assunto continua na prévia e o dado não chega ao cache. Esses avisos são métricas, vêm de toda foto com saída válida, utilizável ou não, e o responsável não os vê. O passo é a função `sanitizePhotoExtraction`, idempotente, que a F1-06 aplica antes de guardar o resultado em cache e a junção aplica de novo por dentro.
 2. **Foto utilizável** = `legibility` diferente de `unreadable` e `isSchoolMaterial`. Foto não utilizável não contribui com candidato, não atendido nem perfil.
-3. **Candidatos:** união por `topicId`; `confidence` `high` se alguma foto deu `high`; `photoIndexList` com as fotos (1 a N) em que aparece. Ordem: mais fotos, depois `high` antes de `medium`, depois a primeira foto em que aparece, depois a ordem de `listTopics`. Corte em `MAX_TOPIC_CANDIDATE_COUNT`.
+3. **Candidatos:** união por `topicId`; `confidence` `high` se alguma foto deu `high`; `photoIndexList` com as fotos (1 a N) em que aparece. Ordem: mais fotos, depois `high` antes de `medium`, depois a primeira foto em que aparece, depois a posição do assunto na lista dessa foto (a ordem de relevância do §3.1), depois a ordem de `listTopics`. Corte em `MAX_TOPIC_CANDIDATE_COUNT`. A posição na foto é precisão da F1-03 pendente do aval do humano (§15.6).
 4. **Não atendidos e avisos:** união, cada um com `photoIndexList`.
 5. **Perfil:** listas unidas na ordem da primeira aparição, sem repetição (sem diferença de maiúsculas), cortadas nos limites; `apparentLevel` é o mais frequente entre as fotos utilizáveis (empate → `at_grade`); `hasFigures` e `isHandwritten` são verdadeiros se alguma foto utilizável for; em Língua Portuguesa, `notationList` fica vazia.
-6. **`legibility_score`** de cada `order_photo`: `LEGIBILITY_SCORE_MAP` (*nova*): `good` 1, `partial` 0,5, `unreadable` 0.
+6. **`legibility_score`** de cada `order_photo`: `LEGIBILITY_SCORE_MAP` (*nova*): `good` 1, `partial` 0,5, `unreadable` 0; `null` para a foto cuja saída de modelo ficou inválida (nada foi medido), que entra na junção como `null`.
+
+O resultado juntado tem schema no core (`mergedExtractionSchema`), para a F2-02 persistir e reler sem schema próprio.
 
 `decidePreviewOutcome(mergedExtraction)`:
 
@@ -197,7 +199,7 @@ O modelo devolve só conteúdo; ano, assunto, dificuldade, tipo, bloco e texto-b
 | `mockSuggestedMinutes`, `studyTip` | §7.1 |
 | `qualityCheckList` | `ValidationIssue[]` só com `severity: "warning"` (kit publicado nunca tem bloqueador) |
 
-**Formato de exibição** (`formatExpectedAnswer`, core, F1-03), usado pelo render para alternativas de Matemática e respostas do gabarito: `number` em pt-BR (vírgula decimal, ponto de milhar) com a unidade depois, separada por espaço, salvo `R$`, que vem antes; `fraction` como `\(\frac{n}{d}\)`, com a unidade depois; `set` com os valores unidos por "; " (a vírgula é decimal); `text` como está. `expression` fica no dado na sintaxe do mathjs (ponto decimal, `*` explícito) e o render a escreve em LaTeX pela conversão que o adaptador do mathjs expõe (F1-04).
+**Formato de exibição** (`formatExpectedAnswer`, core, F1-03), usado pelo render para alternativas de Matemática e respostas do gabarito: `number` em pt-BR (vírgula decimal, ponto de milhar) com a unidade depois, separada por espaço (inclusive `%` e `°C`: `25 %`, `25 °C`), salvo `R$`, que vem antes e leva sempre duas casas (`R$ 12,50`, `R$ 7,00`); `fraction` como `\(\frac{n}{d}\)`, com a unidade depois; `set` com os valores unidos por "; " (a vírgula é decimal); `text` como está. `expression` fica no dado na sintaxe do mathjs (ponto decimal, `*` explícito) e o render a escreve em LaTeX pela conversão que o adaptador do mathjs expõe (F1-04).
 
 **`kitRepairSchema`** (saída do `generate` em modo reparo): as mesmas listas do `kitContentSchema` (`reviewSectionList`, `workedExampleList`, `baseTextList`, `practiceQuestionList`, `mockQuestionList`), cada uma só com os itens pedidos (pode ser vazia) e os mesmos schemas de item; sem `mockSuggestedMinutes` e `studyTip`. A composição confere que os ids devolvidos são exatamente os pedidos; diferente é `kit_slot_mismatch`.
 
@@ -268,7 +270,8 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
   - comando para material da criança: "veja", "abra", "consulte" ou "copie" seguido de "o livro", "a apostila", "o caderno", "seu livro", "sua apostila" ou "seu caderno". Página sozinha não bloqueia, nem "na página 48 do livro": quando é ordem, vem com um desses verbos ("abra o livro na página 12").
   - Testes de falso positivo obrigatórios (não podem casar): "observe a tabela", "observe o trecho", "observe a frase", "observe o verso", "figura de linguagem", "imagem poética", "quantos lados há na figura descrita", "Júlia leu 15 páginas do seu livro por dia", "parou na página 48", "Júlia parou na página 48 do livro", "Ana leu até a página 30 da apostila", "usou 12 folhas do seu caderno", "comprou 3 pacotes de figurinhas", "Lucas pendurou o desenho ao lado da janela", "a imagem acima da porta era antiga".
   - Testes obrigatórios de acerto (têm que casar): "Observe a figura abaixo", "Na figura abaixo, quantos lados há?", "A figura ao lado mostra um triângulo", "Veja o gráfico", "Abra o livro na página 12", "Consulte seu caderno".
-- **Marcação proibida:** aplicada fora dos trechos `\( \)`, com os padrões: `**` ou `__` colados a uma letra (`(?<=\p{L})(\*\*|__)|(\*\*|__)(?=\p{L})`), `#` seguido de espaço no início de linha, link `[texto](endereço)`, crase, tag `</?[a-z][a-z0-9]*[^<>]*>` e emoji por `\p{Extended_Pictographic}`. Testes de falso positivo obrigatórios: lacuna "O gato ______ no telhado", "use <, > ou =", "3 < 5 e 7 > 2", "25 °C", números e "R$ 12,50".
+- **Marcação proibida:** aplicada fora dos trechos `\( \)`, com os padrões: `**` colado a uma letra (`(?<=\p{L})\*\*|\*\*(?=\p{L})`), `__` só como negrito de uma palavra (`(?<![\p{L}\p{N}_])__[\p{L}\p{N}]+__(?![\p{L}\p{N}_])`, pendente do aval do humano, §15.6), `#` seguido de espaço no início de linha, link `[texto](endereço)`, crase (`` ` ``), tag com nome seguido de `>`, `/>` ou espaço (`<\/?[a-z][a-z0-9]*(?:\s[^<>]*)?\/?>`) e emoji por `\p{Extended_Pictographic}`. Testes de falso positivo obrigatórios: lacuna "O gato ______ no telhado", lacuna de letra "ca__a", "__ato", "pe__", "use <, > ou =", "3 < 5 e 7 > 2", "Se x<y, então y>x", "25 °C", números e "R$ 12,50".
+- **Comparação de texto em Português** (alternativas, `option_duplicate`, `distractor_equivalent`, `correct_option_mismatch`): só espaços normalizados (NFC, espaços colapsados, aparado), mantendo acento, maiúscula e pontuação, porque questões de acentuação, maiúscula e pontuação têm alternativas que só diferem nisso. `evidence_quote_not_found` procura a citação sem aspas nem espaços nas pontas, com aspas curvas trocadas pelas retas e espaços colapsados, nos parágrafos unidos por espaço.
 - **Descrição para o reparo:** todo código determinístico tem uma frase pt-BR fixa em `validationIssueDescriptionMap` (core) dizendo o que corrigir; a linha de reparo leva a frase e o `excerpt`.
 - **Dica no simulado** e **termos bloqueados:** listas no core, casadas como palavra inteira depois de `normalizeKeywordText`.
 
@@ -333,6 +336,8 @@ O revisor recebe o kit em duas folhas, questões primeiro e gabarito depois, e r
 | `kit` | `generate` completo com o mesmo plano, validação e revisão completas |
 | `item` | `generate` em modo reparo só com os itens marcados (questões, exemplos, seções de revisão por assunto e textos-base; texto-base marcado leva junto as questões que o citam) e a lista `{ itemId, código, nota da revisão }`; a composição troca esses itens; validação do kit inteiro; revisão só dos itens refeitos, juntada à anterior. Mais de `MAX_REPAIR_ITEM_COUNT` (*nova*, 8) itens vira `kit` |
 | `não` | `generation_failed`, sem gastar a regeneração: `fail_reason_code` = `other_topic_unfeasible` para o "outro" inviável e `generation_blocked` para os códigos de defesa |
+
+A decisão é a função `decideRepair` do core (F1-03). Bloqueador de reparo `item` sem item (`itemId: null`: só a dica do mascote e o rótulo do "outro", que não estão no schema de reparo) sobe para `plano`, que refaz o rótulo e o kit. Códigos de render não entram na decisão: o render tem a própria segunda tentativa (§8.6).
 
 Bloqueador depois da regeneração → `generation_failed`: `ai_output_invalid` (saída inválida), `generation_blocked` (bloqueador de validação ou revisão), `ai_cost_exceeded` (teto `MAX_AI_COST_CENTS_PER_ORDER`, conferido antes de cada chamada; valor definido na F1-07 com o custo medido) ou `render_failed`.
 
@@ -440,7 +445,7 @@ A mesma rubrica serve à auditoria amostral semanal em produção (PRD §7.6).
 
 | Feature | Lê | Implementa |
 |---|---|---|
-| F1-03 `schemas-e-validacoes-do-kit` | §2–§11 | schemas (`photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema` e reparo, `studyKitSchema`, `reviewResultSchema`, `validationIssueSchema`), mapas de rótulo, `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `listAnswerKey`, `formatExpectedAnswer`, `validationIssueDescriptionMap`, `validateStudyKit` (com `MathEvaluator` injetado), `interpretReview`, padrões e listas do §8.4, constantes do §11, rótulos pt-BR (`exerciseFormatLabelMap`, `notationLabelMap`, `difficultyLabelMap`, `perceivedDifficultyLabelMap`, `questionBlockLabelMap`) para a prévia e os placeholders; uma fixture válida e uma inválida por código |
+| F1-03 `schemas-e-validacoes-do-kit` | §2–§11 | `sanitizePhotoExtraction`, `mergedExtractionSchema`, `applyKitRepair`, `decideRepair`; schemas (`photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema` e reparo, `studyKitSchema`, `reviewResultSchema`, `validationIssueSchema`), mapas de rótulo, `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `listAnswerKey`, `formatExpectedAnswer`, `validationIssueDescriptionMap`, `validateStudyKit` (com `MathEvaluator` injetado), `interpretReview`, padrões e listas do §8.4, constantes do §11, rótulos pt-BR (`exerciseFormatLabelMap`, `notationLabelMap`, `difficultyLabelMap`, `perceivedDifficultyLabelMap`, `questionBlockLabelMap`) para a prévia e os placeholders; uma fixture válida e uma inválida por código |
 | F1-04 `avaliador-matematico` | §7.1, §8.2 | `MathEvaluator.evaluate` e `equals` com unidade, fração, tolerância e expressão; conversão de `expression` para LaTeX, usada pelo render |
 | F1-05 `adaptador-de-ia` | §1 | `AiProvider` real com o JSON Schema da etapa e `usage` |
 | F1-06 `pipeline-extracao` | §1, §3, `prompts-v1.md` | prompt `extract` v1, chamada por foto, cache com expiração, chamada de `mergePhotoExtractionList` e `decidePreviewOutcome` da F1-03 (por isso depende da F1-03) |
@@ -460,6 +465,11 @@ Propostas desta spec que interpretam o PRD ou o design doc, aprovadas pelo human
 4. **Avisos em vez de bloqueadores:** `expression_number_not_in_statement` e `non_computable_excess` (§8.2), pelos motivos da tabela. A regressão mede quantas vezes disparam e pode promovê-los.
 5. **Textos que faltam no design doc §5.2:** (a) material legível de outra disciplina ou de outro ano (`no_topic_found` com `subject_mismatch` ou `grade_mismatch`), antes com o texto de foto ilegível; aprovado: "Não encontrei nesta matéria um assunto de {disciplina} do {ano}. Confere o ano e a disciplina?"; (b) `lp-essay-writing` tem motivo `open_writing`, e o texto "porque depende de imagem ou de fala" não serve para redação; aprovado: "Ainda não consigo preparar {assunto}, porque é produção de texto que precisa de correção. O kit sai com os outros assuntos." Os dois textos entraram no design doc 1.6 §5.2.
 
+6. **Pendentes do aval do humano (F1-03, 20/10/2026).** Implementados assim; voltar atrás é uma linha no core e um teste.
+   - Ordem dos candidatos (§3.3, passo 3): a posição do assunto na lista da foto entra antes da ordem de `listTopics`. Sem ela, numa prévia de uma foto só, a relevância que o modelo deu seria trocada pela ordem da taxonomia, e a ordem decide quais assuntos ganham questões a mais (ponto 3).
+   - Padrão `__` (§8.4): só negrito de uma palavra. O padrão aprovado (`__` colado a uma letra) bloquearia lacuna de letra em ortografia ("ca__a", "__ato", "pe__") depois do Pix; negrito de várias palavras com `__` passa, e o render escapa o texto de qualquer jeito (§8.6).
+
 ## 16. Histórico
 
+- **1.1 (20/10/2026):** precisões da F1-03: `evidence` com dado pessoal trocada por texto fixo em vez de descartar o candidato, `sanitizePhotoExtraction` e `mergedExtractionSchema` (§3.3); `R$` com duas casas (§7.2); comparação de texto em Português e da citação, tag HTML mais precisa e falsos positivos novos (§8.4); `decideRepair` e bloqueador de item sem item subindo para `plano` (§10, §14); pendentes do aval: ordem dos candidatos e padrão `__` (§15.6).
 - **1.0 (19/10/2026):** versão inicial (F1-02), aprovada pelo humano em 20/10/2026 com os pontos do §15.

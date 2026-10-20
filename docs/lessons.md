@@ -6,6 +6,10 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-20] Zod 4: fábrica genérica de schema perde o tipo dentro do `refine` — F1-03
+
+Uma função `schemaOf<TShape>(shape: TShape)` que devolve `z.strictObject({ ...shape }).refine(fn)` não compila: dentro da fábrica o tipo de saída fica `$InferObjectOutput<... & TShape>`, que o TypeScript não resolve, e nenhuma função de `refine` com parâmetro estrutural é aceita. Funciona escrever os schemas por extenso (um por disciplina e por bloco), compartilhando os *shapes* como objetos e as funções de `refine` com parâmetro estrutural (`{ optionList: readonly unknown[] | null; ... }`). O mesmo vale para generics sobre listas de união (`MathStudyQuestion[] | PortugueseStudyQuestion[]`): tipar o parâmetro pelo que a função lê (`readonly { readonly [key in K]: string }[]`), nunca com `as`.
+
 ## [2026-10-19] Pino roda `formatters.log` antes dos serializers e não formata bindings de filho; TanStack manda o erro do loader no HTML — revisão da F0 (M5)
 
 No Pino 10.4, `formatters.log` recebe o objeto **antes** de `serializers`; por isso a máscara do `createLogger` deixa a chave `err` para o `serializers.err` e serializa `Error` nas outras chaves. Bindings de `logger.child({...})` não passam pelo formatter (o `redact` antigo cobria): o `createLogger` envolve o `child` para mascará-las. No TanStack Start, o `errorComponent` da raiz não vale para rotas filhas no SSR (vale o `defaultErrorComponent` do router), e o `Error` lançado num loader vai serializado no payload do HTML mesmo com a página de erro própria: loaders lançam erro com mensagem neutra, nunca com dado do pedido.
