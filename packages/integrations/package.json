@@ -12,7 +12,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "test:ai-live": "AI_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/ai/anthropic-live.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

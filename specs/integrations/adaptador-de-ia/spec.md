@@ -131,9 +131,9 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` no pacote; no fim d
 - [x] 2.3 `image.ts` com testes (RF-04)
 
 ### M3 — Adaptador, fake e contrato
-- [ ] 3.1 `anthropic-provider.ts` com testes de `fetch` injetado e SSE (RF-05)
-- [ ] 3.2 `fake-ai-provider.ts` e suíte de contrato no fake (RF-06, RF-07)
-- [ ] 3.3 `anthropic-live.test.ts` e script `test:ai-live` (RF-07)
+- [x] 3.1 `anthropic-provider.ts` com testes de `fetch` injetado e SSE (RF-05)
+- [x] 3.2 `fake-ai-provider.ts` e suíte de contrato no fake (RF-06, RF-07)
+- [x] 3.3 `anthropic-live.test.ts` e script `test:ai-live` (RF-07)
 
 ### M4 — Fechamento
 - [ ] 4.1 Exportações, ADR-0011, `data-model.md`, `CLAUDE.md`, roadmap (RF-08)
