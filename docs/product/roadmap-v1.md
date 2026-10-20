@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 2 | 0 | 9 |
+| F1 Prova técnica e pedagógica | 11 | 3 | 0 | 8 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -133,7 +133,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 2 de 11 concluídas
+**Estado:** em andamento · 3 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -143,10 +143,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `docs/pedagogy/`: schema do kit campo a campo, regras de validação com severidade e código, formato dos casos de teste, prompts v1 em texto, critério de homologação; lista de assuntos ainda não atendidos com id e como a extração e o “outro” os reconhecem (PRD 7.7)
   - Pronto quando: aprovada por você; é a spec de F1-03 a F1-07
   - Concluída em: 20/10/2026. `docs/pedagogy/spec-pedagogica.md` 1.0 (contratos, alocação das questões no core, validações com código, severidade e reparo, regeneração por reparo, casos, homologação e o que cada feature implementa no §14) e `docs/pedagogy/prompts-v1.md`; assuntos ainda não atendidos com id, palavras do “outro” e `findUnsupportedTopicList` no core, publicados em `taxonomia.md`; ADR-0010 aceito. Aprovada por você com os cinco pontos do §15 (metas do gate, dificuldade percebida, relevância pela ordem da prévia, dois avisos e dois textos que entraram no design doc 1.6). Três rodadas de revisão neutra, todas reprovadas e corrigidas; as correções da terceira não passaram por verifier e os padrões de texto são provados pelos testes da F1-03. Sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-03 `schemas-e-validacoes-do-kit` — em andamento** — core · L · depende: F1-02 · `specs/core/schemas-e-validacoes-do-kit/`
+- [x] **F1-03 `schemas-e-validacoes-do-kit`** — core · L · depende: F1-02 · 20/10/2026 · `3641d79` · `specs/core/schemas-e-validacoes-do-kit/`
   - Entrega: o que `docs/pedagogy/spec-pedagogica.md` §14 atribui à F1-03: `photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema`, `studyKitSchema`, `reviewResultSchema`; `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `validateStudyKit` com contagens, cobertura, dificuldade, duplicatas, alternativas, dependência de figura, dado pessoal, e `interpretReview`
   - Pronto quando: cada regra com teste e fixture válida e inválida
-  - Feito até agora (20/10/2026): implementada na branch `feat/core/schemas-e-validacoes-do-kit`, com uma fixture válida e uma inválida por código, as tabelas da spec pedagógica como teste e os falsos positivos do §8.4; spec pedagógica 1.1 com as precisões. Revisão neutra REPROVADO na rodada 1 (três bloqueadores falsos corrigidos) e APROVADO na rodada 2; você aprovou o §15.6 da spec pedagógica 1.1 e `%`/`°` colados ao número em 20/10/2026. Falta o merge. Sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
+  - Concluída em: 20/10/2026. Schemas de cada etapa e do kit publicado, junção da extração, decisão da prévia, alocação das 20 vagas, validação do plano, composição, gabarito e formato das respostas, validações por código com severidade e reparo fixos, interpretação da revisão e decisão do reparo, com uma fixture válida e uma inválida por código, as tabelas da spec pedagógica como teste e os falsos positivos do §8.4. Core com 689 testes. Spec pedagógica 1.1 com as precisões do §15.6, aprovadas por você com `%` e `°` colados ao número. Revisão neutra reprovada na rodada 1 (três bloqueadores falsos) e aprovada na rodada 2. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
 - [ ] **F1-04 `avaliador-matematico`** — integrations · P · depende: F1-03
   - Entrega: `MathEvaluator` com mathjs: expressões, frações simplificadas, unidades, tolerância, equivalência entre alternativas
   - Pronto quando: casos: fração equivalente, decimal vs fração, unidade errada, distratores iguais
