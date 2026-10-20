@@ -112,7 +112,7 @@ describe("findUnsupportedTopicList (reconhecimento do “outro”)", () => {
     expect(idListOf("interpretação de HQ", "portuguese")).toEqual(["lp-image-genres"]);
     expect(idListOf("Redação", "portuguese")).toEqual(["lp-essay-writing"]);
     expect(idListOf("produção de texto narrativo", "portuguese")).toEqual(["lp-essay-writing"]);
-    expect(idListOf("modos verbais na produção de textos", "portuguese")).toEqual([]);
+    expect(idListOf("produção de textos", "portuguese")).toEqual(["lp-essay-writing"]);
     expect(idListOf("seminário sobre o meio ambiente", "portuguese")).toEqual(["lp-orality"]);
     expect(idListOf("simetria", "math")).toEqual(["ma-grid-symmetry"]);
     expect(idListOf("figuras na malha quadriculada", "math")).toEqual(["ma-grid-scaling"]);
@@ -132,8 +132,8 @@ describe("findUnsupportedTopicList (reconhecimento do “outro”)", () => {
     expect(idListOf("reflexão sobre o texto", "portuguese")).toEqual([]);
   });
 
-  it("rótulo e descrição de assunto atendido não disparam a recusa (exceto a simetria do 7º ano, decisão da F1-02)", () => {
-    const acceptedCollisionIdList = ["ma7-cartesian-symmetry"];
+  it("rótulo e descrição de assunto atendido só disparam a recusa nas colisões aceitas na F1-02", () => {
+    const acceptedCollisionIdList = ["ma7-cartesian-symmetry", "lp7-verb-moods"];
     const collisionIdList = taxonomyTopicList
       .filter(
         (topic) =>

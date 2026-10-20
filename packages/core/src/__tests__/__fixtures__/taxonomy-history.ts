@@ -191,7 +191,7 @@ export const publishedTaxonomyList: readonly PublishedTaxonomy[] = [
       "lp7-punctuation",
       "lp7-linguistic-variety",
     ],
-    unsupportedFingerprint: "fa59a662d139e8c7a4d3d216d70149b08549d9e85ff1038964e2c4cab53e9b5d",
+    unsupportedFingerprint: "9e2c7f77c967229ba9ab3e24bf4945a1654f977dfb602fb13f8fb35e9198ed09",
     unsupportedTopicIdList: [
       "ma-grid-symmetry",
       "ma-grid-scaling",

@@ -15,6 +15,7 @@ paths:
 ## Técnica
 - HTML/CSS com templates em `src/render/templates/`; fontes embutidas (família primária do design doc), sem download em runtime.
 - Fórmulas e frações via KaTeX renderizado no servidor (`renderToString`), CSS do KaTeX embutido. Nunca MathJax no cliente nem imagens de fórmula.
+- Todo texto do kit entra escapado; só os trechos entre `\(` e `\)` passam pelo KaTeX. Nenhum texto vindo do modelo vira HTML.
 - Playwright com browser compartilhado e `page.pdf({ format: "A4", printBackground: false })`; timeout por render; semáforo de concorrência (`RENDER_CONCURRENCY`).
 - Simulado com cabeçalho de prova (nome, data, tempo sugerido), numeração própria e espaço de resposta padronizado; questões abertas com linhas; Matemática com espaço de cálculo.
 - Gabarito começa em página nova, na ordem dos blocos, com a justificativa e as etapas essenciais.

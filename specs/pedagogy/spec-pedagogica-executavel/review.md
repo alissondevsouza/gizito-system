@@ -1,9 +1,9 @@
 ---
 feature: F1-02 spec-pedagogica-executavel
 module: pedagogy
-round: 1
+round: 2
 verdict: REPROVADO
-updated: 2026-10-19
+updated: 2026-10-20
 ---
 
 # Review: F1-02 spec-pedagogica-executavel
@@ -76,3 +76,45 @@ Corrigidos:
 Contestados ou levados ao humano:
 - `expression_number_not_in_statement` e `non_computable_excess` seguem avisos: número por extenso ("três", "metade") e geometria conceitual dariam falso bloqueador, e a interpretação errada já é bloqueada pela revisão (roadmap, tabela de riscos). Decisão registrada e posta para aprovação no §15 da spec pedagógica; a regressão pode promovê-los.
 - Textos de `no_topic_found` com disciplina ou ano trocado e de `lp-essay-writing` são mudança de design doc: propostas no §15, sem alterar o design doc antes da decisão do humano.
+
+## Rodada 2 (revalidação dos pontos corrigidos, diff `1d820dd..137dd8a`)
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `git diff 1d820dd..137dd8a` | lido inteiro (15 arquivos) |
+| `bun test src/__tests__/pedagogy/taxonomy` (core) | 63 pass, 0 fail |
+| `bun -e` com `findUnsupportedTopicList` | "produção de textos" → `[]`; "produção textual" e "redação" → `lp-essay-writing` |
+
+### Critérios de aceite
+| RF | Atendido | Evidência |
+|---|---|---|
+| RF-05 | sim, com o defeito novo do §8.3 | §8.1 coerente com o §6 |
+| RF-06 | sim | sem número de produto nos blocos de prompt; `<plano>` marcado |
+| RF-08 | sim, com resto | `worker.md:26-32` coerente; linha 33 contradiz o §10 |
+
+Resolvidos, conferidos pelo verifier: os 3 CRÍTICOs da rodada 1, `review_kit_` e precedência, `kitRepairSchema`, `formatExpectedAnswer`, normalização de `independentAnswer`, `extraction_output_invalid`, extração sem refinamento, dependência F1-06 → F1-03, par de fingerprints, teste de colisão, expiração do cache, ADR-0010, Decisões e Status. Os dois pontos contestados se sustentam (PRD §7.3 exige recálculo só nas `computable`; textos do design doc são decisão do humano).
+
+### Achados
+- [CRÍTICO] `docs/pedagogy/spec-pedagogica.md:249` — a correção trocou "observe a figura" por "observe" sozinho no `figure_reference` (bloqueador) — casa com "observe a tabela" e "observe o trecho", que o próprio prompt pede; bloqueador falso gasta a regeneração — listar só expressões com o objeto ausente e pôr exceções testadas no §8.4; conferir "a imagem" ("imagem poética").
+- [ALERTA] spec §2 e §8.3 — conteúdo proibido saiu do Zod, mas `markup_forbidden` ficou aviso e nada exige escapar o texto no render — bloqueador com reparo `item` ou regra de escape no §8.6 e no `pdf-render.md`.
+- [ALERTA] `.claude/rules/worker.md:33` — "bloqueador em qualquer etapa usa a regeneração" contradiz o reparo `não` e a segunda tentativa própria do render.
+- [ALERTA] `docs/engineering/jobs.md:89` e `:44` — `ai_output_invalid` ainda cita `studyKitSchema`; `generation_blocked` sem os códigos de defesa; fluxograma sem o ramo `F → X` da defesa.
+- [ALERTA] `.claude/rules/ai-pipeline.md:13` — `generationVersion` "no kit e em `ai_call`" contradiz o §1 (`ai_call.prompt_version` com a versão da etapa).
+- [ALERTA] `unsupported.ts` — tirar "producao de textos" deixou passar a forma plural, nome BNCC da prática; o `plan` não tem `reasonCode` para escrita livre.
+- [SUGESTÃO] spec §8.7 — dizer quais códigos dependem da regra do assunto.
+
+### Regressão pedagógica
+Pendente, como na rodada 1.
+
+### Resposta do orquestrador
+Corrigido depois da rodada 2 (`fix` seguinte a `137dd8a`):
+- CRÍTICO: `figure_reference` lista só expressões com verbo ou posição junto do objeto ausente; "observe" e "imagem" sozinhos nunca casam; exceções explícitas no §8.4 ("observe a tabela/o texto/o trecho/a frase/o verso/a palavra", "figura de linguagem", "imagem poética"), cada uma com teste de falso positivo na F1-03; o prompt `generate` diz que pode pedir para observar a tabela ou um trecho do texto-base.
+- `markup_forbidden` vira bloqueador com reparo `item`, e o §8.6 e o `pdf-render.md` passam a exigir que todo texto do kit entre escapado, com só os trechos `\( \)` pelo KaTeX.
+- `worker.md:33` restrito a plano, validação e revisão, citando o reparo `não` e a tentativa própria do render.
+- `jobs.md`: `ai_output_invalid` com os schemas de cada etapa; `generation_blocked` com os códigos de defesa; ramo `F → X` no fluxograma.
+- `ai-pipeline.md`: `generationVersion` no kit, versão da etapa em `ai_call.prompt_version`.
+- "producao de textos" volta à lista; o teste de colisão aceita `lp7-verb-moods` como colisão documentada (decisão no `spec.md`); `open_writing` entra no `reasonCode` do `plan` e no prompt.
+- §8.7 diz que só `unit_missing` depende da regra.
+
+Teto de 2 rodadas atingido (`gizito-spec-driven`): estas correções não passaram por verifier neutro. Escalado ao humano.

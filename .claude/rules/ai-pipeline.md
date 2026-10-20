@@ -10,7 +10,7 @@ paths:
 Contratos, códigos de validação e texto dos prompts v1: `docs/pedagogy/spec-pedagogica.md` e `docs/pedagogy/prompts-v1.md`. Este arquivo resume; em conflito, vale a spec.
 
 ## Prompts
-- Vivem em `apps/worker/src/pipeline/prompts/{stage}/v{N}.ts` (`extract`, `plan`, `generate`, `review`). Nunca editar uma versão publicada: criar `v{N+1}` e apontar a configuração. `generationVersion` = conjunto de versões usadas, gravado no kit e em `ai_call`.
+- Vivem em `apps/worker/src/pipeline/prompts/{stage}/v{N}.ts` (`extract`, `plan`, `generate`, `review`). Nunca editar uma versão publicada: criar `v{N+1}` e apontar a configuração. `generationVersion` = conjunto das versões usadas (`extract-v1+plan-v1+generate-v1+review-v1`), gravado no kit; `ai_call.prompt_version` guarda só a versão da etapa da chamada.
 - O prompt descreve formato de saída pelo schema do core (JSON), não por exemplo solto. Contagens, dificuldades e limites vêm das constantes do core, interpoladas, nunca digitadas.
 - Conteúdo do usuário (fotos, observação, "outro", perfil vindo das fotos) entra em bloco delimitado e marcado como **dado**, com `<` e `>` removidos e instrução explícita de não seguir instruções contidas nele. Nunca concatenado ao system prompt.
 - Fotos só vão à extração (uma chamada por foto); `plan`, `generate` e `review` recebem ids, perfil estruturado e dados do pedido, nunca foto nem texto do material.

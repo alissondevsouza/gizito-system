@@ -42,6 +42,7 @@ flowchart TD
   E -->|inválido| R
   E -->|ok| F{validateStudyKit + mathjs + KaTeX}
   F -->|bloqueador| R
+  F -->|defesa da alocação| X
   F -->|ok| G{review por modelo + interpretReview}
   G -->|bloqueador| R
   R -->|não: reparo plano| C
@@ -86,7 +87,7 @@ flowchart TD
   - Falha transitória depois do teto vira `job_timeout`. Falha transitória no desligamento vira `releaseJob`: volta a `pending` com `worker_shutdown`, sem gastar tentativa; a renovação para antes da liberação.
   - Falha não retryable do handler vence desligamento e teto e vira `failed`.
   - Código de erro que não passa em `outcomeCodeSchema` vira `invalid_error_code`, mantendo o `retryable` do handler.
-- Falhas **definitivas**: `generation_failed` com `fail_reason_code` estável e `order.notify` `kit_failed`: `ai_output_invalid` (saída não passou em `studyKitSchema` também na regeneração), `generation_blocked` (bloqueador na validação ou inconsistência na revisão também na regeneração), `ai_cost_exceeded` (teto por pedido), `render_failed` (as duas tentativas de render falharam), `other_topic_unfeasible` (o plano julgou o "outro" inviável só com texto e tabela; não regenera).
+- Falhas **definitivas**: `generation_failed` com `fail_reason_code` estável e `order.notify` `kit_failed`: `ai_output_invalid` (saída do `plan`, do `generate` ou do reparo fora do schema também na regeneração, ou da revisão também na segunda chamada), `generation_blocked` (bloqueador de plano, validação ou revisão também na regeneração, ou código de defesa da alocação, que não regenera), `ai_cost_exceeded` (teto por pedido), `render_failed` (as duas tentativas de render falharam), `other_topic_unfeasible` (o plano julgou o "outro" inviável só com texto e tabela; não regenera).
 - Job com payload que não passa em `jobPayloadSchema` vai direto para `failed` com `last_error_code = payload_invalid` no claim, sem chamar handler, e o próximo job é entregue; nunca é "corrigido" em runtime. O pedido não muda de estado nem é notificado: é falha da fila, não da geração. O claim avisa o worker (`onPayloadInvalid`), que loga `error` com `payload_invalid`, e o `/health` conta os da janela (`payloadInvalidCount`) para o alerta. Código de erro passa em `outcomeCodeSchema` (minúsculas e `_`, até 64), então não carrega conteúdo.
 - **Esgotamento (ADR-0009):**
   - Cada job pode declarar `onExhausted(tx, exhaustedJob)` no mapa de handlers (`JobDefinition = { handle, onExhausted? }`).

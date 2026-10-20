@@ -30,7 +30,7 @@ paths:
 5. `review`: segunda verificação por modelo; `interpretReview` dá a severidade pelo código (bloqueador ou aviso, spec §8.5).
 6. `render`: dois PDFs; conferir contagem de páginas e presença de todas as questões (regras em `pdf-render.md`).
 7. `publish`: upload dos dois arquivos → `publishKit` (transação) → enfileirar `order.notify`.
-- Bloqueador em qualquer etapa usa a única regeneração, que refaz plano, kit ou só os itens marcados conforme o código (spec §10).
+- Bloqueador de plano, validação ou revisão usa a única regeneração, que refaz plano, kit ou só os itens marcados conforme o código (spec §10); código com reparo `não` (o "outro" inviável e as defesas da alocação) falha sem regenerar; o render tem uma segunda tentativa própria e não regenera o kit.
 - Cada chamada de IA grava uma linha em `ai_call` com modelo, versão do prompt, tokens, custo e `outcomeCode`.
 
 ## Estrutura

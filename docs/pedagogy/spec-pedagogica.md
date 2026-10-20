@@ -145,7 +145,7 @@ Com 2 assuntos A e B: fixação A fácil, fácil, intermediária, intermediária
 | `baseTextBriefList` | Português: 1..3; Matemática: vazia | `{ baseTextId, block: "practice" \| "mock", genre: string 3..40, theme: string 3..80 }` |
 | `styleGuideList` | string[0..5], cada uma 10..140 | diretrizes de estilo tiradas do perfil |
 | `prerequisiteReminderList` | string[0..3], cada uma 10..140 | pré-requisitos a relembrar na revisão |
-| `otherTopicAssessment` | `null` sem "outro"; objeto com "outro" | `{ verdict: "feasible" \| "unfeasible", label: string 3..40, reasonCode: "depends_on_figure" \| "beyond_grade" \| "other_subject" \| "not_a_school_topic" \| null }`; `reasonCode` obrigatório só em `unfeasible`; `label` é o nome limpo que vai à capa |
+| `otherTopicAssessment` | `null` sem "outro"; objeto com "outro" | `{ verdict: "feasible" \| "unfeasible", label: string 3..40, reasonCode: "depends_on_figure" \| "open_writing" \| "beyond_grade" \| "other_subject" \| "not_a_school_topic" \| null }`; `reasonCode` obrigatório só em `unfeasible`; `label` é o nome limpo que vai à capa |
 
 `validateKitPlan(plan, kitSlotPlan, subject)` devolve os códigos de etapa `plan` do §8.1.
 
@@ -246,7 +246,7 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
 
 | Código | Sev. | Reparo | Confere | PRD |
 |---|---|---|---|---|
-| `figure_reference` | B | item | em enunciado, tabela, alternativa e enunciado de exemplo (nunca em texto-base, revisão ou explicação): comando que remete a figura ou material ausente ("observe", "na figura", "a imagem", "o desenho abaixo", "o gráfico abaixo", "veja a ilustração", "página 12", "do seu livro", "da sua apostila", "do seu caderno"); não casa "figura de linguagem" | §7.5 |
+| `figure_reference` | B | item | em enunciado, tabela, alternativa e enunciado de exemplo (nunca em texto-base, revisão ou explicação): expressão que remete a figura ou material ausente, sempre com o objeto: "observe a figura", "observe a imagem", "observe o desenho", "observe o gráfico", "observe a ilustração", "veja a figura", "veja a imagem", "na figura", "a figura abaixo", "o desenho abaixo", "a imagem abaixo", "o gráfico abaixo" (e "acima", "ao lado"), "página 12", "do seu livro", "da sua apostila", "do seu caderno". Exceções em §8.4 | §7.5 |
 | `personal_data_pattern` | B | item | telefone, e-mail ou CPF em qualquer texto do kit, inclusive `topicList[].label` (padrões em §8.4) | §7.5 |
 | `external_link` | B | item | URL, `www.` ou arroba de rede social, em qualquer texto do kit, inclusive `topicList[].label` | §7.5 |
 | `blocked_term` | B | item | termo de `blockedTermList` (core, F1-03: palavrões e ofensas), palavra inteira, em qualquer texto do kit, inclusive `topicList[].label` | §7.4.5, §7.5 |
@@ -257,12 +257,12 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
 | `mock_hint` | A | — | simulado com "dica", "lembre-se", "como vimos", "volte à revisão", "como no exemplo" | §7.2 |
 | `statement_too_long` | A | — | enunciado acima de `MAX_STATEMENT_WORD_COUNT_BY_GRADE` (*nova*: 4º 60, 5º 70, 6º 90, 7º 100 palavras, sem texto-base e tabela) | §7.1.2 |
 | `base_text_length` | A | — | texto-base fora de `BASE_TEXT_WORD_RANGE_BY_GRADE` (*nova*: 4º 100–220, 5º 120–260, 6º 150–320, 7º 180–380 palavras) | §7.3 |
-| `markup_forbidden` | A | — | Markdown, HTML ou emoji em texto do kit | §6 |
+| `markup_forbidden` | B | item | Markdown, tag HTML ou emoji em texto do kit (o render escapa todo texto de qualquer jeito, §8.6) | §6 |
 
 ### 8.4 Padrões determinísticos (F1-03, com testes de falso positivo)
 
 - **Dado pessoal:** telefone brasileiro com DDD (com ou sem parênteses, hífen ou espaço, 8 ou 9 dígitos), e-mail, CPF formatado ou 11 dígitos seguidos. Não podem casar: valores em reais ("R$ 1.250,00"), números grandes de enunciado ("12.345"), horários ("14h30"), frações e expressões.
-- **Figura:** lista de expressões normalizadas (sem acento, minúsculas) com exceções explícitas ("figura de linguagem", "figuras de linguagem").
+- **Figura:** lista de expressões normalizadas (sem acento, minúsculas), sempre verbo ou posição junto do objeto ausente; "observe" ou "imagem" sozinhos nunca casam. Exceções explícitas, cada uma com teste de falso positivo: "observe a tabela", "observe o texto", "observe o trecho", "observe a frase", "observe o verso", "observe a palavra", "figura de linguagem", "figuras de linguagem", "imagem poética". O prompt `generate` permite pedir para observar a tabela ou um trecho do texto-base.
 - **Dica no simulado** e **termos bloqueados:** listas no core, casadas como palavra inteira depois de `normalizeKeywordText`.
 
 ### 8.5 Revisão (`interpretReview`, core)
@@ -283,6 +283,8 @@ A revisão é assistiva (PRD §7.5): marcar problema bloqueia; não marcar não 
 
 ### 8.6 Render (F1-08)
 
+Todo `kitText` entra no template escapado como texto; só os trechos entre `\(` e `\)` passam pelo KaTeX. Nenhum texto do modelo vira HTML.
+
 | Código | Sev. | Tratamento |
 |---|---|---|
 | `render_failed` | B | segunda tentativa de render (`jobs.md` §2); persistindo, `render_failed` |
@@ -292,7 +294,7 @@ A revisão é assistiva (PRD §7.5): marcar problema bloqueia; não marcar não 
 
 ### 8.7 Regras de assunto da taxonomia → códigos
 
-Os códigos dos §8.2–§8.5 rodam em todo kit; a regra do assunto (`validationRuleList`, `taxonomia.md`) liga as checagens específicas e entra no prompt do assunto.
+Só `unit_missing` depende da regra: roda só nas questões de assunto com `measurement_unit`. Todos os outros códigos rodam em todo kit; a regra do assunto (`validationRuleList`, `taxonomia.md`) entra no prompt do assunto (`{{TOPIC_BLOCK}}`) e diz quais códigos são o risco principal dele.
 
 | Regra | Códigos |
 |---|---|
