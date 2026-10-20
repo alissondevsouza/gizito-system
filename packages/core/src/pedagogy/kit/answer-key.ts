@@ -62,7 +62,10 @@ function plainDecimalText(value: number, fixedFractionDigitCount: number | null)
     : shortestText;
 }
 
-function formatDecimal(value: number, fixedFractionDigitCount: number | null): string {
+export function formatBrazilianDecimal(
+  value: number,
+  fixedFractionDigitCount: number | null,
+): string {
   const [integerPart = "0", fractionPart = ""] = plainDecimalText(
     value,
     fixedFractionDigitCount,
@@ -91,7 +94,10 @@ export function formatExpectedAnswer(
   switch (answer.kind) {
     case "number":
       return withUnit(
-        formatDecimal(answer.value, answer.unit === MONEY_UNIT ? MONEY_FRACTION_DIGIT_COUNT : null),
+        formatBrazilianDecimal(
+          answer.value,
+          answer.unit === MONEY_UNIT ? MONEY_FRACTION_DIGIT_COUNT : null,
+        ),
         answer.unit,
       );
     case "fraction": {

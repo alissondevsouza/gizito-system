@@ -1,8 +1,8 @@
-# Spec pedagógica executável — v1.1
+# Spec pedagógica executável — v1.2
 
 > Contrato que as features F1-03 a F1-08 e F1-10 implementam, a partir do PRD 1.3 §6–7, do design doc 1.6 §5.2, §6.3 e §9 e de `docs/engineering/jobs.md` §2. Prompts v1 em [`prompts-v1.md`](prompts-v1.md); assuntos e assuntos ainda não atendidos em [`taxonomia.md`](taxonomia.md), gerado do core.
 >
-> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). A 1.1 registra as precisões da F1-03, aprovadas pelo humano em 20/10/2026 (§15.6). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
+> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). A 1.1 registra as precisões da F1-03, aprovadas pelo humano em 20/10/2026 (§15.6). A 1.2 registra a equivalência do avaliador matemático da F1-04 (§8.2), pendente do aval do humano (§15.7). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
 
 Leia a seção que a sua feature toca (§14 diz qual).
 
@@ -244,6 +244,15 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
 | `fraction_not_simplified` | A | — | `fraction` do gabarito fora da forma irredutível (pode ser pedido do enunciado; a revisão julga) | §7.3 |
 | `unit_missing` | A | — | assunto com `measurement_unit` e resposta `number` sem unidade | §7.3 |
 
+**Equivalência no `MathEvaluator` (F1-04, mathjs).** `evaluate` aceita só número, parênteses, `+ - * / ^`, sinal, `mod`, `%` de porcentagem (`25%` = 0,25), conversão `to`, as funções `sqrt`, `abs`, `floor`, `ceil`, `round`, `gcd`, `lcm`, a constante `pi`, as unidades da tabela abaixo e variáveis de uma letra minúscula; o resto (atribuição, função definida, texto, comparação, unidade junto de variável) é `unsupported`, e vírgula decimal é `parse_error`. `equals`:
+
+- `number`, `fraction` e `expression` sem variável comparam o valor, com a maior das duas tolerâncias e uma folga relativa de 1e-9 para ponto flutuante: `1/2` = `0,5`; `0,333` ≠ `1/3` com tolerância 0;
+- unidades da tabela de mesma grandeza convertem (`2,5 m` = `250 cm`); grandezas diferentes não são iguais; unidade fora da tabela (`R$`, `%`, mês, ano, `pessoas`) só é igual à mesma unidade escrita igual; **o lado sem unidade é lido na unidade do outro** (`2.5 * 100` = `250 cm`), porque a expressão quase sempre é aritmética sem unidade. Unidade errada é pega quando a expressão tem unidade (`2.5 m to cm` ≠ `250 m`) e, quando não tem, pela revisão;
+- `%` é unidade opaca, não fator 1/100: o `calculationExpression` de uma resposta `25%` é `15/60*100`, não `15/60`;
+- `expression` com variável compara o valor em pontos fixos (`5*x` = `2*x + 3*x`); `set` compara o conjunto, com número pt-BR e fração pelo valor; `text` compara `value` e `acceptedList` dos dois lados sem diferença de maiúscula.
+
+Tabela de unidades (símbolo, nome pt-BR no singular e no plural, `²`/`³` ou `^2`/`^3`): mm, cm, dm, m, km; mm², cm², dm², m², km², ha; cm³, dm³, m³, mL, L; mg, g, kg, t; s, min, h, dia, semana; ° (grau); °C; km/h, m/s. Mês e ano ficam fora porque na escola o mês tem 30 dias e o ano 365, e o mathjs usa 30,44 e 365,25.
+
 ### 8.3 Kit: conteúdo (`validateStudyKit`, core; marcação no worker)
 
 | Código | Sev. | Reparo | Confere | PRD |
@@ -473,7 +482,10 @@ Propostas desta spec que interpretam o PRD ou o design doc, aprovadas pelo human
    - Figura (§8.4): "a figura de linguagem" e "a imagem" depois de verbo não bloqueiam (assuntos de figuras de linguagem e de poemas); "dele", "dela" e "daquele" depois da posição contam como narrativa.
    - Dado pessoal (§8.4): fixo exige separador; CPF de 11 dígitos sem pontuação exige dígito verificador; nada é procurado dentro de `\( \)`. Número grande sem separador aparece em exercício de classes e ordens.
 
+7. **Equivalência do avaliador matemático (F1-04), pendente do aval do humano.** Proposta em §8.2: (a) o lado sem unidade é lido na unidade do outro; (b) `%`, `R$`, mês e ano são unidades opacas, sem conversão; (c) texto e conjunto de Matemática sem diferença de maiúscula. A alternativa a (a), exigir unidade nos dois lados, bloquearia o kit sempre que o modelo escrevesse a conta sem unidade, que é o caso comum.
+
 ## 16. Histórico
 
+- **1.2 (20/10/2026):** equivalência do `MathEvaluator` da F1-04 em §8.2 (expressão aceita, tolerância, unidades e tabela, lado sem unidade, `%` opaco, expressão com variável, conjunto e texto), pendente do aval do humano (§15.7).
 - **1.1 (20/10/2026):** precisões da F1-03: `evidence` com dado pessoal trocada por texto fixo em vez de descartar o candidato, `sanitizePhotoExtraction` e `mergedExtractionSchema` (§3.3); `R$` com duas casas, `%` e `°` colados ao número (§7.2); comparação de texto em Português e da citação, tag HTML mais precisa e falsos positivos novos (§8.4); `decideRepair` e bloqueador de item sem item subindo para `plano` (§10, §14); aprovadas pelo humano (§15.6): ordem dos candidatos, `evidence` trocada, padrão `__`, tag, exceções de figura e precisão de telefone e CPF; termos de sentido comum fora de `blockedTermList`.
 - **1.0 (19/10/2026):** versão inicial (F1-02), aprovada pelo humano em 20/10/2026 com os pontos do §15.

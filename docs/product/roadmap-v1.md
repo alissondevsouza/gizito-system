@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 3 | 0 | 8 |
+| F1 Prova técnica e pedagógica | 11 | 3 | 1 | 7 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -147,9 +147,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: o que `docs/pedagogy/spec-pedagogica.md` §14 atribui à F1-03: `photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema`, `studyKitSchema`, `reviewResultSchema`; `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `validateStudyKit` com contagens, cobertura, dificuldade, duplicatas, alternativas, dependência de figura, dado pessoal, e `interpretReview`
   - Pronto quando: cada regra com teste e fixture válida e inválida
   - Concluída em: 20/10/2026. Schemas de cada etapa e do kit publicado, junção da extração, decisão da prévia, alocação das 20 vagas, validação do plano, composição, gabarito e formato das respostas, validações por código com severidade e reparo fixos, interpretação da revisão e decisão do reparo, com uma fixture válida e uma inválida por código, as tabelas da spec pedagógica como teste e os falsos positivos do §8.4. Core com 689 testes. Spec pedagógica 1.1 com as precisões do §15.6, aprovadas por você com `%` e `°` colados ao número. Revisão neutra reprovada na rodada 1 (três bloqueadores falsos) e aprovada na rodada 2. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-04 `avaliador-matematico`** — integrations · P · depende: F1-03
+- [ ] **F1-04 `avaliador-matematico` — em andamento** — integrations · P · depende: F1-03 · `specs/integrations/avaliador-matematico/`
   - Entrega: `MathEvaluator` com mathjs: expressões, frações simplificadas, unidades, tolerância, equivalência entre alternativas
   - Pronto quando: casos: fração equivalente, decimal vs fração, unidade errada, distratores iguais
+  - Feito até agora (20/10/2026): `createMathjsEvaluator` e `mathExpressionToLatex` em `packages/integrations/src/math/`, com lista fechada de nós, funções e unidades, tabela de unidades pt-BR, equivalência por valor, unidade, tolerância, expressão, conjunto e texto, e os casos do pronto como teste; spec pedagógica 1.2 com a equivalência, pendente do seu aval (§15.7). Falta a revisão neutra e o merge
 - [ ] **F1-05 `adaptador-de-ia`** — integrations · M · depende: F0-04
   - Entrega: `AiProvider` real com dois modelos configuráveis, saída JSON validada, `usage` com tokens e custo em centavos, redução de imagem, retries só transitórios; `FakeAiProvider`
   - Pronto quando: suíte de contrato passa no real (com chave) e no fake
