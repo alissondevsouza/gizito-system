@@ -126,9 +126,9 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` no pacote; no fim d
 - [x] 1.1 `ai-provider.ts` com `Result`, `AiFailure`, códigos e `signal`; `aiEffortList`, `aiModelSettingSchema`, `aiEnvironmentSchema`; constantes de imagem; testes (RF-01)
 
 ### M2 — Peças do adaptador
-- [ ] 2.1 `output-schema.ts` com testes nos sete schemas (RF-02)
-- [ ] 2.2 `pricing.ts` com testes (RF-03)
-- [ ] 2.3 `image.ts` com testes (RF-04)
+- [x] 2.1 `output-schema.ts` com testes nos sete schemas (RF-02)
+- [x] 2.2 `pricing.ts` com testes (RF-03)
+- [x] 2.3 `image.ts` com testes (RF-04)
 
 ### M3 — Adaptador, fake e contrato
 - [ ] 3.1 `anthropic-provider.ts` com testes de `fetch` injetado e SSE (RF-05)
