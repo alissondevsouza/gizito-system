@@ -46,8 +46,8 @@ A etapa `extract` do pipeline (spec pedagógica §1, §3; `prompts-v1.md` extrac
 - [x] 1.4 `respondWith` no fake · Arquivos: `packages/integrations/src/fakes/fake-ai-provider.ts`, teste · Verificação: `bun test` em integrations
 
 ### M2 — etapa
-- [ ] 2.1 `AiCallRecord`, `ExtractionCache` com chave e memória · Arquivos: `apps/worker/src/pipeline/{ai-call.ts,extraction-cache.ts}`, testes
-- [ ] 2.2 `analyzeMaterial` (RF-02 a RF-06) · Arquivos: `apps/worker/src/pipeline/extract.ts`, testes · Verificação: `bun run lint`, `bun run typecheck`, `bun run test`
+- [x] 2.1 `AiCallRecord`, `ExtractionCache` com chave e memória · Arquivos: `apps/worker/src/pipeline/{ai-call.ts,extraction-cache.ts}`, testes
+- [x] 2.2 `analyzeMaterial` (RF-02 a RF-06) · Arquivos: `apps/worker/src/pipeline/extract.ts`, testes · Verificação: `bun run lint`, `bun run typecheck`, `bun run test`
 
 ### M3 — visto funcionando e fechamento
 - [ ] 3.1 `test:extract-live` com fotos sintéticas, rodado contra a API · Arquivos: `apps/worker/src/__tests__/pipeline/extract-live.test.ts`, `apps/worker/package.json` · Verificação: `bun run --cwd apps/worker test:extract-live`
