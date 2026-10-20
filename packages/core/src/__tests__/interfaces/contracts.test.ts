@@ -12,6 +12,7 @@ import {
   type AiRequest,
   aiFailureCodeList,
   aiUsageSchema,
+  isInvalidOutputAiFailureCode,
   isRetryableAiFailureCode,
 } from "#src/interfaces/ai-provider.ts";
 import type { MathEvaluator } from "#src/interfaces/math-evaluator.ts";
@@ -214,6 +215,18 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
         "ai_aborted",
       ];
       expect(isRetryableAiFailureCode(code)).toBe(transientCodeList.includes(code));
+    },
+  );
+
+  it.each(aiFailureCodeList.map((code) => [code] as const))(
+    "%s é saída inválida só quando o modelo respondeu algo que não serve",
+    (code) => {
+      const invalidOutputCodeList: readonly string[] = [
+        "ai_refused",
+        "ai_output_truncated",
+        "ai_output_invalid",
+      ];
+      expect(isInvalidOutputAiFailureCode(code)).toBe(invalidOutputCodeList.includes(code));
     },
   );
 

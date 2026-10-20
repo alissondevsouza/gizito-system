@@ -3,8 +3,10 @@ import {
   type AiFailureCode,
   type AiImage,
   type AiProvider,
+  type AiRequest,
   EVIDENCE_DROPPED_TEXT,
   type ExtractionContext,
+  invalidOutputAiFailureCodeList,
   MAX_PHOTO_COUNT,
   mergedExtractionSchema,
   photoDeleteDeadline,
@@ -24,11 +26,14 @@ import {
 } from "#src/__tests__/pipeline/__fixtures__/extraction.ts";
 import {
   analyzeMaterial,
+  EXTRACTION_CACHE_FAILED_CODE,
   type ExtractionDependencies,
   type ExtractionPhoto,
-  invalidOutputCodeList,
 } from "#src/pipeline/extract.ts";
-import { createMemoryExtractionCache } from "#src/pipeline/extraction-cache.ts";
+import {
+  createMemoryExtractionCache,
+  type ExtractionCache,
+} from "#src/pipeline/extraction-cache.ts";
 import { buildExtractPrompt, EXTRACT_PROMPT_VERSION } from "#src/pipeline/prompts/extract/v1.ts";
 
 const MILLISECONDS_PER_DAY = 86_400_000;
@@ -97,6 +102,32 @@ describe("analyzeMaterial: chamada por foto (spec F1-06, RF-02)", () => {
     expect(provider.requestList).toHaveLength(2);
   });
 
+  it("chama o modelo para todas as fotos ao mesmo tempo", async () => {
+    const imageList = await Promise.all([10, 100, 200].map(syntheticImage));
+    const fakeProvider = createScriptedProvider(
+      imageList.map((image) => [image, [outputOf(photoExtractionOf())]] as const),
+    );
+    let inFlightCount = 0;
+    let maxInFlightCount = 0;
+    const trackingProvider: AiProvider = {
+      ...fakeProvider,
+      extract: async <T>(request: AiRequest<T>) => {
+        inFlightCount += 1;
+        maxInFlightCount = Math.max(maxInFlightCount, inFlightCount);
+        try {
+          return await fakeProvider.extract(request);
+        } finally {
+          inFlightCount -= 1;
+        }
+      },
+    };
+    await analyzeOk(
+      imageList.map((image) => photoOf(image)),
+      dependenciesOf(trackingProvider),
+    );
+    expect(maxInFlightCount).toBe(imageList.length);
+  });
+
   it("saída inválida faz uma nova chamada e a segunda vale", async () => {
     const image = await syntheticImage(10);
     const provider = createScriptedProvider([
@@ -111,20 +142,23 @@ describe("analyzeMaterial: chamada por foto (spec F1-06, RF-02)", () => {
     expect(analysis.previewOutcome.outcome).toBe("preview_ready");
   });
 
-  it.each([...invalidOutputCodeList])("%s duas vezes deixa a foto fora da junção", async (code) => {
-    const image = await syntheticImage(10);
-    const provider = createScriptedProvider([[image, [failureOf(code), failureOf(code)]]]);
-    const cache = createMemoryExtractionCache();
-    const analysis = await analyzeOk([photoOf(image)], dependenciesOf(provider, { cache }));
-    expect(analysis.photoStatusList).toEqual(["failed"]);
-    expect(analysis.aiCallList.map((call) => call.outcomeCode)).toEqual([code, code]);
-    expect(analysis.mergedExtraction.photoList[0]?.legibilityScore).toBeNull();
-    expect(issueCodeListOf(analysis.mergedExtraction.issueList)).toEqual([
-      "extraction_output_invalid",
-    ]);
-    expect(analysis.previewOutcome).toMatchObject({ failCode: "photos_unreadable" });
-    expect(cache.entryMap.size).toBe(0);
-  });
+  it.each([...invalidOutputAiFailureCodeList])(
+    "%s duas vezes deixa a foto fora da junção",
+    async (code) => {
+      const image = await syntheticImage(10);
+      const provider = createScriptedProvider([[image, [failureOf(code), failureOf(code)]]]);
+      const cache = createMemoryExtractionCache();
+      const analysis = await analyzeOk([photoOf(image)], dependenciesOf(provider, { cache }));
+      expect(analysis.photoStatusList).toEqual(["failed"]);
+      expect(analysis.aiCallList.map((call) => call.outcomeCode)).toEqual([code, code]);
+      expect(analysis.mergedExtraction.photoList[0]?.legibilityScore).toBeNull();
+      expect(issueCodeListOf(analysis.mergedExtraction.issueList)).toEqual([
+        "extraction_output_invalid",
+      ]);
+      expect(analysis.previewOutcome).toMatchObject({ failCode: "photos_unreadable" });
+      expect(cache.entryMap.size).toBe(0);
+    },
+  );
 
   it("imagem que não abre não repete a chamada", async () => {
     const brokenImage: AiImage = { mediaType: "image/png", data: new Uint8Array([1, 2, 3]) };
@@ -194,6 +228,52 @@ describe("analyzeMaterial: falha da etapa (spec F1-06, RF-03)", () => {
       expect(provider.requestList).toHaveLength(1);
     },
   );
+});
+
+describe("analyzeMaterial: falha do cache (spec F1-06, RF-03)", () => {
+  const cacheFailure = new Error("conexão perdida");
+
+  it("falha ao guardar volta à fila com o custo da chamada já feita", async () => {
+    const image = await syntheticImage(10);
+    const cache: ExtractionCache = {
+      find: async () => null,
+      save: () => Promise.reject(cacheFailure),
+    };
+    const provider = createScriptedProvider([[image, [outputOf(photoExtractionOf())]]]);
+    const result = await analyzeMaterial(
+      [photoOf(image)],
+      mathContext,
+      dependenciesOf(provider, { cache }),
+    );
+    expect(result.ok ? null : result.error).toMatchObject({
+      code: EXTRACTION_CACHE_FAILED_CODE,
+      isRetryable: true,
+      cause: cacheFailure,
+    });
+    expect(result.ok ? [] : result.error.aiCallList.map((call) => call.outcomeCode)).toEqual([
+      "ok",
+    ]);
+  });
+
+  it("falha ao consultar volta à fila sem chamar o modelo", async () => {
+    const image = await syntheticImage(10);
+    const cache: ExtractionCache = {
+      find: () => Promise.reject(cacheFailure),
+      save: async () => {},
+    };
+    const provider = createScriptedProvider([]);
+    const result = await analyzeMaterial(
+      [photoOf(image)],
+      mathContext,
+      dependenciesOf(provider, { cache }),
+    );
+    expect(result.ok ? null : result.error).toMatchObject({
+      code: EXTRACTION_CACHE_FAILED_CODE,
+      isRetryable: true,
+      aiCallList: [],
+    });
+    expect(provider.requestList).toHaveLength(0);
+  });
 });
 
 describe("analyzeMaterial: cache por hash (spec F1-06, RF-04)", () => {
@@ -267,7 +347,7 @@ describe("analyzeMaterial: cache por hash (spec F1-06, RF-04)", () => {
     );
   });
 
-  it("sanitiza antes do cache: dado pessoal e assunto de outro ano não chegam lá", async () => {
+  it("sanitiza antes do cache: telefone, e-mail e assunto de outro ano não chegam lá", async () => {
     const image = await syntheticImage(10);
     const cache = createMemoryExtractionCache();
     const extraction = photoExtractionOf({

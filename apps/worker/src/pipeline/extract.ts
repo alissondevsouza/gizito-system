@@ -7,6 +7,7 @@ import {
   EXTRACT_OUTPUT_RETRY_COUNT,
   type ExtractionContext,
   err,
+  isInvalidOutputAiFailureCode,
   isRetryableAiFailureCode,
   MAX_PHOTO_COUNT,
   type MergedExtraction,
@@ -52,17 +53,20 @@ export type MaterialAnalysis = {
   readonly aiCallList: readonly AiCallRecord[];
 };
 
+export const EXTRACTION_CACHE_FAILED_CODE = "extraction_cache_failed";
+
+export type ExtractionFailureCode = AiFailureCode | typeof EXTRACTION_CACHE_FAILED_CODE;
+
 export type ExtractionFailure = {
-  readonly code: AiFailureCode;
+  readonly code: ExtractionFailureCode;
   readonly isRetryable: boolean;
   readonly aiCallList: readonly AiCallRecord[];
+  readonly cause?: unknown;
 };
 
-export const invalidOutputCodeList: readonly AiFailureCode[] = [
-  "ai_output_invalid",
-  "ai_output_truncated",
-  "ai_refused",
-];
+export function isRetryableExtractionFailureCode(code: ExtractionFailureCode): boolean {
+  return code === EXTRACTION_CACHE_FAILED_CODE || isRetryableAiFailureCode(code);
+}
 
 type PhotoResult = {
   readonly status: PhotoExtractionStatus;
@@ -74,8 +78,9 @@ type PhotoOutcome =
   | ({ readonly kind: "done"; readonly aiCallList: readonly AiCallRecord[] } & PhotoResult)
   | {
       readonly kind: "stage_failed";
-      readonly code: AiFailureCode;
+      readonly code: ExtractionFailureCode;
       readonly aiCallList: readonly AiCallRecord[];
+      readonly cause?: unknown;
     };
 
 export function computeContentHash(data: Uint8Array): string {
@@ -97,17 +102,28 @@ async function extractPhoto(
     promptVersion: EXTRACT_PROMPT_VERSION,
     model: extractModel,
   });
-  const cached = await cache.find(key);
+  const aiCallList: AiCallRecord[] = [];
+  const cacheFailed = (cause: unknown): PhotoOutcome => ({
+    kind: "stage_failed",
+    code: EXTRACTION_CACHE_FAILED_CODE,
+    aiCallList,
+    cause,
+  });
+  const found = await cache.find(key).then(
+    (entry) => ok(entry),
+    (cause: unknown) => err(cause),
+  );
+  if (!found.ok) return cacheFailed(found.error);
+  const cached = found.value;
   if (cached !== null && cached.expireDatetime.getTime() > now().getTime()) {
     return {
       kind: "done",
       status: "cached",
       extraction: cached.extraction,
       issueList: cached.issueList,
-      aiCallList: [],
+      aiCallList,
     };
   }
-  const aiCallList: AiCallRecord[] = [];
   for (let attempt = 0; attempt <= EXTRACT_OUTPUT_RETRY_COUNT; attempt += 1) {
     const result = await aiProvider.extract({
       promptVersion: EXTRACT_PROMPT_VERSION,
@@ -120,15 +136,21 @@ async function extractPhoto(
     aiCallList.push(toAiCallRecord("extract", result));
     if (result.ok) {
       const { extraction, issueList } = sanitizePhotoExtraction(result.value.output, context);
-      await cache.save(key, {
-        extraction,
-        issueList,
-        expireDatetime: photoDeleteDeadline(photo.insertDatetime),
-      });
+      const saved = await cache
+        .save(key, {
+          extraction,
+          issueList,
+          expireDatetime: photoDeleteDeadline(photo.insertDatetime),
+        })
+        .then(
+          () => ok(null),
+          (cause: unknown) => err(cause),
+        );
+      if (!saved.ok) return cacheFailed(saved.error);
       return { kind: "done", status: "extracted", extraction, issueList, aiCallList };
     }
     if (result.error.code === "ai_image_invalid") break;
-    if (!invalidOutputCodeList.includes(result.error.code)) {
+    if (!isInvalidOutputAiFailureCode(result.error.code)) {
       return { kind: "stage_failed", code: result.error.code, aiCallList };
     }
   }
@@ -163,8 +185,9 @@ export async function analyzeMaterial(
     if (outcome.kind === "stage_failed") {
       return err({
         code: outcome.code,
-        isRetryable: isRetryableAiFailureCode(outcome.code),
+        isRetryable: isRetryableExtractionFailureCode(outcome.code),
         aiCallList,
+        cause: outcome.cause,
       });
     }
     photoResultList.push(outcome);

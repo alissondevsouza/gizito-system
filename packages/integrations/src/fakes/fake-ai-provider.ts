@@ -6,6 +6,7 @@ import {
   type AiStage,
   type AiUsage,
   err,
+  isInvalidOutputAiFailureCode,
   ok,
 } from "@gizito/core";
 import { reduceImage } from "#src/ai/image.ts";
@@ -14,12 +15,6 @@ import { findModelPrice, usageOf } from "#src/ai/pricing.ts";
 const CHARACTERS_PER_TOKEN = 4;
 const TOKENS_PER_IMAGE = 1600;
 const FAKE_DURATION_MS = 1;
-
-const outputFailureCodeList: readonly AiFailureCode[] = [
-  "ai_refused",
-  "ai_output_truncated",
-  "ai_output_invalid",
-];
 
 export type FakeAiResponse =
   | { readonly kind: "output"; readonly output: unknown }
@@ -93,9 +88,7 @@ export function createFakeAiProvider({
     const next = queued ?? responderByStage.get(stage)?.(request);
     if (next === undefined) throw new Error(`fake de IA sem resposta enfileirada para ${stage}`);
     if (next.kind === "failure") {
-      const usage = outputFailureCodeList.includes(next.code)
-        ? usageFor(model, request, null)
-        : null;
+      const usage = isInvalidOutputAiFailureCode(next.code) ? usageFor(model, request, null) : null;
       return failure(next.code, usage);
     }
     const usage = usageFor(model, request, next.output);

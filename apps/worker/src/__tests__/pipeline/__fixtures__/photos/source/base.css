@@ -1,0 +1,37 @@
+body {
+  margin: 0;
+  width: 1000px;
+  height: 1400px;
+  background: #fbfaf3;
+  font-family: "DejaVu Sans", sans-serif;
+  color: #1d2340;
+}
+.page {
+  padding: 70px 80px;
+  background-image: repeating-linear-gradient(#fbfaf3 0 47px, #b9cde6 47px 48px);
+  min-height: 1260px;
+  border-left: 3px solid #e3a3a3;
+  margin-left: 40px;
+}
+h1 {
+  font-size: 38px;
+  margin: 0 0 30px;
+}
+p,
+li {
+  font-size: 28px;
+  line-height: 48px;
+  margin: 0;
+}
+ol {
+  margin: 10px 0 0;
+  padding-left: 40px;
+}
+.hand {
+  font-family: "Comic Sans MS", cursive;
+  color: #1b2a8a;
+}
+.header {
+  font-size: 26px;
+  line-height: 48px;
+}
