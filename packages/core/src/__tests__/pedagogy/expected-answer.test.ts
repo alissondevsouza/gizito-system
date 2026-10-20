@@ -32,3 +32,15 @@ describe("expectedAnswerSchema (PRD §7.3)", () => {
     }
   });
 });
+
+it("expectedAnswerSchema recusa chave a mais, porque entra em saída de modelo", () => {
+  expect(
+    expectedAnswerSchema.safeParse({
+      kind: "number",
+      value: 1,
+      unit: null,
+      tolerance: 0,
+      note: "x",
+    }).success,
+  ).toBe(false);
+});
