@@ -50,8 +50,8 @@ A etapa `extract` do pipeline (spec pedagógica §1, §3; `prompts-v1.md` extrac
 - [x] 2.2 `analyzeMaterial` (RF-02 a RF-06) · Arquivos: `apps/worker/src/pipeline/extract.ts`, testes · Verificação: `bun run lint`, `bun run typecheck`, `bun run test`
 
 ### M3 — visto funcionando e fechamento
-- [ ] 3.1 `test:extract-live` com fotos sintéticas, rodado contra a API · Arquivos: `apps/worker/src/__tests__/pipeline/extract-live.test.ts`, `apps/worker/package.json` · Verificação: `bun run --cwd apps/worker test:extract-live`
-- [ ] 3.2 `bun run test:pedagogy`: não existe até a F1-10; registrar no known-issues (entrada da regressão) que o `extract` v1 entrou sem ela
+- [x] 3.1 `test:extract-live` com fotos sintéticas, rodado contra a API · Arquivos: `apps/worker/src/__tests__/pipeline/extract-live.test.ts`, `apps/worker/package.json` · Verificação: `bun run --cwd apps/worker test:extract-live`
+- [x] 3.2 `bun run test:pedagogy`: não existe até a F1-10; registrar no known-issues (entrada da regressão) que o `extract` v1 entrou sem ela
 - [ ] 3.3 Revisão neutra, `review.md`, roadmap "feito até agora"
 
 ## Decisões
@@ -64,4 +64,4 @@ A etapa `extract` do pipeline (spec pedagógica §1, §3; `prompts-v1.md` extrac
 | 2026-10-20 | Cache guarda a `issueList` da sanitização | Mesmos avisos internos com ou sem acerto (Plano) |
 
 ## Status
-M1 em andamento. Próximo passo: roadmap e constante. Pendência para o humano: os 10 casos reais do "pronto quando" esperam as fotos (F1-10).
+M1, M2 e M3.1–3.2 feitos. `test:extract-live` passou contra a API em 20/10/2026 (5 de 5). Próximo passo: revisão neutra (3.3). Pendência para o humano: os 10 casos reais do "pronto quando" esperam as fotos (F1-10).
