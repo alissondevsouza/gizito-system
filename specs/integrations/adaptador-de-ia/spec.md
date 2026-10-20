@@ -32,7 +32,7 @@ Implementar o `AiProvider` real com a Anthropic, mais o `FakeAiProvider`. É por
   - todo objeto sai com `additionalProperties: false`;
   - o que a API não aplica (tamanho de texto, `minItems`/`maxItems` maiores, `minimum`/`maximum`, `pattern`) vai para a `description`, como o SDK faz, para o modelo ainda ver o limite;
   - `allOf` só de `pattern`, que o Zod gera para string com duas regex, vira `description`;
-  - `$ref` com restrição ao lado vira `allOf: [{ $ref }]` com a restrição na `description`, para o padrão do schema reutilizado não se perder;
+  - `$ref` com restrição ao lado é embutido (a definição do `$defs` mesclada com a restrição), para o padrão do schema reutilizado não se perder; `allOf` com `$ref` não é aceito pela API;
   - o JSON Schema descreve a entrada do Zod (`io: "input"`), que é o que o modelo produz;
   - os limites de inteiro seguro do `z.int()` são descartados.
 
@@ -159,4 +159,4 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` no pacote; no fim d
 | 2026-10-20 | Streaming em toda chamada | a geração pode passar de 30.000 tokens de saída com o raciocínio; o streaming evita o timeout HTTP |
 
 ## Status
-M1 a M4 implementados. Revisão neutra rodada 1 REPROVADO (3 CRÍTICOs, 4 ALERTAs, 5 NOTAs), tudo corrigido ou registrado em `review.md`; falta a rodada 2, que revalida só os pontos corrigidos. Pendências do humano: chaves no `.env` e no `.env.example` (o humano já começou a editar o `.env.example`) e rodar `test:ai-live`.
+M1 a M4 implementados. Revisão neutra REPROVADO nas rodadas 1 e 2; as correções da rodada 2 (embutir a definição em vez de `allOf` com `$ref`) não passaram por verifier, pelo teto de 2 rodadas: escalado ao humano. A confirmação definitiva de que a API aceita os sete schemas é o `test:ai-live`, que depende da chave. Pendências do humano: chaves no `.env` e no `.env.example` e rodar `test:ai-live`.

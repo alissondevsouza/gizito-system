@@ -1,7 +1,7 @@
 ---
 feature: F1-05 adaptador-de-ia
 module: integrations
-round: 1
+round: 2
 verdict: REPROVADO
 updated: 2026-10-20
 ---
@@ -61,3 +61,39 @@ Registrado para a F1-07, em known-issues:
 - ALERTA da conta (401, 402, 403, limite de gasto em 400, teto do tier em 429 `enforced_spend_limit_reached`) e alinhamento do `jobs.md` §4. A decisão de manter o pedido na fila e alertar o operador é da orquestração do `order.generate`, que ainda não existe; o adaptador já devolve códigos distintos.
 
 Comandos depois da correção: `bun run lint`, `bun run typecheck` e `bun run build` verdes; `bun run test` verde (core 710, integrations 338 com 17 pulados, db 98, api 25, worker 21).
+
+## Rodada 2
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun test` em `packages/integrations` | 338 pass, 17 skip, 0 fail |
+| sondas no scratchpad (conversão dos sete schemas, `io`, `usage` parcial, documentação oficial de structured outputs) | `photoExtraction` saía com 2 nós `allOf: [{ $ref }]`; `io: "input"` e `"output"` dão o mesmo JSON nos sete schemas; o `usage` parcial não conta em dobro, usa o número exato quando houve `message_delta` e o modelo do `message_start` |
+| `test:ai-live` | não rodado, sem chave |
+
+### Critérios de aceite
+| RF | Atendido | Evidência (teste ou arquivo) |
+|---|---|---|
+| RF-01, RF-04, RF-06, RF-07 | sim | testes novos quebrariam sem as correções |
+| RF-02 | não | `allOf` com `$ref` não é aceito pela API (CRÍTICO) |
+| RF-05 | sim, com ressalva | `usage` parcial é limite inferior (ALERTA) |
+
+### Achados
+- [CRÍTICO] `output-schema.ts:91-93` — `$ref` com restrição virava `allOf: [{ $ref }]`. A documentação de structured outputs diz "`allOf` with `$ref` not supported" e que um recurso não suportado dá 400 — toda chamada `extract` receberia 400 (`ai_request_invalid`, não retentável), pior que o defeito original — embutir a definição do `$defs` com a restrição; teste que proíbe `allOf` com `$ref`.
+- [ALERTA] `anthropic-provider.ts:131-139` — a estimativa de saída conta só o texto visível; um corte depois de muito raciocínio oculto grava `outputTokens: 1` — registrar para a F1-07.
+- [NOTA] `adr/0011…md:43-45` — ADR "aceito" editado; sem efeito prático, porque nasceu nesta branch e não foi mesclado.
+- [NOTA] o risco aceito do `ANTHROPIC_CUSTOM_HEADERS` se sustenta (host fixo, a chave não vaza).
+- [NOTA] o item da conta para a F1-07 em known-issues está bem justificado.
+
+### Regressão pedagógica
+Pendente (F1-10).
+
+### Resposta do orquestrador
+Corrigido:
+- CRÍTICO: `inlineConstrainedRef` substitui um `$ref` local que tem restrição ao lado pela definição do `$defs` mesclada com a restrição (os `allOf` de padrões das duas partes se somam e vão para a `description`), com proteção contra referência circular. O ramo `$ref` de `strictSchemaOf` volta a emitir só o `$ref` puro, como o helper do SDK. Testes: o caso unitário agora exige o `topic` embutido com os dois padrões, sem `$ref` nem `allOf`; um teste novo nos sete schemas do core proíbe `allOf` com `$ref` e `$ref` com qualquer coisa ao lado; o teste de preservação de `pattern` e `maxLength` segue verde.
+- ALERTA: linha nova em known-issues com condição para a F1-07 (margem no teto ou custo marcado como estimado) e conferência na F1-10 contra o painel da Anthropic.
+- NOTA do ADR: exceção aceita. O ADR-0011 foi criado nesta branch e editado antes do merge, então não há versão aceita publicada que tenha mudado.
+
+Comandos depois da correção: `bun run lint`, `bun run typecheck` e `bun run build` verdes; `bun run test` verde (core 710, integrations 345 com 17 pulados, db 98, api 25, worker 21).
+
+Teto de 2 rodadas atingido: a correção desta rodada não passou por verifier. A prova definitiva de que a API aceita os sete schemas é o `test:ai-live`, que roda contra a API real assim que a chave estiver no `.env`.

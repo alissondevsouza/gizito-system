@@ -154,7 +154,7 @@ describe("toOutputJsonSchema (spec F1-05, RF-02)", () => {
     },
   );
 
-  it("$ref com restrição ao lado vira allOf com a restrição na descrição", () => {
+  it("$ref com restrição ao lado é embutido com as duas restrições, sem allOf com $ref", () => {
     const slugSchema = z.string().regex(/^[a-z]+$/);
     const outputSchema = toOutputJsonSchema(
       z.strictObject({ base: slugSchema, topic: slugSchema.regex(/^ma/) }),
@@ -162,9 +162,24 @@ describe("toOutputJsonSchema (spec F1-05, RF-02)", () => {
     const properties = outputSchema.properties as Record<string, SchemaNode>;
     const topic = properties.topic ?? {};
     expect(topic.$ref).toBeUndefined();
-    expect(Array.isArray(topic.allOf)).toBe(true);
+    expect(topic.allOf).toBeUndefined();
+    expect(topic.type).toBe("string");
+    expect(String(topic.description)).toContain("^[a-z]+$");
     expect(String(topic.description)).toContain("^ma");
   });
+
+  it.each(Object.entries(outputSchemaByName))(
+    "%s não tem allOf com $ref nem $ref com restrição ao lado",
+    (_, schema) => {
+      for (const node of listSchemaNode(toOutputJsonSchema(schema))) {
+        if ("$ref" in node) {
+          expect(Object.keys(node).filter((key) => key !== "$defs")).toEqual(["$ref"]);
+        }
+        const allOfList = Array.isArray(node.allOf) ? node.allOf : [];
+        expect(allOfList.some((entry) => isNode(entry) && "$ref" in entry)).toBe(false);
+      }
+    },
+  );
 
   it("descreve a entrada que o modelo produz, não a saída transformada do Zod", () => {
     const outputSchema = toOutputJsonSchema(

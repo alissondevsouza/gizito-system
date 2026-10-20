@@ -44,6 +44,51 @@ function describedConstraint(description: unknown, leftoverMap: JsonSchemaNode):
   return typeof description === "string" ? `${description}\n\n${constraintText}` : constraintText;
 }
 
+const LOCAL_DEFINITION_PREFIX = "#/$defs/";
+
+function mergeDefinition(definition: JsonSchemaNode, siblingMap: JsonSchemaNode): JsonSchemaNode {
+  const allOf = [
+    ...(Array.isArray(definition.allOf) ? definition.allOf : []),
+    ...(Array.isArray(siblingMap.allOf) ? siblingMap.allOf : []),
+  ];
+  return { ...definition, ...siblingMap, ...(allOf.length > 0 ? { allOf } : {}) };
+}
+
+function inlineConstrainedRef(
+  value: unknown,
+  definitionMap: JsonSchemaNode,
+  visitingNameSet: ReadonlySet<string>,
+): unknown {
+  if (Array.isArray(value)) {
+    return value.map((child) => inlineConstrainedRef(child, definitionMap, visitingNameSet));
+  }
+  if (!isNode(value)) return value;
+  const { $ref, ...siblingMap } = value;
+  const definitionName =
+    typeof $ref === "string" && $ref.startsWith(LOCAL_DEFINITION_PREFIX)
+      ? $ref.slice(LOCAL_DEFINITION_PREFIX.length)
+      : null;
+  const definition = definitionName === null ? undefined : definitionMap[definitionName];
+  const canInline =
+    definitionName !== null &&
+    isNode(definition) &&
+    Object.keys(siblingMap).length > 0 &&
+    !visitingNameSet.has(definitionName);
+  if (canInline) {
+    return inlineConstrainedRef(
+      mergeDefinition(definition, siblingMap),
+      definitionMap,
+      new Set([...visitingNameSet, definitionName]),
+    );
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, child]) => [
+      key,
+      inlineConstrainedRef(child, definitionMap, visitingNameSet),
+    ]),
+  );
+}
+
 function strictSchemaOf(value: unknown): unknown {
   if (!isNode(value)) return value;
   const {
@@ -88,10 +133,7 @@ function strictSchemaOf(value: unknown): unknown {
   const strict: Record<string, unknown> = {};
   if (isNode($defs)) strict.$defs = mapNodeRecord($defs);
   if (describedDescription !== undefined) strict.description = describedDescription;
-  if (typeof $ref === "string") {
-    const isBareRef = nestedAllOf.length === 0 && describedDescription === undefined;
-    return isBareRef ? { ...strict, $ref } : { ...strict, allOf: [{ $ref }, ...nestedAllOf] };
-  }
+  if (typeof $ref === "string") return isNode($defs) ? { $defs: strict.$defs, $ref } : { $ref };
   if (type !== undefined && !Array.isArray(type)) strict.type = type;
   const variantList = Array.isArray(anyOf)
     ? anyOf
@@ -117,6 +159,8 @@ function strictSchemaOf(value: unknown): unknown {
 }
 
 export function toOutputJsonSchema(schema: z.ZodType): { readonly [key: string]: unknown } {
-  const strictSchema = strictSchemaOf(z.toJSONSchema(schema, { reused: "ref", io: "input" }));
+  const rawSchema: unknown = z.toJSONSchema(schema, { reused: "ref", io: "input" });
+  const definitionMap = isNode(rawSchema) && isNode(rawSchema.$defs) ? rawSchema.$defs : {};
+  const strictSchema = strictSchemaOf(inlineConstrainedRef(rawSchema, definitionMap, new Set()));
   return isNode(strictSchema) ? strictSchema : {};
 }
