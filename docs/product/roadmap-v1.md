@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 4 | 1 | 6 |
+| F1 Prova técnica e pedagógica | 11 | 5 | 1 | 5 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -133,7 +133,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 4 de 11 concluídas
+**Estado:** em andamento · 5 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -151,12 +151,12 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `MathEvaluator` com mathjs: expressões, frações simplificadas, unidades, tolerância, equivalência entre alternativas
   - Pronto quando: casos: fração equivalente, decimal vs fração, unidade errada, distratores iguais
   - Concluída em: 20/10/2026. `createMathjsEvaluator` e `mathExpressionToLatex` em `packages/integrations/src/math/`: lista fechada de nós, funções e unidades, tabela de unidades pt-BR, equivalência por valor, unidade, tolerância, expressão, conjunto e texto, LaTeX pt-BR sem custo exponencial. Você aprovou a spec pedagógica 1.2 (§15.7), `math_expression_invalid` para resposta e alternativa do tipo `expression` e o `generate` v1 com as unidades aceitas. Revisão neutra reprovada nas rodadas 1 e 2 e aprovada na rodada 3. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-05 `adaptador-de-ia` — em andamento** — integrations · M · depende: F0-04 · `specs/integrations/adaptador-de-ia/`
+- [x] **F1-05 `adaptador-de-ia`** — integrations · M · depende: F0-04 · 20/10/2026 · `8c5acd5` · `specs/integrations/adaptador-de-ia/`
   - Entrega: `AiProvider` real com dois modelos configuráveis, saída JSON validada, `usage` com tokens e custo em centavos, redução de imagem, retries só transitórios; `FakeAiProvider`
   - Pronto quando: suíte de contrato passa no real (com chave) e no fake
-  - Feito até agora (20/10/2026): `createAnthropicProvider` (streaming, cache do system, foto reduzida sem metadado, erros tipados, custo em centavos de dólar; saída estruturada em extração, plano e revisão, e JSON em texto na geração, porque a API recusa a gramática do kit) e `createFakeAiProvider` em `packages/integrations`; `AiProvider` com `Result` no core; ADR-0011. Revisão neutra reprovada nas rodadas 1 e 2, com tudo corrigido. `test:ai-live` contra a API real com 16 de 16 casos, incluindo os sete schemas de saída do core. Falta o merge
+  - Concluída em: 20/10/2026. `createAnthropicProvider` (streaming, cache do system, foto reduzida sem metadado, erros tipados, custo em centavos de dólar; saída estruturada em extração, plano e revisão, e JSON em texto na geração, porque a API recusa a gramática do kit) e `createFakeAiProvider` em `packages/integrations`; `AiProvider` com `Result` no core; ADR-0011. Revisão neutra reprovada nas rodadas 1 e 2, com tudo corrigido. `test:ai-live` contra a API real com 16 de 16 casos, incluindo os sete schemas de saída do core. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
 
-- [ ] **F1-06 `pipeline-extracao`** — worker · M · depende: F1-01, F1-03, F1-05
+- [ ] **F1-06 `pipeline-extracao` — em andamento** — worker · M · depende: F1-01, F1-03, F1-05 · `specs/worker/pipeline-extracao/`
   - Entrega: prompt `extract` v1; mapeamento para a taxonomia com confiança; `material_profile`; legibilidade por foto; cache por hash; aviso de dado pessoal; assuntos ainda não atendidos sinalizados (PRD 7.7)
   - Pronto quando: em 10 casos reais, assuntos corretos; foto ilegível recusada; sem transcrição integral
 - [ ] **F1-07 `pipeline-geracao`** — worker · L · depende: F1-03, F1-04, F1-05, F1-06

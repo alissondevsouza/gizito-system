@@ -6,6 +6,7 @@ import {
   BASE_TEXT_WORD_RANGE_BY_GRADE,
   CHARGE_TTL_MINUTES,
   DUPLICATE_SIMILARITY_THRESHOLD,
+  EXTRACT_OUTPUT_RETRY_COUNT,
   JOB_FAILED_METRIC_WINDOW_HOURS,
   KIT_PRICE_CENTS,
   KIT_RETENTION_MONTHS,
@@ -113,6 +114,7 @@ describe("constantes da spec pedagógica (§11)", () => {
     expect(OTHER_TOPIC_REF).toBe("other");
     expect(MAX_TOPIC_CANDIDATE_COUNT).toBe(6);
     expect(MAX_EVIDENCE_LENGTH).toBe(120);
+    expect(EXTRACT_OUTPUT_RETRY_COUNT).toBe(1);
     expect([MAX_TERMINOLOGY_COUNT, MAX_TERM_LENGTH, MAX_CONTEXT_THEME_COUNT]).toEqual([10, 40, 5]);
     expect(LEGIBILITY_SCORE_MAP).toEqual({ good: 1, partial: 0.5, unreadable: 0 });
     expect(PERCEIVED_DIFFICULTY_SHIFT_DIRECTION_MAP).toEqual({

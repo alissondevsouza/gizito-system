@@ -44,6 +44,7 @@ export const OTHER_TOPIC_REF = "other";
 
 export const MAX_TOPIC_CANDIDATE_COUNT = 6;
 export const MAX_EVIDENCE_LENGTH = 120;
+export const EXTRACT_OUTPUT_RETRY_COUNT = 1;
 export const MAX_TERMINOLOGY_COUNT = 10;
 export const MAX_TERM_LENGTH = 40;
 export const MAX_CONTEXT_THEME_COUNT = 5;

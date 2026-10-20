@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import sharp from "sharp";
 import { z } from "zod";
 import { describeAiProviderContract, echoOutput } from "#src/__tests__/ai/contract.ts";
 import { createFakeAiProvider } from "#src/fakes/fake-ai-provider.ts";
@@ -57,6 +58,33 @@ describe("fake do AiProvider (spec F1-05, RF-06)", () => {
   it("sem resposta enfileirada é erro do teste", async () => {
     const provider = createFakeAiProvider();
     await expect(provider.review(request)).rejects.toThrow("sem resposta enfileirada");
+  });
+
+  it("responde pelo conteúdo da requisição quando a fila está vazia (spec F1-06, RF-07)", async () => {
+    const provider = createFakeAiProvider();
+    const imageOf = async (red: number) => ({
+      mediaType: "image/png" as const,
+      data: new Uint8Array(
+        await sharp({
+          create: { width: 4, height: 4, channels: 3, background: { r: red, g: 0, b: 0 } },
+        })
+          .png()
+          .toBuffer(),
+      ),
+    });
+    const [darkImage, lightImage] = await Promise.all([imageOf(10), imageOf(250)]);
+    provider.enqueueOutput("extract", { planId: "fila" });
+    provider.respondWith("extract", (received) => ({
+      kind: "output",
+      output: { planId: received.imageList?.[0]?.data === darkImage.data ? "escura" : "clara" },
+    }));
+    const queued = await provider.extract({ ...request, imageList: [lightImage] });
+    const [dark, light] = await Promise.all([
+      provider.extract({ ...request, imageList: [darkImage] }),
+      provider.extract({ ...request, imageList: [lightImage] }),
+    ]);
+    const planIdOf = (result: typeof queued) => (result.ok ? result.value.output.planId : null);
+    expect([queued, dark, light].map(planIdOf)).toEqual(["fila", "escura", "clara"]);
   });
 
   it("modelo sem preço é erro do teste", async () => {
