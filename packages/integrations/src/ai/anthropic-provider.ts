@@ -19,6 +19,7 @@ import { toOutputJsonSchema } from "#src/ai/output-schema.ts";
 import { findModelPrice, type ModelPrice, usageOf } from "#src/ai/pricing.ts";
 import type { Logger } from "#src/logger.ts";
 
+export const ANTHROPIC_API_BASE_URL = "https://api.anthropic.com";
 export const DEFAULT_AI_TIMEOUT_MS = 10 * 60 * 1000;
 export const DEFAULT_AI_MAX_RETRIES = 2;
 
@@ -70,12 +71,12 @@ function stageModelOf(setting: AiModelSetting, defaultEffort: AiEffort): StageMo
 
 const STATUS_PAYMENT_REQUIRED = 402;
 const STATUS_SERVER_ERROR_FLOOR = 500;
-const requestInvalidStatusList: readonly number[] = [400, 404, 413, 422];
+const transientClientStatusList: readonly number[] = [408, 409];
 
 function failureCodeOfStatus(status: number | undefined): AiFailureCode {
   if (status === undefined || status >= STATUS_SERVER_ERROR_FLOOR) return "ai_unavailable";
   if (status === STATUS_PAYMENT_REQUIRED) return "ai_auth_failed";
-  return requestInvalidStatusList.includes(status) ? "ai_request_invalid" : "ai_unavailable";
+  return transientClientStatusList.includes(status) ? "ai_unavailable" : "ai_request_invalid";
 }
 
 function failureCodeOfError(error: unknown): AiFailureCode | null {
@@ -86,6 +87,7 @@ function failureCodeOfError(error: unknown): AiFailureCode | null {
   if (error instanceof Anthropic.AuthenticationError) return "ai_auth_failed";
   if (error instanceof Anthropic.PermissionDeniedError) return "ai_auth_failed";
   if (error instanceof Anthropic.APIError) return failureCodeOfStatus(error.status);
+  if (error instanceof Anthropic.AnthropicError) return "ai_unavailable";
   return null;
 }
 
@@ -120,6 +122,22 @@ function usageOfMessage(price: ModelPrice, usage: Anthropic.Usage): AiUsage {
   });
 }
 
+const CHARACTERS_PER_ESTIMATED_TOKEN = 4;
+
+function textOf(message: Anthropic.Message): string {
+  return message.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("");
+}
+
+function partialUsageOf(price: ModelPrice, partialMessage: Anthropic.Message): AiUsage {
+  const estimatedOutputTokens = Math.ceil(
+    textOf(partialMessage).length / CHARACTERS_PER_ESTIMATED_TOKEN,
+  );
+  return usageOfMessage(price, {
+    ...partialMessage.usage,
+    output_tokens: Math.max(partialMessage.usage.output_tokens, estimatedOutputTokens),
+  });
+}
+
 function parseJson(text: string): Result<unknown, null> {
   try {
     return ok(JSON.parse(text));
@@ -129,10 +147,7 @@ function parseJson(text: string): Result<unknown, null> {
 }
 
 function parseOutput<T>(message: Anthropic.Message, schema: z.ZodType<T>): Result<T, null> {
-  const text = message.content
-    .flatMap((block) => (block.type === "text" ? [block.text] : []))
-    .join("");
-  const json = parseJson(text);
+  const json = parseJson(textOf(message));
   if (!json.ok) return json;
   const parsed = schema.safeParse(json.value);
   return parsed.success ? ok(parsed.data) : err(null);
@@ -143,35 +158,42 @@ const truncatedStopReasonList: readonly (string | null)[] = [
   "model_context_window_exceeded",
 ];
 
+type StreamFailure = {
+  readonly code: AiFailureCode;
+  readonly partialMessage: Anthropic.Message | undefined;
+};
+
 async function streamMessage<T>(
   context: ProviderContext,
   stage: AiStage,
   stageModel: StageModel,
   request: AiRequest<T>,
   imageBlockList: readonly Anthropic.ImageBlockParam[],
-): Promise<Result<Anthropic.Message, AiFailureCode>> {
-  try {
-    const stream = context.client.messages.stream(
-      {
-        model: stageModel.model,
-        max_tokens: request.maxOutputTokens ?? defaultMaxOutputTokensByStage[stage],
-        thinking: { type: "adaptive" },
-        output_config: {
-          effort: stageModel.effort,
-          format: { type: "json_schema", schema: toOutputJsonSchema(request.outputSchema) },
-        },
-        system: [
-          { type: "text", text: request.systemPrompt, cache_control: { type: "ephemeral" } },
-        ],
-        messages: [
-          {
-            role: "user",
-            content: [...imageBlockList, { type: "text", text: request.userText }],
-          },
-        ],
+): Promise<Result<Anthropic.Message, StreamFailure>> {
+  const stream = context.client.messages.stream(
+    {
+      model: stageModel.model,
+      max_tokens: request.maxOutputTokens ?? defaultMaxOutputTokensByStage[stage],
+      thinking: { type: "adaptive" },
+      output_config: {
+        effort: stageModel.effort,
+        format: { type: "json_schema", schema: toOutputJsonSchema(request.outputSchema) },
       },
-      { signal: request.signal },
-    );
+      system: [{ type: "text", text: request.systemPrompt, cache_control: { type: "ephemeral" } }],
+      messages: [
+        {
+          role: "user",
+          content: [...imageBlockList, { type: "text", text: request.userText }],
+        },
+      ],
+    },
+    { signal: request.signal },
+  );
+  const progress: { latestSnapshot: Anthropic.Message | undefined } = { latestSnapshot: undefined };
+  stream.on("streamEvent", (_event, snapshot) => {
+    progress.latestSnapshot = snapshot;
+  });
+  try {
     return ok(await stream.finalMessage());
   } catch (error) {
     const code = failureCodeOfError(error);
@@ -186,7 +208,7 @@ async function streamMessage<T>(
       },
       "ai_call_failed",
     );
-    return err(code);
+    return err({ code, partialMessage: progress.latestSnapshot });
   }
 }
 
@@ -197,18 +219,18 @@ async function callModel<T>(
   request: AiRequest<T>,
 ): Promise<AiCallResult<T>> {
   const startTime = context.now();
+  const elapsedMs = () => Math.round(context.now() - startTime);
   const failure = (code: AiFailureCode, usage: AiUsage | null, model: string) =>
-    err({
-      code,
-      usage,
-      model,
-      promptVersion: request.promptVersion,
-      durationMs: context.now() - startTime,
-    });
+    err({ code, usage, model, promptVersion: request.promptVersion, durationMs: elapsedMs() });
   const imageBlockList = await imageBlockListOf(request.imageList ?? []);
   if (!imageBlockList.ok) return failure(imageBlockList.error, null, stageModel.model);
   const streamed = await streamMessage(context, stage, stageModel, request, imageBlockList.value);
-  if (!streamed.ok) return failure(streamed.error, null, stageModel.model);
+  if (!streamed.ok) {
+    const { code, partialMessage } = streamed.error;
+    return partialMessage === undefined
+      ? failure(code, null, stageModel.model)
+      : failure(code, partialUsageOf(stageModel.price, partialMessage), partialMessage.model);
+  }
   const message = streamed.value;
   const usage = usageOfMessage(stageModel.price, message.usage);
   if (message.stop_reason === "refusal") return failure("ai_refused", usage, message.model);
@@ -222,7 +244,7 @@ async function callModel<T>(
     usage,
     model: message.model,
     promptVersion: request.promptVersion,
-    durationMs: context.now() - startTime,
+    durationMs: elapsedMs(),
   });
 }
 
@@ -232,6 +254,10 @@ export function createAnthropicProvider(config: AnthropicProviderConfig): AiProv
   const context: ProviderContext = {
     client: new Anthropic({
       apiKey: config.apiKey,
+      authToken: null,
+      baseURL: ANTHROPIC_API_BASE_URL,
+      logLevel: "off",
+      openTelemetry: false,
       timeout: config.timeoutMs ?? DEFAULT_AI_TIMEOUT_MS,
       maxRetries: config.maxRetries ?? DEFAULT_AI_MAX_RETRIES,
       fetch: config.fetch,

@@ -126,4 +126,51 @@ describe("toOutputJsonSchema (spec F1-05, RF-02)", () => {
     ]);
     expect(properties.answer?.oneOf).toBeUndefined();
   });
+
+  function listRawConstraint(node: unknown, key: string): readonly unknown[] {
+    if (Array.isArray(node)) return node.flatMap((child) => listRawConstraint(child, key));
+    if (!isNode(node)) return [];
+    return [
+      ...(key in node ? [node[key]] : []),
+      ...Object.values(node).flatMap((child) => listRawConstraint(child, key)),
+    ];
+  }
+
+  function descriptionTextOf(node: unknown): string {
+    return listRawConstraint(node, "description").join("\n");
+  }
+
+  it.each(Object.entries(outputSchemaByName))(
+    "%s leva todo pattern e todo maxLength do schema bruto para a descrição",
+    (_, schema) => {
+      const rawSchema = z.toJSONSchema(schema, { reused: "ref", io: "input" });
+      const descriptionText = descriptionTextOf(toOutputJsonSchema(schema));
+      for (const pattern of listRawConstraint(rawSchema, "pattern")) {
+        expect(descriptionText).toContain(JSON.stringify(pattern).slice(1, -1));
+      }
+      for (const maxLength of listRawConstraint(rawSchema, "maxLength")) {
+        expect(descriptionText).toContain(`maxLength: ${maxLength}`);
+      }
+    },
+  );
+
+  it("$ref com restrição ao lado vira allOf com a restrição na descrição", () => {
+    const slugSchema = z.string().regex(/^[a-z]+$/);
+    const outputSchema = toOutputJsonSchema(
+      z.strictObject({ base: slugSchema, topic: slugSchema.regex(/^ma/) }),
+    );
+    const properties = outputSchema.properties as Record<string, SchemaNode>;
+    const topic = properties.topic ?? {};
+    expect(topic.$ref).toBeUndefined();
+    expect(Array.isArray(topic.allOf)).toBe(true);
+    expect(String(topic.description)).toContain("^ma");
+  });
+
+  it("descreve a entrada que o modelo produz, não a saída transformada do Zod", () => {
+    const outputSchema = toOutputJsonSchema(
+      z.strictObject({ amount: z.string().pipe(z.coerce.number()) }),
+    );
+    const properties = outputSchema.properties as Record<string, SchemaNode>;
+    expect(properties.amount?.type).toBe("string");
+  });
 });

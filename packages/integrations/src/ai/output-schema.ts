@@ -69,33 +69,10 @@ function strictSchemaOf(value: unknown): unknown {
     pattern,
     ...leftoverMap
   } = value;
-  const strict: Record<string, unknown> = {};
-  if (isNode($defs)) strict.$defs = mapNodeRecord($defs);
-  if (typeof $ref === "string") return { ...strict, $ref };
-  if (type !== undefined && !Array.isArray(type)) strict.type = type;
-  const variantList = Array.isArray(anyOf)
-    ? anyOf
-    : Array.isArray(oneOf)
-      ? oneOf
-      : Array.isArray(type)
-        ? type.map((variantType) => ({ type: variantType }))
-        : null;
-  if (variantList !== null) strict.anyOf = variantList.map(strictSchemaOf);
   const isPatternAllOf = Array.isArray(allOf) && allOf.every(isPatternOnly);
-  if (Array.isArray(allOf) && !isPatternAllOf) strict.allOf = allOf.map(strictSchemaOf);
-  if (enumList !== undefined) strict.enum = enumList;
-  if (constValue !== undefined) strict.const = constValue;
-  if (title !== undefined) strict.title = title;
-  if (type === "object") {
-    strict.properties = isNode(properties) ? mapNodeRecord(properties) : {};
-    strict.additionalProperties = false;
-    if (required !== undefined) strict.required = required;
-  }
-  if (type === "array" && items !== undefined) strict.items = strictSchemaOf(items);
+  const nestedAllOf = Array.isArray(allOf) && !isPatternAllOf ? allOf.map(strictSchemaOf) : [];
   const isSupportedMinItems = type === "array" && supportedMinItemsList.includes(minItems);
-  if (isSupportedMinItems) strict.minItems = minItems;
   const isSupportedFormat = type === "string" && supportedStringFormatSet.has(format);
-  if (isSupportedFormat) strict.format = format;
   const patternList = [
     ...(typeof pattern === "string" ? [pattern] : []),
     ...(isPatternAllOf ? allOf.map((entry) => entry.pattern) : []),
@@ -108,11 +85,38 @@ function strictSchemaOf(value: unknown): unknown {
     maximum: isSafeIntegerBound(maximum) ? undefined : maximum,
     pattern: patternList.length === 0 ? undefined : patternList.join(" e "),
   });
+  const strict: Record<string, unknown> = {};
+  if (isNode($defs)) strict.$defs = mapNodeRecord($defs);
   if (describedDescription !== undefined) strict.description = describedDescription;
+  if (typeof $ref === "string") {
+    const isBareRef = nestedAllOf.length === 0 && describedDescription === undefined;
+    return isBareRef ? { ...strict, $ref } : { ...strict, allOf: [{ $ref }, ...nestedAllOf] };
+  }
+  if (type !== undefined && !Array.isArray(type)) strict.type = type;
+  const variantList = Array.isArray(anyOf)
+    ? anyOf
+    : Array.isArray(oneOf)
+      ? oneOf
+      : Array.isArray(type)
+        ? type.map((variantType) => ({ type: variantType }))
+        : null;
+  if (variantList !== null) strict.anyOf = variantList.map(strictSchemaOf);
+  if (nestedAllOf.length > 0) strict.allOf = nestedAllOf;
+  if (enumList !== undefined) strict.enum = enumList;
+  if (constValue !== undefined) strict.const = constValue;
+  if (title !== undefined) strict.title = title;
+  if (type === "object") {
+    strict.properties = isNode(properties) ? mapNodeRecord(properties) : {};
+    strict.additionalProperties = false;
+    if (required !== undefined) strict.required = required;
+  }
+  if (type === "array" && items !== undefined) strict.items = strictSchemaOf(items);
+  if (isSupportedMinItems) strict.minItems = minItems;
+  if (isSupportedFormat) strict.format = format;
   return strict;
 }
 
 export function toOutputJsonSchema(schema: z.ZodType): { readonly [key: string]: unknown } {
-  const strictSchema = strictSchemaOf(z.toJSONSchema(schema, { reused: "ref" }));
+  const strictSchema = strictSchemaOf(z.toJSONSchema(schema, { reused: "ref", io: "input" }));
   return isNode(strictSchema) ? strictSchema : {};
 }

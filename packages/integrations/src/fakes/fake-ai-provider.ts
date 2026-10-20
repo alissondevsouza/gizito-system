@@ -8,6 +8,7 @@ import {
   err,
   ok,
 } from "@gizito/core";
+import { reduceImage } from "#src/ai/image.ts";
 import { findModelPrice, usageOf } from "#src/ai/pricing.ts";
 
 const CHARACTERS_PER_TOKEN = 4;
@@ -66,7 +67,11 @@ export function createFakeAiProvider({
       outputTokens: tokenCountOfText(JSON.stringify(output) ?? ""),
     });
   };
-  const respond = <T>(stage: AiStage, model: string, request: AiRequest<T>): AiCallResult<T> => {
+  const respond = async <T>(
+    stage: AiStage,
+    model: string,
+    request: AiRequest<T>,
+  ): Promise<AiCallResult<T>> => {
     requestList.push({ stage, request });
     const failure = (code: AiFailureCode, usage: AiUsage | null) =>
       err({
@@ -77,6 +82,8 @@ export function createFakeAiProvider({
         durationMs: FAKE_DURATION_MS,
       });
     if (request.signal?.aborted) return failure("ai_aborted", null);
+    const reducedList = await Promise.all((request.imageList ?? []).map(reduceImage));
+    if (reducedList.some((reduced) => !reduced.ok)) return failure("ai_image_invalid", null);
     const [next, ...rest] = queueByStage.get(stage) ?? [];
     if (next === undefined) throw new Error(`fake de IA sem resposta enfileirada para ${stage}`);
     queueByStage.set(stage, rest);
@@ -98,10 +105,10 @@ export function createFakeAiProvider({
     });
   };
   return {
-    extract: async (request) => respond("extract", extractModel, request),
-    plan: async (request) => respond("plan", generateModel, request),
-    generate: async (request) => respond("generate", generateModel, request),
-    review: async (request) => respond("review", generateModel, request),
+    extract: (request) => respond("extract", extractModel, request),
+    plan: (request) => respond("plan", generateModel, request),
+    generate: (request) => respond("generate", generateModel, request),
+    review: (request) => respond("review", generateModel, request),
     enqueueOutput: (stage, output) => enqueue(stage, { kind: "output", output }),
     enqueueFailure: (stage, code) => enqueue(stage, { kind: "failure", code }),
     requestList,

@@ -6,6 +6,7 @@ import {
   errorResponse,
   messageSseResponse,
   midStreamErrorResponse,
+  partialSseResponse,
   type RecordedMessage,
 } from "#src/__tests__/ai/sse.ts";
 import {
@@ -20,6 +21,7 @@ type JsonRecord = Record<string, unknown>;
 type CapturedRequest = {
   readonly url: string;
   readonly body: JsonRecord;
+  readonly headers: Headers;
 };
 
 const wordSchema = z.strictObject({ word: z.string().min(2) });
@@ -69,6 +71,7 @@ function createHarness(
       capturedList.push({
         url: String(input instanceof Request ? input.url : input),
         body: JSON.parse(String(init?.body ?? "{}")),
+        headers: new Headers(init?.headers),
       });
       if (step === undefined) throw new Error("sem resposta gravada");
       return step(init?.signal);
@@ -297,5 +300,68 @@ describe("adaptador Anthropic: resposta (spec F1-05, RF-05)", () => {
     await expect(
       provider.generate({ ...wordRequest(), outputSchema: z.strictObject({ when: z.date() }) }),
     ).rejects.toThrow();
+  });
+});
+
+describe("adaptador Anthropic: correções da revisão (spec F1-05, RF-05)", () => {
+  const partialText = '{"word": "giz'.padEnd(400, "x");
+
+  it.each([
+    ["conexão fechada sem message_stop", "close"],
+    ["stream que falha no meio", "error"],
+  ] as const)("%s dá ai_unavailable com o usage parcial", async (_, ending) => {
+    const { provider } = createHarness([() => partialSseResponse(partialText, ending)]);
+    const result = await provider.generate(wordRequest());
+    expect(result.ok ? null : result.error.code).toBe("ai_unavailable");
+    expect(result.ok ? null : result.error.usage?.inputTokens).toBe(1000);
+    expect(result.ok ? null : result.error.usage?.outputTokens).toBe(100);
+  });
+
+  it("cancelamento no meio do stream dá ai_aborted com o usage parcial", async () => {
+    const controller = new AbortController();
+    const { provider } = createHarness([
+      (signal) => {
+        setTimeout(() => controller.abort(), 20);
+        return partialSseResponse(partialText, "hang", signal);
+      },
+    ]);
+    const result = await provider.generate(wordRequest({ signal: controller.signal }));
+    expect(result.ok ? null : result.error.code).toBe("ai_aborted");
+    expect(result.ok ? null : result.error.usage?.inputTokens).toBe(1000);
+  });
+
+  it.each<[number, AiFailureCode]>([
+    [405, "ai_request_invalid"],
+    [410, "ai_request_invalid"],
+    [451, "ai_request_invalid"],
+    [408, "ai_unavailable"],
+    [409, "ai_unavailable"],
+  ])("HTTP %d dá %s", async (status, code) => {
+    const { provider } = createHarness([() => errorResponse(status, "error")]);
+    expect(failureCodeOf(await provider.generate(wordRequest()))).toBe(code);
+  });
+
+  it("duração sai inteira mesmo com relógio fracionário", async () => {
+    const instantList = [0.4, 34.25];
+    const { provider } = createHarness([respondWith(recordedMessage())], {
+      now: () => instantList.shift() ?? 0,
+    });
+    const result = await provider.generate(wordRequest());
+    expect(result.ok && result.value.durationMs).toBe(34);
+  });
+
+  it("ignora as variáveis de ambiente do SDK", async () => {
+    const savedEnvironment = { ...process.env };
+    process.env.ANTHROPIC_BASE_URL = "http://127.0.0.1:9";
+    process.env.ANTHROPIC_AUTH_TOKEN = "token-do-ambiente";
+    try {
+      const { provider, capturedList } = createHarness([respondWith(recordedMessage())]);
+      await provider.generate(wordRequest());
+      expect(capturedList[0]?.url.startsWith("https://api.anthropic.com/")).toBe(true);
+      expect(capturedList[0]?.headers.get("authorization")).toBeNull();
+      expect(capturedList[0]?.headers.get("x-api-key")).toBe("chave-de-teste");
+    } finally {
+      process.env = savedEnvironment;
+    }
   });
 });

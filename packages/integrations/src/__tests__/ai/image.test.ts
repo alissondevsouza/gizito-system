@@ -59,4 +59,23 @@ describe("reduceImage (spec F1-05, RF-04)", () => {
     });
     expect(result).toEqual({ ok: false, error: "ai_image_invalid" });
   });
+
+  it("PNG transparente sai com fundo branco, não preto", async () => {
+    const transparentPng = Uint8Array.from(
+      await sharp({
+        create: {
+          width: 200,
+          height: 200,
+          channels: 4,
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+        },
+      })
+        .png()
+        .toBuffer(),
+    );
+    const result = await reduceImage({ mediaType: "image/png", data: transparentPng });
+    if (!result.ok) throw new Error("redução falhou");
+    const { channels } = await sharp(result.value.data).stats();
+    expect(channels.every((channel) => channel.mean > 250)).toBe(true);
+  });
 });

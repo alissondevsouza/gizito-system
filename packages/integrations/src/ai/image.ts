@@ -8,6 +8,8 @@ import {
 } from "@gizito/core";
 import sharp from "sharp";
 
+const JPEG_BACKGROUND_COLOR = "#ffffff";
+
 export async function reduceImage(image: AiImage): Promise<Result<AiImage, "ai_image_invalid">> {
   try {
     const buffer = await sharp(image.data)
@@ -18,6 +20,7 @@ export async function reduceImage(image: AiImage): Promise<Result<AiImage, "ai_i
         fit: "inside",
         withoutEnlargement: true,
       })
+      .flatten({ background: JPEG_BACKGROUND_COLOR })
       .jpeg({ quality: AI_IMAGE_JPEG_QUALITY })
       .toBuffer();
     return ok({

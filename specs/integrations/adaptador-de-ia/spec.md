@@ -32,12 +32,15 @@ Implementar o `AiProvider` real com a Anthropic, mais o `FakeAiProvider`. É por
   - todo objeto sai com `additionalProperties: false`;
   - o que a API não aplica (tamanho de texto, `minItems`/`maxItems` maiores, `minimum`/`maximum`, `pattern`) vai para a `description`, como o SDK faz, para o modelo ainda ver o limite;
   - `allOf` só de `pattern`, que o Zod gera para string com duas regex, vira `description`;
+  - `$ref` com restrição ao lado vira `allOf: [{ $ref }]` com a restrição na `description`, para o padrão do schema reutilizado não se perder;
+  - o JSON Schema descreve a entrada do Zod (`io: "input"`), que é o que o modelo produz;
   - os limites de inteiro seguro do `z.int()` são descartados.
 
   Aceite:
   - os sete schemas de saída do core (extração, plano, conteúdo e reparo por disciplina, revisão) convertem sem erro, só com palavras-chave da lista e com `additionalProperties: false` em todo objeto;
   - `enum` e `const` sobrevivem (o helper do SDK descarta os dois e falha com `allOf` de padrões);
-  - `maxLength: 700` aparece na `description`.
+  - `maxLength: 700` aparece na `description`;
+  - todo `pattern` e todo `maxLength` do schema bruto dos sete schemas aparecem na `description` convertida.
 - **RF-03 Custo** — tabela de preço por modelo em US$ por milhão de tokens (entrada, saída e leitura de cache), conforme a tabela de 06/10/2026:
   - Haiku 5.5: 0,10 / 0,50 / 0,01;
   - Sonnet 5.5: 2 / 10 / 0,20;
@@ -52,7 +55,7 @@ Implementar o `AiProvider` real com a Anthropic, mais o `FakeAiProvider`. É por
   - modelo desconhecido recusado.
 - **RF-04 Redução de imagem** — `reduceImage` com sharp:
   - gira pela orientação do EXIF e limita o lado maior a `AI_IMAGE_MAX_SIDE_PX` (1.600), sem ampliar;
-  - sai em JPEG com `AI_IMAGE_JPEG_QUALITY` (80) e sem metadado nenhum (EXIF, GPS), em linha com a LGPD;
+  - sai em JPEG com `AI_IMAGE_JPEG_QUALITY` (80), fundo branco no lugar da transparência e sem metadado nenhum (EXIF, GPS), em linha com a LGPD;
   - imagem que o sharp não lê dá `ai_image_invalid`.
 
   Aceite:
@@ -71,25 +74,29 @@ Implementar o `AiProvider` real com a Anthropic, mais o `FakeAiProvider`. É por
     - 5xx, 529 e falha de rede → `ai_unavailable`;
     - cancelamento → `ai_aborted`;
     - 401, 403 e 402 → `ai_auth_failed`;
-    - 400, 404, 413 e 422 → `ai_request_invalid`;
+    - 408 e 409 (depois das tentativas do SDK) → `ai_unavailable`; qualquer outro 4xx → `ai_request_invalid`;
+    - erro do SDK depois do 200 (conexão cortada, SSE sem `message_stop`, corpo que não é SSE) → `ai_unavailable`;
     - `stop_reason` `refusal` → `ai_refused`;
     - `max_tokens` ou `model_context_window_exceeded` → `ai_output_truncated`;
     - JSON que não analisa ou não passa no Zod → `ai_output_invalid`.
     - Erro que não vem do SDK nem do sharp é bug e propaga.
-  - **Retorno:** o `model` é o que a resposta informa, e o `usage` vai junto quando há resposta.
+  - **Retorno:** o `model` é o que a resposta informa, e o `usage` vai junto quando há resposta. Em stream interrompido, o `usage` sai do último retrato da mensagem: entrada e cache exatos, saída estimada pelo texto visível. `durationMs` é inteiro (`ai_call.duration_ms` é `integer`).
+  - **Ambiente:** o cliente do SDK recebe URL, `authToken: null`, `logLevel: "off"` e `openTelemetry: false` no construtor, para não ler `ANTHROPIC_*` do ambiente.
   - **Log:** mensagem do fornecedor só em `debug`, com etapa, modelo, status e tipo; nunca prompt, saída ou imagem.
 
   Aceite: testes com `fetch` injetado devolvendo SSE gravado, um por código e um por etapa, conferindo o corpo enviado (modelo, esforço, formato, `cache_control` no system, imagem em base64 JPEG antes do texto) e o custo.
 - **RF-06 Fake** — `createFakeAiProvider({ extractModel?, generateModel? })` com `enqueueOutput(stage, output)`, `enqueueFailure(stage, code)` e `requestList`.
   - Valida a saída enfileirada com o schema do pedido, como o real (inválida dá `ai_output_invalid`).
   - Calcula `usage` e custo determinísticos pela mesma tabela.
-  - Respeita `signal` cancelado (`ai_aborted`).
+  - Respeita `signal` cancelado (`ai_aborted`) e passa as fotos por `reduceImage` (foto ilegível dá `ai_image_invalid`), como o real.
   - Sem nada enfileirado, lança erro de teste.
 
   Aceite: a suíte de contrato roda no fake.
 - **RF-07 Suíte de contrato** — `describeAiProviderContract` cobre:
   - as quatro etapas com saída válida e `usage`, `model`, `promptVersion` e `durationMs` coerentes;
   - extração com imagem;
+  - foto ilegível (`ai_image_invalid` sem `usage`);
+  - `durationMs` inteiro;
   - saída fora do schema (`ai_output_invalid` com `usage`);
   - saída cortada (`ai_output_truncated`);
   - `signal` cancelado (`ai_aborted`, retentável).
@@ -152,4 +159,4 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` no pacote; no fim d
 | 2026-10-20 | Streaming em toda chamada | a geração pode passar de 30.000 tokens de saída com o raciocínio; o streaming evita o timeout HTTP |
 
 ## Status
-M1 a M4 implementados. Lint, typecheck, build e `bun run test` verdes na raiz (core 710, integrations 317 + 16 pulados do teste real, db 98, api 25, worker 21). O `test:ai-live` falha de propósito sem as chaves da IA no `.env` (lista as que faltam). Próximo: revisão neutra (4.4). Pendências do humano: conta Anthropic com limite de gasto, as chaves no `.env` e no `.env.example` (bloqueado para o agente) e rodar `bun run --cwd packages/integrations test:ai-live`.
+M1 a M4 implementados. Revisão neutra rodada 1 REPROVADO (3 CRÍTICOs, 4 ALERTAs, 5 NOTAs), tudo corrigido ou registrado em `review.md`; falta a rodada 2, que revalida só os pontos corrigidos. Pendências do humano: chaves no `.env` e no `.env.example` (o humano já começou a editar o `.env.example`) e rodar `test:ai-live`.

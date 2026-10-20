@@ -40,6 +40,9 @@ O PRD 1.3 §12.2 deixava o provedor de IA em aberto: dois níveis de modelo mult
 ### Riscos
 - Recusa do modelo vira falha da etapa sem reserva; com conteúdo escolar, o risco é baixo, e a F1-10 mede.
 - Preço de prompt acima de 100.000 tokens no Haiku 5.5 é outro e não está na tabela; o pipeline usa cerca de 10.000.
+- O timeout do SDK cobre só até os cabeçalhos da resposta; um stream que para depois do 200 só é cortado pelo `signal` do worker (teto de execução do job) e vira `ai_aborted`, não `ai_timeout`.
+- Em stream interrompido, o `usage` vem do último retrato da mensagem: entrada e cache exatos, saída estimada pelo texto visível (limite inferior, porque o raciocínio oculto também é cobrado).
+- O SDK ainda aplica `ANTHROPIC_CUSTOM_HEADERS` do ambiente, sem opção para desligar; as demais variáveis do SDK (URL, token, log, OpenTelemetry) são fixadas no construtor.
 
 ## O que faria esta decisão mudar
 

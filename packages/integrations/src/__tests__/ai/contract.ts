@@ -78,6 +78,7 @@ export function describeAiProviderContract(
           expect(result.value.model.length).toBeGreaterThan(0);
           expect(result.value.promptVersion).toBe(`${stage}-contract`);
           expect(result.value.durationMs).toBeGreaterThanOrEqual(0);
+          expect(Number.isInteger(result.value.durationMs)).toBe(true);
         },
         testTimeoutMs,
       );
@@ -93,6 +94,20 @@ export function describeAiProviderContract(
           imageList: [await syntheticNotebookImage()],
         });
         expect(result.ok && result.value.output).toEqual(echoOutput);
+      },
+      testTimeoutMs,
+    );
+
+    it(
+      "foto ilegível é ai_image_invalid sem usage",
+      async () => {
+        const driver = createDriver();
+        const result = await driver.provider.extract({
+          ...echoRequest("extract"),
+          imageList: [{ mediaType: "image/jpeg", data: new Uint8Array([1, 2, 3]) }],
+        });
+        expect(result.ok ? null : result.error.code).toBe("ai_image_invalid");
+        expect(result.ok ? "ok" : result.error.usage).toBeNull();
       },
       testTimeoutMs,
     );
