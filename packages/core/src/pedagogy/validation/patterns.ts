@@ -25,10 +25,6 @@ function foldWithPosition(text: string): FoldedText {
   return { folded, startList, endList };
 }
 
-export function foldKeywordText(text: string): string {
-  return foldWithPosition(text).folded;
-}
-
 export function normalizeSpacing(text: string): string {
   return text.normalize("NFC").replace(/\s+/g, " ").trim();
 }

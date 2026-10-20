@@ -7,6 +7,7 @@ import {
   findMockHintExcerpt,
   findPersonalDataExcerpt,
   hasBalancedMathMarkup,
+  listMathMarkupSegment,
   normalizeSpacing,
 } from "#src/pedagogy/validation/patterns.ts";
 
@@ -183,4 +184,12 @@ describe("delimitadores e espaçamento", () => {
     expect(normalizeSpacing("Está")).toBe("Está");
     expect(normalizeSpacing("Brasil")).not.toBe(normalizeSpacing("brasil"));
   });
+});
+
+it("listMathMarkupSegment devolve o conteúdo de cada trecho, para o KaTeX do worker", () => {
+  expect(listMathMarkupSegment("a \\(\\frac{1}{2}\\) e \\(3 \\times 4\\)")).toEqual([
+    "\\frac{1}{2}",
+    "3 \\times 4",
+  ]);
+  expect(listMathMarkupSegment("sem marcação")).toEqual([]);
 });

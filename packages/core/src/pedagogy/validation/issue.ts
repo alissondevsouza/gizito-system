@@ -358,7 +358,3 @@ export function createValidationIssue(
         : detail.excerpt.slice(0, MAX_ISSUE_EXCERPT_LENGTH),
   };
 }
-
-export function isBlocker(issue: ValidationIssue): boolean {
-  return issue.severity === "blocker";
-}
