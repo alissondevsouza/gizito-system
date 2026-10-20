@@ -17,7 +17,7 @@ import {
   type OperatorNodeFn,
   type OperatorNodeOp,
 } from "mathjs";
-import { parseMathExpression } from "#src/math/expression.ts";
+import { type ParsedExpression, parseMathExpression } from "#src/math/expression.ts";
 
 type TexOption = {
   readonly parenthesis: "auto";
@@ -35,12 +35,24 @@ function wrappedTex(node: MathNode, option: TexOption): string {
   return `\\left(${node.toTex(option)}\\right)`;
 }
 
-function negativeOperandOf(node: MathNode): MathNode | null {
-  const content = isParenthesisNode(node) ? node.content : node;
-  return isOperatorNode(content) && content.fn === "unaryMinus" ? content : null;
+function startsWithSign(node: MathNode): boolean {
+  if (!isOperatorNode(node)) return false;
+  if (node.fn === "unaryMinus" || node.fn === "unaryPlus") return true;
+  const [first] = node.args;
+  return node.fn !== "divide" && first !== undefined && startsWithSign(first);
+}
+
+function contentOf(node: MathNode): MathNode {
+  return isParenthesisNode(node) ? node.content : node;
+}
+
+function rightOperandTex(node: MathNode, option: TexOption): string {
+  if (isParenthesisNode(node)) return wrappedTex(node.content, option);
+  return startsWithSign(node) ? wrappedTex(node, option) : node.toTex(option);
 }
 
 function isJuxtaposedFactor(node: MathNode): boolean {
+  if (startsWithSign(contentOf(node))) return false;
   if (isSymbolNode(node) || isParenthesisNode(node) || isFunctionNode(node)) {
     return true;
   }
@@ -51,42 +63,45 @@ function leftFactorTex(node: MathNode, option: TexOption): string {
   return isParenthesisNode(node) ? wrappedTex(node.content, option) : node.toTex(option);
 }
 
-function rightFactorTex(node: MathNode, option: TexOption): string {
-  const negative = negativeOperandOf(node);
-  if (negative !== null) return wrappedTex(negative, option);
-  return leftFactorTex(node, option);
-}
-
-function multiplicationTex(left: MathNode, right: MathNode, option: TexOption): string {
-  const operator = isJuxtaposedFactor(right) && negativeOperandOf(right) === null ? "" : "\\times";
-  return `${leftFactorTex(left, option)}${operator}${rightFactorTex(right, option)}`;
-}
-
 function operatorTex(
   node: OperatorNode<OperatorNodeOp, OperatorNodeFn>,
   option: TexOption,
 ): string | undefined {
   const [left, right] = node.args;
-  if (node.fn === "unaryMinus" && left !== undefined) {
-    const negative = negativeOperandOf(left);
-    return negative === null ? undefined : `-${wrappedTex(negative, option)}`;
+  if (node.fn === "unaryMinus" && left !== undefined && right === undefined) {
+    return `-${rightOperandTex(left, option)}`;
   }
   if (left === undefined || right === undefined) return undefined;
-  if (node.fn === "multiply") return multiplicationTex(left, right, option);
-  if (node.fn !== "add" && node.fn !== "subtract") return undefined;
-  const negative = negativeOperandOf(right);
-  return negative === null
-    ? undefined
-    : `${left.toTex(option)}${node.op}${wrappedTex(negative, option)}`;
+  if (node.fn === "multiply") {
+    const operator = isJuxtaposedFactor(right) ? "" : "\\times";
+    return `${leftFactorTex(left, option)}${operator}${rightOperandTex(right, option)}`;
+  }
+  return node.fn === "add" || node.fn === "subtract"
+    ? `${left.toTex(option)}${node.op}${rightOperandTex(right, option)}`
+    : undefined;
 }
 
-function functionTex(node: FunctionNode, option: TexOption): string | undefined {
+const singleArgumentTexMap: Readonly<Record<string, (argumentTex: string) => string>> = {
+  sqrt: (argumentTex) => `\\sqrt{${argumentTex}}`,
+  abs: (argumentTex) => `\\left|${argumentTex}\\right|`,
+  floor: (argumentTex) => `\\left\\lfloor ${argumentTex}\\right\\rfloor`,
+  ceil: (argumentTex) => `\\left\\lceil ${argumentTex}\\right\\rceil`,
+  round: (argumentTex) => `\\left\\lfloor ${argumentTex}\\right\\rceil`,
+};
+
+function functionTex(node: FunctionNode, option: TexOption): string {
   const name = node.fn.name;
-  if (node.args.length < 2 || name === "mod") return undefined;
-  const argumentTex = node.args
-    .map((argument) => argument.toTex(option))
-    .join(FUNCTION_ARGUMENT_SEPARATOR);
-  return `${functionNameTexMap[name] ?? `\\operatorname{${name}}`}\\left(${argumentTex}\\right)`;
+  const argumentTexList = node.args.map((argument) => argument.toTex(option));
+  const [first, second] = argumentTexList;
+  const singleArgumentTex = singleArgumentTexMap[name];
+  if (argumentTexList.length === 1 && first !== undefined && singleArgumentTex !== undefined) {
+    return singleArgumentTex(first);
+  }
+  if (name === "mod" && argumentTexList.length === 2) {
+    return `\\left(${first}\\bmod ${second}\\right)`;
+  }
+  const nameTex = functionNameTexMap[name] ?? `\\operatorname{${name}}`;
+  return `${nameTex}\\left(${argumentTexList.join(FUNCTION_ARGUMENT_SEPARATOR)}\\right)`;
 }
 
 function texOptionOf(variableList: readonly string[]): TexOption {
@@ -101,9 +116,13 @@ function texOptionOf(variableList: readonly string[]): TexOption {
   return { parenthesis: "auto", handler };
 }
 
+function latexOf(parsed: ParsedExpression): string {
+  return parsed.node.toTex(texOptionOf(parsed.variableList));
+}
+
 export function mathExpressionToLatex(expression: string): Result<string, MathEvaluationError> {
-  const parsed = parseMathExpression(expression);
-  return parsed.ok
-    ? ok(parsed.value.node.toTex(texOptionOf(parsed.value.variableList)))
-    : err({ code: parsed.error, expression });
+  const algebraic = parseMathExpression(expression, "algebra");
+  if (algebraic.ok) return ok(latexOf(algebraic.value));
+  const measured = parseMathExpression(expression, "measure");
+  return measured.ok ? ok(latexOf(measured.value)) : err({ code: measured.error, expression });
 }

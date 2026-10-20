@@ -45,7 +45,7 @@ describe("expressão aceita (spec F1-04, RF-01)", () => {
     "reais",
     "5!",
     "2'",
-    "2 m + x",
+    "2 cm + x",
     "X + 1",
     "{a: 1}",
     "a.b",
@@ -79,6 +79,15 @@ describe("expressão aceita (spec F1-04, RF-01)", () => {
     const parsed = parseMathExpression(source);
     expect(parsed.ok && parsed.value.unitSymbolList).toEqual([...unitList]);
     expect(parsed.ok && parsed.value.variableList).toEqual([...variableList]);
+  });
+
+  it("na leitura de álgebra toda letra é variável e unidade de mais de uma letra é recusada", () => {
+    const algebra = parseMathExpression("4l + 2 m", "algebra");
+    expect(algebra.ok && algebra.value.variableList).toEqual(["l", "m"]);
+    expect(parseMathExpression("2 m + 30 cm", "algebra")).toEqual({
+      ok: false,
+      error: "unsupported",
+    });
   });
 
   it("devolve o erro com a expressão original", () => {
@@ -146,16 +155,40 @@ describe("evaluate (spec F1-04, RF-02)", () => {
     expect(performance.now() - startTime).toBeLessThan(500);
   });
 
+  it("aninhamento fundo é rápido", () => {
+    const nestedList = [
+      `${"sqrt(".repeat(32)}x${")".repeat(32)}`,
+      `${"mod(".repeat(24)}x${", 2)".repeat(24)}`,
+      `${"-(".repeat(60)}x${")".repeat(60)}`,
+    ];
+    const startTime = performance.now();
+    for (const nested of nestedList) {
+      evaluator.evaluate(nested);
+      evaluator.equals(expression(nested), expression(nested));
+    }
+    expect(performance.now() - startTime).toBeLessThan(500);
+  });
+
+  it.each<[string, ExpectedAnswer]>([
+    ["2t + 3", expression("2 t + 3")],
+    ["5m + 3", expression("5 m + 3")],
+    ["2b + 2h", expression("2 b + 2 h")],
+    ["2 m + 3", expression("2 m + 3")],
+    ["4l", number(4, "L")],
+  ])(
+    "letra colada a número que não fecha como medida é lida como álgebra: %j",
+    (source, expected) => {
+      expect(evaluator.evaluate(source)).toEqual({ ok: true, value: expected });
+    },
+  );
+
   it.each(["1/0", "0/0", "1 m / 0", "x/0", "sqrt(-1 - x^2)"])("%j é not_finite", (source) => {
     expect(evaluateCode(source)).toBe("not_finite");
   });
 
-  it.each(["sqrt(-1)", "1 kg + 2 m", "2 m + 3", "cm", "2 A", "mod(1)"])(
-    "%j é unsupported",
-    (source) => {
-      expect(evaluateCode(source)).toBe("unsupported");
-    },
-  );
+  it.each(["sqrt(-1)", "1 kg + 2 m", "cm", "2 A", "mod(1)"])("%j é unsupported", (source) => {
+    expect(evaluateCode(source)).toBe("unsupported");
+  });
 });
 
 describe("equals (spec F1-04, RF-04)", () => {
@@ -178,6 +211,11 @@ describe("equals (spec F1-04, RF-04)", () => {
     ["área com letra de unidade", expression("b*h"), expression("h*b")],
     ["perímetro com letra de unidade", expression("4*l"), expression("l + l + l + l")],
     ["tempo com letra de unidade", expression("2*t + 3"), expression("3 + 2*t")],
+    ["letra colada como álgebra", expression("2t + 3"), expression("3 + 2*t")],
+    ["perímetro colado", expression("4l"), expression("l + l + l + l")],
+    ["soma colada", expression("2b + 2h"), expression("2*(b + h)")],
+    ["medida colada", expression("4l"), number(4, "L")],
+    ["área em medida", expression("8 m * 5 m"), number(40, "m²")],
     ["duas variáveis", expression("2*(a + b)"), expression("2*b + 2*a")],
     ["expressão inválida igual", expression("2x +"), expression("2x+")],
     ["conjunto sem ordem", set("1", "2", "3"), set("3", "2", "1")],

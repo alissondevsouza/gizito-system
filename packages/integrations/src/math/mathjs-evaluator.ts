@@ -5,10 +5,15 @@ import {
   type MathEvaluator,
   normalizeSpacing,
   ok,
+  parseBrazilianNumber,
   type Result,
 } from "@gizito/core";
 import { unit as createUnit, isUnit, type MathNode } from "mathjs";
-import { type ParsedExpression, parseMathExpression } from "#src/math/expression.ts";
+import {
+  type ParsedExpression,
+  parseMathExpression,
+  type SymbolReading,
+} from "#src/math/expression.ts";
 import {
   convertUnitValue,
   findResultUnitEntry,
@@ -159,10 +164,17 @@ function numericEquals(left: NumericValue, right: NumericValue): boolean {
   );
 }
 
+function parsedWithVariableOf(expression: string, reading: SymbolReading): ParsedExpression | null {
+  const parsed = parseMathExpression(expression, reading);
+  return parsed.ok && parsed.value.variableList.length > 0 ? parsed.value : null;
+}
+
 function variableExpressionOf(answer: ExpectedAnswer): ParsedExpression | null {
   if (answer.kind !== "expression") return null;
-  const parsed = parseMathExpression(answer.expression);
-  return parsed.ok && parsed.value.variableList.length > 0 ? parsed.value : null;
+  return (
+    parsedWithVariableOf(answer.expression, "measure") ??
+    parsedWithVariableOf(answer.expression, "algebra")
+  );
 }
 
 function symbolicEquals(left: ParsedExpression, right: ParsedExpression): boolean {
@@ -186,7 +198,7 @@ function normalizeAnswerText(text: string): string {
 function setElementOf(text: string): number | string {
   const normalized = normalizeAnswerText(text);
   if (BRAZILIAN_NUMBER_PATTERN.test(normalized)) {
-    return Number(normalized.replace(/\./g, "").replace(",", "."));
+    return parseBrazilianNumber(normalized);
   }
   const [, numerator = "", denominator = "0"] = FRACTION_TEXT_PATTERN.exec(normalized) ?? [];
   return Number(denominator) === 0 ? normalized : Number(numerator) / Number(denominator);
@@ -258,11 +270,25 @@ function equalsExpectedAnswer(left: ExpectedAnswer, right: ExpectedAnswer): bool
   );
 }
 
+function evaluateWithReading(
+  expression: string,
+  reading: SymbolReading,
+): Result<ExpectedAnswer, MathEvaluationErrorCode> {
+  const parsed = parseMathExpression(expression, reading);
+  return parsed.ok ? evaluateParsed(parsed.value) : parsed;
+}
+
+function evaluateExpression(expression: string): Result<ExpectedAnswer, MathEvaluationErrorCode> {
+  const measured = evaluateWithReading(expression, "measure");
+  if (measured.ok || measured.error !== "unsupported") return measured;
+  const algebraic = evaluateWithReading(expression, "algebra");
+  return algebraic.ok ? algebraic : measured;
+}
+
 export function createMathjsEvaluator(): MathEvaluator {
   return {
     evaluate: (expression) => {
-      const parsed = parseMathExpression(expression);
-      const evaluated = parsed.ok ? evaluateParsed(parsed.value) : parsed;
+      const evaluated = evaluateExpression(expression);
       return evaluated.ok ? evaluated : err({ code: evaluated.error, expression });
     },
     equals: equalsExpectedAnswer,

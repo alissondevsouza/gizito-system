@@ -1,7 +1,7 @@
 ---
 feature: F1-04 avaliador-matematico
 module: integrations
-round: 1
+round: 2
 verdict: REPROVADO
 updated: 2026-10-20
 ---
@@ -56,3 +56,44 @@ Contestado:
 - NOTA de aparência de `degC`, `to` e `25%` no LaTeX: só aparece em resposta do tipo `expression` com unidade, que o prompt não pede; fica como está.
 
 Comandos depois da correção: `bun run lint` verde (237 arquivos); `bun run typecheck` verde; `bun run test` verde (core 691, integrations 218, db 98, api 25, worker 21).
+
+## Rodada 2
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun test` em `packages/integrations` | 218 pass, 0 fail |
+| `bun run lint` (raiz) | verde, 237 arquivos (a regra de import não pega caminho absoluto) |
+| sondas do verifier no scratchpad | `evaluate` e `equals` abaixo de 10 ms em 24 entradas adversárias de até 200 caracteres; LaTeX de `sqrt` aninhado 26 vezes em 31,4 s; 70 expressões de negativo e função; 45 classificações de letra de unidade |
+| `bun run test:pedagogy` | não existe até a F1-10 |
+
+### Critérios de aceite
+| RF | Atendido | Evidência (teste ou arquivo) |
+|---|---|---|
+| RF-01 a RF-05 | sim | o CRÍTICO do `simplify` está resolvido; os testes de `MIN_VALID_SAMPLE_COUNT`, do deslocamento por variável e do ponto 37,3 falham se a lógica sair |
+| RF-06 | em parte | negativo em produto saía `--`; conversão exponencial com função aninhada |
+| RF-07 | em risco | `src/__probe2.ts` no commit quebraria o typecheck no CI |
+
+### Achados
+- [CRÍTICO] `src/__probe2.ts:2` — sonda com import por caminho absoluto entrou no commit `29f6895` — TS2307 no CI — `git rm`.
+- [CRÍTICO] `latex.ts:85` — o `FunctionNode.toTex` do mathjs calcula cada argumento duas vezes; `sqrt(` aninhado 26 vezes (157 caracteres) levou 31,4 s, e 32 vezes (193 caracteres) passaria de 30 min — trava o worker no render, como o CRÍTICO da rodada 1 — escrever toda função no `handler`.
+- [ALERTA] `latex.ts:38` — só o negativo no topo do operando era reconhecido: `x - (-3x)` → `x--3 x`, `10 - (-2*3)`, `x - -2*y`, `5 - (+3)` — manter os parênteses do operando que veio entre parênteses ou começa com sinal.
+- [ALERTA] `expression.ts:63` — letra colada a número continuava unidade: `2t + 3`, `5m + 3`, `2b + 2h` davam `math_expression_invalid`; `4l` ≠ `l + l + l + l`; a SP §15.7 (d) só citava `3h + 2h` — escrever a consequência real ou reler como álgebra quando a medida falha.
+- [NOTA] `mathjs-evaluator.ts:89` — `sqrt(x - 4)` dá `not_finite` (só 37,3 no domínio); registrar.
+- [NOTA] revalidação da rodada 1: vírgula, prompt registrado e NOTAs resolvidos.
+- [NOTA] contestados: os dois procedem; detalhe: o parse de número pt-BR repetia o `parseBrazilianNumber` privado do core.
+
+### Regressão pedagógica
+Pendente (F1-10).
+
+### Resposta do orquestrador
+Corrigido:
+- CRÍTICO da sonda: `git rm packages/integrations/src/__probe2.ts`; lição em `docs/lessons.md` (conferir `git status` antes de `git add -A` depois de verifier).
+- CRÍTICO do LaTeX: o `handler` escreve toda função (`\sqrt{}`, `\left|\right|`, piso, teto, arredondamento, `\bmod`, `mdc`, `mmc`, `\operatorname`), calculando cada argumento uma vez. Sondas de 13 formas de aninhamento de até 211 caracteres (função, parênteses, sinal, potência, divisão, produto, soma) ficaram abaixo de 7 ms em LaTeX, `evaluate` e `equals`; testes de tempo com `sqrt`, `floor` e `mod` aninhados.
+- ALERTA dos negativos: à direita de `+`, `-`, da multiplicação e do sinal, operando que veio entre parênteses ou começa com sinal fica em `\left(\right)`; os sete casos do achado na tabela de teste.
+- ALERTA das letras: leitura de álgebra quando a de medida dá `unsupported` (`evaluate`), um lado algébrico faz os dois serem comparados como álgebra (`equals`) e o LaTeX lê como álgebra primeiro. `2t + 3`, `5m + 3`, `2b + 2h` e `2 m + 3` saem como `expression`; `4l` = `l + l + l + l` e `4l` = `4 L`. A SP §15.7 (d) e a Decisão descrevem as consequências reais, inclusive `3 * m * 4 * m` ≠ `12 m²`; a pendência do prompt em known-issues ganhou "unidade colada ao número, variável com `*`".
+- NOTAs: `sqrt(x - 4)` registrado nas Decisões; `parseBrazilianNumber` exportado do core e usado no conjunto.
+
+Comandos depois da correção: `bun run lint` verde (236 arquivos); `bun run typecheck` verde; `bun run test` verde (core 691, integrations 248, db 98, api 25, worker 21); `bun run build` verde.
+
+Teto de 2 rodadas atingido: as correções da rodada 2 não passaram por verifier. Escalado ao humano com este `review.md`.

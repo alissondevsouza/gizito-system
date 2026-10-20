@@ -142,7 +142,7 @@ export function checkNonComputableExcess(studyKit: StudyKit): ValidationIssue[] 
     : [];
 }
 
-function parseBrazilianNumber(text: string): number {
+export function parseBrazilianNumber(text: string): number {
   return Number(text.replace(/\./g, "").replace(",", "."));
 }
 

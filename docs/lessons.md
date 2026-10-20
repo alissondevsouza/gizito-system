@@ -6,6 +6,17 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-20] mathjs 15: `simplify` e `toTex` de função crescem de forma explosiva; unidade simplificada depende de estado global — F1-04
+
+Três armadilhas do mathjs 15.2 com expressão vinda do modelo, todas medidas na revisão da F1-04:
+- `simplify` levou mais de 60 s numa soma de 30 termos `k*x` (139 caracteres) e não terminou em 300 s com 40 termos;
+- `FunctionNode.toTex` calcula o LaTeX de cada argumento duas vezes, então `sqrt(` aninhado 26 vezes levou 31 s. Os dois travariam o worker de forma síncrona. O avaliador não simplifica (compara por amostragem) e monta o LaTeX de toda função no próprio `handler`, calculando cada argumento uma vez;
+- `Unit.simplify()` usa o sistema "auto", que lembra a última unidade usada de cada grandeza no estado global: `3 m * 4 m` saiu como hectare depois de um teste com hectare. O nome da unidade é montado do `formatUnits()`.
+
+Ainda no mathjs, `min` resolve para a função antes da unidade, então `30 min` falha; a unidade entra no escopo da avaliação.
+
+Processo: o verifier deixou um arquivo de sonda em `src/`, e um `git add -A` o levou ao commit, com import por caminho absoluto que quebraria o CI. Depois de spawn de verifier, conferir `git status` antes de adicionar tudo.
+
 ## [2026-10-20] Zod 4: fábrica genérica de schema perde o tipo dentro do `refine` — F1-03
 
 Uma função `schemaOf<TShape>(shape: TShape)` que devolve `z.strictObject({ ...shape }).refine(fn)` não compila: dentro da fábrica o tipo de saída fica `$InferObjectOutput<... & TShape>`, que o TypeScript não resolve, e nenhuma função de `refine` com parâmetro estrutural é aceita. Funciona escrever os schemas por extenso (um por disciplina e por bloco), compartilhando os *shapes* como objetos e as funções de `refine` com parâmetro estrutural (`{ optionList: readonly unknown[] | null; ... }`). O mesmo vale para generics sobre listas de união (`MathStudyQuestion[] | PortugueseStudyQuestion[]`): tipar o parâmetro pelo que a função lê (`readonly { readonly [key in K]: string }[]`), nunca com `as`.

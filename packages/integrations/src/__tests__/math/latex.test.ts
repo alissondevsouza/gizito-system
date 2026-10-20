@@ -34,6 +34,24 @@ describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
     ["gcd(12, 18)", "\\text{mdc}\\left(12;18\\right)"],
     ["lcm(4, 6)", "\\text{mmc}\\left(4;6\\right)"],
     ["round(2.5, 2)", "\\operatorname{round}\\left(2,5;2\\right)"],
+    ["x - (-3x)", " x-\\left(-3 x\\right)"],
+    ["a - (-2*b)", " a-\\left(-2 b\\right)"],
+    ["10 - (-2*3)", "10-\\left(-2\\times3\\right)"],
+    ["x - -2*y", " x-\\left(-2 y\\right)"],
+    ["x + (-3x)", " x+\\left(-3 x\\right)"],
+    ["5 - (+3)", "5-\\left(+3\\right)"],
+    ["2 m - (-30 cm)", "2\\mathrm{m}-\\left(-30\\mathrm{cm}\\right)"],
+    ["-x", "- x"],
+    ["-(x+1)", "-\\left( x+1\\right)"],
+    ["-3^2", "-{3}^{2}"],
+    ["(x-1) - 2", " x-1-2"],
+    ["abs(x - 2)", "\\left| x-2\\right|"],
+    ["floor(x/2)", "\\left\\lfloor \\frac{ x}{2}\\right\\rfloor"],
+    ["round(x)", "\\left\\lfloor  x\\right\\rceil"],
+    ["mod(17, 5)", "\\left(17\\bmod 5\\right)"],
+    ["4l", "4 l"],
+    ["2t + 3", "2 t+3"],
+    ["2 m + 30 cm", "2\\mathrm{m}+30\\mathrm{cm}"],
   ];
 
   it.each(latexTable)("%j → %j", (expression, latex) => {
@@ -49,6 +67,18 @@ describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
       ok: false,
       error: { code, expression },
     });
+  });
+
+  it("aninhamento fundo de função converte rápido", () => {
+    const startTime = performance.now();
+    for (const nested of [
+      `${"sqrt(".repeat(32)}x${")".repeat(32)}`,
+      `${"floor(".repeat(30)}x${")".repeat(30)}`,
+      `${"mod(".repeat(24)}x${", 2)".repeat(24)}`,
+    ]) {
+      expect(mathExpressionToLatex(nested).ok).toBe(true);
+    }
+    expect(performance.now() - startTime).toBeLessThan(500);
   });
 
   it("a saída passa no parse do KaTeX, com a vírgula decimal trocada como o render faz", () => {

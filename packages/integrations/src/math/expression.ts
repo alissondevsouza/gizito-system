@@ -10,6 +10,8 @@ import {
 } from "mathjs";
 import { expressionUnitSymbolSet } from "#src/math/units.ts";
 
+export type SymbolReading = "measure" | "algebra";
+
 export type ParsedExpression = {
   readonly node: MathNode;
   readonly unitSymbolList: readonly string[];
@@ -108,11 +110,12 @@ function parseNode(expression: string): MathNode | null {
 
 export function parseMathExpression(
   expression: string,
+  reading: SymbolReading = "measure",
 ): Result<ParsedExpression, MathEvaluationErrorCode> {
   const node = parseNode(expression);
   if (node === null) return err("parse_error");
   const collector: SymbolCollector = {
-    isUnitContext: hasUnitContext(node),
+    isUnitContext: reading === "measure" && hasUnitContext(node),
     unitSymbolSet: new Set(),
     variableSet: new Set(),
   };
