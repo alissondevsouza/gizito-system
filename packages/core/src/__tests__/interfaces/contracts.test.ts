@@ -7,10 +7,12 @@ import {
   SHORT_CODE,
 } from "#src/__tests__/__fixtures__/entities.ts";
 import {
+  type AiCallResult,
   type AiProvider,
   type AiRequest,
-  type AiResult,
+  aiFailureCodeList,
   aiUsageSchema,
+  isRetryableAiFailureCode,
 } from "#src/interfaces/ai-provider.ts";
 import type { MathEvaluator } from "#src/interfaces/math-evaluator.ts";
 import {
@@ -163,14 +165,15 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
     expect(recipientHashSchema.safeParse("mae@example.com").success).toBe(false);
   });
 
-  it("AiProvider devolve output tipado pelo schema pedido, com usage e versão do prompt", async () => {
-    const respond = async <T>(request: AiRequest<T>): Promise<AiResult<T>> => ({
-      output: request.outputSchema.parse({ topicIdList: ["mat-5-fracoes"] }),
-      usage: { inputTokens: 10, outputTokens: 5, costCents: 0.2 },
-      model: "fake-model",
-      promptVersion: request.promptVersion,
-      durationMs: 1,
-    });
+  it("AiProvider devolve Result com output tipado pelo schema pedido, usage e versão do prompt", async () => {
+    const respond = async <T>(request: AiRequest<T>): Promise<AiCallResult<T>> => {
+      const parsed = request.outputSchema.safeParse({ topicIdList: ["mat-5-fracoes"] });
+      const base = { model: "fake-model", promptVersion: request.promptVersion, durationMs: 1 };
+      const usage = { inputTokens: 10, outputTokens: 5, costCents: 0.2 };
+      return parsed.success
+        ? ok({ ...base, output: parsed.data, usage })
+        : err({ ...base, code: "ai_output_invalid", usage });
+    };
     const provider: AiProvider = {
       extract: respond,
       plan: respond,
@@ -184,14 +187,35 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
       userText: "data",
       imageList: [{ mediaType: "image/jpeg", data: new Uint8Array([1, 2, 3]) }],
       outputSchema,
+      signal: new AbortController().signal,
     });
-    expect(result.output.topicIdList).toEqual(["mat-5-fracoes"]);
-    expect(result.promptVersion).toBe("extract.v1");
-    expect(aiUsageSchema.safeParse(result.usage).success).toBe(true);
+    expect(result.ok && result.value.output.topicIdList).toEqual(["mat-5-fracoes"]);
+    expect(result.ok && result.value.promptVersion).toBe("extract.v1");
+    expect(result.ok && aiUsageSchema.safeParse(result.value.usage).success).toBe(true);
+    const failed = await provider.plan({
+      promptVersion: "plan.v1",
+      systemPrompt: "system",
+      userText: "data",
+      outputSchema: z.object({ planId: z.string() }),
+    });
+    expect(failed.ok ? null : failed.error.code).toBe("ai_output_invalid");
     expect(
       aiUsageSchema.safeParse({ inputTokens: -1, outputTokens: 0, costCents: 0 }).success,
     ).toBe(false);
   });
+
+  it.each(aiFailureCodeList.map((code) => [code] as const))(
+    "%s volta à fila só quando é transitório",
+    (code) => {
+      const transientCodeList: readonly string[] = [
+        "ai_timeout",
+        "ai_rate_limited",
+        "ai_unavailable",
+        "ai_aborted",
+      ];
+      expect(isRetryableAiFailureCode(code)).toBe(transientCodeList.includes(code));
+    },
+  );
 
   it("ObjectStorage", async () => {
     const store = new Map<string, Uint8Array>();

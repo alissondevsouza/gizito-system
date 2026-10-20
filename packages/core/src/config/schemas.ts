@@ -25,6 +25,25 @@ export const paymentEnvironmentSchema = z.object({
   PAYMENT_GATEWAY: paymentGatewaySchema,
 });
 
+export const aiEffortList = ["low", "medium", "high", "xhigh", "max"] as const;
+export const aiEffortSchema = z.enum(aiEffortList);
+export type AiEffort = z.infer<typeof aiEffortSchema>;
+
+export const aiModelSettingSchema = z.object({
+  model: z.string().trim().min(1),
+  effort: aiEffortSchema.optional(),
+});
+export type AiModelSetting = z.infer<typeof aiModelSettingSchema>;
+
+export const aiEnvironmentSchema = z.object({
+  AI_API_KEY: z.string().trim().min(1),
+  AI_MODEL_EXTRACT: z.string().trim().min(1),
+  AI_MODEL_GENERATE: z.string().trim().min(1),
+  AI_EFFORT_EXTRACT: aiEffortSchema.optional(),
+  AI_EFFORT_GENERATE: aiEffortSchema.optional(),
+});
+export type AiEnvironment = z.infer<typeof aiEnvironmentSchema>;
+
 export const productionDebugLogLevelList = [
   "debug",
   "trace",

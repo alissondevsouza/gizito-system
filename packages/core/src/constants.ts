@@ -6,6 +6,9 @@ export const MIN_PHOTO_COUNT = 1;
 export const MAX_PHOTO_COUNT = 5;
 export const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 
+export const AI_IMAGE_MAX_SIDE_PX = 1600;
+export const AI_IMAGE_JPEG_QUALITY = 80;
+
 export const MIN_TOPIC_COUNT = 1;
 export const MAX_TOPIC_COUNT = 3;
 

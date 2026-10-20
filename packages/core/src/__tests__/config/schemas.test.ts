@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 import {
+  aiEnvironmentSchema,
+  aiModelSettingSchema,
   checkProductionEnvironment,
   isLogLevelAllowed,
   isPaymentGatewayAllowed,
@@ -112,5 +114,34 @@ describe("guardas de produção no ambiente", () => {
       { addIssue: (issue) => issueList.push(issue) },
     );
     expect(issueList.map((issue) => issue.path)).toEqual([["PAYMENT_GATEWAY"], ["LOG_LEVEL"]]);
+  });
+});
+
+describe("ambiente da IA (F1-05)", () => {
+  const aiEnvironment = {
+    AI_API_KEY: "chave-de-teste",
+    AI_MODEL_EXTRACT: "modelo-extracao",
+    AI_MODEL_GENERATE: "modelo-geracao",
+  };
+
+  it("exige chave e os dois modelos; esforço é opcional", () => {
+    expect(aiEnvironmentSchema.parse(aiEnvironment)).toEqual(aiEnvironment);
+    expect(
+      aiEnvironmentSchema.parse({ ...aiEnvironment, AI_EFFORT_GENERATE: "high" })
+        .AI_EFFORT_GENERATE,
+    ).toBe("high");
+  });
+
+  it.each([
+    ["chave vazia", { ...aiEnvironment, AI_API_KEY: "  " }],
+    ["sem modelo de extração", { ...aiEnvironment, AI_MODEL_EXTRACT: undefined }],
+    ["esforço fora da lista", { ...aiEnvironment, AI_EFFORT_EXTRACT: "altissimo" }],
+  ])("recusa %s", (_, environment) => {
+    expect(aiEnvironmentSchema.safeParse(environment).success).toBe(false);
+  });
+
+  it("configuração de modelo por etapa aceita esforço opcional", () => {
+    expect(aiModelSettingSchema.parse({ model: "modelo" })).toEqual({ model: "modelo" });
+    expect(aiModelSettingSchema.safeParse({ model: "", effort: "low" }).success).toBe(false);
   });
 });

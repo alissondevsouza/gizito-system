@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Result } from "#src/result.ts";
 
 export const aiUsageSchema = z.object({
   inputTokens: z.int().min(0),
@@ -21,6 +22,7 @@ export type AiRequest<T> = {
   readonly imageList?: readonly AiImage[];
   readonly outputSchema: z.ZodType<T>;
   readonly maxOutputTokens?: number;
+  readonly signal?: AbortSignal;
 };
 
 export type AiResult<T> = {
@@ -31,9 +33,45 @@ export type AiResult<T> = {
   readonly durationMs: number;
 };
 
+export const aiFailureCodeList = [
+  "ai_timeout",
+  "ai_rate_limited",
+  "ai_unavailable",
+  "ai_aborted",
+  "ai_auth_failed",
+  "ai_request_invalid",
+  "ai_image_invalid",
+  "ai_refused",
+  "ai_output_truncated",
+  "ai_output_invalid",
+] as const;
+export const aiFailureCodeSchema = z.enum(aiFailureCodeList);
+export type AiFailureCode = z.infer<typeof aiFailureCodeSchema>;
+
+export const retryableAiFailureCodeList = [
+  "ai_timeout",
+  "ai_rate_limited",
+  "ai_unavailable",
+  "ai_aborted",
+] as const satisfies readonly AiFailureCode[];
+
+export function isRetryableAiFailureCode(code: AiFailureCode): boolean {
+  return retryableAiFailureCodeList.some((retryableCode) => retryableCode === code);
+}
+
+export type AiFailure = {
+  readonly code: AiFailureCode;
+  readonly usage: AiUsage | null;
+  readonly model: string;
+  readonly promptVersion: string;
+  readonly durationMs: number;
+};
+
+export type AiCallResult<T> = Result<AiResult<T>, AiFailure>;
+
 export interface AiProvider {
-  extract<T>(request: AiRequest<T>): Promise<AiResult<T>>;
-  plan<T>(request: AiRequest<T>): Promise<AiResult<T>>;
-  generate<T>(request: AiRequest<T>): Promise<AiResult<T>>;
-  review<T>(request: AiRequest<T>): Promise<AiResult<T>>;
+  extract<T>(request: AiRequest<T>): Promise<AiCallResult<T>>;
+  plan<T>(request: AiRequest<T>): Promise<AiCallResult<T>>;
+  generate<T>(request: AiRequest<T>): Promise<AiCallResult<T>>;
+  review<T>(request: AiRequest<T>): Promise<AiCallResult<T>>;
 }
