@@ -65,7 +65,7 @@ A etapa `extract` do pipeline (spec pedagógica §1, §3; `prompts-v1.md` extrac
 | 2026-10-20 | Falha da porta do cache vira `Err` `extraction_cache_failed`, retryable, com as chamadas já feitas (revisão, rodada 1) | Uma exceção perdia o custo das chamadas pagas (invariante 3); com o cache no banco, a queda que derruba a gravação derruba também a transição do job, então o retry é o caminho |
 | 2026-10-20 | Fotos do live desenhadas em HTML e renderizadas uma vez pelo Chrome headless (`google-chrome --headless=new --screenshot --window-size=1000,1400`), guardadas em JPEG com a fonte HTML ao lado | O libvips do sharp não tem fontes nem a operação de texto; gerar no teste exigiria Chrome na máquina de quem roda |
 | 2026-10-20 | Foto repetida no mesmo pedido não é deduplicada na etapa | O lugar é o upload (F2-01), que já tem o `content_hash`; na etapa, ela só custa uma chamada a mais e conta duas vezes na junção (known-issues) |
-| 2026-10-20 | `AI_EFFORT_EXTRACT` fora da chave do cache | A chave do §3 não o inclui; trocar o esforço reaproveita saídas por até 30 dias. Pergunta ao humano no handoff |
+| 2026-10-20 | `AI_EFFORT_EXTRACT` fora da chave do cache na v1, decisão do humano | A chave do §3 não o inclui; trocar o esforço reaproveita saídas por até 30 dias (known-issues) |
 
 ## Status
-Pronta para o humano em 20/10/2026: M1 a M3 feitos, revisão neutra APROVADA na rodada 1 com os ALERTAs corrigidos (`review.md`), `test:extract-live` 5 de 5 na versão final. Pendências para o humano: os 10 casos reais do "pronto quando" esperam as fotos (F1-10); decidir se `AI_EFFORT_EXTRACT` entra na chave do cache.
+Pronta para o humano em 20/10/2026: M1 a M3 feitos, revisão neutra APROVADA na rodada 1 com os ALERTAs corrigidos (`review.md`), `test:extract-live` 5 de 5 na versão final. Pendência para o humano: os 10 casos reais do "pronto quando" esperam as fotos (F1-10). `AI_EFFORT_EXTRACT` fica fora da chave do cache na v1 (decisão do humano, 20/10/2026).

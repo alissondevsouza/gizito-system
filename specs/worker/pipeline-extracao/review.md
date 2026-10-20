@@ -49,6 +49,6 @@ Não aplicável ainda: o prompt `extract` v1 entrou e `bun run test:pedagogy` s�
 - ALERTA 2, corrigido: critério do RF-04 reescrito (padrões do §8.4) e nome do teste ajustado; known-issues MEDIUM com a condição da F1-10. Uma regra nova de nome na sanitização mudaria a spec pedagógica aprovada, então fica para o humano.
 - SUGESTÃO paralelismo, feita: teste com o provedor embrulhado conta 3 chamadas em voo para 3 fotos.
 - SUGESTÃO core, feita: `invalidOutputAiFailureCodeList` e `isInvalidOutputAiFailureCode` em `packages/core/src/interfaces/ai-provider.ts`, com teste; o fake passou a usar a mesma lista.
-- SUGESTÃO foto repetida, adiada: o lugar é o upload da F2-01, que já tem o `content_hash` (known-issues LOW). `AI_EFFORT_EXTRACT` na chave vai como pergunta ao humano no handoff.
+- SUGESTÃO foto repetida, adiada: o lugar é o upload da F2-01, que já tem o `content_hash` (known-issues LOW). `AI_EFFORT_EXTRACT` fica fora da chave na v1, por decisão do humano em 20/10/2026 (known-issues LOW).
 - SUGESTÃO fixtures, feita: fonte HTML e CSS das três páginas em `apps/worker/src/__tests__/pipeline/__fixtures__/photos/source/` e o comando do Chrome headless nas Decisões da spec.
 - Sem CRÍTICO: pelo fluxo, não há rodada 2 de verifier.
