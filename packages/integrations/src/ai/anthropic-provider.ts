@@ -30,6 +30,8 @@ export const defaultMaxOutputTokensByStage: Readonly<Record<AiStage, number>> = 
   review: 32_000,
 };
 
+export const defaultStructuredOutputStageList: readonly AiStage[] = ["extract", "plan", "review"];
+
 const DEFAULT_EXTRACT_EFFORT: AiEffort = "medium";
 const DEFAULT_GENERATE_EFFORT: AiEffort = "high";
 
@@ -42,6 +44,7 @@ export type AnthropicProviderConfig = {
   readonly fetch?: (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
   readonly now?: () => number;
   readonly logger?: Logger;
+  readonly structuredOutputStageList?: readonly AiStage[];
 };
 
 export class UnknownAiModelError extends Error {
@@ -61,6 +64,7 @@ type ProviderContext = {
   readonly client: Anthropic;
   readonly now: () => number;
   readonly logger: Logger | undefined;
+  readonly structuredOutputStageList: readonly AiStage[];
 };
 
 function stageModelOf(setting: AiModelSetting, defaultEffort: AiEffort): StageModel {
@@ -175,10 +179,12 @@ async function streamMessage<T>(
       model: stageModel.model,
       max_tokens: request.maxOutputTokens ?? defaultMaxOutputTokensByStage[stage],
       thinking: { type: "adaptive" },
-      output_config: {
-        effort: stageModel.effort,
-        format: { type: "json_schema", schema: toOutputJsonSchema(request.outputSchema) },
-      },
+      output_config: context.structuredOutputStageList.includes(stage)
+        ? {
+            effort: stageModel.effort,
+            format: { type: "json_schema", schema: toOutputJsonSchema(request.outputSchema) },
+          }
+        : { effort: stageModel.effort },
       system: [{ type: "text", text: request.systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: [
         {
@@ -264,6 +270,7 @@ export function createAnthropicProvider(config: AnthropicProviderConfig): AiProv
     }),
     now: config.now ?? (() => performance.now()),
     logger: config.logger,
+    structuredOutputStageList: config.structuredOutputStageList ?? defaultStructuredOutputStageList,
   };
   return {
     extract: (request) => callModel(context, "extract", extractModel, request),

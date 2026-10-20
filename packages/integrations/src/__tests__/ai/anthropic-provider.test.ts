@@ -118,9 +118,13 @@ describe("adaptador Anthropic: requisição (spec F1-05, RF-05)", () => {
       expect(body.thinking).toEqual({ type: "adaptive" });
       const outputConfig = body.output_config as JsonRecord;
       expect(outputConfig.effort).toBe(effort);
-      const format = outputConfig.format as JsonRecord;
-      expect(format.type).toBe("json_schema");
-      expect((format.schema as JsonRecord).additionalProperties).toBe(false);
+      if (stage === "generate") {
+        expect(outputConfig.format).toBeUndefined();
+      } else {
+        const format = outputConfig.format as JsonRecord;
+        expect(format.type).toBe("json_schema");
+        expect((format.schema as JsonRecord).additionalProperties).toBe(false);
+      }
       expect(body.system).toEqual([
         { type: "text", text: "regras fixas", cache_control: { type: "ephemeral" } },
       ]);
@@ -298,7 +302,7 @@ describe("adaptador Anthropic: resposta (spec F1-05, RF-05)", () => {
   it("schema que não vira JSON Schema é bug e propaga", async () => {
     const { provider } = createHarness([respondWith(recordedMessage())]);
     await expect(
-      provider.generate({ ...wordRequest(), outputSchema: z.strictObject({ when: z.date() }) }),
+      provider.plan({ ...wordRequest(), outputSchema: z.strictObject({ when: z.date() }) }),
     ).rejects.toThrow();
   });
 });
@@ -363,5 +367,34 @@ describe("adaptador Anthropic: correções da revisão (spec F1-05, RF-05)", () 
     } finally {
       process.env = savedEnvironment;
     }
+  });
+});
+
+describe("adaptador Anthropic: saída estruturada por etapa (spec F1-05, RF-05)", () => {
+  it("generate pede JSON em texto e valida pelo Zod do mesmo jeito", async () => {
+    const { provider, capturedList } = createHarness([
+      respondWith(recordedMessage({ text: JSON.stringify({ word: "g" }) })),
+    ]);
+    const result = await provider.generate(wordRequest());
+    const outputConfig = (capturedList[0]?.body.output_config ?? {}) as JsonRecord;
+    expect(outputConfig.format).toBeUndefined();
+    expect(result.ok ? null : result.error.code).toBe("ai_output_invalid");
+  });
+
+  it("JSON cercado por markdown é saída inválida, sem parse tolerante", async () => {
+    const { provider } = createHarness([
+      respondWith(recordedMessage({ text: '```json\n{"word": "gizito"}\n```' })),
+    ]);
+    expect(failureCodeOf(await provider.generate(wordRequest()))).toBe("ai_output_invalid");
+  });
+
+  it("a lista de etapas com saída estruturada é configurável", async () => {
+    const { provider, capturedList } = createHarness([respondWith(recordedMessage())], {
+      structuredOutputStageList: ["generate"],
+    });
+    await provider.generate(wordRequest());
+    const outputConfig = (capturedList[0]?.body.output_config ?? {}) as JsonRecord;
+    const format = (outputConfig.format ?? {}) as JsonRecord;
+    expect(format.type).toBe("json_schema");
   });
 });

@@ -97,3 +97,18 @@ Corrigido:
 Comandos depois da correção: `bun run lint`, `bun run typecheck` e `bun run build` verdes; `bun run test` verde (core 710, integrations 345 com 17 pulados, db 98, api 25, worker 21).
 
 Teto de 2 rodadas atingido: a correção desta rodada não passou por verifier. A prova definitiva de que a API aceita os sete schemas é o `test:ai-live`, que roda contra a API real assim que a chave estiver no `.env`.
+
+## Teste real (`test:ai-live`, depois da rodada 2)
+
+Rodado pelo orquestrador com a chave do humano, no workspace `gizito-dev`.
+
+- **Primeira execução: 13 pass, 4 fail.** O contrato nas quatro etapas e os schemas de extração, plano e revisão passaram. Os quatro schemas do kit (conteúdo e reparo, Matemática e Português) receberam 400 "The compiled grammar is too large".
+  - Sondas confirmaram a causa: uma questão sozinha cabe na gramática, uma lista de questões não. Nenhuma simplificação testada fez caber: sem `enum`/`const`, sem `minItems`, `nullable` como campo simples, ou só uma propriedade.
+  - A correção da rodada 2 (`$ref` embutido) foi aceita pela API, no `photoExtraction`.
+- **Ajuste:** saída estruturada só nas etapas de `structuredOutputStageList` (padrão: extract, plan, review). O generate pede JSON em texto com o schema no prompt, como os prompts v1 já fazem, e o Zod valida sem parse tolerante. Testes novos:
+  - o generate sem `format` e com a saída fora do schema dá `ai_output_invalid`;
+  - JSON cercado por markdown dá `ai_output_invalid`;
+  - a lista de etapas é configurável;
+  - o teste real confere cada schema na sua etapa.
+  - Registrado em known-issues (taxa de saída inválida na geração, medir na F1-10) e no ADR-0011.
+- **Segunda execução: 16 pass, 0 fail.** Inclui o contrato nas quatro etapas (o generate já com JSON em texto), a foto, a foto ilegível, a saída inválida, a cortada, o cancelamento e os sete schemas.

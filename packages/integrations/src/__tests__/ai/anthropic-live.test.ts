@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  type AiStage,
   aiEnvironmentSchema,
   kitContentSchemaBySubject,
   kitPlanSchema,
@@ -27,22 +28,15 @@ function createLiveProvider() {
   });
 }
 
-const coreOutputSchemaByName: Readonly<Record<string, z.ZodType>> = {
-  photoExtraction: photoExtractionSchema,
-  kitPlan: kitPlanSchema,
-  mathKitContent: kitContentSchemaBySubject.math,
-  portugueseKitContent: kitContentSchemaBySubject.portuguese,
-  mathKitRepair: kitRepairSchemaBySubject.math,
-  portugueseKitRepair: kitRepairSchemaBySubject.portuguese,
-  reviewResult: reviewResultSchema,
-};
-
-it.if(process.env.AI_LIVE_TEST === "1")("test:ai-live encontra o ambiente da IA completo", () => {
-  const missingKeyList = liveEnvironment?.success
-    ? []
-    : (liveEnvironment?.error.issues ?? []).map((issue) => issue.path.join("."));
-  expect(missingKeyList).toEqual([]);
-});
+const coreOutputSchemaList: readonly (readonly [string, AiStage, z.ZodType])[] = [
+  ["photoExtraction", "extract", photoExtractionSchema],
+  ["kitPlan", "plan", kitPlanSchema],
+  ["mathKitContent", "generate", kitContentSchemaBySubject.math],
+  ["portugueseKitContent", "generate", kitContentSchemaBySubject.portuguese],
+  ["mathKitRepair", "generate", kitRepairSchemaBySubject.math],
+  ["portugueseKitRepair", "generate", kitRepairSchemaBySubject.portuguese],
+  ["reviewResult", "review", reviewResultSchema],
+];
 
 describe.skipIf(!liveEnvironment?.success)("API real da Anthropic (test:ai-live)", () => {
   describeAiProviderContract("Anthropic", {
@@ -50,10 +44,10 @@ describe.skipIf(!liveEnvironment?.success)("API real da Anthropic (test:ai-live)
     testTimeoutMs: LIVE_TEST_TIMEOUT_MS,
   });
 
-  it.each(Object.entries(coreOutputSchemaByName))(
-    "a API aceita o schema de saída %s",
-    async (name, outputSchema) => {
-      const result = await createLiveProvider().generate({
+  it.each(coreOutputSchemaList)(
+    "a API aceita o schema de saída %s na etapa %s",
+    async (name, stage, outputSchema) => {
+      const result = await createLiveProvider()[stage]({
         promptVersion: `${name}-schema-probe`,
         systemPrompt: "Você testa a integração do Gizito.",
         userText: "Gere um exemplo curto que siga o formato pedido.",

@@ -12,7 +12,7 @@ O PRD 1.3 §12.2 deixava o provedor de IA em aberto: dois níveis de modelo mult
 
 1. **Anthropic na F1:** Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão (PRD 1.4 §12.1). Os modelos e o esforço são configuração; Gemini ou GPT entram atrás da mesma interface se o custo por kit medido na F1-10 passar da meta.
 2. **O `AiProvider` devolve `Result<AiResult, AiFailure>`.** A falha carrega um código estável, o `usage` quando houve resposta, o modelo e a duração. Só timeout, 429, indisponibilidade e cancelamento voltam à fila (`isRetryableAiFailureCode`); recusa, corte e saída inválida são falha da etapa.
-3. **Saída estruturada com JSON Schema gerado do schema Zod da etapa,** por conversão própria. A conversão mantém `enum`, `const`, `anyOf` e `$ref`. O que a API não aplica (tamanhos, limites numéricos, padrões) vai para a `description`, e o Zod confere tudo depois.
+3. **Saída estruturada com JSON Schema gerado do schema Zod da etapa, onde a gramática cabe,** por conversão própria. A conversão mantém `enum`, `const`, `anyOf` e `$ref`. O que a API não aplica (tamanhos, limites numéricos, padrões) vai para a `description`, e o Zod confere tudo depois. Extração, plano e revisão usam saída estruturada. A geração (conteúdo e reparo do kit) pede JSON em texto, com o schema no prompt, como os prompts v1 já fazem (`{{OUTPUT_JSON_SCHEMA}}`), e o Zod valida sem parse tolerante. O `test:ai-live` de 20/10/2026 recebeu 400 "The compiled grammar is too large" nos quatro schemas do kit: uma questão sozinha cabe, mas uma lista de questões já não, e o kit tem duas listas de 10 mais exemplos.
 4. **System em bloco com cache efêmero,** imagens reduzidas a 1.600 px em JPEG sem metadado e streaming em toda chamada.
 5. **`costCents` em centavos de dólar,** a moeda da fatura, pela tabela de preço por modelo do adaptador. Modelo fora da tabela é erro na construção.
 
@@ -39,6 +39,7 @@ O PRD 1.3 §12.2 deixava o provedor de IA em aberto: dois níveis de modelo mult
 
 ### Riscos
 - Recusa do modelo vira falha da etapa sem reserva; com conteúdo escolar, o risco é baixo, e a F1-10 mede.
+- Na geração, sem gramática, o modelo pode devolver JSON cercado por markdown ou fora do schema; isso é `ai_output_invalid` e gasta a regeneração. A F1-10 mede a taxa.
 - Preço de prompt acima de 100.000 tokens no Haiku 5.5 é outro e não está na tabela; o pipeline usa cerca de 10.000.
 - O timeout do SDK cobre só até os cabeçalhos da resposta; um stream que para depois do 200 só é cortado pelo `signal` do worker (teto de execução do job) e vira `ai_aborted`, não `ai_timeout`.
 - Em stream interrompido, o `usage` vem do último retrato da mensagem: entrada e cache exatos, saída estimada pelo texto visível (limite inferior, porque o raciocínio oculto também é cobrado).
@@ -49,3 +50,4 @@ O PRD 1.3 §12.2 deixava o provedor de IA em aberto: dois níveis de modelo mult
 - Custo por kit medido na F1-10 acima de 10% do preço do kit, mesmo com esforço menor: testar Gemini ou GPT com um segundo adaptador.
 - Regressão dos 40 casos com qualidade insuficiente no Sonnet 5.5: medir o Opus 5.5 (só configuração).
 - SDK passar a manter `enum` e `const` e aceitar `allOf` de padrões: trocar a conversão própria pelo helper.
+- Taxa de `ai_output_invalid` na geração alta na F1-10: testar ferramenta não estrita (o JSON chega já analisado) ou dividir a geração em chamadas menores.
