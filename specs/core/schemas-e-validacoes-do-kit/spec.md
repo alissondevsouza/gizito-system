@@ -70,32 +70,32 @@ Verificação de toda task: `bun test` no core e `bunx tsc --noEmit`; no fim do 
 - [x] 1.1 Constantes e `legibilityList` (RF-01) · Arquivos: `constants.ts`, `enums.ts`, `__tests__/constants.test.ts`
 - [x] 1.2 `kit-item.ts` (RF-02) e `labels.ts` (RF-05) com testes
 - [x] 1.3 `validation/issue.ts` (RF-03) com teste tabelado de SP §8
-- [ ] 1.4 `validation/patterns.ts` (RF-04) com os testes de falso positivo e acerto (feito em `7dcb5de`; falta o ajuste do `__` e dos novos casos da revisão da spec)
+- [x] 1.4 `validation/patterns.ts` (RF-04) com os testes de falso positivo e acerto
 
 ### M2 — Extração e prévia
 - [x] 2.1 `extraction/schemas.ts` (RF-06)
-- [ ] 2.2 `extraction/merge.ts` com `mergedExtractionSchema` (RF-07) e `extraction/preview.ts` (RF-08)
+- [x] 2.2 `extraction/merge.ts` com `mergedExtractionSchema` (RF-07) e `extraction/preview.ts` (RF-08)
 
 ### M3 — Alocação e plano
-- [ ] 3.1 `slots.ts` (RF-09) com os testes de referência
-- [ ] 3.2 `plan/schemas.ts`, `validation/plan.ts` (RF-10) e fixture de plano em `__fixtures__/kit.ts`
+- [x] 3.1 `slots.ts` (RF-09) com os testes de referência
+- [x] 3.2 `plan/schemas.ts`, `validation/plan.ts` (RF-10) e fixture de plano em `__fixtures__/kit.ts`
 
 ### M4 — Kit, composição e gabarito
-- [ ] 4.1 `expectedAnswerSchema` estrito, `kit/schemas.ts` (RF-11), fixtures de kit em `__fixtures__/kit.ts` e avaliador de tabela em `__fixtures__/math-evaluator.ts`
-- [ ] 4.2 `kit/compose.ts` (RF-12), `kit/answer-key.ts` (RF-13), `kit/text.ts`
+- [x] 4.1 `expectedAnswerSchema` estrito, `kit/schemas.ts` (RF-11), fixtures de kit em `__fixtures__/kit.ts` e avaliador de tabela em `__fixtures__/math-evaluator.ts`
+- [x] 4.2 `kit/compose.ts` (RF-12), `kit/answer-key.ts` (RF-13), `kit/text.ts`
 
 ### M5 — Validação do kit
-- [ ] 5.1 `validation/structure.ts`, `validation/answers.ts` (SP §8.2)
-- [ ] 5.2 `validation/content.ts` (SP §8.3) e `validation/index.ts` (RF-14)
+- [x] 5.1 `validation/structure.ts`, `validation/answers.ts` (SP §8.2)
+- [x] 5.2 `validation/content.ts` (SP §8.3) e `validation/index.ts` (RF-14)
 
 ### M6 — Revisão e reparo
-- [ ] 6.1 `review/schemas.ts`, `review/interpret.ts` (RF-15)
-- [ ] 6.2 `validation/repair.ts` (RF-16)
+- [x] 6.1 `review/schemas.ts`, `review/interpret.ts` (RF-15)
+- [x] 6.2 `validation/repair.ts` (RF-16)
 
 ### M7 — Fechamento
-- [ ] 7.1 `index.ts`, teste de entrypoint, teste de `toJSONSchema` (RF-11, RF-17)
-- [ ] 7.2 Rodar `bun run test:pedagogy` — não existe até a F1-10: pendência estendida em `known-issues.md` e registrada na review
-- [ ] 7.3 Docs (RF-17); `bun run lint`, `bun run typecheck`, `bun run test` na raiz; cobertura; revisão neutra (zona sensível: pedagogia)
+- [x] 7.1 `index.ts`, teste de entrypoint, teste de `toJSONSchema` (RF-11, RF-17)
+- [x] 7.2 Rodar `bun run test:pedagogy` — não existe até a F1-10: pendência estendida em `known-issues.md` e registrada na review
+- [ ] 7.3 Docs (RF-17); `bun run lint`, `bun run typecheck`, `bun run test` na raiz; cobertura; revisão neutra (zona sensível: pedagogia) — docs, lint, typecheck, testes e cobertura feitos; falta a revisão neutra
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -114,4 +114,4 @@ Verificação de toda task: `bun test` no core e `bunx tsc --noEmit`; no fim do 
 | 2026-10-20 | Saída inválida persistente de uma foto entra na junção como `null` | a F1-06 não precisa fabricar extração falsa; `legibilityScore` fica `null` (nada foi medido) |
 
 ## Status
-Spec revisada por `gizito-spec-verifier` (APROVADO com alertas, incorporados em 2026-10-20). M1 commitado (`7dcb5de`); M2 e M3 em andamento. Para o humano no handoff: ordem dos candidatos, padrão `__` e espaço antes de `%`/`°` (Decisões).
+Spec revisada por `gizito-spec-verifier` (APROVADO com alertas, incorporados em 2026-10-20). M1 a M7 implementados e commitados (`7dcb5de` a `0c7681f`); lint, typecheck e `bun run test` verdes na raiz; cobertura do core 99,9% das linhas. Próximo passo: revisão neutra do diff. Para o humano no handoff: ordem dos candidatos e padrão `__` (spec pedagógica §15.6) e o espaço antes de `%`/`°` (Decisões).
