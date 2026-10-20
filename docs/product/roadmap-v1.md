@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 3 | 1 | 7 |
+| F1 Prova técnica e pedagógica | 11 | 4 | 1 | 6 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -72,7 +72,7 @@ flowchart LR
 ### 1.4 Pendências do humano, com antecedência
 
 - [x] `git init` e primeiro commit — necessário em F0-01 — feito em 14/10/2026
-- [ ] Chave do provedor de IA — necessário em F1-05 — começar no início de F1
+- [ ] Chave do provedor de IA — necessário em F1-05 — provedor decidido em 20/10/2026 (Anthropic: Haiku 5.5 na extração, Sonnet 5.5 na geração e revisão, PRD 1.4 §12.1); falta a conta com limite de gasto e a chave no `.env`
 - [ ] 40 materiais fotografados (4 anos × 2 disciplinas × 5), com manuscritos, fotos ruins e dados pessoais a cobrir — necessário em F1-10 — começar no início de F1; leva semanas
 - [ ] Professor(a) para revisar amostra — necessário em F1-11 — combinar em F1; a taxonomia da F1-01 (`docs/pedagogy/taxonomia.md`) já foi revisada e aprovada pelo professor em 19/10/2026
 - [ ] Conta Mercado Pago pessoa física, chave Pix, aplicação e credenciais de teste — necessário em F2-03 — começar em F0, para a conta envelhecer
@@ -133,7 +133,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 3 de 11 concluídas
+**Estado:** em andamento · 4 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -147,11 +147,11 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: o que `docs/pedagogy/spec-pedagogica.md` §14 atribui à F1-03: `photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema`, `studyKitSchema`, `reviewResultSchema`; `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `validateStudyKit` com contagens, cobertura, dificuldade, duplicatas, alternativas, dependência de figura, dado pessoal, e `interpretReview`
   - Pronto quando: cada regra com teste e fixture válida e inválida
   - Concluída em: 20/10/2026. Schemas de cada etapa e do kit publicado, junção da extração, decisão da prévia, alocação das 20 vagas, validação do plano, composição, gabarito e formato das respostas, validações por código com severidade e reparo fixos, interpretação da revisão e decisão do reparo, com uma fixture válida e uma inválida por código, as tabelas da spec pedagógica como teste e os falsos positivos do §8.4. Core com 689 testes. Spec pedagógica 1.1 com as precisões do §15.6, aprovadas por você com `%` e `°` colados ao número. Revisão neutra reprovada na rodada 1 (três bloqueadores falsos) e aprovada na rodada 2. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-04 `avaliador-matematico` — em andamento** — integrations · P · depende: F1-03 · `specs/integrations/avaliador-matematico/`
+- [x] **F1-04 `avaliador-matematico`** — integrations · P · depende: F1-03 · 20/10/2026 · `21643c4` · `specs/integrations/avaliador-matematico/`
   - Entrega: `MathEvaluator` com mathjs: expressões, frações simplificadas, unidades, tolerância, equivalência entre alternativas
   - Pronto quando: casos: fração equivalente, decimal vs fração, unidade errada, distratores iguais
-  - Feito até agora (20/10/2026): `createMathjsEvaluator` e `mathExpressionToLatex` em `packages/integrations/src/math/`, com lista fechada de nós, funções e unidades, tabela de unidades pt-BR, equivalência por valor, unidade, tolerância, expressão, conjunto e texto, e os casos do pronto como teste. Você aprovou a spec pedagógica 1.2 (§15.7), `math_expression_invalid` também para resposta e alternativa do tipo `expression` e o texto do `generate` v1 com as unidades aceitas. Revisão neutra REPROVADO nas rodadas 1 e 2 (dois travamentos do worker por tempo explosivo do mathjs, letras de unidade e LaTeX de negativos) e APROVADO na rodada 3. Falta o merge. Sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-05 `adaptador-de-ia`** — integrations · M · depende: F0-04
+  - Concluída em: 20/10/2026. `createMathjsEvaluator` e `mathExpressionToLatex` em `packages/integrations/src/math/`: lista fechada de nós, funções e unidades, tabela de unidades pt-BR, equivalência por valor, unidade, tolerância, expressão, conjunto e texto, LaTeX pt-BR sem custo exponencial. Você aprovou a spec pedagógica 1.2 (§15.7), `math_expression_invalid` para resposta e alternativa do tipo `expression` e o `generate` v1 com as unidades aceitas. Revisão neutra reprovada nas rodadas 1 e 2 e aprovada na rodada 3. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
+- [ ] **F1-05 `adaptador-de-ia` — em andamento** — integrations · M · depende: F0-04 · `specs/integrations/adaptador-de-ia/`
   - Entrega: `AiProvider` real com dois modelos configuráveis, saída JSON validada, `usage` com tokens e custo em centavos, redução de imagem, retries só transitórios; `FakeAiProvider`
   - Pronto quando: suíte de contrato passa no real (com chave) e no fake
 - [ ] **F1-06 `pipeline-extracao`** — worker · M · depende: F1-01, F1-03, F1-05

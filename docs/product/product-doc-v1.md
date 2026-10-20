@@ -1,7 +1,7 @@
-# PRD — Gizito | MVP v1.3
+# PRD — Gizito | MVP v1.4
 
 **Status:** especificação proposta para implementação  
-**Data:** 14/10/2026 · revisão 1.3 em 19/10/2026 (ver seção 13)  
+**Data:** 14/10/2026 · revisão 1.4 em 20/10/2026 (ver seção 13)  
 **Produto:** gerador de kits personalizados para preparação de provas escolares  
 **Modelo de receita:** pagamento único por kit via Pix  
 **Nome:** **Gizito**
@@ -352,17 +352,18 @@ Detalhamento em features, dependências, pendências do humano e critérios de p
 ### 12.1 Decididas nesta revisão
 - **Gateway Pix: Mercado Pago**, Orders API, conta pessoa física (seção 9.1). Pendências operacionais: cadastrar chave Pix na conta, confirmar a taxa vigente, criar usuários de teste.
 - **WhatsApp: Evolution API com Baileys, em modo somente resposta**, já no piloto (seção 9.2). Pendências: chip e aparelho dedicados, aquecimento do número, política de privacidade atualizada.
+- **Provedor de IA na Fase 1: Anthropic (Claude)**, com Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão (decisão do humano em 20/10/2026). Os modelos são configuração (`AI_MODEL_EXTRACT`, `AI_MODEL_GENERATE`); a regressão dos 40 casos e o custo medido na Fase 1 confirmam a escolha. Se o custo por kit passar da meta, Gemini ou GPT são testados atrás da mesma interface `AiProvider`. Pendências: conta e chave da API com limite de gasto, conferência da política de dados da API e o provedor como suboperador na política de privacidade.
 
 ### 12.2 Em aberto (não bloqueiam o protótipo)
 1. **Marca:** consulta de anterioridade de “Gizito” no INPI e disponibilidade de domínio (`gizito.com.br` e variações) antes de divulgar.
 2. **Preço:** R$ 29,90 é o preço de lançamento. Testar sensibilidade (por exemplo, R$ 19,90) apenas após qualidade demonstrada no piloto; não criar múltiplos planos no MVP.
-3. **Provedor de IA:** sem restrição de dados ou preferência. Candidato inicial: um provedor com dois níveis de modelo multimodal (pequeno para extração, grande para geração e revisão). Selecionar por benchmark nos 40 casos, custo real medido, estabilidade e política de dados. Ordem de grandeza esperada com modelos atuais: centavos de dólar por prévia e menos de um dólar por kit; confirmar na Fase 1.
-4. **Prazo de retenção e políticas:** validar adequação jurídica à LGPD, CDC e prestação de serviço digital antes de comercializar, incluindo o tratamento do número de WhatsApp.
-5. **Conversão de HEIC no servidor:** só se o teste em iPhone real mostrar necessidade.
-6. **Migração do WhatsApp para a API oficial:** gatilhos são banimento, instabilidade recorrente ou volume que justifique a verificação de negócio. A Evolution API mantém os mesmos endpoints; muda a integração da instância.
+3. **Prazo de retenção e políticas:** validar adequação jurídica à LGPD, CDC e prestação de serviço digital antes de comercializar, incluindo o tratamento do número de WhatsApp.
+4. **Conversão de HEIC no servidor:** só se o teste em iPhone real mostrar necessidade.
+5. **Migração do WhatsApp para a API oficial:** gatilhos são banimento, instabilidade recorrente ou volume que justifique a verificação de negócio. A Evolution API mantém os mesmos endpoints; muda a integração da instância.
 
 ## 13. Histórico de revisões
 
+- **1.4 (20/10/2026):** provedor de IA decidido para a Fase 1: Anthropic, com Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão, e Gemini ou GPT como alternativa se o custo por kit passar da meta (12.1, antes em aberto em 12.2). Decisão do humano na F1-05.
 - **1.3 (19/10/2026):** assuntos ainda não atendidos (7.7): o material que trata de assunto deixado fora da taxonomia v1 por depender de figura ou oralidade é sinalizado na prévia; esse assunto não pode ser confirmado nem pedido como “outro”, o kit sai com os demais e, sem nenhum atendido, não há checkout (5, 6, 7.4, 10). Motivo: pelo caminho “outro”, o kit falharia depois do Pix no bloqueador de figura ausente. Decisão do humano na F1-01.
 - **1.2 (14/10/2026):** gateway Pix decidido: Mercado Pago via Orders API, conta pessoa física, com tabela comparativa e roteiro de integração (9.1); WhatsApp entra no MVP via Evolution API com Baileys em modo somente resposta, com fluxo, salvaguardas e caminho de migração para a API oficial (9.2); botão “Receber no WhatsApp” nas páginas de processamento e entrega; código curto do pedido; feature flag do canal; interfaces `PaymentGateway` e `NotificationChannel`; Redis e Evolution API no Compose; seção 12 reorganizada em decididas e em aberto.
 - **1.1 (14/10/2026):** nome definitivo Gizito; preço R$ 29,90; anos 4º–7º; kit com 10 + 10 = 20 questões em dois PDFs (atividades e gabarito); campos opcionais mantidos e tratados como texto não confiável; funil completo nas métricas; taxonomia de assuntos (7.7); perfil do material e personalização real; simulado com formato de prova; recálculo matemático com mathjs; KaTeX no servidor; fila em Postgres com transação única; stack decidida (TanStack Start, Bun + Elysia, worker Bun, `packages/core`); link do pedido separado do link de download; estado `analisando`; economia da prévia; homologação sem revisão humana no fluxo, com regressão e auditoria amostral; decisões abertas sobre gateway para CPF e WhatsApp.
