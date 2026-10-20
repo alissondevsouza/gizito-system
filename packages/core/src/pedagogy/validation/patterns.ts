@@ -106,7 +106,7 @@ const forbiddenMarkupPatternList: readonly RegExp[] = [
   /^#+ /m,
   /\[[^\]\n]+\]\([^)\s]+\)/,
   /`/,
-  /<\/?[a-z][a-z0-9]*(?:\s+[a-z-]+\s*=\s*(?:"[^"<>]*"|'[^'<>]*'|[^\s"'<>]+))*\s*\/?>/,
+  /<\/?[a-z][a-z0-9]*(?:\s+[a-z][a-z0-9-]*\s*=\s*(?:"[^"<>]*"|'[^'<>]*'|[^\s"'<>]+))*\s*\/?>/,
   /(?![\u00A9\u00AE\u2122\u2194-\u2199\u21A9\u21AA])\p{Extended_Pictographic}/u,
 ];
 
@@ -160,7 +160,7 @@ const figurePositionPattern = new RegExp(
 );
 
 const narrativePositionComplementPattern =
-  /^\s+(?:de|da|do|das|dos|dele|dela|deles|delas|deste|desta|destes|destas|desse|dessa|desses|dessas|daquele|daquela|daqueles|daquelas|disso|disto|daquilo)(?![\p{L}\p{N}])/iu;
+  /^\s+(?:de|da|do|das|dos|dele|dela|deles|delas|daquele|daquela|daqueles|daquelas|daquilo)(?![\p{L}\p{N}])/iu;
 
 const childMaterialPattern = wholeExpressionPattern(
   `${phrasePattern(["veja", "abra", "consulte", "copie"])} +${phrasePattern([

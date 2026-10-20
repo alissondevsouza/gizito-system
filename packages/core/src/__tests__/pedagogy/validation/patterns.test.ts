@@ -206,6 +206,13 @@ describe("falsos positivos achados na revisão neutra da F1-03", () => {
     expect(findFigureReferenceExcerpt(text)).toBeNull();
   });
 
+  it.each([
+    ["Na figura ao lado desta questão, conte os lados.", "Na figura ao lado"],
+    ["A figura abaixo deste enunciado mostra um quadrado.", "A figura abaixo"],
+  ])("figura com demonstrativo depois da posição ainda casa: %s", (text, excerpt) => {
+    expect(findFigureReferenceExcerpt(text)).toBe(excerpt);
+  });
+
   it("figura ainda casa com imagem pela posição", () => {
     expect(findFigureReferenceExcerpt("Observe a imagem abaixo e responda.")).toBe(
       "a imagem abaixo",
@@ -230,6 +237,7 @@ describe("falsos positivos achados na revisão neutra da F1-03", () => {
     ['<p class="nota">texto</p>', '<p class="nota">'],
     ["linha<br />outra", "<br />"],
     ["</b>", "</b>"],
+    ['<div data-x1="1">', '<div data-x1="1">'],
   ])("tag casa: %s", (text, excerpt) => {
     expect(findForbiddenMarkupExcerpt(text)).toBe(excerpt);
   });

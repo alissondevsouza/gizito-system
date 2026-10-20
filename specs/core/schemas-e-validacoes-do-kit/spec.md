@@ -2,7 +2,7 @@
 feature: F1-03 schemas-e-validacoes-do-kit
 module: core
 size: L
-status: in_progress
+status: review
 branch: feat/core/schemas-e-validacoes-do-kit
 updated: 2026-10-20
 ---
@@ -95,7 +95,7 @@ Verificação de toda task: `bun test` no core e `bunx tsc --noEmit`; no fim do 
 ### M7 — Fechamento
 - [x] 7.1 `index.ts`, teste de entrypoint, teste de `toJSONSchema` (RF-11, RF-17)
 - [x] 7.2 Rodar `bun run test:pedagogy` — não existe até a F1-10: pendência estendida em `known-issues.md` e registrada na review
-- [ ] 7.3 Docs (RF-17); `bun run lint`, `bun run typecheck`, `bun run test` na raiz; cobertura; revisão neutra (zona sensível: pedagogia) — docs, lint, typecheck, testes e cobertura feitos; falta a revisão neutra
+- [x] 7.3 Docs (RF-17); `bun run lint`, `bun run typecheck`, `bun run test` na raiz; cobertura; revisão neutra (zona sensível: pedagogia)
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -115,4 +115,4 @@ Verificação de toda task: `bun test` no core e `bunx tsc --noEmit`; no fim do 
 | 2026-10-20 | Saída inválida persistente de uma foto entra na junção como `null` | a F1-06 não precisa fabricar extração falsa; `legibilityScore` fica `null` (nada foi medido) |
 
 ## Status
-Spec revisada (APROVADO com alertas, incorporados). M1 a M7 implementados. Revisão neutra rodada 1: REPROVADO com 3 CRÍTICOs, todos corrigidos com teste (`review.md`); rodada 2 revalida só os pontos corrigidos. Para o humano no handoff: os pontos de SP §15.6 e o espaço antes de `%`/`°`.
+Implementada e revisada: revisão da spec APROVADO com alertas; revisão neutra do diff REPROVADO na rodada 1 (3 CRÍTICOs corrigidos) e APROVADO na rodada 2 (`review.md`). Pendências do humano: aval dos pontos da SP §15.6, decidir o espaço antes de `%`/`°`, push e merge. `bun run test:pedagogy` só na F1-10.

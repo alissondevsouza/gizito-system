@@ -1,8 +1,8 @@
 ---
 feature: F1-03 schemas-e-validacoes-do-kit
 module: core
-round: 1
-verdict: REPROVADO
+round: 2
+verdict: APROVADO
 updated: 2026-10-20
 ---
 
@@ -55,3 +55,29 @@ Todos os achados aceitos e corrigidos, com teste que falhava antes:
 - CRÍTICO 3: termos de sentido comum fora da lista; frases do achado nos testes de "não casa"; critério escrito na SP §8.4.
 - ALERTAs: tag exige atributo `nome=valor`; `R$` com exatamente duas casas (arredondamento do ICU, 12,555 → 12,56); contrações com pronome no complemento narrativo; telefone fixo exige separador, celular sem separador exige o 9, CPF de 11 dígitos exige dígito verificador, nada procurado dentro de `\( \)`; `composeStudyKit` lança `InvalidComposeInputError` para dado do pedido inválido antes de olhar a saída do modelo; SP §15.6 lista todas as mudanças de texto aprovado como pendentes do aval do humano.
 - SUGESTÕES: corte do trecho sem partir par substituto; domínio só com sufixo minúsculo; `©`, `®`, `™` e setas fora do padrão de emoji; teste de `figure_reference` em tabela, alternativa e exemplo.
+
+## Rodada 2
+
+Revalidação só dos pontos corrigidos (`git diff c707ca0..c5e0b7f`), por verifier novo.
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun test` em `packages/core` | 686 pass, 0 fail (654 + 32 novos) |
+| `bunx tsc --noEmit` em `packages/core` | exit 0 |
+| `bunx biome check packages/core docs specs` | 106 arquivos, sem erro |
+| sondagem do verifier fora do repositório | casos da rodada 1 e bordas novas refeitos |
+| `bun run test:pedagogy` | não existe até a F1-10 |
+
+### Veredito
+APROVADO. Os 3 CRÍTICOs, os 6 ALERTAs e as 4 SUGESTÕES da rodada 1 confirmados como corrigidos; RF-04, RF-10, RF-12, RF-13, RF-14 e RF-17 atendidos.
+
+### Achados
+- [ALERTA] `patterns.ts:60` — número de 11 algarismos sem separador com 9 no terceiro dígito ainda vira celular ("21900000000"); a SP §8.4 aceita celular sem separador.
+- [SUGESTÃO] `patterns.ts:163` — contrações demonstrativas (`deste`, `desta`, `desse`…) deixavam escapar "Na figura ao lado desta questão".
+- [SUGESTÃO] `patterns.ts:109` — tag não pega atributo sem valor, atributo com dígito no nome nem tag maiúscula.
+
+### Resposta do orquestrador
+- ALERTA aceito como risco: segue o texto aprovado; registrado em `known-issues.md` com condição de resolução na F1-10 (exigir separador no celular é decisão do humano).
+- SUGESTÃO das contrações aceita: ficam só `dele(s)`, `dela(s)`, `daquele(s)`, `daquela(s)`, `daquilo`; teste de que "desta questão" e "deste enunciado" ainda casam.
+- SUGESTÃO da tag aceita em parte: nome de atributo aceita dígito (teste com `data-x1`). Atributo sem valor fica de fora de propósito: "<y e z>" voltaria a casar como tag em desigualdades com letras (achado da rodada 1); tag maiúscula também, porque o render escapa o texto (SP §8.6) e o modelo escreve tag em minúscula.
