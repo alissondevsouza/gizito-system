@@ -2,7 +2,7 @@
 feature: F1-04 avaliador-matematico
 module: integrations
 size: M
-status: in_progress
+status: done
 branch: feat/integrations/avaliador-matematico
 updated: 2026-10-20
 ---
@@ -58,7 +58,7 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` em `packages/integr
 - [x] 2.2 `index.ts`; SP 1.2 (§8.2, §15.7, §16); roadmap; known-issues (regressão e pendência de `expression` sem código) (RF-07)
 - [x] 2.3 `bun run lint`, `bun run typecheck`, `bun run test` na raiz
 - [x] 2.4 `bun run test:pedagogy`: não existe até a F1-10; registrar em known-issues
-- [ ] 2.5 Revisão neutra (`review.md`)
+- [x] 2.5 Revisão neutra (`review.md`)
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -82,4 +82,4 @@ Verificação de toda task: `bun test` e `bunx tsc --noEmit` em `packages/integr
 | 2026-10-20 | Texto e conjunto sem diferença de maiúscula em Matemática | `Agudo` e `agudo` como alternativas são a mesma resposta; em Português o core mantém a maiúscula (F1-03) porque ela é conteúdo |
 
 ## Status
-M1 e M2 implementados. Revisão neutra reprovada nas rodadas 1 e 2, com as correções aplicadas; o humano aprovou a SP §15.7, a extensão de `math_expression_invalid` e o texto do prompt, aplicados em `3b35442`, e pediu uma rodada 3 de revisão sobre as correções da rodada 2 e essas mudanças. Lint, typecheck, build e `bun run test` verdes na raiz (core 694, integrations 249, db 98, api 25, worker 21).
+Pronta para o merge. Revisão neutra REPROVADO nas rodadas 1 e 2 e APROVADO na rodada 3, pedida pelo humano; o ALERTA e as NOTAs da rodada 3 foram aplicados. O humano aprovou a SP §15.7, `math_expression_invalid` para resposta e alternativa do tipo `expression` e o texto do `generate` v1. Lint, typecheck, build e `bun run test` verdes na raiz (core 695, integrations 250, db 98, api 25, worker 21). Sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues).

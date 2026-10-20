@@ -248,6 +248,10 @@ export const expressionUnitSymbolSet: ReadonlySet<string> = new Set(
   unitEntryList.flatMap((entry) => entry.expressionSymbolList),
 );
 
+export const mathExpressionUnitSymbolList: readonly string[] = unitEntryList.flatMap((entry) =>
+  entry.expressionSymbolList.slice(0, 1),
+);
+
 export function normalizeUnitText(unit: string): string {
   return normalizeSpacing(unit)
     .normalize("NFD")

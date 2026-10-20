@@ -6,6 +6,7 @@ import {
   findResultUnitEntry,
   findUnitEntry,
   isSameDimension,
+  mathExpressionUnitSymbolList,
   normalizeUnitText,
   unitEntryList,
 } from "#src/math/units.ts";
@@ -69,6 +70,15 @@ describe("tabela de unidades (spec F1-04, RF-03)", () => {
     expect(expressionUnitSymbolSet.has("year")).toBe(false);
     expect(expressionUnitSymbolSet.has("min")).toBe(true);
     expect(expressionUnitSymbolSet.has("hm")).toBe(true);
+  });
+
+  it("a lista do prompt tem um símbolo por unidade, todos aceitos na expressão", () => {
+    expect(mathExpressionUnitSymbolList).toContain("min");
+    expect(mathExpressionUnitSymbolList).toContain("km");
+    expect(mathExpressionUnitSymbolList).not.toContain("hours");
+    for (const symbol of mathExpressionUnitSymbolList) {
+      expect(expressionUnitSymbolSet.has(symbol)).toBe(true);
+    }
   });
 
   it("compara grandeza e converte valor", () => {

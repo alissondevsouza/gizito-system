@@ -1,8 +1,8 @@
 ---
 feature: F1-04 avaliador-matematico
 module: integrations
-round: 2
-verdict: REPROVADO
+round: 3
+verdict: APROVADO
 updated: 2026-10-20
 ---
 
@@ -96,4 +96,42 @@ Corrigido:
 
 Comandos depois da correção: `bun run lint` verde (236 arquivos); `bun run typecheck` verde; `bun run test` verde (core 691, integrations 248, db 98, api 25, worker 21); `bun run build` verde.
 
-Teto de 2 rodadas atingido: as correções da rodada 2 não passaram por verifier. Escalado ao humano com este `review.md`.
+Teto de 2 rodadas atingido: escalado ao humano, que aprovou as pendências e pediu a rodada 3.
+
+## Rodada 3 (pedida pelo humano)
+
+Escopo: `git diff 29f6895..HEAD`, que traz as correções da rodada 2 e as decisões do humano. As decisões foram três: `math_expression_invalid` para resposta e alternativa do tipo `expression`, a SP §15.7 aprovada e o texto do `generate` v1.
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun test` em `packages/integrations` e `packages/core` | 249 e 694 pass, 0 fail |
+| sondas do verifier no scratchpad, sem arquivo no repositório (`git status` limpo) | leitura de álgebra em 30 expressões e 26 pares sem igualdade falsa nem assimetria; 43 formas adversárias de até 200 caracteres com pior caso de 7,4 ms (`evaluate` + `equals` + LaTeX); KaTeX em até 13,5 ms; matriz 93×93 simétrica e reflexiva; exemplos do prompt novo conferidos; 49 expressões aceitas passam no KaTeX `strict` |
+| `bun run test:pedagogy` | não existe até a F1-10 |
+
+### Critérios de aceite
+| RF | Atendido | Evidência (teste ou arquivo) |
+|---|---|---|
+| RF-01 a RF-07 | sim | `mathjs-evaluator.test.ts`, `latex.test.ts`, `units.test.ts`, `kit-validation.test.ts` (três casos novos), SP 1.2, `prompts-v1.md`, known-issues |
+
+### Achados
+- [ALERTA] `kit-validation.test.ts:205` — "uma vez por item" não era provado: nenhum item tinha duas expressões inválidas — trocar a regra por "um código por expressão" deixaria a suíte verde — caso com `calculationExpression` e `expectedAnswer` inválidos no mesmo item.
+- [NOTA] `roadmap-v1.md:153` — ainda dizia "pendente do seu aval".
+- [NOTA] `spec-pedagogica.md:247` — "unidade junto de variável" é `unsupported` só para unidade de mais de uma letra.
+- [NOTA] `prompts-v1.md:233-234` — o prompt não proíbe unidade em conta com variável (`2*x + 10 cm`) nem `x(x + 1)`, lido como chamada de função.
+- [NOTA] `prompts-v1.md:21`, `index.ts` — `{{MATH_UNIT_LIST}}` vinha de `unitEntryList`, que o pacote não exporta.
+- [NOTA] `mathjs-evaluator.ts` — `equals` não é transitivo (54 casos): `5*h` = `5h` = `{5, "h"}`, mas `5*h` ≠ `{5, "h"}`; só com alternativas de tipos misturados, que o prompt proíbe; efeito previsto da SP §15.7 (d).
+- [NOTA] `latex.ts` — letra de unidade em itálico quando não há unidade de mais de uma letra (`3 m\times4 m`); só visual, nas Decisões.
+
+### Regressão pedagógica
+Pendente (F1-10, known-issues).
+
+### Resposta do orquestrador
+Corrigido:
+- ALERTA: teste com `calculationExpression` e `expectedAnswer` inválidos no mesmo item, esperando um só `math_expression_invalid`.
+- NOTAs de docs: roadmap atualizado; SP §8.2 com "unidade de mais de uma letra junto de variável"; prompt com `*` antes de parênteses (`x*(x + 1)`, nunca `x(x + 1)`) e sem unidade em conta com variável, que detalham a regra "variável sempre com `*`" já aprovada pelo humano.
+- NOTA do placeholder: `mathExpressionUnitSymbolList` exportado de `@gizito/integrations`, com teste, e citado em `prompts-v1.md`.
+
+Aceito sem mudança: a falta de transitividade, que é o efeito previsto da §15.7 (d) e depende de alternativas de tipos misturados, e o itálico no LaTeX, que já está nas Decisões.
+
+Comandos depois da correção: `bun run lint` verde (236 arquivos); `bun run typecheck` verde; `bun run test` verde (core 695, integrations 250, db 98, api 25, worker 21); `bun run build` verde.
