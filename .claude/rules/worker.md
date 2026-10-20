@@ -17,7 +17,7 @@ paths:
 - TODO job é **idempotente**: checar estado atual antes de agir; reexecução não duplica kit, cobrança, e-mail nem mensagem.
 - Padrão de handler: carregar pedido → validar que o estado permite a etapa → executar → transição + efeitos na mesma transação. Handler chama service; service fala com Drizzle. Sem repository.
 - Payload do job validado com Zod ao enfileirar e ao consumir; payload inválido vai para falha com `outcome_code`, nunca é "corrigido" em runtime.
-- Retry com backoff exponencial para falhas transitórias (rede, 5xx, rate limit); falhas de validação pedagógica **não** são transitórias: contam como a única regeneração permitida.
+- Retry com backoff exponencial para falhas transitórias (rede, 5xx, rate limit); falhas de validação pedagógica **não** são transitórias: seguem a regeneração por reparo do pipeline de geração (abaixo), nunca o retry da fila.
 - Concorrência limitada por tipo (`GENERATE_CONCURRENCY`, default 2); `order.generate` tem limite de custo por pedido (`MAX_AI_COST_CENTS_PER_ORDER`): ao exceder, falhar seguro.
 - Health check HTTP simples e métricas por etapa (duração, custo, tokens, resultado).
 - Logs estruturados com `orderId`, `jobName`, `stage`, duração, custo, `outcomeCode`. **NUNCA** logar imagens, texto extraído, prompt, resposta do modelo, observação ou mensagem de WhatsApp.

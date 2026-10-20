@@ -39,7 +39,7 @@ Leia a seção que a sua feature toca (§14 diz qual).
 | `kitText` | texto pt-BR; no Zod, só aparado e com tamanho. Conteúdo proibido (Markdown, HTML, emoji, link, dado pessoal, termo bloqueado) é conferido pelos códigos do §8.3, para ter código próprio e reparo por item. Marcação matemática em `\(` … `\)` (abaixo) |
 | `kitTable` | `{ headerList: string[2..6], rowList: string[][1..10] }`; cada linha com o mesmo número de células do cabeçalho; célula de 1 a 40 caracteres. Substitui figura e gráfico nos assuntos com `figure_free_statement` |
 | `expectedAnswer` | `expectedAnswerSchema` existente (`number`, `fraction`, `expression`, `set`, `text`), com as regras de uso do §7.1 |
-| `ValidationIssue` | `{ code, severity: "blocker" \| "warning", stage: "extract" \| "plan" \| "validate" \| "review" \| "render", itemId: itemId \| topicRef \| null, note: string \| null }`; `note` só vem da revisão (até 200 caracteres) |
+| `ValidationIssue` | `{ code, severity: "blocker" \| "warning", stage: "extract" \| "plan" \| "validate" \| "review" \| "render", itemId: itemId \| topicRef \| null, note: string \| null, excerpt: string \| null }`; `note` só vem da revisão (até 200 caracteres); `excerpt` só vem de código determinístico de texto: o trecho do kit que casou, até 80 caracteres. Os dois são texto do kit, nunca entram em log |
 
 **Marcação matemática.** Expressão que precisa de formatação vai entre `\(` e `\)`, com o subconjunto do KaTeX: `\frac{a}{b}`, `^{}`, `\times`, `\div`, `\cdot`, `\text{}`, `\le`, `\ge`, `\ne`, `\%`. O cifrão é literal ("R$ 12,50" fica fora da marcação): por isso não se usa `$` como delimitador. Números em pt-BR em todo o texto, inclusive dentro da marcação: vírgula decimal (`2,5`) e ponto de milhar (`1.250`); o render (F1-08) troca a vírgula decimal por `{,}` dentro da marcação para o KaTeX não espaçar. `checkMathMarkup` (worker) confere delimitadores pareados e o parse do KaTeX de cada trecho.
 
@@ -145,7 +145,7 @@ Com 2 assuntos A e B: fixação A fácil, fácil, intermediária, intermediária
 | `baseTextBriefList` | Português: 1..3; Matemática: vazia | `{ baseTextId, block: "practice" \| "mock", genre: string 3..40, theme: string 3..80 }` |
 | `styleGuideList` | string[0..5], cada uma 10..140 | diretrizes de estilo tiradas do perfil |
 | `prerequisiteReminderList` | string[0..3], cada uma 10..140 | pré-requisitos a relembrar na revisão |
-| `otherTopicAssessment` | `null` sem "outro"; objeto com "outro" | `{ verdict: "feasible" \| "unfeasible", label: string 3..40, reasonCode: "depends_on_figure" \| "open_writing" \| "beyond_grade" \| "other_subject" \| "not_a_school_topic" \| null }`; `reasonCode` obrigatório só em `unfeasible`; `label` é o nome limpo que vai à capa |
+| `otherTopicAssessment` | `null` sem "outro"; objeto com "outro" | `{ verdict: "feasible" \| "unfeasible", label: string 3..40, reasonCode: "figure" \| "orality" \| "open_writing" \| "beyond_grade" \| "other_subject" \| "not_a_school_topic" \| null }`; `reasonCode` obrigatório só em `unfeasible`; os três primeiros valores são os de `unsupportedTopicReasonList`; `label` é o nome limpo que vai à capa |
 
 `validateKitPlan(plan, kitSlotPlan, subject)` devolve os códigos de etapa `plan` do §8.1.
 
@@ -246,7 +246,7 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
 
 | Código | Sev. | Reparo | Confere | PRD |
 |---|---|---|---|---|
-| `figure_reference` | B | item | em enunciado, tabela, alternativa e enunciado de exemplo (nunca em texto-base, revisão ou explicação): expressão que remete a figura ou material ausente, sempre com o objeto: "observe a figura", "observe a imagem", "observe o desenho", "observe o gráfico", "observe a ilustração", "veja a figura", "veja a imagem", "na figura", "a figura abaixo", "o desenho abaixo", "a imagem abaixo", "o gráfico abaixo" (e "acima", "ao lado"), "página 12", "do seu livro", "da sua apostila", "do seu caderno". Exceções em §8.4 | §7.5 |
+| `figure_reference` | B | item | em enunciado, tabela, alternativa e enunciado de exemplo (nunca em texto-base, revisão ou explicação): só comandos que mandam a criança a uma figura ou material ausente, pela lista fechada do §8.4. Precisão antes de cobertura: dependência de figura que a lista não pega é bloqueada pela revisão (`review_missing_data`) | §7.5 |
 | `personal_data_pattern` | B | item | telefone, e-mail ou CPF em qualquer texto do kit, inclusive `topicList[].label` (padrões em §8.4) | §7.5 |
 | `external_link` | B | item | URL, `www.` ou arroba de rede social, em qualquer texto do kit, inclusive `topicList[].label` | §7.5 |
 | `blocked_term` | B | item | termo de `blockedTermList` (core, F1-03: palavrões e ofensas), palavra inteira, em qualquer texto do kit, inclusive `topicList[].label` | §7.4.5, §7.5 |
@@ -257,12 +257,18 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
 | `mock_hint` | A | — | simulado com "dica", "lembre-se", "como vimos", "volte à revisão", "como no exemplo" | §7.2 |
 | `statement_too_long` | A | — | enunciado acima de `MAX_STATEMENT_WORD_COUNT_BY_GRADE` (*nova*: 4º 60, 5º 70, 6º 90, 7º 100 palavras, sem texto-base e tabela) | §7.1.2 |
 | `base_text_length` | A | — | texto-base fora de `BASE_TEXT_WORD_RANGE_BY_GRADE` (*nova*: 4º 100–220, 5º 120–260, 6º 150–320, 7º 180–380 palavras) | §7.3 |
-| `markup_forbidden` | B | item | Markdown, tag HTML ou emoji em texto do kit (o render escapa todo texto de qualquer jeito, §8.6) | §6 |
+| `markup_forbidden` | B | item | Markdown, tag HTML ou emoji em texto do kit, pelos padrões do §8.4, fora dos trechos `\( \)` (o render escapa todo texto de qualquer jeito, §8.6) | §6 |
 
 ### 8.4 Padrões determinísticos (F1-03, com testes de falso positivo)
 
 - **Dado pessoal:** telefone brasileiro com DDD (com ou sem parênteses, hífen ou espaço, 8 ou 9 dígitos), e-mail, CPF formatado ou 11 dígitos seguidos. Não podem casar: valores em reais ("R$ 1.250,00"), números grandes de enunciado ("12.345"), horários ("14h30"), frações e expressões.
-- **Figura:** lista de expressões normalizadas (sem acento, minúsculas), sempre verbo ou posição junto do objeto ausente; "observe" ou "imagem" sozinhos nunca casam. Exceções explícitas, cada uma com teste de falso positivo: "observe a tabela", "observe o texto", "observe o trecho", "observe a frase", "observe o verso", "observe a palavra", "figura de linguagem", "figuras de linguagem", "imagem poética". O prompt `generate` permite pedir para observar a tabela ou um trecho do texto-base.
+- **Figura:** lista fechada de comandos, casados como expressão inteira depois de `normalizeKeywordText`; nada fora dela bloqueia:
+  - verbo + objeto visual: "observe", "veja" ou "olhe" seguido de "a figura", "a imagem", "o desenho", "o grafico" ou "a ilustracao";
+  - objeto visual + posição: "a figura", "na figura", "da figura", "o desenho", "no desenho", "a imagem", "na imagem", "o grafico", "no grafico", "a ilustracao" ou "na ilustracao", seguidos de "abaixo", "acima" ou "ao lado";
+  - comando para material da criança: "veja", "abra", "consulte" ou "copie" seguido de "o livro", "a apostila", "o caderno", "seu livro", "sua apostila" ou "seu caderno"; e "na pagina {número} do livro" ou "da apostila".
+  - Testes de falso positivo obrigatórios (não podem casar): "observe a tabela", "observe o trecho", "observe a frase", "observe o verso", "figura de linguagem", "imagem poética", "quantos lados há na figura descrita", "Júlia leu 15 páginas do seu livro por dia", "parou na página 48", "usou 12 folhas do seu caderno", "comprou 3 pacotes de figurinhas".
+- **Marcação proibida:** aplicada fora dos trechos `\( \)`, com os padrões: `**` ou `__` colados a uma letra (`(?<=\p{L})(\*\*|__)|(\*\*|__)(?=\p{L})`), `#` seguido de espaço no início de linha, link `[texto](endereço)`, crase, tag `</?[a-z][a-z0-9]*[^<>]*>` e emoji por `\p{Extended_Pictographic}`. Testes de falso positivo obrigatórios: lacuna "O gato ______ no telhado", "use <, > ou =", "3 < 5 e 7 > 2", "25 °C", números e "R$ 12,50".
+- **Descrição para o reparo:** todo código determinístico tem uma frase pt-BR fixa em `validationIssueDescriptionMap` (core) dizendo o que corrigir; a linha de reparo leva a frase e o `excerpt`.
 - **Dica no simulado** e **termos bloqueados:** listas no core, casadas como palavra inteira depois de `normalizeKeywordText`.
 
 ### 8.5 Revisão (`interpretReview`, core)
@@ -294,7 +300,7 @@ Todo `kitText` entra no template escapado como texto; só os trechos entre `\(` 
 
 ### 8.7 Regras de assunto da taxonomia → códigos
 
-Só `unit_missing` depende da regra: roda só nas questões de assunto com `measurement_unit`. Todos os outros códigos rodam em todo kit; a regra do assunto (`validationRuleList`, `taxonomia.md`) entra no prompt do assunto (`{{TOPIC_BLOCK}}`) e diz quais códigos são o risco principal dele.
+Só `unit_missing` depende da regra: roda só nas questões de assunto com `measurement_unit`. O "outro" não tem regras, então nele o `unit_missing` não roda; unidade errada no "outro" ainda é pega pelo recálculo (unidade comparada por `equals`) e pela revisão. Todos os outros códigos rodam em todo kit; a regra do assunto (`validationRuleList`, `taxonomia.md`) entra no prompt do assunto (`{{TOPIC_BLOCK}}`) e diz quais códigos são o risco principal dele.
 
 | Regra | Códigos |
 |---|---|
@@ -433,7 +439,7 @@ A mesma rubrica serve à auditoria amostral semanal em produção (PRD §7.6).
 
 | Feature | Lê | Implementa |
 |---|---|---|
-| F1-03 `schemas-e-validacoes-do-kit` | §2–§11 | schemas (`photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema` e reparo, `studyKitSchema`, `reviewResultSchema`, `validationIssueSchema`), mapas de rótulo, `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `listAnswerKey`, `formatExpectedAnswer`, `validateStudyKit` (com `MathEvaluator` injetado), `interpretReview`, padrões e listas do §8.4, constantes do §11, rótulos pt-BR (`exerciseFormatLabelMap`, `notationLabelMap`, `difficultyLabelMap`, `perceivedDifficultyLabelMap`, `questionBlockLabelMap`) para a prévia e os placeholders; uma fixture válida e uma inválida por código |
+| F1-03 `schemas-e-validacoes-do-kit` | §2–§11 | schemas (`photoExtractionSchema`, `materialProfileSchema`, `kitPlanSchema`, `kitContentSchema` e reparo, `studyKitSchema`, `reviewResultSchema`, `validationIssueSchema`), mapas de rótulo, `mergePhotoExtractionList`, `decidePreviewOutcome`, `planKitSlots`, `validateKitPlan`, `composeStudyKit`, `listAnswerKey`, `formatExpectedAnswer`, `validationIssueDescriptionMap`, `validateStudyKit` (com `MathEvaluator` injetado), `interpretReview`, padrões e listas do §8.4, constantes do §11, rótulos pt-BR (`exerciseFormatLabelMap`, `notationLabelMap`, `difficultyLabelMap`, `perceivedDifficultyLabelMap`, `questionBlockLabelMap`) para a prévia e os placeholders; uma fixture válida e uma inválida por código |
 | F1-04 `avaliador-matematico` | §7.1, §8.2 | `MathEvaluator.evaluate` e `equals` com unidade, fração, tolerância e expressão; conversão de `expression` para LaTeX, usada pelo render |
 | F1-05 `adaptador-de-ia` | §1 | `AiProvider` real com o JSON Schema da etapa e `usage` |
 | F1-06 `pipeline-extracao` | §1, §3, `prompts-v1.md` | prompt `extract` v1, chamada por foto, cache com expiração, chamada de `mergePhotoExtractionList` e `decidePreviewOutcome` da F1-03 (por isso depende da F1-03) |

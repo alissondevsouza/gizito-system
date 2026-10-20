@@ -1,7 +1,7 @@
 ---
 feature: F1-02 spec-pedagogica-executavel
 module: pedagogy
-round: 2
+round: 3
 verdict: REPROVADO
 updated: 2026-10-20
 ---
@@ -118,3 +118,40 @@ Corrigido depois da rodada 2 (`fix` seguinte a `137dd8a`):
 - §8.7 diz que só `unit_missing` depende da regra.
 
 Teto de 2 rodadas atingido (`gizito-spec-driven`): estas correções não passaram por verifier neutro. Escalado ao humano.
+
+## Rodada 3 (pedida pelo humano; revalidação do diff `137dd8a..a5cc92f`)
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `git diff 137dd8a..a5cc92f` | 12 arquivos lidos inteiros |
+| `bun test` (core) | 347 pass, 0 fail |
+| `bun -e` com regex ingênuas de marcação | `\p{Emoji}` casa dígitos e "°C"; regra de tag casa "use <, > ou ="; `__` casa lacuna "______" |
+
+### Critérios de aceite
+| RF | Atendido | Evidência |
+|---|---|---|
+| RF-02, RF-03 | sim | "produção de textos" → `lp-essay-writing`; colisões aceitas registradas; fingerprint trocado antes do merge |
+| RF-05 | falta o `figure_reference` | §8.3 contra §8.4; demais pontos da rodada 2 resolvidos |
+| RF-06 | sim | linhas novas sem número; `reasonCode` igual ao §6 |
+| RF-08 | sim | `worker.md:33`, `jobs.md` e `ai-pipeline.md:13` batem com a spec |
+
+### Achados
+- [CRÍTICO] `spec-pedagogica.md:249` contra `:265` — a lista do §8.3 manteve "página 12", "do seu livro/apostila/caderno" sem verbo, contra a regra do §8.4; o prompt só proíbe pedir para observar, então "leu 15 páginas do seu livro", "parou na página 48" e "12 folhas do seu caderno" passam no prompt e bloqueiam no validador; "na figura" casa "na figura descrita" e "na figurinha" — lista fechada de comandos, palavra inteira, resto para `review_missing_data`, testes de falso positivo.
+- [ALERTA] `spec-pedagogica.md:260` — `markup_forbidden` virou bloqueador sem padrão no §8.4; padrões ingênuos casam dígitos, "°C", "<" de comparação e lacuna — definir os padrões e os testes de falso positivo; dizer no prompt como escrever lacuna.
+- [ALERTA] `prompts-v1.md:27` — reparo de código determinístico chega ao modelo sem nota (`- p3: figure_reference —`) — descrição fixa do core e trecho que casou.
+- [SUGESTÃO] `reasonCode` sem oralidade e com nomes diferentes de `unsupportedTopicReasonList`.
+- [SUGESTÃO] `worker.md:21` — "contam como a única regeneração" ignora o reparo `não`.
+- [SUGESTÃO] `spec-pedagogica.md:297` — `unit_missing` não roda no "outro"; registrar.
+
+### Regressão pedagógica
+Pendente, como nas rodadas anteriores.
+
+### Resposta do orquestrador
+Tudo corrigido:
+- CRÍTICO: `figure_reference` vira lista fechada de comandos no §8.4 (verbo + objeto visual; objeto visual + "abaixo/acima/ao lado"; "veja/abra/consulte/copie" + livro, apostila ou caderno; "na página N do livro/da apostila"), casada como expressão inteira; nada fora dela bloqueia, e o resto fica com `review_missing_data`. Os três enunciados do achado, "na figura descrita" e "figurinhas" entram como testes de falso positivo obrigatórios.
+- `markup_forbidden`: padrões definidos no §8.4, fora dos trechos `\( \)`, com `\p{Extended_Pictographic}` em vez de `\p{Emoji}`, `**`/`__` só colados a letra e tag só com letra depois de `<`. Conferido com `bun` num script fora do repositório: nenhum falso positivo em lacuna, "use <, > ou =", "3 < 5 e 7 > 2", "25 °C", números e "R$ 12,50"; pega `**`, `__`, `#`, link, crase, tag e emoji. O prompt `generate` diz como escrever lacuna.
+- Reparo: `ValidationIssue` ganha `excerpt` (trecho que casou, até 80 caracteres, nunca em log) e o core ganha `validationIssueDescriptionMap`; a linha de reparo leva descrição, trecho e nota.
+- `reasonCode` = `figure`, `orality`, `open_writing` (os de `unsupportedTopicReasonList`) + `beyond_grade`, `other_subject`, `not_a_school_topic`, no §6 e no prompt `plan`.
+- `worker.md:21` remete à regeneração por reparo.
+- §8.7 registra que `unit_missing` não roda no "outro" e o que ainda pega unidade errada nele.

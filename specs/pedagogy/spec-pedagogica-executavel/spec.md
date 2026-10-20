@@ -51,7 +51,7 @@ Escrever em `docs/pedagogy/` a especificação pedagógica que as features F1-03
 - [x] 3.1 Docs e rules (RF-08)
 - [x] 3.2 `bun run lint`, `bun run typecheck`, `bun run test` na raiz
 - [x] 3.3 `bun run test:pedagogy`: não existe até a F1-10; pendência já em `known-issues.md` (linha da `tax-v1`), estendida à lista de não atendidos
-- [x] 3.4 Revisão neutra (zona sensível: pedagogia): 2 rodadas, ambas REPROVADO, achados corrigidos; teto atingido, escalado ao humano com o `review.md`
+- [x] 3.4 Revisão neutra (zona sensível: pedagogia): 3 rodadas (a 3ª pedida pelo humano), todas REPROVADO, achados corrigidos; correções da 3ª sem verifier
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -69,6 +69,7 @@ Escrever em `docs/pedagogy/` a especificação pedagógica que as features F1-03
 | 2026-10-19 | Limites de tamanho fora do texto dos prompts, carregados pelo JSON Schema | número digitado no prompt divergiria do schema na recalibração (revisão neutra, rodada 1) |
 | 2026-10-20 | "produção de textos" recusa o "outro", aceitando a colisão com a descrição de `lp7-verb-moods` | é o nome BNCC da prática e o que o responsável digita; o PRD §7.7 proíbe pedir redação como "outro"; quem quer modos verbais tem o chip (revisão neutra, rodada 2) |
 | 2026-10-20 | `figure_reference` só com o objeto ausente explícito, com exceções testadas; `markup_forbidden` bloqueador; render escapa todo texto | "observe" sozinho bloquearia "observe a tabela"; Markdown e HTML não podem chegar à criança (revisão neutra, rodada 2) |
+| 2026-10-20 | Validadores de texto que bloqueiam usam lista fechada, com precisão antes de cobertura e testes de falso positivo; o resto fica com a revisão por modelo | bloqueador falso gasta a única regeneração e derruba pedido pago; foi o defeito das três rodadas (revisão neutra, rodada 3) |
 
 ## Status
-M1 a M3 implementados. Revisão neutra: rodada 1 REPROVADO (3 CRÍTICOs corrigidos), rodada 2 REPROVADO (1 CRÍTICO criado pela correção, `figure_reference`, e ALERTAs de coerência), tudo corrigido depois da rodada 2. Teto de 2 rodadas atingido: as correções da rodada 2 não passaram por verifier neutro e vão ao humano com o `review.md`. Pendências para o humano: decidir se quer uma terceira revisão; aprovar a spec (pronto da F1-02), o ADR-0010 e os pontos do §15 da spec pedagógica.
+M1 a M3 implementados. Revisão neutra: rodadas 1 e 2 REPROVADO, teto atingido e escalado; o humano pediu a rodada 3, também REPROVADO (bloqueador falso de `figure_reference` e padrão de marcação indefinido), corrigida em seguida. As correções da rodada 3 não passaram por verifier. Pendências para o humano: decidir se quer a rodada 4; aprovar a spec (pronto da F1-02), o ADR-0010 e os pontos do §15 da spec pedagógica.
