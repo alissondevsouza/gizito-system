@@ -19,3 +19,4 @@ logs
 tests/pedagogy/cases/**/photos/
 tests/pedagogy/output/
 .output
+.env
