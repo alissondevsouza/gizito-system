@@ -56,20 +56,43 @@ function firstMatchOf(text: string, patternList: readonly RegExp[]): string | nu
 }
 
 const personalDataPatternList: readonly RegExp[] = [
-  /(?<!\d)(?:\(\s?[1-9]{2}\s?\)|[1-9]{2})[\s.-]?(?:9\s?\d{4}|[2-5]\d{3})[\s.-]?\d{4}(?!\d)/,
+  /(?<!\d)(?:\(\s?[1-9]{2}\s?\)\s?|[1-9]{2}[\s.-])(?:9\s?\d{4}|[2-5]\d{3})[\s.-]?\d{4}(?!\d)/,
+  /(?<!\d)[1-9]{2}9\d{8}(?!\d)/,
   /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/u,
   /(?<!\d)\d{3}\.\d{3}\.\d{3}-\d{2}(?!\d)/,
-  /(?<!\d)\d{11}(?!\d)/,
 ];
 
+function cpfCheckDigit(digitList: readonly number[]): number {
+  const weightedSum = digitList.reduce(
+    (sum, digit, index) => sum + digit * (digitList.length + 1 - index),
+    0,
+  );
+  return ((weightedSum * 10) % 11) % 10;
+}
+
+export function isValidCpfDigitSequence(digitText: string): boolean {
+  const digitList = [...digitText].map(Number);
+  if (digitList.length !== 11 || new Set(digitList).size === 1) return false;
+  return (
+    cpfCheckDigit(digitList.slice(0, 9)) === digitList[9] &&
+    cpfCheckDigit(digitList.slice(0, 10)) === digitList[10]
+  );
+}
+
 export function findPersonalDataExcerpt(text: string): string | null {
-  return firstMatchOf(text, personalDataPatternList);
+  const plainText = blankMathMarkup(text);
+  const patternExcerpt = firstMatchOf(plainText, personalDataPatternList);
+  if (patternExcerpt !== null) return patternExcerpt;
+  const cpfMatch = [...plainText.matchAll(/(?<!\d)\d{11}(?!\d)/g)].find((match) =>
+    isValidCpfDigitSequence(match[0]),
+  );
+  return cpfMatch?.[0] ?? null;
 }
 
 const externalLinkPatternList: readonly RegExp[] = [
   /\bhttps?:\/\/\S+/i,
   /(?<![\p{L}\p{N}])www\.\S+/iu,
-  /(?<![\p{L}\p{N}@.-])[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)*\.(?:com|net|org|gov|edu)(?:\.br)?(?![\p{L}\p{N}])/iu,
+  /(?<![\p{L}\p{N}@.-])[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)*\.(?:com|net|org|gov|edu)(?:\.br)?(?![\p{L}\p{N}])/u,
   /(?<![\p{L}\p{N}._%+-])@[\p{L}\p{N}_.]{2,}/u,
 ];
 
@@ -83,8 +106,8 @@ const forbiddenMarkupPatternList: readonly RegExp[] = [
   /^#+ /m,
   /\[[^\]\n]+\]\([^)\s]+\)/,
   /`/,
-  /<\/?[a-z][a-z0-9]*(?:\s[^<>]*)?\/?>/,
-  /\p{Extended_Pictographic}/u,
+  /<\/?[a-z][a-z0-9]*(?:\s+[a-z-]+\s*=\s*(?:"[^"<>]*"|'[^'<>]*'|[^\s"'<>]+))*\s*\/?>/,
+  /(?![\u00A9\u00AE\u2122\u2194-\u2199\u21A9\u21AA])\p{Extended_Pictographic}/u,
 ];
 
 export function findForbiddenMarkupExcerpt(text: string): string | null {
@@ -110,13 +133,11 @@ function findFoldedExcerpt(text: string, pattern: RegExp): string | null {
 }
 
 const figureVerbPattern = wholeExpressionPattern(
-  `${phrasePattern(["observe", "veja", "olhe"])} +${phrasePattern([
-    "a figura",
-    "a imagem",
+  `${phrasePattern(["observe", "veja", "olhe"])} +(?:a +figura(?! +de +linguagem)|${phrasePattern([
     "o desenho",
     "o grafico",
     "a ilustracao",
-  ])}`,
+  ])})`,
 );
 
 const figurePositionPattern = new RegExp(
@@ -138,7 +159,8 @@ const figurePositionPattern = new RegExp(
   "g",
 );
 
-const narrativePositionComplementPattern = /^\s+(?:de|da|do|das|dos)(?![\p{L}\p{N}])/iu;
+const narrativePositionComplementPattern =
+  /^\s+(?:de|da|do|das|dos|dele|dela|deles|delas|deste|desta|destes|destas|desse|dessa|desses|dessas|daquele|daquela|daqueles|daquelas|disso|disto|daquilo)(?![\p{L}\p{N}])/iu;
 
 const childMaterialPattern = wholeExpressionPattern(
   `${phrasePattern(["veja", "abra", "consulte", "copie"])} +${phrasePattern([
@@ -182,10 +204,6 @@ export const blockedTermList = [
   "bucetas",
   "caralho",
   "caralhos",
-  "crioula",
-  "crioulas",
-  "crioulo",
-  "crioulos",
   "cu",
   "cus",
   "cuzao",
@@ -221,12 +239,6 @@ export const blockedTermList = [
   "putarias",
   "puto",
   "putos",
-  "retardada",
-  "retardadas",
-  "retardado",
-  "retardados",
-  "sapatao",
-  "sapatoes",
   "traveco",
   "travecos",
   "vadia",

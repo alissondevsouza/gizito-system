@@ -43,18 +43,33 @@ export function listAnswerKey(studyKit: StudyKit): readonly AnswerKeyEntry[] {
 
 export const MONEY_UNIT = "R$";
 
-function formatDecimal(value: number, minimumFractionDigitCount: number): string {
-  const absoluteText = Math.abs(value).toString();
-  const plainText = /e/i.test(absoluteText)
+const MONEY_FRACTION_DIGIT_COUNT = 2;
+
+function plainDecimalText(value: number, fixedFractionDigitCount: number | null): string {
+  const absoluteValue = Math.abs(value);
+  if (fixedFractionDigitCount !== null) {
+    return new Intl.NumberFormat("en-US", {
+      useGrouping: false,
+      minimumFractionDigits: fixedFractionDigitCount,
+      maximumFractionDigits: fixedFractionDigitCount,
+    }).format(absoluteValue);
+  }
+  const shortestText = absoluteValue.toString();
+  return /e/i.test(shortestText)
     ? new Intl.NumberFormat("en-US", { useGrouping: false, maximumSignificantDigits: 15 }).format(
-        Math.abs(value),
+        absoluteValue,
       )
-    : absoluteText;
-  const [integerPart = "0", fractionPart = ""] = plainText.split(".");
+    : shortestText;
+}
+
+function formatDecimal(value: number, fixedFractionDigitCount: number | null): string {
+  const [integerPart = "0", fractionPart = ""] = plainDecimalText(
+    value,
+    fixedFractionDigitCount,
+  ).split(".");
   const groupedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  const paddedFraction = fractionPart.padEnd(minimumFractionDigitCount, "0");
-  const sign = value < 0 ? "-" : "";
-  return `${sign}${groupedInteger}${paddedFraction === "" ? "" : `,${paddedFraction}`}`;
+  const isNegative = value < 0 && /[1-9]/.test(`${integerPart}${fractionPart}`);
+  return `${isNegative ? "-" : ""}${groupedInteger}${fractionPart === "" ? "" : `,${fractionPart}`}`;
 }
 
 function withUnit(text: string, unit: string | null): string {
@@ -72,7 +87,10 @@ export function formatExpectedAnswer(
 ): string {
   switch (answer.kind) {
     case "number":
-      return withUnit(formatDecimal(answer.value, answer.unit === MONEY_UNIT ? 2 : 0), answer.unit);
+      return withUnit(
+        formatDecimal(answer.value, answer.unit === MONEY_UNIT ? MONEY_FRACTION_DIGIT_COUNT : null),
+        answer.unit,
+      );
     case "fraction": {
       const sign = answer.numerator < 0 ? "-" : "";
       return withUnit(

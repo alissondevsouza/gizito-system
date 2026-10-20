@@ -177,4 +177,9 @@ describe("registro de códigos (spec pedagógica §8)", () => {
     );
     expect(validationIssueSchema.safeParse({ ...issue, itemId: "q1" }).success).toBe(false);
   });
+
+  it("o corte do trecho não deixa metade de um emoji", () => {
+    const issue = createValidationIssue("markup_forbidden", { excerpt: `${"x".repeat(79)}🎉` });
+    expect(issue.excerpt).toBe("x".repeat(79));
+  });
 });

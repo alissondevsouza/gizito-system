@@ -7,6 +7,7 @@ import {
   findMockHintExcerpt,
   findPersonalDataExcerpt,
   hasBalancedMathMarkup,
+  isValidCpfDigitSequence,
   listMathMarkupSegment,
   normalizeSpacing,
 } from "#src/pedagogy/validation/patterns.ts";
@@ -192,4 +193,70 @@ it("listMathMarkupSegment devolve o conteúdo de cada trecho, para o KaTeX do wo
     "3 \\times 4",
   ]);
   expect(listMathMarkupSegment("sem marcação")).toEqual([]);
+});
+
+describe("falsos positivos achados na revisão neutra da F1-03", () => {
+  it.each([
+    "Observe a figura de linguagem usada no verso 2.",
+    "Observe a imagem poética do segundo verso.",
+    "Veja a imagem que o poeta cria no verso.",
+    "Lucas colocou o desenho ao lado dele.",
+    "O gato dormiu na imagem acima dela, no quadro da sala.",
+  ])("figura não casa: %s", (text) => {
+    expect(findFigureReferenceExcerpt(text)).toBeNull();
+  });
+
+  it("figura ainda casa com imagem pela posição", () => {
+    expect(findFigureReferenceExcerpt("Observe a imagem abaixo e responda.")).toBe(
+      "a imagem abaixo",
+    );
+  });
+
+  it.each([
+    "O palhaço usava um sapatão vermelho.",
+    "Aumentativo de sapato: sapatão.",
+    "Plantamos sementes crioulas na horta.",
+    "A galinha crioula botou um ovo.",
+    "O carrinho fez um movimento retardado.",
+  ])("termo bloqueado não casa: %s", (text) => {
+    expect(findBlockedTermExcerpt(text)).toBeNull();
+  });
+
+  it.each(["Se x<y então y>x", "Compare a<b e b>c", "Se 3<x e x>1"])("tag não casa: %s", (text) => {
+    expect(findForbiddenMarkupExcerpt(text)).toBeNull();
+  });
+
+  it.each([
+    ['<p class="nota">texto</p>', '<p class="nota">'],
+    ["linha<br />outra", "<br />"],
+    ["</b>", "</b>"],
+  ])("tag casa: %s", (text, excerpt) => {
+    expect(findForbiddenMarkupExcerpt(text)).toBe(excerpt);
+  });
+
+  it("emoji não pega símbolo tipográfico", () => {
+    expect(findForbiddenMarkupExcerpt("metade ↔ 1/2 e © 2026")).toBeNull();
+    expect(findForbiddenMarkupExcerpt("Muito bem ✔")).toBe("✔");
+  });
+
+  it.each([
+    "O número 2345678901 tem dez algarismos.",
+    "Separe as classes do número 12345678901.",
+    "10000000000",
+    "\\(1234567890\\)",
+    "Escreva \\(11987654321\\) por extenso.",
+  ])("dado pessoal não casa: %s", (text) => {
+    expect(findPersonalDataExcerpt(text)).toBeNull();
+  });
+
+  it("CPF de 11 dígitos só com dígito verificador válido", () => {
+    expect(isValidCpfDigitSequence("12345678909")).toBe(true);
+    expect(isValidCpfDigitSequence("12345678901")).toBe(false);
+    expect(isValidCpfDigitSequence("11111111111")).toBe(false);
+  });
+
+  it("domínio só com sufixo em minúsculas", () => {
+    expect(findExternalLinkExcerpt("Ele saiu.Com pressa, voltou.")).toBeNull();
+    expect(findExternalLinkExcerpt("Veja Escola.com.br")).toBe("Escola.com.br");
+  });
 });

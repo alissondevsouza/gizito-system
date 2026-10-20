@@ -327,6 +327,29 @@ describe("validateStudyKit: conteúdo (spec pedagógica §8.3)", () => {
     ]);
   });
 
+  it("figure_reference também em tabela, alternativa e exemplo", () => {
+    const kit = editPortuguese((draft) => {
+      itemOf(draft, "p5").table = {
+        headerList: ["Coluna", "Observe o gráfico"],
+        rowList: [["linha", "valor"]],
+      };
+      const option = (itemOf(draft, "p7").optionList as JsonRecord[])[3];
+      if (option) option.text = "Veja o desenho ao lado.";
+      const example = itemOf(draft, "e1");
+      example.statement = `Olhe a ilustração. ${example.statement as string}`;
+      itemOf(draft, "e2").table = {
+        headerList: ["Palavra", "Na figura abaixo"],
+        rowList: [["esperto", "sabido"]],
+      };
+    });
+    expect(issuesOf(kit, portuguese.mathEvaluator)).toEqual([
+      { code: "figure_reference", itemId: "e1", excerpt: "Olhe a ilustração" },
+      { code: "figure_reference", itemId: "e2", excerpt: "Na figura abaixo" },
+      { code: "figure_reference", itemId: "p5", excerpt: "Observe o gráfico" },
+      { code: "figure_reference", itemId: "p7", excerpt: "Veja o desenho" },
+    ]);
+  });
+
   it("personal_data_pattern em explicação e no rótulo do outro, com itemId nulo no rótulo", () => {
     const kit = editMath((draft) => {
       at(itemOf(draft, "p2"), "answer").explanation =

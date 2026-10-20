@@ -106,8 +106,9 @@ function checkBaseTextPlan({ plan, subject }: PlanContext): ValidationIssue[] {
     : [createValidationIssue("plan_base_text_invalid")];
 }
 
-function checkOtherTopicFeasibility({ plan }: PlanContext): ValidationIssue[] {
-  return plan.otherTopicAssessment?.verdict === "unfeasible"
+function checkOtherTopicFeasibility({ plan, kitSlotPlan }: PlanContext): ValidationIssue[] {
+  const hasOtherTopic = kitSlotPlan.reviewSectionTopicRefList.includes(OTHER_TOPIC_REF);
+  return hasOtherTopic && plan.otherTopicAssessment?.verdict === "unfeasible"
     ? [createValidationIssue("other_topic_unfeasible", { itemId: OTHER_TOPIC_REF })]
     : [];
 }

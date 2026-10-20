@@ -1,6 +1,20 @@
+import { z } from "zod";
 import { OTHER_TOPIC_REF, STUDY_KIT_FORMAT_VERSION } from "#src/constants.ts";
-import type { Grade, PerceivedDifficulty, QuestionType, Subject } from "#src/enums.ts";
-import type { MaterialProfile, SourceWarningCode } from "#src/pedagogy/extraction/schemas.ts";
+import {
+  type Grade,
+  gradeSchema,
+  type PerceivedDifficulty,
+  perceivedDifficultySchema,
+  type QuestionType,
+  type Subject,
+  subjectSchema,
+} from "#src/enums.ts";
+import {
+  type MaterialProfile,
+  materialProfileSchema,
+  type SourceWarningCode,
+  sourceWarningCodeSchema,
+} from "#src/pedagogy/extraction/schemas.ts";
 import {
   kitContentSchemaBySubject,
   kitRepairSchemaBySubject,
@@ -10,6 +24,7 @@ import {
 import {
   type BaseTextId,
   baseTextIdList,
+  generationVersionSchema,
   type KitItemId,
   type QuestionId,
   questionIdList,
@@ -20,8 +35,39 @@ import {
 import type { KitPlan, SlotDetail } from "#src/pedagogy/plan/schemas.ts";
 import type { KitSlotPlan, QuestionSlot } from "#src/pedagogy/slots.ts";
 import { findTopic, TAXONOMY_VERSION } from "#src/pedagogy/taxonomy/index.ts";
+import { uniqueListSchema } from "#src/pedagogy/taxonomy/schemas.ts";
 import { createValidationIssue, type ValidationIssue } from "#src/pedagogy/validation/issue.ts";
 import { err, ok, type Result } from "#src/result.ts";
+
+export class InvalidComposeInputError extends Error {
+  override readonly name = "InvalidComposeInputError";
+  constructor(readonly fieldList: readonly string[]) {
+    super(`composeStudyKit received invalid order data: ${fieldList.join(", ")}`);
+  }
+}
+
+const composeOrderDataSchema = z.strictObject({
+  grade: gradeSchema,
+  subject: subjectSchema,
+  perceivedDifficulty: perceivedDifficultySchema.nullable(),
+  materialProfile: materialProfileSchema,
+  sourceWarningCodeList: uniqueListSchema(sourceWarningCodeSchema),
+  generationVersion: generationVersionSchema,
+});
+
+function assertOrderData(input: ComposeStudyKitInput): void {
+  const parsed = composeOrderDataSchema.safeParse({
+    grade: input.grade,
+    subject: input.subject,
+    perceivedDifficulty: input.perceivedDifficulty,
+    materialProfile: input.materialProfile,
+    sourceWarningCodeList: input.sourceWarningCodeList,
+    generationVersion: input.generationVersion,
+  });
+  if (!parsed.success) {
+    throw new InvalidComposeInputError(parsed.error.issues.map((issue) => issue.path.join(".")));
+  }
+}
 
 export type ComposeStudyKitInput = {
   readonly content: unknown;
@@ -102,6 +148,7 @@ function finishStudyKit(candidate: unknown): Result<StudyKit, readonly Validatio
 export function composeStudyKit(
   input: ComposeStudyKitInput,
 ): Result<StudyKit, readonly ValidationIssue[]> {
+  assertOrderData(input);
   const parsed = kitContentSchemaBySubject[input.subject].safeParse(input.content);
   if (!parsed.success) return err([createValidationIssue("kit_output_invalid")]);
   const content = parsed.data;

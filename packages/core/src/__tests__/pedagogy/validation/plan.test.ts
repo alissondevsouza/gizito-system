@@ -8,6 +8,7 @@ import {
 import type { Subject } from "#src/enums.ts";
 import type { KitPlan } from "#src/pedagogy/plan/schemas.ts";
 import { validateKitPlan } from "#src/pedagogy/validation/plan.ts";
+import { decideRepair } from "#src/pedagogy/validation/repair.ts";
 
 const mathSlotPlan = buildSlotPlan(MATH_TOPIC_REF_LIST);
 const portugueseSlotPlan = buildSlotPlan(PORTUGUESE_TOPIC_REF_LIST);
@@ -236,4 +237,19 @@ describe("validateKitPlan (spec pedagógica §6 e §8.1)", () => {
       ]);
     }
   });
+});
+
+it("unfeasible em pedido sem outro é só saída inválida e refaz o plano", () => {
+  const result = validateKitPlan(
+    portuguesePlan((plan) => ({
+      ...plan,
+      otherTopicAssessment: { verdict: "unfeasible", label: "Mapas", reasonCode: "figure" },
+    })),
+    portugueseSlotPlan,
+    "portuguese",
+  );
+  expect(result.ok).toBe(false);
+  if (result.ok) return;
+  expect(result.error.map((issue) => issue.code)).toEqual(["plan_output_invalid"]);
+  expect(decideRepair(result.error, null)).toEqual({ repair: "plan" });
 });

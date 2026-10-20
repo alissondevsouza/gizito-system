@@ -338,6 +338,12 @@ export type ValidationIssueDetail = {
   readonly excerpt?: string | null;
 };
 
+function truncateText(text: string | null | undefined, maxLength: number): string | null {
+  if (text === undefined || text === null) return null;
+  const truncated = text.slice(0, maxLength);
+  return /[\uD800-\uDBFF]$/.test(truncated) ? truncated.slice(0, -1) : truncated;
+}
+
 export function createValidationIssue(
   code: ValidationIssueCode,
   detail: ValidationIssueDetail = {},
@@ -348,13 +354,7 @@ export function createValidationIssue(
     severity: rule.severity,
     stage: rule.stage,
     itemId: detail.itemId ?? null,
-    note:
-      detail.note === undefined || detail.note === null
-        ? null
-        : detail.note.slice(0, MAX_REVIEW_NOTE_LENGTH),
-    excerpt:
-      detail.excerpt === undefined || detail.excerpt === null
-        ? null
-        : detail.excerpt.slice(0, MAX_ISSUE_EXCERPT_LENGTH),
+    note: truncateText(detail.note, MAX_REVIEW_NOTE_LENGTH),
+    excerpt: truncateText(detail.excerpt, MAX_ISSUE_EXCERPT_LENGTH),
   };
 }

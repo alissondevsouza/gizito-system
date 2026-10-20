@@ -12,7 +12,11 @@ import type { Subject } from "#src/enums.ts";
 import type { ExpectedAnswer } from "#src/pedagogy/expected-answer.ts";
 import { photoExtractionSchema } from "#src/pedagogy/extraction/schemas.ts";
 import { formatExpectedAnswer, listAnswerKey } from "#src/pedagogy/kit/answer-key.ts";
-import { applyKitRepair, composeStudyKit } from "#src/pedagogy/kit/compose.ts";
+import {
+  applyKitRepair,
+  composeStudyKit,
+  InvalidComposeInputError,
+} from "#src/pedagogy/kit/compose.ts";
 import {
   kitContentSchemaBySubject,
   kitRepairSchemaBySubject,
@@ -318,6 +322,27 @@ describe("composeStudyKit (spec pedagógica §7.3)", () => {
     expect(math.studyKit.qualityCheckList).toEqual([]);
   });
 
+  it("dado do pedido inválido é erro de quem chama, não kit_slot_mismatch", () => {
+    const composeWith = (override: Record<string, unknown>) => () =>
+      composeStudyKit({
+        content: math.content,
+        kitSlotPlan: math.kitSlotPlan,
+        plan: math.plan,
+        grade: "5",
+        subject: "math",
+        perceivedDifficulty: null,
+        materialProfile: FIXTURE_MATERIAL_PROFILE,
+        sourceWarningCodeList: [],
+        generationVersion: GENERATION_VERSION,
+        ...override,
+      });
+    expect(composeWith({ generationVersion: "generate-v1" })).toThrow(InvalidComposeInputError);
+    expect(composeWith({ sourceWarningCodeList: ["grade_mismatch", "grade_mismatch"] })).toThrow(
+      InvalidComposeInputError,
+    );
+    expect(composeWith({})).not.toThrow();
+  });
+
   it("saída fora do schema é kit_output_invalid", () => {
     expect(codesOf(compose("math", { ...math.content, extra: 1 }))).toEqual(["kit_output_invalid"]);
     expect(codesOf(compose("math", portuguese.content))).toEqual(["kit_output_invalid"]);
@@ -552,6 +577,9 @@ describe("listAnswerKey e formatExpectedAnswer (spec pedagógica §7.2)", () => 
     [number(0.1 + 0.2), "0,30000000000000004"],
     [number(12.5, "R$"), "R$ 12,50"],
     [number(7, "R$"), "R$ 7,00"],
+    [number(12.555, "R$"), "R$ 12,56"],
+    [number(10 / 3, "R$"), "R$ 3,33"],
+    [number(-0.001, "R$"), "R$ 0,00"],
     [number(30, "cm"), "30 cm"],
     [number(25, "°C"), "25 °C"],
     [number(25, "%"), "25 %"],
