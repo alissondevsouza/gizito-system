@@ -34,6 +34,18 @@ export const unitEntryList: readonly UnitEntry[] = [
     aliasList: ["m", "metro", "metros"],
   },
   {
+    mathjsUnit: "dam",
+    displayUnit: "dam",
+    expressionSymbolList: ["dam"],
+    aliasList: ["dam", "decâmetro", "decâmetros"],
+  },
+  {
+    mathjsUnit: "hm",
+    displayUnit: "hm",
+    expressionSymbolList: ["hm"],
+    aliasList: ["hm", "hectômetro", "hectômetros"],
+  },
+  {
     mathjsUnit: "km",
     displayUnit: "km",
     expressionSymbolList: ["km"],
@@ -100,6 +112,18 @@ export const unitEntryList: readonly UnitEntry[] = [
     aliasList: ["ml", "mililitro", "mililitros"],
   },
   {
+    mathjsUnit: "cL",
+    displayUnit: "cL",
+    expressionSymbolList: ["cL", "cl"],
+    aliasList: ["cl", "centilitro", "centilitros"],
+  },
+  {
+    mathjsUnit: "dL",
+    displayUnit: "dL",
+    expressionSymbolList: ["dL", "dl"],
+    aliasList: ["dl", "decilitro", "decilitros"],
+  },
+  {
     mathjsUnit: "L",
     displayUnit: "L",
     expressionSymbolList: ["L", "l"],
@@ -112,10 +136,34 @@ export const unitEntryList: readonly UnitEntry[] = [
     aliasList: ["mg", "miligrama", "miligramas"],
   },
   {
+    mathjsUnit: "cg",
+    displayUnit: "cg",
+    expressionSymbolList: ["cg"],
+    aliasList: ["cg", "centigrama", "centigramas"],
+  },
+  {
+    mathjsUnit: "dg",
+    displayUnit: "dg",
+    expressionSymbolList: ["dg"],
+    aliasList: ["dg", "decigrama", "decigramas"],
+  },
+  {
     mathjsUnit: "g",
     displayUnit: "g",
     expressionSymbolList: ["g"],
     aliasList: ["g", "grama", "gramas"],
+  },
+  {
+    mathjsUnit: "dag",
+    displayUnit: "dag",
+    expressionSymbolList: ["dag"],
+    aliasList: ["dag", "decagrama", "decagramas"],
+  },
+  {
+    mathjsUnit: "hg",
+    displayUnit: "hg",
+    expressionSymbolList: ["hg"],
+    aliasList: ["hg", "hectograma", "hectogramas"],
   },
   {
     mathjsUnit: "kg",
@@ -202,14 +250,19 @@ export const expressionUnitSymbolSet: ReadonlySet<string> = new Set(
 
 export function normalizeUnitText(unit: string): string {
   return normalizeSpacing(unit)
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
     .toLocaleLowerCase("pt-BR")
+    .replace(/º/g, "°")
     .replace(/\s*\/\s*/g, "/")
     .replace(/\^2/g, "²")
     .replace(/\^3/g, "³");
 }
 
 const unitEntryByAlias = new Map(
-  unitEntryList.flatMap((entry) => entry.aliasList.map((alias) => [alias, entry] as const)),
+  unitEntryList.flatMap((entry) =>
+    entry.aliasList.map((alias) => [normalizeUnitText(alias), entry] as const),
+  ),
 );
 
 export function findUnitEntry(unit: string): UnitEntry | null {

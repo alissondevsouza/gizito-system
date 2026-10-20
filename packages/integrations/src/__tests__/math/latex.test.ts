@@ -4,7 +4,7 @@ import katex from "katex";
 import { mathExpressionToLatex } from "#src/math/latex.ts";
 
 describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
-  it.each([
+  const latexTable: readonly [string, string][] = [
     ["5*x + 3", "5 x+3"],
     ["5x + 3", "5 x+3"],
     ["2.5*x", "2,5 x"],
@@ -18,9 +18,25 @@ describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
     ["2*x^2 - x*y", "2{ x}^{2}- x y"],
     ["(x+1)^2", "{\\left( x+1\\right)}^{2}"],
     ["-x/2", "\\frac{- x}{2}"],
+    ["-3*x", "-3 x"],
     ["2*pi*r", "2\\pi r"],
     ["2*sqrt(x)", "2\\sqrt{ x}"],
-  ])("%j → %j", (expression, latex) => {
+    ["a*b", " a b"],
+    ["b*h/2", "\\frac{ b h}{2}"],
+    ["5 - (-3)", "5-\\left(-3\\right)"],
+    ["-3 + (-5)", "-3+\\left(-5\\right)"],
+    ["x - (-1)", " x-\\left(-1\\right)"],
+    ["2*(-3)", "2\\times\\left(-3\\right)"],
+    ["2*-3", "2\\times\\left(-3\\right)"],
+    ["-(-3)", "-\\left(-3\\right)"],
+    ["(-3)^2", "{\\left(-3\\right)}^{2}"],
+    ["x - (y + 1)", " x-\\left( y+1\\right)"],
+    ["gcd(12, 18)", "\\text{mdc}\\left(12;18\\right)"],
+    ["lcm(4, 6)", "\\text{mmc}\\left(4;6\\right)"],
+    ["round(2.5, 2)", "\\operatorname{round}\\left(2,5;2\\right)"],
+  ];
+
+  it.each(latexTable)("%j → %j", (expression, latex) => {
     expect(mathExpressionToLatex(expression)).toEqual({ ok: true, value: latex });
   });
 
@@ -37,6 +53,7 @@ describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
 
   it("a saída passa no parse do KaTeX, com a vírgula decimal trocada como o render faz", () => {
     const expressionList = [
+      ...latexTable.map(([expression]) => expression),
       "5*x + 3",
       "2.5*x - 1250/3",
       "3*(x+1)^2",

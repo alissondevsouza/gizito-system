@@ -7,7 +7,7 @@ import {
   ok,
   type Result,
 } from "@gizito/core";
-import { unit as createUnit, isUnit, type MathNode, simplify } from "mathjs";
+import { unit as createUnit, isUnit, type MathNode } from "mathjs";
 import { type ParsedExpression, parseMathExpression } from "#src/math/expression.ts";
 import {
   convertUnitValue,
@@ -21,7 +21,7 @@ import {
 
 const SIGNIFICANT_DIGIT_COUNT = 15;
 const RELATIVE_EPSILON = 1e-9;
-const SAMPLE_POINT_LIST: readonly number[] = [0.7, 1.3, 2.9, -1.7, 3.1, -2.3];
+const SAMPLE_POINT_LIST: readonly number[] = [0.7, 1.3, 2.9, -1.7, 3.1, -2.3, 37.3];
 const MIN_VALID_SAMPLE_COUNT = 3;
 
 type NumericValue = {
@@ -67,18 +67,38 @@ function evaluateNumeric(parsed: ParsedExpression): Result<NumericValue, MathEva
     : err("not_finite");
 }
 
-function simplifyExpression(parsed: ParsedExpression): Result<string, MathEvaluationErrorCode> {
-  try {
-    return ok(simplify(parsed.node).toString());
-  } catch {
-    return err("unsupported");
-  }
+function sampleValue(node: MathNode, scope: ReadonlyMap<string, number>): number | null {
+  const evaluated = evaluateNode(node, scope);
+  return evaluated.ok && typeof evaluated.value === "number" && Number.isFinite(evaluated.value)
+    ? evaluated.value
+    : null;
+}
+
+function sampleScopeOf(
+  variableList: readonly string[],
+  pointIndex: number,
+): ReadonlyMap<string, number> {
+  return new Map(
+    variableList.map((variable, variableIndex) => [
+      variable,
+      SAMPLE_POINT_LIST[(pointIndex + variableIndex) % SAMPLE_POINT_LIST.length] ?? 0,
+    ]),
+  );
+}
+
+function hasEnoughFiniteSample(parsed: ParsedExpression): boolean {
+  const finiteSampleCount = SAMPLE_POINT_LIST.filter(
+    (_, pointIndex) =>
+      sampleValue(parsed.node, sampleScopeOf(parsed.variableList, pointIndex)) !== null,
+  ).length;
+  return finiteSampleCount >= MIN_VALID_SAMPLE_COUNT;
 }
 
 function evaluateParsed(parsed: ParsedExpression): Result<ExpectedAnswer, MathEvaluationErrorCode> {
   if (parsed.variableList.length > 0) {
-    const simplified = simplifyExpression(parsed);
-    return simplified.ok ? ok({ kind: "expression", expression: simplified.value }) : simplified;
+    return hasEnoughFiniteSample(parsed)
+      ? ok({ kind: "expression", expression: parsed.node.toString() })
+      : err("not_finite");
   }
   const numeric = evaluateNumeric(parsed);
   return numeric.ok ? ok({ kind: "number", ...numeric.value }) : numeric;
@@ -143,25 +163,6 @@ function variableExpressionOf(answer: ExpectedAnswer): ParsedExpression | null {
   if (answer.kind !== "expression") return null;
   const parsed = parseMathExpression(answer.expression);
   return parsed.ok && parsed.value.variableList.length > 0 ? parsed.value : null;
-}
-
-function sampleValue(node: MathNode, scope: ReadonlyMap<string, number>): number | null {
-  const evaluated = evaluateNode(node, scope);
-  return evaluated.ok && typeof evaluated.value === "number" && Number.isFinite(evaluated.value)
-    ? evaluated.value
-    : null;
-}
-
-function sampleScopeOf(
-  variableList: readonly string[],
-  pointIndex: number,
-): ReadonlyMap<string, number> {
-  return new Map(
-    variableList.map((variable, variableIndex) => [
-      variable,
-      SAMPLE_POINT_LIST[(pointIndex + variableIndex) % SAMPLE_POINT_LIST.length] ?? 0,
-    ]),
-  );
 }
 
 function symbolicEquals(left: ParsedExpression, right: ParsedExpression): boolean {

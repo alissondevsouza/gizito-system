@@ -44,12 +44,29 @@ const ALLOWED_CONSTANT = "pi";
 const VARIABLE_PATTERN = /^[a-z]$/;
 
 type SymbolCollector = {
+  readonly isUnitContext: boolean;
   readonly unitSymbolSet: Set<string>;
   readonly variableSet: Set<string>;
 };
 
+function isUnitFactor(node: MathNode): boolean {
+  const base = isOperatorNode(node) && node.fn === "pow" ? node.args[0] : node;
+  return isSymbolNode(base) && expressionUnitSymbolSet.has(base.name);
+}
+
+function hasUnitContext(node: MathNode): boolean {
+  if (isSymbolNode(node)) return expressionUnitSymbolSet.has(node.name) && node.name.length > 1;
+  if (isParenthesisNode(node)) return hasUnitContext(node.content);
+  if (isFunctionNode(node)) return node.args.some(hasUnitContext);
+  if (!isOperatorNode(node)) return false;
+  const [, right] = node.args;
+  const isUnitAfterNumber =
+    node.fn === "multiply" && node.implicit && right !== undefined && isUnitFactor(right);
+  return node.fn === "to" || isUnitAfterNumber || node.args.some(hasUnitContext);
+}
+
 function collectSymbol(name: string, collector: SymbolCollector): boolean {
-  if (expressionUnitSymbolSet.has(name)) {
+  if (collector.isUnitContext && expressionUnitSymbolSet.has(name)) {
     collector.unitSymbolSet.add(name);
     return true;
   }
@@ -94,7 +111,11 @@ export function parseMathExpression(
 ): Result<ParsedExpression, MathEvaluationErrorCode> {
   const node = parseNode(expression);
   if (node === null) return err("parse_error");
-  const collector: SymbolCollector = { unitSymbolSet: new Set(), variableSet: new Set() };
+  const collector: SymbolCollector = {
+    isUnitContext: hasUnitContext(node),
+    unitSymbolSet: new Set(),
+    variableSet: new Set(),
+  };
   if (!isAllowedNode(node, collector)) return err("unsupported");
   if (collector.unitSymbolSet.size > 0 && collector.variableSet.size > 0) {
     return err("unsupported");

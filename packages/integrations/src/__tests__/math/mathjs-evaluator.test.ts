@@ -64,6 +64,23 @@ describe("expressão aceita (spec F1-04, RF-01)", () => {
     expect(algebra.ok && algebra.value.variableList).toEqual(["e", "r", "y"]);
   });
 
+  it.each<[string, readonly string[], readonly string[]]>([
+    ["2 m + 30 cm", ["m", "cm"], []],
+    ["2 m", ["m"], []],
+    ["3 m^2 + 1 m^2", ["m"], []],
+    ["50 km/h to m/s", ["km", "h", "m", "s"], []],
+    ["2 t to kg", ["t", "kg"], []],
+    ["b*h", [], ["b", "h"]],
+    ["h*h + h", [], ["h"]],
+    ["4*l", [], ["l"]],
+    ["5*m", [], ["m"]],
+    ["2*t + 3", [], ["t"]],
+  ])("letra de unidade em %j: unidades %j, variáveis %j", (source, unitList, variableList) => {
+    const parsed = parseMathExpression(source);
+    expect(parsed.ok && parsed.value.unitSymbolList).toEqual([...unitList]);
+    expect(parsed.ok && parsed.value.variableList).toEqual([...variableList]);
+  });
+
   it("devolve o erro com a expressão original", () => {
     expect(evaluator.evaluate("x = 4")).toEqual({
       ok: false,
@@ -115,12 +132,21 @@ describe("evaluate (spec F1-04, RF-02)", () => {
     expect(evaluator.evaluate("2 cm * 3 m")).toEqual({ ok: true, value: number(0.06, "m²") });
   });
 
-  it("expressão com variável sai simplificada e equivalente", () => {
+  it("expressão com variável sai normalizada, sem simplificar, e equivalente", () => {
     const result = evaluator.evaluate("2*x + 3*x");
-    expect(result).toEqual({ ok: true, value: expression("5 * x") });
+    expect(result).toEqual({ ok: true, value: expression("2 * x + 3 * x") });
+    expect(result.ok && evaluator.equals(result.value, expression("5*x"))).toBe(true);
   });
 
-  it.each(["1/0", "0/0", "1 m / 0"])("%j é not_finite", (source) => {
+  it("soma longa com variável é rápida", () => {
+    const longSum = Array.from({ length: 40 }, (_, index) => `${index}*x`).join("+");
+    const startTime = performance.now();
+    const result = evaluator.evaluate(longSum);
+    expect(result.ok && evaluator.equals(result.value, expression("780*x"))).toBe(true);
+    expect(performance.now() - startTime).toBeLessThan(500);
+  });
+
+  it.each(["1/0", "0/0", "1 m / 0", "x/0", "sqrt(-1 - x^2)"])("%j é not_finite", (source) => {
     expect(evaluateCode(source)).toBe("not_finite");
   });
 
@@ -149,6 +175,9 @@ describe("equals (spec F1-04, RF-04)", () => {
     ["expressão com unidade", expression("2 m + 30 cm"), number(230, "cm")],
     ["expressão simplificada", expression("5*x"), expression("2*x + 3*x")],
     ["produto notável", expression("(x+1)*(x-1)"), expression("x^2 - 1")],
+    ["área com letra de unidade", expression("b*h"), expression("h*b")],
+    ["perímetro com letra de unidade", expression("4*l"), expression("l + l + l + l")],
+    ["tempo com letra de unidade", expression("2*t + 3"), expression("3 + 2*t")],
     ["duas variáveis", expression("2*(a + b)"), expression("2*b + 2*a")],
     ["expressão inválida igual", expression("2x +"), expression("2x+")],
     ["conjunto sem ordem", set("1", "2", "3"), set("3", "2", "1")],
@@ -172,6 +201,13 @@ describe("equals (spec F1-04, RF-04)", () => {
     ["tolerância curta", number(2.5, "m", 0.01), number(252, "cm")],
     ["expressão diferente", expression("2*x"), expression("x^2")],
     ["variável diferente", expression("2*x"), expression("2*y")],
+    ["variáveis trocadas", expression("a - b"), expression("b - a")],
+    ["degrau em escala maior", expression("floor(x/10)"), expression("floor(x/20)")],
+    [
+      "um ponto válido só",
+      expression("sqrt(x - 3) + sqrt(3.2 - x)"),
+      expression("(sqrt(x - 3) + sqrt(3.2 - x)) * x / 3.1"),
+    ],
     ["expressão com variável e número", expression("x/x"), number(1)],
     ["expressão inválida diferente", expression("2x +"), expression("3x +")],
     ["conjunto diferente", set("1", "2"), set("1", "2", "3")],
@@ -222,6 +258,9 @@ describe("cenários de SP §8.2 no avaliador (spec F1-04, RF-05)", () => {
     expect(recalculates("3/4 - 1/4", fraction(1, 2))).toBe(true);
     expect(recalculates("15 / 60 * 100", number(25, "%"))).toBe(true);
     expect(recalculates("10 / 3", number(3.33, "R$", 0.01))).toBe(true);
+    expect(recalculates("5 hm to m", number(500, "m"))).toBe(true);
+    expect(recalculates("180 deg - 110 deg", number(70, "º"))).toBe(true);
+    expect(recalculates("b*h/2", expression("h*b/2"))).toBe(true);
   });
 
   it("conta diferente é math_recalculation_mismatch", () => {

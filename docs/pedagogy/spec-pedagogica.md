@@ -244,14 +244,14 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
 | `fraction_not_simplified` | A | — | `fraction` do gabarito fora da forma irredutível (pode ser pedido do enunciado; a revisão julga) | §7.3 |
 | `unit_missing` | A | — | assunto com `measurement_unit` e resposta `number` sem unidade | §7.3 |
 
-**Equivalência no `MathEvaluator` (F1-04, mathjs).** `evaluate` aceita só número, parênteses, `+ - * / ^`, sinal, `mod`, `%` de porcentagem (`25%` = 0,25), conversão `to`, as funções `sqrt`, `abs`, `floor`, `ceil`, `round`, `gcd`, `lcm`, a constante `pi`, as unidades da tabela abaixo e variáveis de uma letra minúscula; o resto (atribuição, função definida, texto, comparação, unidade junto de variável) é `unsupported`, e vírgula decimal é `parse_error`. `equals`:
+**Equivalência no `MathEvaluator` (F1-04, mathjs).** `evaluate` aceita só número, parênteses, `+ - * / ^`, sinal, `mod`, `%` de porcentagem (`25%` = 0,25), conversão `to`, as funções `sqrt`, `abs`, `floor`, `ceil`, `round`, `gcd`, `lcm`, a constante `pi`, as unidades da tabela abaixo e variáveis de uma letra minúscula; letra que também é unidade (`m`, `l`, `g`, `t`, `s`, `h`) só é unidade em expressão com unidade (número colado, `2 m`; unidade de mais de uma letra; `to`), e fora disso é variável (`b*h`); o resto (atribuição, função definida, texto, comparação, unidade junto de variável) é `unsupported`, e vírgula decimal é `parse_error`. `equals`:
 
 - `number`, `fraction` e `expression` sem variável comparam o valor, com a maior das duas tolerâncias e uma folga relativa de 1e-9 para ponto flutuante: `1/2` = `0,5`; `0,333` ≠ `1/3` com tolerância 0;
 - unidades da tabela de mesma grandeza convertem (`2,5 m` = `250 cm`); grandezas diferentes não são iguais; unidade fora da tabela (`R$`, `%`, mês, ano, `pessoas`) só é igual à mesma unidade escrita igual; **o lado sem unidade é lido na unidade do outro** (`2.5 * 100` = `250 cm`), porque a expressão quase sempre é aritmética sem unidade. Unidade errada é pega quando a expressão tem unidade (`2.5 m to cm` ≠ `250 m`) e, quando não tem, pela revisão;
 - `%` é unidade opaca, não fator 1/100: o `calculationExpression` de uma resposta `25%` é `15/60*100`, não `15/60`;
-- `expression` com variável compara o valor em pontos fixos (`5*x` = `2*x + 3*x`); `set` compara o conjunto, com número pt-BR e fração pelo valor; `text` compara `value` e `acceptedList` dos dois lados sem diferença de maiúscula.
+- `expression` com variável não é simplificada: `evaluate` devolve o texto normalizado, e `equals` compara o valor em 7 pontos fixos (`5*x` = `2*x + 3*x`); `set` compara o conjunto, com número pt-BR e fração pelo valor; `text` compara `value` e `acceptedList` dos dois lados sem diferença de maiúscula.
 
-Tabela de unidades (símbolo, nome pt-BR no singular e no plural, `²`/`³` ou `^2`/`^3`): mm, cm, dm, m, km; mm², cm², dm², m², km², ha; cm³, dm³, m³, mL, L; mg, g, kg, t; s, min, h, dia, semana; ° (grau); °C; km/h, m/s. Mês e ano ficam fora porque na escola o mês tem 30 dias e o ano 365, e o mathjs usa 30,44 e 365,25.
+Tabela de unidades (símbolo, nome pt-BR no singular e no plural, sem diferença de maiúscula nem de acento, `²`/`³` ou `^2`/`^3`, `º` como `°`): mm, cm, dm, m, dam, hm, km; mm², cm², dm², m², km², ha; cm³, dm³, m³, mL, cL, dL, L; mg, cg, dg, g, dag, hg, kg, t; s, min, h, dia, semana; ° (grau); °C; km/h, m/s. Mês e ano ficam fora porque na escola o mês tem 30 dias e o ano 365, e o mathjs usa 30,44 e 365,25.
 
 ### 8.3 Kit: conteúdo (`validateStudyKit`, core; marcação no worker)
 
@@ -482,7 +482,7 @@ Propostas desta spec que interpretam o PRD ou o design doc, aprovadas pelo human
    - Figura (§8.4): "a figura de linguagem" e "a imagem" depois de verbo não bloqueiam (assuntos de figuras de linguagem e de poemas); "dele", "dela" e "daquele" depois da posição contam como narrativa.
    - Dado pessoal (§8.4): fixo exige separador; CPF de 11 dígitos sem pontuação exige dígito verificador; nada é procurado dentro de `\( \)`. Número grande sem separador aparece em exercício de classes e ordens.
 
-7. **Equivalência do avaliador matemático (F1-04), pendente do aval do humano.** Proposta em §8.2: (a) o lado sem unidade é lido na unidade do outro; (b) `%`, `R$`, mês e ano são unidades opacas, sem conversão; (c) texto e conjunto de Matemática sem diferença de maiúscula. A alternativa a (a), exigir unidade nos dois lados, bloquearia o kit sempre que o modelo escrevesse a conta sem unidade, que é o caso comum.
+7. **Equivalência do avaliador matemático (F1-04), pendente do aval do humano.** Proposta em §8.2: (a) o lado sem unidade é lido na unidade do outro; (b) `%`, `R$`, mês e ano são unidades opacas, sem conversão; (c) texto e conjunto de Matemática sem diferença de maiúscula; (d) letra que também é unidade (`m`, `h`, `t`…) só é unidade em expressão com unidade, e por isso `3h + 2h` é lido como 5 horas, não como álgebra. A alternativa a (a), exigir unidade nos dois lados, bloquearia o kit sempre que o modelo escrevesse a conta sem unidade, que é o caso comum.
 
 ## 16. Histórico
 

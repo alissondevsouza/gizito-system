@@ -17,10 +17,9 @@ function entryOf(unit: string) {
 }
 
 describe("tabela de unidades (spec F1-04, RF-03)", () => {
-  it("cada apelido aponta para uma única unidade, já normalizado", () => {
-    const aliasList = unitEntryList.flatMap((entry) => entry.aliasList);
+  it("cada apelido normalizado aponta para uma única unidade", () => {
+    const aliasList = unitEntryList.flatMap((entry) => entry.aliasList.map(normalizeUnitText));
     expect(new Set(aliasList).size).toBe(aliasList.length);
-    for (const alias of aliasList) expect(normalizeUnitText(alias)).toBe(alias);
   });
 
   it("cada unidade da tabela é uma unidade do mathjs e o símbolo de exibição é apelido dela", () => {
@@ -46,6 +45,14 @@ describe("tabela de unidades (spec F1-04, RF-03)", () => {
     ["°C", "°C"],
     ["graus", "°"],
     ["dias", "dia"],
+    ["º", "°"],
+    ["ºC", "°C"],
+    ["quilometros", "km"],
+    ["centimetros quadrados", "cm²"],
+    ["hectômetros", "hm"],
+    ["dam", "dam"],
+    ["decagramas", "dag"],
+    ["dL", "dL"],
   ])("%j é %j", (written, displayUnit) => {
     expect(findUnitEntry(written)?.displayUnit).toBe(displayUnit);
   });
@@ -61,6 +68,7 @@ describe("tabela de unidades (spec F1-04, RF-03)", () => {
     expect(expressionUnitSymbolSet.has("month")).toBe(false);
     expect(expressionUnitSymbolSet.has("year")).toBe(false);
     expect(expressionUnitSymbolSet.has("min")).toBe(true);
+    expect(expressionUnitSymbolSet.has("hm")).toBe(true);
   });
 
   it("compara grandeza e converte valor", () => {
