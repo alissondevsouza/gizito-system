@@ -60,4 +60,4 @@ Corrigido:
 Registrado para a F1-07, em known-issues:
 - ALERTA da conta (401, 402, 403, limite de gasto em 400, teto do tier em 429 `enforced_spend_limit_reached`) e alinhamento do `jobs.md` §4. A decisão de manter o pedido na fila e alertar o operador é da orquestração do `order.generate`, que ainda não existe; o adaptador já devolve códigos distintos.
 
-Comandos depois da correção: `bun run lint`, `bun run typecheck` e `bun run build` verdes; `bun run test` verde (core 710, integrations 328 com 16 pulados, db 98, api 25, worker 21).
+Comandos depois da correção: `bun run lint`, `bun run typecheck` e `bun run build` verdes; `bun run test` verde (core 710, integrations 338 com 17 pulados, db 98, api 25, worker 21).
