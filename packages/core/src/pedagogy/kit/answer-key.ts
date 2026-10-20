@@ -72,9 +72,12 @@ function formatDecimal(value: number, fixedFractionDigitCount: number | null): s
   return `${isNegative ? "-" : ""}${groupedInteger}${fractionPart === "" ? "" : `,${fractionPart}`}`;
 }
 
+const ATTACHED_UNIT_LIST: readonly string[] = ["%", "°"];
+
 function withUnit(text: string, unit: string | null): string {
   if (unit === null) return text;
-  return unit === MONEY_UNIT ? `${MONEY_UNIT} ${text}` : `${text} ${unit}`;
+  if (unit === MONEY_UNIT) return `${MONEY_UNIT} ${text}`;
+  return ATTACHED_UNIT_LIST.includes(unit) ? `${text}${unit}` : `${text} ${unit}`;
 }
 
 export type ExpectedAnswerFormatOption = {

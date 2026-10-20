@@ -81,3 +81,7 @@ APROVADO. Os 3 CRÍTICOs, os 6 ALERTAs e as 4 SUGESTÕES da rodada 1 confirmados
 - ALERTA aceito como risco: segue o texto aprovado; registrado em `known-issues.md` com condição de resolução na F1-10 (exigir separador no celular é decisão do humano).
 - SUGESTÃO das contrações aceita: ficam só `dele(s)`, `dela(s)`, `daquele(s)`, `daquela(s)`, `daquilo`; teste de que "desta questão" e "deste enunciado" ainda casam.
 - SUGESTÃO da tag aceita em parte: nome de atributo aceita dígito (teste com `data-x1`). Atributo sem valor fica de fora de propósito: "<y e z>" voltaria a casar como tag em desigualdades com letras (achado da rodada 1); tag maiúscula também, porque o render escapa o texto (SP §8.6) e o modelo escreve tag em minúscula.
+
+## Decisões do humano no handoff (20/10/2026)
+- Aprovou todas as precisões da SP §15.6.
+- `%` e `°` colados ao número (`25%`, `30°`); `°C` segue com espaço. Aplicado em `formatExpectedAnswer`, com teste.
