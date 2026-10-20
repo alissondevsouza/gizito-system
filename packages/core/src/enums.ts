@@ -56,6 +56,10 @@ export const perceivedDifficultyList = ["basic", "intermediate", "unknown"] as c
 export const perceivedDifficultySchema = z.enum(perceivedDifficultyList);
 export type PerceivedDifficulty = z.infer<typeof perceivedDifficultySchema>;
 
+export const legibilityList = ["good", "partial", "unreadable"] as const;
+export const legibilitySchema = z.enum(legibilityList);
+export type Legibility = z.infer<typeof legibilitySchema>;
+
 export const questionBlockList = ["practice", "mock"] as const;
 export const questionBlockSchema = z.enum(questionBlockList);
 export type QuestionBlock = z.infer<typeof questionBlockSchema>;
