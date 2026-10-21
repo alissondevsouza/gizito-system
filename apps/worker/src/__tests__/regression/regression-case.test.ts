@@ -119,6 +119,32 @@ describe("formato do caso (spec F1-10, RF-01)", () => {
     ]);
   });
 
+  it("recusa aceitável só cabe com a prévia preview_ready", () => {
+    const reference = regressionCaseOf();
+    const refused = regressionCaseOf({
+      expectedPreview: {
+        ...reference.expectedPreview,
+        outcome: "analysis_failed",
+        failCode: "no_topic_found",
+        requiredTopicIdList: [],
+        acceptableTopicIdList: [],
+        acceptableFailCodeList: ["photos_unreadable"],
+      },
+      expectedKitOutcome: "not_applicable",
+    });
+    expect(findCaseProblemList(refused)).toEqual([
+      "recusa aceitável só com a prévia preview_ready",
+    ]);
+    const parsed = regressionCaseSchema.parse({
+      ...reference,
+      expectedPreview: {
+        ...reference.expectedPreview,
+        acceptableFailCodeList: undefined,
+      },
+    });
+    expect(parsed.expectedPreview.acceptableFailCodeList).toEqual([]);
+  });
+
   it("prévia analysis_failed com confirmação é problema", () => {
     const reference = regressionCaseOf();
     const refusedWithConfirmation = regressionCaseOf({

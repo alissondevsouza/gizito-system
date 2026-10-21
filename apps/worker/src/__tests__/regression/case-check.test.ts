@@ -48,6 +48,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     );
     expect(check).toEqual({
       failedCheckList: [],
+      expectedKitOutcome: "ready",
       warningList: [],
       actualPreview: { outcome: "preview_ready", failCode: null },
       actualKitOutcome: "ready",
@@ -234,6 +235,50 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     expect(check.actualKitOutcome).toBe("not_applicable");
   });
 
+  it("caso de fronteira aceita a recusa listada, e aí o kit esperado é not_applicable", async () => {
+    const reference = regressionCaseOf();
+    const borderCase = regressionCaseOf({
+      photoList: reference.photoList.map((photo) => ({ ...photo, expectedLegibility: "partial" })),
+      expectedPreview: {
+        ...reference.expectedPreview,
+        requiredTopicIdList: [],
+        acceptableTopicIdList: [FRACTIONS_TOPIC_ID, PERIMETER_TOPIC_ID],
+        acceptableFailCodeList: ["photos_unreadable"],
+      },
+      confirmation: {
+        topicIdList: [FRACTIONS_TOPIC_ID, PERIMETER_TOPIC_ID],
+        otherTopicText: null,
+        perceivedDifficulty: null,
+        noteText: null,
+      },
+    });
+    const refused = checkRegressionCase(
+      borderCase,
+      (await fixtureRunOf(unreadableExtraction)).outcome,
+      EMPTY_CASE_TEXT_REFERENCE,
+    );
+    expect(refused.failedCheckList).toEqual([]);
+    expect(refused.expectedKitOutcome).toBe("not_applicable");
+    const ready = checkRegressionCase(borderCase, await readyOutcome(), EMPTY_CASE_TEXT_REFERENCE);
+    expect(ready.failedCheckList).toEqual([]);
+    expect(ready.expectedKitOutcome).toBe("ready");
+    const otherRefusal = checkRegressionCase(
+      regressionCaseOf({
+        ...borderCase,
+        expectedPreview: {
+          ...borderCase.expectedPreview,
+          acceptableFailCodeList: ["no_topic_found"],
+        },
+      }),
+      (await fixtureRunOf(unreadableExtraction)).outcome,
+      EMPTY_CASE_TEXT_REFERENCE,
+    );
+    expect(otherRefusal.failedCheckList).toEqual([
+      "preview_outcome_mismatch",
+      "kit_outcome_mismatch",
+    ]);
+  });
+
   it("caso que quebra é crashed e kit_outcome_mismatch, mesmo esperando not_applicable", () => {
     const check = checkRegressionCase(
       regressionCaseOf({ expectedKitOutcome: "not_applicable" }),
@@ -242,6 +287,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     );
     expect(check).toEqual({
       failedCheckList: ["kit_outcome_mismatch"],
+      expectedKitOutcome: "not_applicable",
       warningList: [],
       actualPreview: null,
       actualKitOutcome: "crashed",

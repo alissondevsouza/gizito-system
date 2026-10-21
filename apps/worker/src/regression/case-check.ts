@@ -1,6 +1,6 @@
 import type { MergedExtraction, PhotoExtraction } from "@gizito/core";
 import type { PipelineRun, PipelineStage } from "#src/pipeline/run-pipeline.ts";
-import type { RegressionCase } from "#src/regression/regression-case.ts";
+import type { ExpectedKitOutcome, RegressionCase } from "#src/regression/regression-case.ts";
 
 export const caseCheckCodeList = [
   "preview_outcome_mismatch",
@@ -58,6 +58,7 @@ export const EMPTY_CASE_TEXT_REFERENCE: CaseTextReference = {
 
 export type CaseCheck = {
   readonly failedCheckList: readonly CaseCheckCode[];
+  readonly expectedKitOutcome: ExpectedKitOutcome;
   readonly warningList: readonly string[];
   readonly actualPreview: ActualPreview | null;
   readonly actualKitOutcome: ActualKitOutcome;
@@ -178,6 +179,7 @@ export function checkRegressionCase(
   if (outcome.kind === "crashed") {
     return {
       failedCheckList: ["kit_outcome_mismatch"],
+      expectedKitOutcome: regressionCase.expectedKitOutcome,
       warningList: [],
       actualPreview: null,
       actualKitOutcome: "crashed",
@@ -188,18 +190,25 @@ export function checkRegressionCase(
   const actualKitOutcome = actualKitOutcomeOf(run);
   const { expectedPreview } = regressionCase;
   const extraction = checkExtraction(regressionCase, outcome, textReference);
+  const isAcceptedRefusal =
+    actualPreview.outcome === "analysis_failed" &&
+    actualPreview.failCode !== null &&
+    expectedPreview.acceptableFailCodeList.some((code) => code === actualPreview.failCode);
   const isPreviewMismatch =
-    actualPreview.outcome !== expectedPreview.outcome ||
-    actualPreview.failCode !== expectedPreview.failCode;
+    !isAcceptedRefusal &&
+    (actualPreview.outcome !== expectedPreview.outcome ||
+      actualPreview.failCode !== expectedPreview.failCode);
+  const expectedKitOutcome = isAcceptedRefusal
+    ? "not_applicable"
+    : regressionCase.expectedKitOutcome;
   const failedCheckList: CaseCheckCode[] = [
     ...(isPreviewMismatch ? (["preview_outcome_mismatch"] as const) : []),
     ...extraction.failedCheckList,
-    ...(actualKitOutcome === regressionCase.expectedKitOutcome
-      ? []
-      : (["kit_outcome_mismatch"] as const)),
+    ...(actualKitOutcome === expectedKitOutcome ? [] : (["kit_outcome_mismatch"] as const)),
   ];
   return {
     failedCheckList: caseCheckCodeList.filter((code) => failedCheckList.includes(code)),
+    expectedKitOutcome,
     warningList: extraction.warningList,
     actualPreview,
     actualKitOutcome,

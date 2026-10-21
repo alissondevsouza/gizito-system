@@ -153,7 +153,7 @@ export type ReviewSection = z.infer<typeof reviewSectionSchema>;
 const baseTextShape = {
   baseTextId: baseTextIdSchema,
   title: titleSchema,
-  paragraphList: kitTextListSchema(1, 10, 10, 800),
+  paragraphList: kitTextListSchema(1, 10, 1, 800),
 };
 export const baseTextSchema = z.strictObject(baseTextShape);
 export type BaseText = z.infer<typeof baseTextSchema>;

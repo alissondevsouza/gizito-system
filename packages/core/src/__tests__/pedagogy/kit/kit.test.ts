@@ -85,6 +85,21 @@ describe("kitContentSchema por disciplina (spec pedagógica §7.1)", () => {
     expect(isContentValid("portuguese", portuguese.content)).toBe(true);
   });
 
+  it("texto-base aceita parágrafo curto, como saudação e assinatura de carta (spec pedagógica 1.5 §15.10)", () => {
+    const withLetterEnding = editContent("portuguese", (content) => {
+      const [baseText] = listAt(content, "baseTextList");
+      if (baseText === undefined) throw new Error("fixture");
+      baseText.paragraphList = [...(baseText.paragraphList as string[]), "Um abraço,", "Lia"];
+    });
+    expect(isContentValid("portuguese", withLetterEnding)).toBe(true);
+    const withEmptyParagraph = editContent("portuguese", (content) => {
+      const [baseText] = listAt(content, "baseTextList");
+      if (baseText === undefined) throw new Error("fixture");
+      baseText.paragraphList = [...(baseText.paragraphList as string[]), " "];
+    });
+    expect(isContentValid("portuguese", withEmptyParagraph)).toBe(false);
+  });
+
   it.each<[string, Subject, (content: JsonRecord) => void]>([
     ["9 questões", "math", (content) => listAt(content, "practiceQuestionList").pop()],
     [

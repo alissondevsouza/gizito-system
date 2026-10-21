@@ -191,7 +191,7 @@ function caseRowOf(result: CaseResult): CaseReportRow {
     caseId: regressionCase.caseId,
     tagList: regressionCase.tagList,
     actualPreview: check.actualPreview,
-    expectedKitOutcome: regressionCase.expectedKitOutcome,
+    expectedKitOutcome: check.expectedKitOutcome,
     actualKitOutcome: check.actualKitOutcome,
     failCode: summary?.failCode ?? null,
     crashErrorName: crash?.errorName ?? null,

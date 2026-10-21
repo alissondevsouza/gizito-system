@@ -63,6 +63,7 @@ export const expectedPreviewSchema = z.strictObject({
   acceptableTopicIdList: uniqueListSchema(taxonomyTopicIdSchema),
   unsupportedTopicIdList: uniqueListSchema(unsupportedTopicIdSchema),
   requiredSourceWarningCodeList: uniqueListSchema(sourceWarningCodeSchema),
+  acceptableFailCodeList: uniqueListSchema(previewFailCodeSchema).default([]),
 });
 export type ExpectedPreview = z.infer<typeof expectedPreviewSchema>;
 
@@ -124,6 +125,9 @@ export function findCaseProblemList(regressionCase: RegressionCase): readonly st
     if (unsupportedSubjectOf(unsupportedTopicId) !== subject) {
       problemList.push(`${unsupportedTopicId} não é área não atendida de ${subject}`);
     }
+  }
+  if (!isPreviewReady && expectedPreview.acceptableFailCodeList.length > 0) {
+    problemList.push("recusa aceitável só com a prévia preview_ready");
   }
   if (!isPreviewReady && confirmation !== null) {
     problemList.push("prévia analysis_failed não tem confirmação");

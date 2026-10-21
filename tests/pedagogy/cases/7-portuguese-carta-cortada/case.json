@@ -16,7 +16,8 @@
     "requiredTopicIdList": [],
     "acceptableTopicIdList": ["lp7-linguistic-variety", "lp7-reading-comprehension"],
     "unsupportedTopicIdList": [],
-    "requiredSourceWarningCodeList": []
+    "requiredSourceWarningCodeList": [],
+    "acceptableFailCodeList": ["no_topic_found"]
   },
   "confirmation": {
     "topicIdList": ["lp7-linguistic-variety"],
@@ -25,5 +26,5 @@
     "noteText": null
   },
   "expectedKitOutcome": "ready",
-  "note": "Partes da carta são do 4º ano na tax-v1; a carta formal e informal leva a variedades linguísticas do 7º ano, que o modelo ofereceu com confiança média na rodada 1. Recalibrado com o humano em 21/10/2026."
+  "note": "Partes da carta são do 4º ano na tax-v1; a carta formal e informal leva a variedades linguísticas do 7º ano. O modelo ora oferece esse assunto com confiança média, ora recusa; as duas respostas valem (spec pedagógica 1.5 §15.10)."
 }

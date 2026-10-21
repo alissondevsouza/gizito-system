@@ -20,7 +20,8 @@
       "ma7-rational-operations"
     ],
     "unsupportedTopicIdList": [],
-    "requiredSourceWarningCodeList": []
+    "requiredSourceWarningCodeList": [],
+    "acceptableFailCodeList": ["no_topic_found"]
   },
   "confirmation": {
     "topicIdList": ["ma7-integer-multiplication-division"],
@@ -29,5 +30,5 @@
     "noteText": null
   },
   "expectedKitOutcome": "ready",
-  "note": "Potenciação é do 6º ano na tax-v1; potência é multiplicação repetida, e o modelo ofereceu multiplicação de inteiros com confiança média no ensaio da F1-10. Recalibrado com o humano em 21/10/2026."
+  "note": "Potenciação é do 6º ano na tax-v1; potência é multiplicação repetida. O modelo ora oferece multiplicação de inteiros com confiança média, ora recusa; as duas respostas valem (spec pedagógica 1.5 §15.10)."
 }
