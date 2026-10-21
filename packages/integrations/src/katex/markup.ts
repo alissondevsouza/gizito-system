@@ -1,6 +1,7 @@
 import katex from "katex";
 
 const DECIMAL_COMMA_PATTERN = /(\d),(?=\d)/g;
+const BARE_PERCENT_PATTERN = /(?<!\\)%/g;
 
 export function isKatexParsable(latex: string): boolean {
   try {
@@ -13,7 +14,8 @@ export function isKatexParsable(latex: string): boolean {
 }
 
 export function renderMathMarkup(latex: string): string {
-  return katex.renderToString(`\\displaystyle ${latex.replace(DECIMAL_COMMA_PATTERN, "$1{,}")}`, {
+  const source = latex.replace(DECIMAL_COMMA_PATTERN, "$1{,}").replace(BARE_PERCENT_PATTERN, "\\%");
+  return katex.renderToString(`\\displaystyle ${source}`, {
     output: "html",
     throwOnError: true,
     strict: "ignore",

@@ -36,6 +36,11 @@ describe("renderMathMarkup (spec F1-08, RF-01)", () => {
     expect(renderMathMarkup("2, 3")).not.toBe(renderMathMarkup("2{,} 3"));
   });
 
+  it("escreve o % sem barra como porcentagem, e não como comentário que apaga o resto", () => {
+    expect(renderMathMarkup("25% \\text{ de } 80")).toBe(renderMathMarkup("25\\% \\text{ de } 80"));
+    expect(renderMathMarkup("25\\%")).toBe(renderMathMarkup("25%"));
+  });
+
   it("escapa o texto dentro de \\text", () => {
     const rendered = renderMathMarkup("\\text{<b>x</b>}");
     expect(rendered).not.toContain("<b>");

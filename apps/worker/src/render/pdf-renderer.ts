@@ -37,6 +37,7 @@ export type PdfRenderer = {
 export type PdfRendererOption = {
   readonly concurrency: number;
   readonly timeoutMs?: number;
+  readonly launchBrowser?: () => Promise<Browser>;
 };
 
 type DomItemReport = {
@@ -139,42 +140,74 @@ async function withTimeout<T>(work: Promise<T>, timeoutMs: number): Promise<T> {
   }
 }
 
+function launchHeadlessChromium(): Promise<Browser> {
+  return chromium.launch({ headless: true });
+}
+
+function closeDiscardedBrowser(launching: Promise<Browser>): void {
+  launching.then(
+    (browser) => browser.close().catch(() => undefined),
+    () => undefined,
+  );
+}
+
 export function createPdfRenderer({
   concurrency,
   timeoutMs = DEFAULT_RENDER_TIMEOUT_MS,
+  launchBrowser = launchHeadlessChromium,
 }: PdfRendererOption): PdfRenderer {
   const semaphore = createSemaphore(concurrency);
   let browserPromise: Promise<Browser> | null = null;
 
+  function forgetBrowser(launching: Promise<Browser>): void {
+    if (browserPromise === launching) browserPromise = null;
+  }
+
   function sharedBrowser(): Promise<Browser> {
-    browserPromise ??= chromium.launch({ headless: true }).then(
+    if (browserPromise !== null) return browserPromise;
+    const launching: Promise<Browser> = launchBrowser().then(
       (browser) => {
-        browser.on("disconnected", () => {
-          browserPromise = null;
-        });
+        browser.on("disconnected", () => forgetBrowser(launching));
         return browser;
       },
       (error: unknown) => {
-        browserPromise = null;
+        forgetBrowser(launching);
         throw error;
       },
     );
-    return browserPromise;
+    browserPromise = launching;
+    return launching;
   }
 
-  async function renderOnce(
+  async function renderInBrowser(
+    launching: Promise<Browser>,
     renderDocument: RenderDocument,
   ): Promise<Result<RenderedPdf, PdfRenderFailure>> {
-    const browser = await withTimeout(sharedBrowser(), timeoutMs);
+    const browser = await launching;
     const context = await browser.newContext({
       javaScriptEnabled: false,
       offline: true,
       viewport: { width: CONTENT_WIDTH_PX, height: PAGE_HEIGHT_PX },
     });
     try {
-      return await withTimeout(convertToPdf(context, renderDocument, timeoutMs), timeoutMs);
+      return await convertToPdf(context, renderDocument, timeoutMs);
     } finally {
       await context.close();
+    }
+  }
+
+  async function renderOnce(
+    renderDocument: RenderDocument,
+  ): Promise<Result<RenderedPdf, PdfRenderFailure>> {
+    const launching = sharedBrowser();
+    try {
+      return await withTimeout(renderInBrowser(launching, renderDocument), timeoutMs);
+    } catch (error) {
+      if (error instanceof RenderTimeoutError) {
+        forgetBrowser(launching);
+        closeDiscardedBrowser(launching);
+      }
+      throw error;
     }
   }
 
@@ -193,7 +226,11 @@ export function createPdfRenderer({
     async close() {
       const pending = browserPromise;
       browserPromise = null;
-      if (pending !== null) await (await pending).close();
+      if (pending !== null)
+        await pending.then(
+          (browser) => browser.close(),
+          () => undefined,
+        );
     },
   };
 }

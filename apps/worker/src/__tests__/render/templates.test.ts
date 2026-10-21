@@ -250,6 +250,10 @@ describe("gabarito (spec F1-08, RF-03)", () => {
     expect(cover).toContain('Gabarito de <span class="cover-subject">Língua Portuguesa</span>');
     expect(cover).toContain("7º ano");
     expect(cover).toContain(assets.mascotDataUrlMap.success);
+    expect(cover).toContain("Para o responsável conferir depois que a criança resolver.");
+    expect(cover).toContain(`Gerado em ${formatKitDate(FIXED_GENERATED_AT)}`);
+    for (const topic of realPortugueseKit.topicList)
+      expect(cover).toContain(kitTextHtml(topic.label).value);
     expect(cover).toContain(AI_NOTE_TEXT);
   });
 });

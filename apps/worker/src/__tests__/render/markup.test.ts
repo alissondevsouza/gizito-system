@@ -47,6 +47,11 @@ describe("kitTextHtml (spec F1-08, RF-01)", () => {
     expect(rendered.endsWith(" e &lt;b&gt;")).toBe(true);
   });
 
+  it("escreve expoente como sobrescrito do KaTeX", () => {
+    const rendered = kitTextHtml("Área de \\(25\\text{ cm}^{2}\\) e \\(x^{2}\\)").value;
+    expect(rendered.match(/msupsub/g)?.length).toBe(2);
+  });
+
   it("deixa R$ e vírgula fora da marcação como texto", () => {
     expect(kitTextHtml("Custa R$ 12,50.").value).toBe("Custa R$ 12,50.");
   });

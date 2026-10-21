@@ -5,6 +5,7 @@ import {
   type MathStudyKit,
   type Subject,
 } from "@gizito/core";
+import { type Browser, chromium } from "playwright";
 import {
   FIXED_GENERATED_AT,
   loadRealStudyKit,
@@ -36,6 +37,30 @@ function plainDocument(
   };
 }
 
+function createSpiedLauncher() {
+  const browserList: Browser[] = [];
+  let activeContextCount = 0;
+  let maxActiveContextCount = 0;
+  async function launchBrowser(): Promise<Browser> {
+    const browser = await chromium.launch({ headless: true });
+    const newContext = browser.newContext.bind(browser);
+    browser.newContext = async (option) => {
+      const context = await newContext(option);
+      activeContextCount += 1;
+      maxActiveContextCount = Math.max(maxActiveContextCount, activeContextCount);
+      context.on("close", () => {
+        activeContextCount -= 1;
+      });
+      return context;
+    };
+    browserList.push(browser);
+    return browser;
+  }
+  return { launchBrowser, browserList, maxActiveContextCount: () => maxActiveContextCount };
+}
+
+const busyBody = `<p data-kit-item="p1">um</p>${"<p>linha de preenchimento</p>".repeat(3000)}`;
+
 async function loadRealMathKit(): Promise<MathStudyKit> {
   const studyKit = await loadRealStudyKit("math");
   if (studyKit.subject !== "math") throw new Error("fixture de Matemática");
@@ -59,7 +84,9 @@ describe("renderKit com Chromium real (spec F1-08, RF-05 a RF-07)", () => {
         expect(pdfText(file.bytes)).toContain("NunitoSans");
         expect(file.attemptCount).toBe(1);
       }
-      expect(pdfText(activities.bytes).includes("KaTeX_Main")).toBe(subject === "math");
+      for (const file of [activities, answerKey]) {
+        expect(pdfText(file.bytes).includes("KaTeX_Main")).toBe(subject === "math");
+      }
       expect(activities.pageCount).toBeGreaterThanOrEqual(ACTIVITIES_PAGE_RANGE.min);
       expect(activities.pageCount).toBeLessThanOrEqual(ACTIVITIES_PAGE_RANGE.max);
       expect(answerKey.pageCount).toBeGreaterThanOrEqual(ANSWER_KEY_PAGE_RANGE.min);
@@ -193,6 +220,67 @@ describe("browser, rede e tempo (spec F1-08, RF-04 e RF-05)", () => {
       await slowRenderer.close();
     }
   });
+
+  it.each([
+    [1, 1],
+    [2, 2],
+  ])(
+    "com concurrency %i, no máximo %i documentos abertos ao mesmo tempo",
+    async (concurrency, expected) => {
+      const spied = createSpiedLauncher();
+      const renderer = createPdfRenderer({ concurrency, launchBrowser: spied.launchBrowser });
+      try {
+        const document = plainDocument(busyBody, ["p1"]);
+        const resultList = await Promise.all([
+          renderer.render(document),
+          renderer.render(document),
+        ]);
+        expect(resultList.every((result) => result.ok)).toBe(true);
+        expect(spied.maxActiveContextCount()).toBe(expected);
+      } finally {
+        await renderer.close();
+      }
+    },
+  );
+
+  it("estouro do tempo na conversão descarta o browser, libera a vaga e o próximo render relança", async () => {
+    const spied = createSpiedLauncher();
+    const renderer = createPdfRenderer({
+      concurrency: 1,
+      timeoutMs: 5000,
+      launchBrowser: spied.launchBrowser,
+    });
+    try {
+      const small = plainDocument('<p data-kit-item="p1">um</p>', ["p1"]);
+      expect((await renderer.render(small)).ok).toBe(true);
+      const heavy = plainDocument(
+        `<p data-kit-item="p1">um</p>${"<p>linha de preenchimento</p>".repeat(100_000)}`,
+        ["p1"],
+      );
+      const timedOut = await renderer.render(heavy);
+      expect(timedOut.ok).toBe(false);
+      if (timedOut.ok) return;
+      expect(timedOut.error.errorName).toBe("RenderTimeoutError");
+      expect((await renderer.render(small)).ok).toBe(true);
+      expect(spied.browserList).toHaveLength(2);
+    } finally {
+      await renderer.close();
+    }
+  }, 30_000);
+
+  it("browser que cai entre renders é relançado no render seguinte", async () => {
+    const spied = createSpiedLauncher();
+    const renderer = createPdfRenderer({ concurrency: 1, launchBrowser: spied.launchBrowser });
+    try {
+      const document = plainDocument('<p data-kit-item="p1">um</p>', ["p1"]);
+      expect((await renderer.render(document)).ok).toBe(true);
+      await spied.browserList[0]?.close();
+      expect((await renderer.render(document)).ok).toBe(true);
+      expect(spied.browserList).toHaveLength(2);
+    } finally {
+      await renderer.close();
+    }
+  }, 30_000);
 
   it("relança o browser depois de close()", async () => {
     const renderer = createPdfRenderer({ concurrency: 1 });
