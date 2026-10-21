@@ -211,6 +211,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 - [ ] **F1-10 `regressao-pedagogica`** — pedagogy, tests · M · depende: F1-09
   - Entrega: formato de caso, runner `bun run test:pedagogy`, relatório por caso; 35 casos rodados (30 imagens geradas por IA e 5 variações delas, spec pedagógica §13.1); defeitos corrigidos viram casos
   - Pronto quando: zero bloqueador crítico inesperado; relatório gravado em `docs/pedagogy/`
+  - Em andamento em 21/10/2026, na branch `feat/pedagogy/regressao-pedagogica`.
+    - Entregou o runner `bun run test:pedagogy`, os 35 `case.json`, as 5 variações e o relatório com os critérios do gate (`specs/pedagogy/regressao-pedagogica/`).
+    - A rodada 1 (`docs/pedagogy/regressao/2026-10-21-extract-v1+plan-v1+generate-v1+review-v1.md`) teve 10 bloqueadores críticos inesperados: 3 lacunas da `tax-v1` no 5º ano de Português, 1 caso de fronteira e 6 de 28 kits falhando depois da única regeneração. A extração (33 de 35), a foto ilegível, o dado pessoal e o custo passaram.
+    - Aguarda decisões do humano sobre taxonomia, prompts e regeneração (`review.md`).
 - [ ] **F1-11 `homologacao-e-amostras`** — pedagogy · P · depende: F1-10
   - Entrega: revisão de amostra por professor; 2 kits de amostra (Matemática e Português) marcados como amostra; custo por prévia e por kit, e tempo, registrados no PRD seção 3
   - Pronto quando: critério de lançamento do PRD 7.6 atendido

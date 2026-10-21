@@ -126,12 +126,12 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 
 ### M4 — Rodada real
 - [x] 4.1 Preparar as fotos, conferir as 5 variações a olho e gravar os hashes · Verificação: `bun run test:pedagogy --prepare-photos`
-- [ ] 4.2 Rodada completa dos 35 casos · Verificação: `bun run test:pedagogy`
+- [x] 4.2 Rodada completa dos 35 casos · Verificação: `bun run test:pedagogy`
 - [ ] 4.3 Corrigir defeitos e recalibrar casos ambíguos, com motivo; rodar de novo os casos afetados · Verificação: `bun run test:pedagogy --case ...`
 - [ ] 4.4 Docs: dívidas medidas no `known-issues.md`, `testing.md` e `CLAUDE.md` se mudarem, roadmap
 
 ### M5 — Revisão neutra
-- [ ] 5.1 `gizito-implement-verifier` e `review.md`
+- [x] 5.1 `gizito-implement-verifier` e `review.md`
 
 ## Decisões
 
@@ -150,4 +150,9 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 
 ## Status
 
-M1 a M3 feitos em 21/10/2026, com as fotos preparadas e os hashes das variações gravados (4.1). Rodada completa em andamento (4.2).
+21/10/2026:
+- M1 a M3 feitos.
+- Revisão neutra reprovada na rodada 1: o CRÍTICO é o RF-09, e os ALERTAs foram corrigidos em `f495acf`.
+- Rodada completa feita (4.2): 10 bloqueadores críticos inesperados, com o detalhe no `review.md`.
+
+Próximo passo: as decisões do humano sobre os 10 críticos, depois as correções (4.3) e uma rodada nova, completa, e o 4.4. O texto "7 cortadas" da spec pedagógica também espera o humano.
