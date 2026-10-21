@@ -138,15 +138,17 @@ export function checkRecalculation(
 ): ValidationIssue[] {
   if (studyKit.subject !== "math") return [];
   return listComputableItem(studyKit).flatMap(({ itemId, answer, optionList, mismatchCode }) => {
-    const invalidIssue = createValidationIssue("math_expression_invalid", { itemId });
-    const hasInvalidAnswerExpression = listAnswerExpression(answer, optionList).some(
+    const invalidIssueOf = (excerpt: string) =>
+      createValidationIssue("math_expression_invalid", { itemId, excerpt });
+    const invalidAnswerExpression = listAnswerExpression(answer, optionList).find(
       (expression) => !mathEvaluator.evaluate(expression).ok,
     );
     if (!answer.computable || answer.calculationExpression === null) {
-      return hasInvalidAnswerExpression ? [invalidIssue] : [];
+      return invalidAnswerExpression === undefined ? [] : [invalidIssueOf(invalidAnswerExpression)];
     }
     const evaluated = mathEvaluator.evaluate(answer.calculationExpression);
-    if (!evaluated.ok || hasInvalidAnswerExpression) return [invalidIssue];
+    if (!evaluated.ok) return [invalidIssueOf(answer.calculationExpression)];
+    if (invalidAnswerExpression !== undefined) return [invalidIssueOf(invalidAnswerExpression)];
     return mathEvaluator.equals(evaluated.value, answer.expectedAnswer)
       ? []
       : [createValidationIssue(mismatchCode, { itemId })];

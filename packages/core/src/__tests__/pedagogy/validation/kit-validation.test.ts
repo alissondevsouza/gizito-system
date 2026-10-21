@@ -200,6 +200,7 @@ describe("validateStudyKit: estrutura e respostas (spec pedagógica §8.2)", () 
       at(itemOf(draft, "p2"), "answer").calculationExpression = "4 * * 11";
     });
     expect(codeItemListOf(kit)).toEqual([["math_expression_invalid", "p2"]]);
+    expect(issuesOf(kit)[0]?.excerpt).toBe("4 * * 11");
   });
 
   it("math_expression_invalid em resposta expression que o avaliador não aceita, uma vez por item", () => {
@@ -217,6 +218,7 @@ describe("validateStudyKit: estrutura e respostas (spec pedagógica §8.2)", () 
       answer.expectedAnswer = { kind: "expression", expression: "2x +" };
     });
     expect(codeItemListOf(kit)).toEqual([["math_expression_invalid", "p2"]]);
+    expect(issuesOf(kit)[0]?.excerpt).toBe("4 * * 11");
   });
 
   it("math_expression_invalid em alternativa expression que o avaliador não aceita", () => {

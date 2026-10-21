@@ -112,6 +112,7 @@ export type GenerationFailure = {
   readonly isRetryable: boolean;
   readonly attemptList: readonly GenerationAttempt[];
   readonly aiCallList: readonly AiCallRecord[];
+  readonly lastStudyKit: StudyKit | null;
 };
 
 type StepFailure = { readonly code: GenerationFailureCode; readonly isRetryable: boolean };
@@ -417,7 +418,13 @@ export async function generateKit(
   const state: RunState = { plan: null, studyKit: null, review: null };
   const attemptList: GenerationAttempt[] = [];
   const failWith = (code: GenerationFailureCode, isRetryable: boolean) =>
-    err({ code, isRetryable, attemptList, aiCallList: context.aiCallList });
+    err({
+      code,
+      isRetryable,
+      attemptList,
+      aiCallList: context.aiCallList,
+      lastStudyKit: state.studyKit,
+    });
   let pending: PendingRepair = { repair: "initial" };
   let regenerationLeft = MAX_REGENERATION_COUNT;
   for (;;) {

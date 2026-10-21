@@ -267,6 +267,7 @@ describe("generateKit regenera pelo código mais forte (spec F1-07, RF-04)", () 
     expect(result.error.code).toBe("generation_blocked");
     expect(result.error.isRetryable).toBe(false);
     expect(result.error.attemptList.map((attempt) => attempt.repair)).toEqual(["initial", "item"]);
+    expect(result.error.lastStudyKit?.practiceQuestionList[0]?.questionId).toBe("p1");
   });
 
   it("saída inválida também depois da regeneração falha com ai_output_invalid", async () => {
@@ -395,6 +396,7 @@ describe("generateKit com falha que não é do kit (spec F1-07, RF-07)", () => {
     if (result.ok) throw new Error("deveria falhar");
     expect([result.error.code, result.error.isRetryable]).toEqual(["ai_auth_failed", false]);
     expect(result.error.attemptList).toEqual([]);
+    expect(result.error.lastStudyKit).toBeNull();
   });
 });
 

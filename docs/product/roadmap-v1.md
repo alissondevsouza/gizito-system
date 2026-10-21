@@ -180,6 +180,12 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 - [ ] **F1-07 `pipeline-geracao` — em andamento** — worker · L · depende: F1-03, F1-04, F1-05, F1-06 · `specs/worker/pipeline-geracao/`
   - Entrega: prompts `plan`, `generate`, `review` v1; orquestração das etapas; uma regeneração; `ai_call` por chamada; limite de custo por pedido
   - Pronto quando: kit válido em 10 casos; fixtures defeituosas disparam cada bloqueador
+  - Feito até agora (21/10/2026):
+    - Entregou os prompts `plan`, `generate` e `review` v1, transcritos de `prompts-v1.md` (um teste compara com o doc), e o `generateKit` em `apps/worker/src/pipeline/`: alocação, plano, geração, composição, validação com mathjs e KaTeX, revisão, uma regeneração pelo código mais forte, nova chamada de revisão, teto de custo (`MAX_AI_COST_CENTS_PER_ORDER` = US$ 2), sinal e registro de cada chamada.
+    - Fixtures defeituosas: uma por bloqueador, e todas disparam o código e o reparo certos.
+    - Pronto quando: `test:generate-live` com 10 de 10 kits válidos contra a API, a US$ 0,41 por pedido em média e de 2,5 a 5,9 min por kit.
+    - O live achou e esta branch corrigiu o `fetch` do Bun cortando a resposta aos 300 s, o exemplo resolvido com letra ou citação, e a equação escrita como cálculo no `generate` v1. Esta última e a precisão 1.4 do §10 da spec pedagógica esperam a sua aprovação.
+    - Falta a revisão neutra.
 - [ ] **F1-08 `render-pdf`** — worker · M · depende: F1-03
   - Entrega: templates HTML do caderno de atividades e do gabarito, KaTeX no servidor, Playwright, verificação de páginas e presença das 20 questões; imagem do worker com Chromium
   - Pronto quando: PDFs abrem no celular e imprimem; frações legíveis; teste de integração do render

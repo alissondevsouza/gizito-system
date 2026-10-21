@@ -2,6 +2,7 @@ export * from "#src/ai/anthropic-provider.ts";
 export * from "#src/ai/image.ts";
 export * from "#src/ai/output-schema.ts";
 export * from "#src/ai/pricing.ts";
+export * from "#src/ai/runtime-fetch.ts";
 export * from "#src/katex/markup.ts";
 export * from "#src/log-error.ts";
 export * from "#src/logger.ts";

@@ -6,6 +6,11 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-21] Bun: `fetch` sem dado por 300 s cai com `TimeoutError`; regra de `refine` não chega ao modelo — F1-07
+
+- O `fetch` do Bun 1.3 tem um timeout de inatividade de 300 s que não aparece nos tipos nem na documentação. Medido com servidor local: sem nenhum byte por 300 s, `TimeoutError: The operation timed out.`; com dado a cada 10 s, um stream de 330 s termina; com `timeout: false` no `init`, a resposta de 320 s chega. No primeiro live da geração, 5 de 10 chamadas do Sonnet 5.5 morreram aos ~300 s como `ai_unavailable` (raciocínio oculto e fila da API deixam o stream mudo), antes do timeout de 10 min do SDK. O adaptador usa `fetchWithoutIdleTimeout` (`timeout: false`, tipado por `declare global` em `BunFetchRequestInit`). O timer do SDK só cobre até os cabeçalhos; depois disso, quem limita o stream é o `signal` do job.
+- Regra que só existe em `refine` do Zod não entra no JSON Schema enviado ao modelo. O `generate` pôs letra de alternativa num exemplo resolvido de Português, e o kit foi recusado duas vezes. A regra passou para o tipo (`correctOptionLabel: z.null()` no exemplo), e o JSON Schema diz `{ "type": "null" }`. Ao criar regra de saída de IA, preferir expressá-la no tipo; quando não der, dizê-la no prompt.
+
 ## [2026-10-20] mathjs 15: `simplify` e `toTex` de função crescem de forma explosiva; unidade simplificada depende de estado global — F1-04
 
 Três armadilhas do mathjs 15.2 com expressão vinda do modelo, todas medidas na revisão da F1-04:

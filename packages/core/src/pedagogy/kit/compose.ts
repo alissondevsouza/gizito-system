@@ -29,7 +29,6 @@ import {
   type QuestionId,
   questionIdList,
   type TopicRef,
-  type WorkedExampleId,
   workedExampleIdList,
 } from "#src/pedagogy/kit-item.ts";
 import type { KitPlan, SlotDetail } from "#src/pedagogy/plan/schemas.ts";
@@ -109,13 +108,6 @@ function checkQuestionShape(question: QuestionContent, shape: QuestionShape): Va
   return isCoherent ? [] : [slotMismatch(question.questionId)];
 }
 
-function checkExampleShape(example: {
-  readonly exampleId: WorkedExampleId;
-  readonly answer: { readonly evidenceQuote: string | null };
-}): ValidationIssue[] {
-  return example.answer.evidenceQuote === null ? [] : [slotMismatch(example.exampleId)];
-}
-
 function topicLabelOf(topicRef: TopicRef, plan: KitPlan): string | null {
   if (topicRef === OTHER_TOPIC_REF) return plan.otherTopicAssessment?.label ?? null;
   return findTopic(topicRef)?.label ?? null;
@@ -191,7 +183,6 @@ export function composeStudyKit(
         ? [slotMismatch(question.questionId)]
         : checkQuestionShape(question, detail);
     }),
-    ...content.workedExampleList.flatMap(checkExampleShape),
     ...topicLabelList.flatMap((topic) =>
       topic.label === null ? [slotMismatch(topic.topicRef)] : [],
     ),
@@ -300,7 +291,6 @@ export function applyKitRepair(
         ? [slotMismatch(question.questionId)]
         : checkQuestionShape(question, current);
     }),
-    ...repair.workedExampleList.flatMap(checkExampleShape),
   ];
   if (shapeIssueList.length > 0) return err(shapeIssueList);
 

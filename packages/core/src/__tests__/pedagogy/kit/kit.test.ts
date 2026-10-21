@@ -182,6 +182,22 @@ describe("kitContentSchema por disciplina (spec pedagógica §7.1)", () => {
       },
     ],
     [
+      "exemplo de Português com evidenceQuote",
+      "portuguese",
+      (content) => {
+        const example = listAt(content, "workedExampleList")[0];
+        if (example) at(example, "answer").evidenceQuote = "um trecho do exemplo";
+      },
+    ],
+    [
+      "exemplo de Português com correctOptionLabel",
+      "portuguese",
+      (content) => {
+        const example = listAt(content, "workedExampleList")[1];
+        if (example) at(example, "answer").correctOptionLabel = "B";
+      },
+    ],
+    [
       "expectedAnswer com chave a mais",
       "math",
       (content) => {
@@ -222,6 +238,18 @@ describe("kitContentSchema por disciplina (spec pedagógica §7.1)", () => {
   ])("recusa %s", (_, subject, edit) => {
     expect(isContentValid(subject, editContent(subject, edit))).toBe(false);
   });
+
+  it.each<Subject>(["math", "portuguese"])(
+    "o JSON Schema de %s diz ao modelo que o exemplo não tem alternativa correta nem citação",
+    (subject) => {
+      const schemaText = JSON.stringify(z.toJSONSchema(kitContentSchemaBySubject[subject]));
+      const jsonSchema = JSON.parse(schemaText);
+      const answerProperties =
+        jsonSchema.properties.workedExampleList.items.properties.answer.properties;
+      expect(answerProperties.correctOptionLabel).toEqual({ type: "null" });
+      expect(answerProperties.evidenceQuote).toEqual({ type: "null" });
+    },
+  );
 });
 
 describe("studyKitSchema (spec pedagógica §7.2)", () => {
@@ -421,14 +449,6 @@ describe("composeStudyKit (spec pedagógica §7.3)", () => {
       (content) => {
         const question = listAt(content, "practiceQuestionList")[5];
         if (question) at(question, "answer").evidenceQuote = "um trecho do nada";
-      },
-    ],
-    [
-      "exemplo com citação",
-      "portuguese",
-      (content) => {
-        const example = listAt(content, "workedExampleList")[0];
-        if (example) at(example, "answer").evidenceQuote = "um trecho do nada";
       },
     ],
   ])("kit_slot_mismatch: %s", (_, subject, edit) => {

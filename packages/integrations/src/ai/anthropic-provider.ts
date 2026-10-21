@@ -17,6 +17,7 @@ import type { z } from "zod";
 import { reduceImage } from "#src/ai/image.ts";
 import { toOutputJsonSchema } from "#src/ai/output-schema.ts";
 import { findModelPrice, type ModelPrice, usageOf } from "#src/ai/pricing.ts";
+import { fetchWithoutIdleTimeout } from "#src/ai/runtime-fetch.ts";
 import type { Logger } from "#src/logger.ts";
 
 export const ANTHROPIC_API_BASE_URL = "https://api.anthropic.com";
@@ -266,7 +267,7 @@ export function createAnthropicProvider(config: AnthropicProviderConfig): AiProv
       openTelemetry: false,
       timeout: config.timeoutMs ?? DEFAULT_AI_TIMEOUT_MS,
       maxRetries: config.maxRetries ?? DEFAULT_AI_MAX_RETRIES,
-      fetch: config.fetch,
+      fetch: config.fetch ?? fetchWithoutIdleTimeout,
     }),
     now: config.now ?? (() => performance.now()),
     logger: config.logger,

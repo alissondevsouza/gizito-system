@@ -57,10 +57,11 @@ flowchart TD
   J --> K[publishKit: kit + kit_published → ready + order.notify kit_ready]
 ```
 
-- Cada chamada de IA grava uma linha em `ai_call`; o custo acumulado do pedido é comparado a `MAX_AI_COST_CENTS_PER_ORDER` antes de cada chamada; exceder é falha segura.
+- Cada chamada de IA grava uma linha em `ai_call`; o pipeline (`generateKit`, F1-07) entrega cada registro ao handler logo depois da chamada (`onAiCall`), para o custo de uma chamada paga ficar gravado mesmo se algo falhar depois. O custo acumulado do pedido (extração, tentativas anteriores do job e as chamadas da execução) é comparado a `MAX_AI_COST_CENTS_PER_ORDER` antes de cada chamada; igual ou acima, a chamada não acontece e o pedido falha com `ai_cost_exceeded`. Como a conferência é antes da chamada, o custo final pode passar do teto em uma chamada.
 - Uma regeneração automática no total (`MAX_REGENERATION_COUNT = 1`), seja por saída inválida, por bloqueador no plano ou na validação ou por bloqueador da revisão; nenhuma delas é transitória nem entra no retry da fila. O código mais forte decide o reparo: plano e kit, kit inteiro ou só os itens marcados (spec pedagógica §10). O "outro" inviável e os códigos de defesa da alocação falham sem regenerar. Saída inválida da revisão ganha uma nova chamada de revisão, que não gasta a regeneração. O render tem uma segunda tentativa própria (timeout do Playwright é comum e barato de repetir).
 - O handler tem três ramos pelo status: `paid` → `generation_started` e segue; `processing` (worker caiu no meio) → segue do `plan` sem transição, com o custo já gasto contando no teto; qualquer outro → no-op com log `info`.
-- O handler respeita `signal` (desligamento, teto de execução ou lease perdido): interrompe a etapa em curso e devolve falha transitória, sem publicar nada parcial.
+- O handler respeita `signal` (desligamento, teto de execução ou lease perdido): interrompe a etapa em curso e devolve falha transitória (`ai_aborted`), sem publicar nada parcial.
+- A regeneração é contada por execução do pipeline: a reexecução do job depois de falha transitória refaz o pedido do zero com a regeneração disponível, e o teto de custo limita o total. O reparo por item que veio da validação termina com revisão completa, porque o kit ainda não foi revisado (spec pedagógica 1.4 §10).
 - `onExhausted` de `order.generate`: com o pedido em `paid` ou `processing`, `generation_failed` com o código do job em `fail_reason_code` e `order.notify` `kit_failed`, na transação do `failed`; qualquer outro estado é no-op.
 
 ## 3. Idempotência e transações
@@ -119,3 +120,4 @@ flowchart TD
 - **1.2 (2026-10-16):** F0-07: raias de concorrência, agendador só do que o worker consome, manutenção de locks a cada 60 s, log por job, `payload_invalid` em log `error`, `/health` com métricas da fila e desligamento por sinal.
 - **1.3 (2026-10-19):** revisão da F0 e ADR-0009: lease de 2 min renovado a cada 30 s, teto de 15 min por execução, sinal para o handler, liberação sem gastar tentativa no desligamento, código de erro inválido sem travar o job, compensação atômica por `onExhausted`, manutenção a cada 30 s; `charge.reconcile` com `webhookEventId` e 2 vagas; `order.analyze` em raia própria.
 - **1.4 (2026-10-19):** F1-02 e ADR-0010: alocação das vagas no core antes do `plan`, `validateKitPlan`, composição do kit, revisão com severidade pelo código, regeneração por reparo (plano, kit ou itens), nova chamada de revisão sem gastar a regeneração e `fail_reason_code` `other_topic_unfeasible`.
+- **1.5 (2026-10-21):** F1-07: registro de cada chamada pelo `onAiCall`, teto conferido antes da chamada com o custo já gasto, `ai_aborted` no sinal, regeneração por execução e revisão completa depois do reparo por item vindo da validação.

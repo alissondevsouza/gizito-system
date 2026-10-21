@@ -76,28 +76,32 @@ const portugueseOptionListSchema = z
   .length(MULTIPLE_CHOICE_OPTION_COUNT)
   .refine(hasOrderedLabelList, orderedLabelMessage);
 
-export const mathSolutionSchema = z
-  .strictObject({
-    correctOptionLabel: optionLabelSchema.nullable(),
-    expectedAnswer: expectedAnswerSchema,
-    computable: z.boolean(),
-    calculationExpression: z.string().trim().min(1).max(200).nullable(),
-    solutionStepList: stepListSchema(1, 6),
-    explanation: explanationSchema,
-    evidenceQuote: z.null(),
-  })
-  .refine((solution) => solution.computable === (solution.calculationExpression !== null), {
-    message: "calculationExpression is required exactly when computable",
-    path: ["calculationExpression"],
-  })
-  .refine(
-    (solution) =>
-      !solution.computable || COMPUTABLE_ANSWER_KIND_LIST.includes(solution.expectedAnswer.kind),
-    { message: "a computable answer is a number, fraction or expression", path: ["computable"] },
-  );
+function mathSolutionSchemaOf<T extends z.ZodType<OptionLabel | null>>(correctOptionLabel: T) {
+  return z
+    .strictObject({
+      correctOptionLabel,
+      expectedAnswer: expectedAnswerSchema,
+      computable: z.boolean(),
+      calculationExpression: z.string().trim().min(1).max(200).nullable(),
+      solutionStepList: stepListSchema(1, 6),
+      explanation: explanationSchema,
+      evidenceQuote: z.null(),
+    })
+    .refine((solution) => solution.computable === (solution.calculationExpression !== null), {
+      message: "calculationExpression is required exactly when computable",
+      path: ["calculationExpression"],
+    })
+    .refine(
+      (solution) =>
+        !solution.computable || COMPUTABLE_ANSWER_KIND_LIST.includes(solution.expectedAnswer.kind),
+      { message: "a computable answer is a number, fraction or expression", path: ["computable"] },
+    );
+}
+
+export const mathSolutionSchema = mathSolutionSchemaOf(optionLabelSchema.nullable());
 export type MathSolution = z.infer<typeof mathSolutionSchema>;
 
-export const portugueseSolutionSchema = z.strictObject({
+const portugueseSolutionShape = {
   correctOptionLabel: optionLabelSchema.nullable(),
   expectedAnswer: textAnswerSchema,
   computable: z.literal(false),
@@ -105,7 +109,9 @@ export const portugueseSolutionSchema = z.strictObject({
   solutionStepList: stepListSchema(0, 4),
   explanation: explanationSchema,
   evidenceQuote: z.string().trim().min(3).max(240).nullable(),
-});
+};
+
+export const portugueseSolutionSchema = z.strictObject(portugueseSolutionShape);
 export type PortugueseSolution = z.infer<typeof portugueseSolutionSchema>;
 
 type QuestionCoherenceInput = {
@@ -161,26 +167,21 @@ const workedExampleShape = {
   commentary: kitTextSchema(10, 300),
 };
 
-const exampleHasNoOptionMessage = {
-  message: "a worked example has no correct option",
-  path: ["answer", "correctOptionLabel"],
+const mathWorkedExampleShape = {
+  ...workedExampleShape,
+  answer: mathSolutionSchemaOf(z.null()),
+};
+const portugueseWorkedExampleShape = {
+  ...workedExampleShape,
+  answer: z.strictObject({
+    ...portugueseSolutionShape,
+    correctOptionLabel: z.null(),
+    evidenceQuote: z.null(),
+  }),
 };
 
-function hasNoCorrectOption(example: {
-  readonly answer: { readonly correctOptionLabel: OptionLabel | null };
-}): boolean {
-  return example.answer.correctOptionLabel === null;
-}
-
-const mathWorkedExampleShape = { ...workedExampleShape, answer: mathSolutionSchema };
-const portugueseWorkedExampleShape = { ...workedExampleShape, answer: portugueseSolutionSchema };
-
-const mathWorkedExampleSchema = z
-  .strictObject(mathWorkedExampleShape)
-  .refine(hasNoCorrectOption, exampleHasNoOptionMessage);
-const portugueseWorkedExampleSchema = z
-  .strictObject(portugueseWorkedExampleShape)
-  .refine(hasNoCorrectOption, exampleHasNoOptionMessage);
+const mathWorkedExampleSchema = z.strictObject(mathWorkedExampleShape);
+const portugueseWorkedExampleSchema = z.strictObject(portugueseWorkedExampleShape);
 
 const mathPracticeQuestionSchema = z
   .strictObject({ questionId: practiceQuestionIdSchema, ...mathQuestionShape })
@@ -362,11 +363,7 @@ export const mathStudyKitSchema = z
     subject: z.literal("math"),
     ...studyKitCommonShape,
     workedExampleList: z
-      .array(
-        z
-          .strictObject({ ...mathWorkedExampleShape, topicRef: topicRefSchema })
-          .refine(hasNoCorrectOption, exampleHasNoOptionMessage),
-      )
+      .array(z.strictObject({ ...mathWorkedExampleShape, topicRef: topicRefSchema }))
       .length(WORKED_EXAMPLE_COUNT),
     practiceQuestionList: z.array(mathStudyQuestionSchema).length(PRACTICE_QUESTION_COUNT),
     mockQuestionList: z.array(mathStudyQuestionSchema).length(MOCK_QUESTION_COUNT),
@@ -379,11 +376,7 @@ export const portugueseStudyKitSchema = z
     subject: z.literal("portuguese"),
     ...studyKitCommonShape,
     workedExampleList: z
-      .array(
-        z
-          .strictObject({ ...portugueseWorkedExampleShape, topicRef: topicRefSchema })
-          .refine(hasNoCorrectOption, exampleHasNoOptionMessage),
-      )
+      .array(z.strictObject({ ...portugueseWorkedExampleShape, topicRef: topicRefSchema }))
       .length(WORKED_EXAMPLE_COUNT),
     practiceQuestionList: z.array(portugueseStudyQuestionSchema).length(PRACTICE_QUESTION_COUNT),
     mockQuestionList: z.array(portugueseStudyQuestionSchema).length(MOCK_QUESTION_COUNT),
