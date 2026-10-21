@@ -2,7 +2,7 @@
 feature: cli-do-pipeline
 module: worker
 size: M
-status: in_progress
+status: done
 branch: feat/worker/cli-do-pipeline
 updated: 2026-10-21
 ---
@@ -110,4 +110,4 @@ Riscos: Chromium ausente na máquina vira `render_failed` com `errorName`. O uso
 
 ## Status
 
-Implementação, execução real e revisão neutra concluídas (aprovada na rodada 1; alertas corrigidos, ver `review.md`). Execução real: Matemática 5º ano (US$ 0,37, 3 min 19 s, 11 + 5 páginas) e Português 6º ano (US$ 0,41, 3 min 42 s, 10 + 4 páginas), ambos prontos na primeira tentativa. Pendente do humano: abrir os PDFs de `tests/pedagogy/output/pipeline/f1-09-live-*/` e aprovar; depois, `[x]` no roadmap com o hash do merge.
+Feita e aprovada. Revisão neutra aprovada na rodada 1, sem CRÍTICO, com os alertas corrigidos (`review.md`). Execução real: Matemática 5º ano (US$ 0,37, 3 min 19 s, 11 + 5 páginas) e Português 6º ano (US$ 0,41, 3 min 42 s, 10 + 4 páginas), ambos prontos na primeira tentativa. O humano aprovou os PDFs dos dois kits em 21/10/2026; F1-09 `[x]` no roadmap. Merge e push são do humano.
