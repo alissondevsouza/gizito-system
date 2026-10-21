@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 7 | 0 | 4 |
+| F1 Prova técnica e pedagógica | 11 | 8 | 0 | 3 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -188,9 +188,14 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
     - Você aprovou, em 21/10/2026, a precisão 1.4 do §10 da spec pedagógica (§15.9) e a frase do `generate` v1 sobre equação.
     - Revisão neutra aprovada na rodada 1, com 3 alertas e 3 sugestões corrigidos ou registrados.
     - Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-08 `render-pdf`** — worker · M · depende: F1-03
+- [x] **F1-08 `render-pdf`** — worker · M · depende: F1-03 · 21/10/2026 · `986ea36` · `specs/worker/render-pdf/`
   - Entrega: templates HTML do caderno de atividades e do gabarito, KaTeX no servidor, Playwright, verificação de páginas e presença das 20 questões; imagem do worker com Chromium
   - Pronto quando: PDFs abrem no celular e imprimem; frações legíveis; teste de integração do render
+  - Concluída em: 21/10/2026.
+    - Entregou o `renderKit` e o `createPdfRenderer` em `apps/worker/src/render/`: templates `kit-v1` do caderno e do gabarito, texto do kit sempre escapado e só a marcação pelo KaTeX no servidor, Nunito Sans e mascote embutidos, conferência no DOM dos 22 itens do caderno e das 20 respostas, contagem de páginas com aviso fora da faixa, uma segunda tentativa, `RENDER_CONCURRENCY`, o script `render:kit` e a imagem do worker com Chromium (`apps/worker/Dockerfile`).
+    - Pronto quando: os 10 kits reais da F1-07 renderizam com atividades em 10–11 páginas e gabarito em 5–6; você abriu os PDFs no celular e no computador e os imprimiu, com ótima qualidade (21/10/2026).
+    - Revisão neutra aprovada na rodada 1, com 4 alertas e 3 sugestões corrigidos e o restante contestado no `review.md`.
+    - Não toca prompt, modelo, taxonomia nem validador (sem `bun run test:pedagogy`)
 - [ ] **F1-09 `cli-do-pipeline`** — worker · P · depende: F1-06, F1-07, F1-08
   - Entrega: `bun run pipeline --photos ... --grade ... --subject ...` gera `study_kit.json`, os dois PDFs e um resumo de custo e tempo
   - Pronto quando: você gera um kit de um caderno de teste com um comando
