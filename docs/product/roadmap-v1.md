@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 8 | 0 | 3 |
+| F1 Prova técnica e pedagógica | 11 | 9 | 0 | 2 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -141,7 +141,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 7 de 11 concluídas
+**Estado:** em andamento · 9 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -196,9 +196,16 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
     - Pronto quando: os 10 kits reais da F1-07 renderizam com atividades em 10–11 páginas e gabarito em 5–6; você abriu os PDFs no celular e no computador e os imprimiu, com ótima qualidade (21/10/2026). Depois disso, você escolheu a capa curta do gabarito na primeira página, com as respostas logo abaixo, e o gabarito passou a 4–5 páginas. Por fim, o logo aprovado entrou nas capas e no cabeçalho, e você aprovou os PDFs com ele (21/10/2026).
     - Revisão neutra aprovada na rodada 1, com 4 alertas e 3 sugestões corrigidos e o restante contestado no `review.md`.
     - Não toca prompt, modelo, taxonomia nem validador (sem `bun run test:pedagogy`)
-- [ ] **F1-09 `cli-do-pipeline`** — worker · P · depende: F1-06, F1-07, F1-08
+- [x] **F1-09 `cli-do-pipeline`** — worker · M · depende: F1-06, F1-07, F1-08 · 21/10/2026 · `feat/worker/cli-do-pipeline` · `specs/worker/cli-do-pipeline/`
   - Entrega: `bun run pipeline --photos ... --grade ... --subject ...` gera `study_kit.json`, os dois PDFs e um resumo de custo e tempo
   - Pronto quando: você gera um kit de um caderno de teste com um comando
+  - Concluída em: 21/10/2026.
+    - Entregou o `runPipeline` em `apps/worker/src/pipeline/run-pipeline.ts`, que a F1-10 reaproveita: extração por foto, decisão da prévia, confirmação, `generateKit` e `renderKit`, sem banco nem fila. Diz em que etapa o pedido parou e com que código. Cada etapa-job (análise e geração) tem o seu `AbortSignal.timeout(JOB_MAX_RUN_SECONDS * 1000)`, e o custo da extração entra no teto da geração.
+    - Entregou o comando `bun run pipeline` na raiz. A entrada é validada antes de qualquer chamada de IA: fotos, ano, disciplina, `--topics`, `--other`, `--difficulty` e `--note`. Sem `--topics`, entram os candidatos de confiança alta da prévia. A saída tem `study_kit.json`, os dois PDFs, `summary.json` e um resumo em pt-BR, sem conteúdo do material nem do pedido.
+    - Pronto quando: duas execuções reais em 21/10/2026, cada uma com um comando e uma imagem de caderno de teste, deram kit pronto na primeira tentativa:
+      - Matemática do 5º ano, com a confirmação padrão: US$ 0,37, 3 min 19 s, atividades com 11 páginas e gabarito com 5;
+      - Português do 6º ano, com `--difficulty basic`: US$ 0,41, 3 min 42 s, atividades com 10 páginas e gabarito com 4.
+    - Não toca prompt, modelo, taxonomia nem validador (sem `bun run test:pedagogy`)
 - [ ] **F1-10 `regressao-pedagogica`** — pedagogy, tests · M · depende: F1-09
   - Entrega: formato de caso, runner `bun run test:pedagogy`, relatório por caso; 35 casos rodados (30 imagens geradas por IA e 5 variações delas, spec pedagógica §13.1); defeitos corrigidos viram casos
   - Pronto quando: zero bloqueador crítico inesperado; relatório gravado em `docs/pedagogy/`

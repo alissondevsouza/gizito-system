@@ -39,6 +39,7 @@ bun run test                             # unit do monorepo (bun test no backend
 bun run test:integration                 # dentro do workspace; Postgres real via Docker
 bun run test:pedagogy                    # raiz; 35 casos; exige chave de IA; fora do CI
 bun run --cwd packages/integrations test:ai-live  # contrato real do AiProvider; lê o .env da raiz; custa centavos; fora do CI
+bun run pipeline --photos <foto>... --grade 5 --subject math  # raiz; fotos → study_kit.json, dois PDFs e resumo; exige chave de IA; ~US$ 0,40 por kit
 bun run db:generate --filter=@gizito/db  # migration
 bun run db:migrate --filter=@gizito/db
 docker compose up -d | down              # Postgres, Redis, Evolution API

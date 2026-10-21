@@ -94,8 +94,8 @@ Riscos: Chromium ausente na máquina vira `render_failed` com `errorName`. O uso
 - [x] 2.4 `bun run lint`, `bun run typecheck`, `bun run test`
 
 ### M3 — Execução real e docs
-- [ ] 3.1 Execução real com uma imagem de Matemática e uma de Português (RF-09)
-- [ ] 3.2 `CLAUDE.md` (comando), `known-issues.md` (parte da F1-09 da dívida do `signal`), roadmap (F1-09 `[x]` e contagem da §4)
+- [x] 3.1 Execução real com uma imagem de Matemática e uma de Português (RF-09)
+- [x] 3.2 `CLAUDE.md` (comando), `known-issues.md` (parte da F1-09 da dívida do `signal`), roadmap (F1-09 `[x]` e contagem da §4)
 
 ## Decisões
 
@@ -108,4 +108,4 @@ Riscos: Chromium ausente na máquina vira `render_failed` com `errorName`. O uso
 
 ## Status
 
-M1 e M2 concluídos. M3 em andamento: execução real e docs.
+M1, M2 e M3 concluídos. Execução real: Matemática 5º ano (US$ 0,37, 3 min 19 s, 11 + 5 páginas) e Português 6º ano (US$ 0,41, 3 min 42 s, 10 + 4 páginas), ambos prontos na primeira tentativa. Próximo passo: revisão neutra. Pendente do humano: abrir os PDFs de `tests/pedagogy/output/pipeline/f1-09-live-*/`.
