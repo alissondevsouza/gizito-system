@@ -4,6 +4,7 @@ import type { StudyKit } from "#src/pedagogy/kit/schemas.ts";
 import type { KitItemId, TopicRef } from "#src/pedagogy/kit-item.ts";
 import {
   type ValidationIssue,
+  type ValidationIssueCode,
   type ValidationRepair,
   validationIssueRuleMap,
 } from "#src/pedagogy/validation/issue.ts";
@@ -23,6 +24,20 @@ export type RepairFailReasonCode = Extract<
 >;
 
 export type RepairItemId = KitItemId | TopicRef;
+
+const outputInvalidIssueCodeList: readonly ValidationIssueCode[] = [
+  "plan_output_invalid",
+  "kit_output_invalid",
+];
+
+export function failReasonAfterRegeneration(
+  issueList: readonly ValidationIssue[],
+): Extract<GenerationFailReasonCode, "ai_output_invalid" | "generation_blocked"> {
+  const isOutputInvalid = issueList.some(
+    (issue) => issue.severity === "blocker" && outputInvalidIssueCodeList.includes(issue.code),
+  );
+  return isOutputInvalid ? "ai_output_invalid" : "generation_blocked";
+}
 
 export type RepairDecision =
   | { readonly repair: "none"; readonly failReasonCode: RepairFailReasonCode }

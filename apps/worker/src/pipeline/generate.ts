@@ -6,6 +6,7 @@ import {
   composeStudyKit,
   decideRepair,
   err,
+  failReasonAfterRegeneration,
   type GenerationFailReasonCode,
   type Grade,
   interpretReview,
@@ -150,8 +151,6 @@ type AiStepResult<T> =
   | { readonly kind: "output"; readonly output: T }
   | { readonly kind: "invalid_output" }
   | { readonly kind: "failed"; readonly failure: StepFailure };
-
-const outputInvalidIssueCodeList: readonly string[] = ["plan_output_invalid", "kit_output_invalid"];
 
 function stepFailed(code: GenerationFailureCode, isRetryable: boolean) {
   return { kind: "failed", failure: { code, isRetryable } } as const;
@@ -342,7 +341,7 @@ async function checkAndReview(
       : partialReview.previous.issueList.filter(
           (issue) => issue.itemId === null || !partialReview.itemIdList.includes(issue.itemId),
         );
-  const reviewIssueList = [...keptIssueList, ...reviewed.value];
+  const reviewIssueList = uniqueByCodeAndItem([...keptIssueList, ...reviewed.value]);
   state.review = { issueList: reviewIssueList };
   const issueList = [...validationIssueList, ...reviewIssueList];
   return hasBlocker(issueList)
@@ -444,10 +443,7 @@ export async function generateKit(
     if (decision === null) throw new Error("tentativa bloqueada sem bloqueador");
     if (decision.repair === "none") return failWith(decision.failReasonCode, false);
     if (regenerationLeft === 0) {
-      const isOutputInvalid = outcome.issueList.some(
-        (issue) => issue.severity === "blocker" && outputInvalidIssueCodeList.includes(issue.code),
-      );
-      return failWith(isOutputInvalid ? "ai_output_invalid" : "generation_blocked", false);
+      return failWith(failReasonAfterRegeneration(outcome.issueList), false);
     }
     regenerationLeft -= 1;
     pending = decision;

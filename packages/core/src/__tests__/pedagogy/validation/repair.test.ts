@@ -5,7 +5,11 @@ import {
 } from "#src/__tests__/__fixtures__/kit-content.ts";
 import { practiceQuestionIdList } from "#src/pedagogy/kit-item.ts";
 import { createValidationIssue } from "#src/pedagogy/validation/issue.ts";
-import { decideRepair, generationFailReasonCodeList } from "#src/pedagogy/validation/repair.ts";
+import {
+  decideRepair,
+  failReasonAfterRegeneration,
+  generationFailReasonCodeList,
+} from "#src/pedagogy/validation/repair.ts";
 
 const math = buildMathFixture();
 const portuguese = buildPortugueseFixture();
@@ -19,6 +23,23 @@ describe("generationFailReasonCodeList (jobs.md §4)", () => {
       "ai_cost_exceeded",
       "render_failed",
     ]);
+  });
+});
+
+describe("failReasonAfterRegeneration (jobs.md §4)", () => {
+  it("saída inválida entre os bloqueadores dá ai_output_invalid; o resto, generation_blocked", () => {
+    expect(failReasonAfterRegeneration([createValidationIssue("kit_output_invalid")])).toBe(
+      "ai_output_invalid",
+    );
+    expect(
+      failReasonAfterRegeneration([
+        createValidationIssue("plan_output_invalid"),
+        createValidationIssue("review_off_topic", { itemId: "p1" }),
+      ]),
+    ).toBe("ai_output_invalid");
+    expect(
+      failReasonAfterRegeneration([createValidationIssue("review_off_topic", { itemId: "p1" })]),
+    ).toBe("generation_blocked");
   });
 });
 

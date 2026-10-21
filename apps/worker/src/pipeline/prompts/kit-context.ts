@@ -7,8 +7,8 @@ import {
   OTHER_TOPIC_REF,
   type PerceivedDifficulty,
   perceivedDifficultyLabelMap,
-  type QuestionType,
   questionBlockLabelMap,
+  questionTypeLabelMap,
   type TopicRef,
   topicValidationRuleDescriptionMap,
 } from "@gizito/core";
@@ -19,11 +19,6 @@ export const OTHER_TOPIC_PLAN_REFERENCE = "ver <assunto_outro>";
 const WORKED_EXAMPLE_LABEL = "exemplo";
 const EMPTY_PREREQUISITE_TEXT = "nenhum";
 const EMPTY_RULE_TEXT = "nenhuma";
-
-const questionTypeLabelMap: Readonly<Record<QuestionType, string>> = {
-  multiple_choice: "múltipla escolha",
-  open_answer: "resposta aberta",
-};
 
 export class UnknownTopicRefError extends Error {
   constructor(readonly topicRef: string) {

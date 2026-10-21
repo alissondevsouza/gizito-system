@@ -2,7 +2,7 @@
 feature: pipeline-geracao
 module: worker
 size: L
-status: in_progress
+status: done
 branch: feat/worker/pipeline-geracao
 updated: 2026-10-21
 ---
@@ -80,7 +80,7 @@ As etapas de IA do `order.generate` depois do Pix (spec pedagógica §1 linhas 3
 - [x] 4.1 `test:generate-live` com 10 casos contra a API; teto definido pelo custo medido (RF-10) · Arquivos: `apps/worker/src/__tests__/pipeline/{generate-live.test.ts,__fixtures__/generation-cases.ts}`, `apps/worker/package.json`, `packages/core/src/constants.ts` · Verificação: `bun run --cwd apps/worker test:generate-live`
 - [x] 4.2 `bun run test:pedagogy`: não existe até a F1-10; registrar no known-issues (entrada da regressão) que `plan`, `generate` e `review` v1 e o validador `checkMathMarkup` entraram sem ela
 - [x] 4.3 Docs: spec pedagógica 1.4 (revisão completa depois do reparo vindo da validação), `jobs.md` (teto citando a constante, sem repetir o número), known-issues (incidente da conta → F2-05, chamada interrompida com a margem do teto), roadmap · Verificação: leitura
-- [ ] 4.4 Revisão neutra, `review.md`
+- [x] 4.4 Revisão neutra, `review.md`
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -100,13 +100,11 @@ As etapas de IA do `order.generate` depois do Pix (spec pedagógica §1 linhas 3
 | 2026-10-21 | `generate` v1, antes de publicar: "o cálculo nunca tem sinal de igual; numa equação, é a conta que isola a incógnita, e a solução vai como `number`" (pendente de aprovação do humano) | No live, o modelo escreveu a equação como cálculo (`3*x + 4 = 22`) em 2 de 4 kits de equações; o avaliador recusa a igualdade, e cada ocorrência gasta a regeneração. Mesmo caminho da mudança da F1-04 no v1 (`prompts-v1.md`, histórico) |
 
 ## Status
-M1 a M4.3 feitos em 21/10/2026, com a suíte do monorepo verde. O pronto quando (RF-10) foi cumprido: na rodada final do `test:generate-live`, 10 de 10 kits saíram sem bloqueador, 3 deles com regeneração por item. As duas rodadas anteriores acharam três defeitos, corrigidos nesta branch:
+Pronta para o humano em 21/10/2026: M1 a M4 feitos, com a suíte do monorepo verde. O pronto quando (RF-10) foi cumprido: na rodada final do `test:generate-live`, 10 de 10 kits saíram sem bloqueador, 3 deles com regeneração por item. A revisão neutra aprovou na rodada 1, com 3 ALERTAs e 3 sugestões, todos corrigidos ou registrados (`review.md`). As rodadas anteriores do live acharam três defeitos, corrigidos nesta branch:
 - `fetch` do Bun cortando a resposta aos 300 s sem dado;
 - exemplo resolvido com letra ou citação, regra que o modelo não via no JSON Schema;
 - equação escrita como cálculo no `generate` v1.
 
 Pendências para o humano:
-- aprovar a precisão 1.4 do §10 da spec pedagógica;
-- aprovar a frase nova do `generate` v1 sobre equação.
-
-Próximo passo: revisão neutra (4.4).
+- aprovar a precisão 1.4 do §10 da spec pedagógica (revisão completa depois do reparo por item que veio da validação);
+- aprovar a frase nova do `generate` v1 sobre equação (`prompts-v1.md`, histórico).

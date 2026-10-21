@@ -1,5 +1,10 @@
 import { expect, it } from "bun:test";
-import { difficultyList, perceivedDifficultyList, questionBlockList } from "#src/enums.ts";
+import {
+  difficultyList,
+  perceivedDifficultyList,
+  questionBlockList,
+  questionTypeList,
+} from "#src/enums.ts";
 import { exerciseFormatList, notationList } from "#src/pedagogy/extraction/schemas.ts";
 import {
   difficultyLabelMap,
@@ -8,6 +13,7 @@ import {
   notationLabelMap,
   perceivedDifficultyLabelMap,
   questionBlockLabelMap,
+  questionTypeLabelMap,
 } from "#src/pedagogy/labels.ts";
 
 it("rótulos pt-BR cobrem todos os valores dos enums", () => {
@@ -17,6 +23,7 @@ it("rótulos pt-BR cobrem todos os valores dos enums", () => {
     [difficultyList, difficultyLabelMap],
     [perceivedDifficultyList, perceivedDifficultyLabelMap],
     [questionBlockList, questionBlockLabelMap],
+    [questionTypeList, questionTypeLabelMap],
   ];
   for (const [valueList, labelMap] of pairList) {
     expect(Object.keys(labelMap).sort()).toEqual([...valueList].sort());
@@ -39,4 +46,8 @@ it("rótulos do bloco “O que entendi” e dos placeholders seguem o design doc
     unknown: "não informada",
   });
   expect(questionBlockLabelMap).toEqual({ practice: "fixação", mock: "simulado" });
+  expect(questionTypeLabelMap).toEqual({
+    multiple_choice: "múltipla escolha",
+    open_answer: "resposta aberta",
+  });
 });

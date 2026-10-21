@@ -206,6 +206,33 @@ describe("generateKit regenera pelo código mais forte (spec F1-07, RF-04)", () 
     expect(reviewedItemIdListOf(review.request)).toEqual(fullReviewItemIdList);
   });
 
+  it("aviso do kit marcado de novo na revisão parcial sai uma vez só", async () => {
+    const fixture = fixtureOf("math");
+    const aiProvider = createFixtureAiProvider(fixture);
+    const styleIssue = {
+      code: "style_mismatch" as const,
+      targetId: null,
+      note: "o kit destoa do caderno",
+    };
+    const firstReview = reviewWithIssueOf(
+      fixture.studyKit,
+      [{ itemId: "p3", code: "answer_incorrect" }],
+      [styleIssue],
+    );
+    aiProvider.enqueueOutput("review", firstReview);
+    aiProvider.enqueueOutput("review", {
+      itemReviewList: reviewWithIssueOf(fixture.studyKit, []).itemReviewList.filter(
+        (review) => review.itemId === "p3",
+      ),
+      kitIssueList: [styleIssue],
+    });
+    const result = await generateKit(requestOf("math"), dependenciesOf(aiProvider, fixture));
+    if (!result.ok) throw new Error(`falhou com ${result.error.code}`);
+    expect(codeListOf(result.value.studyKit.qualityCheckList)).toEqual([
+      "review_kit_style_mismatch",
+    ]);
+  });
+
   it("texto-base marcado leva junto as questões que o citam, no reparo e na revisão", async () => {
     const fixture = fixtureOf("portuguese");
     const aiProvider = createFixtureAiProvider(fixture);
@@ -309,6 +336,27 @@ describe("generateKit regenera pelo código mais forte (spec F1-07, RF-04)", () 
 });
 
 describe("generateKit com revisão inválida (spec F1-07, RF-05)", () => {
+  it("a nova chamada vale também na revisão depois do reparo por item", async () => {
+    const fixture = fixtureOf("math");
+    const aiProvider = createFixtureAiProvider(fixture);
+    aiProvider.enqueueOutput(
+      "review",
+      reviewWithIssueOf(fixture.studyKit, [{ itemId: "p3", code: "answer_incorrect" }]),
+    );
+    aiProvider.enqueueFailure("review", "ai_output_invalid");
+    const result = await generateKit(requestOf("math"), dependenciesOf(aiProvider, fixture));
+    if (!result.ok) throw new Error(`falhou com ${result.error.code}`);
+    expect(stageListOf(aiProvider)).toEqual([
+      "plan",
+      "generate",
+      "review",
+      "generate",
+      "review",
+      "review",
+    ]);
+    expect(result.value.attemptList.map((attempt) => attempt.repair)).toEqual(["initial", "item"]);
+  });
+
   it("uma nova chamada de revisão não gasta a regeneração", async () => {
     const fixture = fixtureOf("math");
     const aiProvider = createFixtureAiProvider(fixture);
@@ -354,6 +402,25 @@ describe("generateKit interrompido (spec F1-07, RF-06)", () => {
     if (result.ok) throw new Error("deveria falhar");
     expect([result.error.code, result.error.isRetryable]).toEqual(["ai_aborted", true]);
     expect(aiProvider.requestList).toEqual([]);
+  });
+
+  it("o sinal vai em toda requisição ao provedor", async () => {
+    const fixture = fixtureOf("math");
+    const aiProvider = createFixtureAiProvider(fixture);
+    const controller = new AbortController();
+    aiProvider.enqueueOutput(
+      "review",
+      reviewWithIssueOf(fixture.studyKit, [{ itemId: "p3", code: "answer_incorrect" }]),
+    );
+    const result = await generateKit(
+      requestOf("math"),
+      dependenciesOf(aiProvider, fixture, { signal: controller.signal }),
+    );
+    expect(result.ok).toBe(true);
+    expect(aiProvider.requestList).toHaveLength(5);
+    expect(
+      aiProvider.requestList.every((record) => record.request.signal === controller.signal),
+    ).toBe(true);
   });
 
   it("sinal abortado depois do plano para antes do generate", async () => {

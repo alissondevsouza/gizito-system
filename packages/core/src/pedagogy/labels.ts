@@ -1,4 +1,4 @@
-import type { Difficulty, PerceivedDifficulty, QuestionBlock } from "#src/enums.ts";
+import type { Difficulty, PerceivedDifficulty, QuestionBlock, QuestionType } from "#src/enums.ts";
 import type { ExerciseFormat, Notation } from "#src/pedagogy/extraction/schemas.ts";
 
 export const exerciseFormatLabelMap: Readonly<Record<ExerciseFormat, string>> = {
@@ -43,4 +43,9 @@ export const perceivedDifficultyLabelMap: Readonly<Record<PerceivedDifficulty, s
 export const questionBlockLabelMap: Readonly<Record<QuestionBlock, string>> = {
   practice: "fixação",
   mock: "simulado",
+};
+
+export const questionTypeLabelMap: Readonly<Record<QuestionType, string>> = {
+  multiple_choice: "múltipla escolha",
+  open_answer: "resposta aberta",
 };
