@@ -1,0 +1,23 @@
+{
+  "phraseListByCase": {
+    "4-math-adicao-subtracao-cortada": ["456 + 289", "738 - 465"],
+    "4-portuguese-pontuacao": ["O cachorro está no quintal", "Maria comprou pão"],
+    "4-portuguese-producao-textual": ["No último sábado", "Meu passeio ao zoológico"],
+    "5-math-divisao-com-outro": ["243 ÷ 3", "125 ÷ 5"],
+    "5-math-fracoes-decimais-perimetro": [
+      "um inteiro e vinte e cinco centésimos",
+      "Calcule o perímetro das figuras"
+    ],
+    "5-portuguese-interpretacao-e-redacao": [
+      "Lucas era um menino que adorava brincar",
+      "Um lugar especial para mim"
+    ],
+    "6-math-angulos": ["abertura formada por duas semirretas", "Desenhe um ângulo de 80"],
+    "6-portuguese-substantivos-formacao": [
+      "dá origem a outras palavras",
+      "mesmo no singular, indica um conjunto"
+    ],
+    "7-math-inteiros-e-fracoes": ["Lembre-se da ordem", "(-5) + 3 = -2"],
+    "7-portuguese-figuras-de-linguagem": ["Meu coração é um tambor", "A cidade não dorme nunca"]
+  }
+}

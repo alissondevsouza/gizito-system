@@ -48,7 +48,11 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
   - `source_warning_missed`;
   - `kit_outcome_mismatch`: o resultado real é `ready`, `failed` ou `not_applicable`, este último quando o pedido parou na análise ou na confirmação; `crashed` sempre falha.
 
-  Há também `personal_data_copied`, para a dívida da F1-06: um texto inventado da variação, sem diferença de maiúsculas, aparece na extração juntada (evidências, perfil). · Aceite: teste unit por código, com o caso que passa e o que falha.
+  Há também duas verificações que não estão no §12.3 e não entram no gate:
+  - `personal_data_copied`, para a dívida da F1-06: um texto inventado da variação aparece nas extrações por foto ou na juntada. Conta o nome inteiro, cada palavra do nome com 4 letras ou mais (palavra inteira, sem diferença de maiúsculas), a escola e os 8 últimos dígitos do telefone, com qualquer separador;
+  - `material_copied`, que vem da F1-06 (transcrição): uma frase de `tests/pedagogy/material-phrases.json` aparece na extração.
+
+  · Aceite: teste unit por código, com o caso que passa e o que falha.
 - **RF-06 — Relatório.** Na saída da rodada (`tests/pedagogy/output/regressao/{runId}/`, fora do git), cada caso fica numa pasta com:
   - `study_kit.json` ou `study_kit.failed.json` e os dois PDFs, como no `bun run pipeline`;
   - `summary.json` (`buildPipelineSummary`);
@@ -140,6 +144,8 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 | 2026-10-21 | Variações: `4-portuguese-pontuacao-desfocada` (sigma 14, a da F1-06) e dado pessoal sobre `4-portuguese-substantivos-comuns-proprios`, `5-portuguese-singular-plural`, `6-math-razao-proporcao` e `7-math-equacoes-porcentagem` | Uma variação de dado pessoal por ano, duas de cada disciplina, em páginas com espaço em branco para as três linhas de texto. As cinco foram conferidas a olho, e a geração repete o mesmo hash na mesma máquina |
 | 2026-10-21 | Câmbio padrão de 6,00 reais por dólar no relatório, com `--usd-brl` para trocar | O custo é gravado em dólar (ADR-0011), e as metas 5 e 6 estão em reais. Um câmbio acima do de mercado deixa a conferência conservadora. O câmbio é parâmetro do relatório, não regra do produto, e não entra no core |
 | 2026-10-21 | As receitas das variações e os textos inventados ficam em `tests/pedagogy/photo-variations.json`, fora do `case.json` | O `case.json` segue o §12.2 sem campo novo. A receita da variação é dado de preparação, e a verificação `personal_data_copied` lê os textos dela |
+| 2026-10-21 | Revisão neutra, rodada 1: caso quebrado reprova nos critérios 2 e 3; `material_copied` volta, com as frases dos 10 casos da F1-06 em `tests/pedagogy/material-phrases.json`; a busca de dado pessoal casa cada palavra do nome e os 8 últimos dígitos do telefone; erro fora do `runPipeline` vira `crashed` sem derrubar a rodada; o `report.md` ganha custo e tempo por etapa e os avisos da 1ª tentativa | Achados da revisão (`review.md`) |
+| 2026-10-21 | `legibility_mismatch` reprova a foto esperada `good` que não ficou utilizável por qualquer motivo (ilegível, "não é material escolar" ou saída inválida), e não só a marcada `unreadable` | Para o responsável, as três dão a mesma tela de trocar a foto. A regra mais rígida é de propósito |
 | 2026-10-21 | Correções que mudem prompt, modelo, taxonomia, validador ou o texto da spec pedagógica param para o humano antes de entrar | `prompts-v1.md`, `tax-v1` e a spec pedagógica foram aprovados por ele. As dívidas do `known-issues.md` já dizem "decisão do humano" nesses pontos |
 
 ## Status

@@ -13,7 +13,11 @@ import {
 } from "#src/__tests__/pipeline/__fixtures__/pipeline.ts";
 import { buildPipelineSummary } from "#src/cli/pipeline-report.ts";
 import type { PipelineRequest } from "#src/pipeline/run-pipeline.ts";
-import { type CaseRunOutcome, checkRegressionCase } from "#src/regression/case-check.ts";
+import {
+  type CaseRunOutcome,
+  checkRegressionCase,
+  EMPTY_CASE_TEXT_REFERENCE,
+} from "#src/regression/case-check.ts";
 import type { RegressionCase } from "#src/regression/regression-case.ts";
 import type { CaseResult } from "#src/regression/regression-report.ts";
 import { runRegressionCase } from "#src/regression/run-case.ts";
@@ -81,7 +85,7 @@ export async function caseResultOf(
   const { request, outcome } = await fixtureRunOf(extraction, requestOverride);
   return {
     regressionCase,
-    check: checkRegressionCase(regressionCase, outcome, []),
+    check: checkRegressionCase(regressionCase, outcome, EMPTY_CASE_TEXT_REFERENCE),
     summary: outcome.kind === "ran" ? buildPipelineSummary(outcome.run, request) : null,
     crash:
       outcome.kind === "crashed" ? { stage: outcome.stage, errorName: outcome.errorName } : null,

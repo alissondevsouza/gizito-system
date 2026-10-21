@@ -119,6 +119,29 @@ describe("formato do caso (spec F1-10, RF-01)", () => {
     ]);
   });
 
+  it("prévia analysis_failed com confirmação é problema", () => {
+    const reference = regressionCaseOf();
+    const refusedWithConfirmation = regressionCaseOf({
+      expectedPreview: {
+        ...reference.expectedPreview,
+        outcome: "analysis_failed",
+        failCode: "no_topic_found",
+        requiredTopicIdList: [],
+        acceptableTopicIdList: [],
+      },
+      expectedKitOutcome: "not_applicable",
+      confirmation: {
+        topicIdList: ["ma5-fractions"],
+        otherTopicText: null,
+        perceivedDifficulty: null,
+        noteText: null,
+      },
+    });
+    expect(findCaseProblemList(refusedWithConfirmation)).toEqual([
+      "prévia analysis_failed não tem confirmação",
+    ]);
+  });
+
   it("a confirmação segue as regras do pedido: total de assuntos e outro não atendido", () => {
     const tooMany = regressionCaseOf({
       confirmation: {

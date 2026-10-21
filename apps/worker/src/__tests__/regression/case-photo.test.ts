@@ -206,12 +206,16 @@ describe("preparação das fotos dos casos (spec F1-10, RF-03)", () => {
     });
   });
 
-  it("os textos inventados de um caso vêm só das variações de dado pessoal dele", () => {
+  it("os textos procurados de um caso vêm só da variação dele: nome, cada palavra do nome, escola e telefone", () => {
     const variationList = [blurVariation, personalDataVariation];
     expect(personalDataTextListOf(variationList, "5-math-dado-pessoal")).toEqual([
       "Nome Inventado Teste",
+      "Nome",
+      "Inventado",
+      "Teste",
       "Escola Inventada Teste",
       "(11) 91234-5678",
+      "12345678",
     ]);
     expect(personalDataTextListOf(variationList, "5-math-desfocada")).toEqual([]);
   });

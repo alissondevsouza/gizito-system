@@ -10,6 +10,7 @@ export const caseCheckCodeList = [
   "legibility_mismatch",
   "source_warning_missed",
   "personal_data_copied",
+  "material_copied",
   "kit_outcome_mismatch",
 ] as const;
 export type CaseCheckCode = (typeof caseCheckCodeList)[number];
@@ -45,6 +46,16 @@ export type CaseRunOutcome =
       readonly errorName: string;
     };
 
+export type CaseTextReference = {
+  readonly personalDataTextList: readonly string[];
+  readonly materialPhraseList: readonly string[];
+};
+
+export const EMPTY_CASE_TEXT_REFERENCE: CaseTextReference = {
+  personalDataTextList: [],
+  materialPhraseList: [],
+};
+
 export type CaseCheck = {
   readonly failedCheckList: readonly CaseCheckCode[];
   readonly warningList: readonly string[];
@@ -74,24 +85,41 @@ function actualKitOutcomeOf(run: PipelineRun): ActualKitOutcome {
     : "failed";
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsWholeText(text: string, searched: string): boolean {
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(searched)}(?![\\p{L}\\p{N}])`, "iu").test(
+    text,
+  );
+}
+
 export function isPersonalDataCopied(
   extractionText: string,
   personalDataTextList: readonly string[],
 ): boolean {
-  const lowerText = extractionText.toLowerCase();
-  const compactText = lowerText.replace(PHONE_DIGIT_SEPARATOR_PATTERN, "");
+  const compactText = extractionText.replace(PHONE_DIGIT_SEPARATOR_PATTERN, "");
   return personalDataTextList.some((text) => {
     const compactDigitText = text.replace(PHONE_DIGIT_SEPARATOR_PATTERN, "");
     return /^\d+$/.test(compactDigitText)
       ? compactText.includes(compactDigitText)
-      : lowerText.includes(text.toLowerCase());
+      : containsWholeText(extractionText, text);
   });
+}
+
+export function isMaterialCopied(
+  extractionText: string,
+  materialPhraseList: readonly string[],
+): boolean {
+  const lowerText = extractionText.toLowerCase();
+  return materialPhraseList.some((phrase) => lowerText.includes(phrase.toLowerCase()));
 }
 
 function checkExtraction(
   regressionCase: RegressionCase,
   { run, photoExtractionList }: Extract<CaseRunOutcome, { kind: "ran" }>,
-  personalDataTextList: readonly string[],
+  textReference: CaseTextReference,
 ): { readonly failedCheckList: CaseCheckCode[]; readonly warningList: string[] } {
   const { expectedPreview } = regressionCase;
   const merged = run.analysis.ok ? run.analysis.value.mergedExtraction : emptyMergedExtraction;
@@ -129,8 +157,12 @@ function checkExtraction(
   ) {
     failedCheckList.push("source_warning_missed");
   }
-  if (isPersonalDataCopied(JSON.stringify({ photoExtractionList, merged }), personalDataTextList)) {
+  const extractionText = JSON.stringify({ photoExtractionList, merged });
+  if (isPersonalDataCopied(extractionText, textReference.personalDataTextList)) {
     failedCheckList.push("personal_data_copied");
+  }
+  if (isMaterialCopied(extractionText, textReference.materialPhraseList)) {
+    failedCheckList.push("material_copied");
   }
   const warningList = unexpectedList
     .filter((candidate) => candidate.confidence === "medium")
@@ -141,7 +173,7 @@ function checkExtraction(
 export function checkRegressionCase(
   regressionCase: RegressionCase,
   outcome: CaseRunOutcome,
-  personalDataTextList: readonly string[],
+  textReference: CaseTextReference,
 ): CaseCheck {
   if (outcome.kind === "crashed") {
     return {
@@ -155,7 +187,7 @@ export function checkRegressionCase(
   const actualPreview = actualPreviewOf(run);
   const actualKitOutcome = actualKitOutcomeOf(run);
   const { expectedPreview } = regressionCase;
-  const extraction = checkExtraction(regressionCase, outcome, personalDataTextList);
+  const extraction = checkExtraction(regressionCase, outcome, textReference);
   const isPreviewMismatch =
     actualPreview.outcome !== expectedPreview.outcome ||
     actualPreview.failCode !== expectedPreview.failCode;

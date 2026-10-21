@@ -10,7 +10,13 @@ import {
   REGRESSION_MIN_EXTRACTION_PASS_RATE,
   type TopicRef,
 } from "@gizito/core";
-import { formatDollar, formatDuration, type PipelineSummary } from "#src/cli/pipeline-report.ts";
+import {
+  aiStageLabelMap,
+  formatDollar,
+  formatDuration,
+  type PipelineSummary,
+  pipelineStageLabelMap,
+} from "#src/cli/pipeline-report.ts";
 import { AI_CALL_OK_OUTCOME_CODE } from "#src/pipeline/ai-call.ts";
 import type { PipelineStage } from "#src/pipeline/run-pipeline.ts";
 import {
@@ -301,7 +307,7 @@ function gateCriterionListOf(
 ): readonly GateCriterion[] {
   const criticalCount = rowList.filter((row) => hasAnyCheck(row, criticalCaseCheckCodeList)).length;
   const extractionPassCount = rowList.filter(
-    (row) => !hasAnyCheck(row, extractionCaseCheckCodeList),
+    (row) => row.actualPreview !== null && !hasAnyCheck(row, extractionCaseCheckCodeList),
   ).length;
   const unreadableList = resultList.filter(({ regressionCase }) =>
     regressionCase.photoList.some((photo) => photo.expectedLegibility === "unreadable"),
@@ -311,10 +317,13 @@ function gateCriterionListOf(
   );
   const safetyCaseCount = unreadableList.length + personalDataList.length;
   const safetyPassCount =
-    unreadableList.filter(({ check }) => !check.failedCheckList.includes("legibility_mismatch"))
-      .length +
+    unreadableList.filter(
+      ({ check }) =>
+        check.actualPreview !== null && !check.failedCheckList.includes("legibility_mismatch"),
+    ).length +
     personalDataList.filter(
       ({ check }) =>
+        check.actualPreview !== null &&
         !check.failedCheckList.includes("source_warning_missed") &&
         !check.failedCheckList.includes("personal_data_copied"),
     ).length;
@@ -515,6 +524,19 @@ function codeCountText(codeCountList: readonly CodeCount[]): string {
   return listText(codeCountList.map((entry) => `${entry.code} × ${entry.count}`));
 }
 
+const costStageList: readonly AiStage[] = aiStageList;
+const durationStageList: readonly PipelineStage[] = ["analyze", "generate", "render"];
+
+function stageCostText(row: CaseReportRow, stage: AiStage): string {
+  const costCents = row.costCentsByStage[stage];
+  return costCents === undefined ? "—" : formatDollar(costCents);
+}
+
+function stageDurationText(row: CaseReportRow, stage: PipelineStage): string {
+  const durationMs = row.durationMsByStage[stage];
+  return durationMs === undefined ? "—" : formatDuration(durationMs);
+}
+
 function topicRowLine(row: TopicReportRow): string {
   return `| ${row.topicRef} | ${row.caseCount} | ${row.readyCount} | ${row.regeneratedCount} | ${listText(row.firstAttemptBlockerCodeList)} |`;
 }
@@ -547,11 +569,20 @@ export function formatRegressionMarkdown(report: RegressionReport): string {
     "",
     "## Casos",
     "",
-    "| Caso | Prévia | Kit | Falhas | Avisos | Bloqueadores da 1ª tentativa | Tentativas | Prévia | Kit | Geração | Páginas |",
+    "| Caso | Prévia | Kit | Falhas | Avisos | Bloqueadores da 1ª tentativa | Tentativas | Custo da prévia | Custo do kit | Geração | Páginas |",
     "|---|---|---|---|---|---|---|---|---|---|---|",
     ...report.caseRowList.map(
       (row) =>
         `| ${row.caseId} | ${previewText(row)} | ${kitText(row)} | ${listText(row.failedCheckList)} | ${listText(row.warningList)} | ${listText(row.firstAttemptBlockerCodeList)} | ${listText(row.repairList)} | ${optionalText(row.previewCostCents, formatDollar)} | ${optionalText(row.kitCostCents, formatDollar)} | ${optionalText(row.generationDurationMs, formatDuration)} | ${pageText(row)} |`,
+    ),
+    "",
+    "### Custo e tempo por etapa",
+    "",
+    `| Caso | ${costStageList.map((stage) => `Custo ${aiStageLabelMap[stage]}`).join(" | ")} | ${durationStageList.map((stage) => `Tempo ${pipelineStageLabelMap[stage]}`).join(" | ")} | Avisos da 1ª tentativa |`,
+    `|---|${[...costStageList, ...durationStageList].map(() => "---|").join("")}---|`,
+    ...report.caseRowList.map(
+      (row) =>
+        `| ${row.caseId} | ${costStageList.map((stage) => stageCostText(row, stage)).join(" | ")} | ${durationStageList.map((stage) => stageDurationText(row, stage)).join(" | ")} | ${listText(countCodeList(row.firstAttemptWarningCodeList).map((entry) => `${entry.code} × ${entry.count}`))} |`,
     ),
     "",
     "## Por assunto",

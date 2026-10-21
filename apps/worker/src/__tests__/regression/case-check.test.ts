@@ -21,7 +21,12 @@ import {
   SENTINEL_TERM,
   sentinelExtraction,
 } from "#src/__tests__/regression/__fixtures__/regression.ts";
-import { checkRegressionCase, isPersonalDataCopied } from "#src/regression/case-check.ts";
+import {
+  checkRegressionCase,
+  EMPTY_CASE_TEXT_REFERENCE,
+  isMaterialCopied,
+  isPersonalDataCopied,
+} from "#src/regression/case-check.ts";
 import type { RegressionCase } from "#src/regression/regression-case.ts";
 import { runRegressionCase } from "#src/regression/run-case.ts";
 
@@ -36,7 +41,11 @@ async function readyOutcome() {
 
 describe("verificações do caso (spec F1-10, RF-05)", () => {
   it("caso que bate com a execução passa em todas as verificações", async () => {
-    const check = checkRegressionCase(regressionCaseOf(), await readyOutcome(), []);
+    const check = checkRegressionCase(
+      regressionCaseOf(),
+      await readyOutcome(),
+      EMPTY_CASE_TEXT_REFERENCE,
+    );
     expect(check).toEqual({
       failedCheckList: [],
       warningList: [],
@@ -56,7 +65,11 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
       },
       expectedKitOutcome: "not_applicable",
     });
-    const check = checkRegressionCase(regressionCase, await readyOutcome(), []);
+    const check = checkRegressionCase(
+      regressionCase,
+      await readyOutcome(),
+      EMPTY_CASE_TEXT_REFERENCE,
+    );
     expect(check.failedCheckList).toEqual(["preview_outcome_mismatch", "kit_outcome_mismatch"]);
   });
 
@@ -64,7 +77,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     const check = checkRegressionCase(
       withPreview({ requiredTopicIdList: [FRACTIONS_TOPIC_ID, "ma5-decimal-numbers"] }),
       await readyOutcome(),
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     );
     expect(check.failedCheckList).toEqual(["required_topic_missing"]);
   });
@@ -73,7 +86,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     const highCheck = checkRegressionCase(
       withPreview({ acceptableTopicIdList: [] }),
       await readyOutcome(),
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     );
     expect(highCheck.failedCheckList).toEqual(["unexpected_topic"]);
     const mediumExtraction = photoExtractionOf({
@@ -89,7 +102,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
           topicIdList: [FRACTIONS_TOPIC_ID, PERIMETER_TOPIC_ID],
         })
       ).outcome,
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     );
     expect(mediumCheck.failedCheckList).toEqual([]);
     expect(mediumCheck.warningList).toEqual([`unexpected_topic_medium:${PERIMETER_TOPIC_ID}`]);
@@ -99,7 +112,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     const check = checkRegressionCase(
       withPreview({ unsupportedTopicIdList: ["ma-flowcharts"] }),
       await readyOutcome(),
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     );
     expect(check.failedCheckList).toEqual(["unsupported_topic_missed"]);
   });
@@ -112,12 +125,13 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
       ],
     });
     expect(
-      checkRegressionCase(expectedUnreadable, await readyOutcome(), []).failedCheckList,
+      checkRegressionCase(expectedUnreadable, await readyOutcome(), EMPTY_CASE_TEXT_REFERENCE)
+        .failedCheckList,
     ).toEqual(["legibility_mismatch"]);
     const refused = checkRegressionCase(
       regressionCaseOf(),
       (await fixtureRunOf(unreadableExtraction)).outcome,
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     );
     expect(refused.actualPreview).toEqual({
       outcome: "analysis_failed",
@@ -136,32 +150,53 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     const check = checkRegressionCase(
       withPreview({ requiredSourceWarningCodeList: ["personal_data_visible"] }),
       await readyOutcome(),
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     );
     expect(check.failedCheckList).toEqual(["source_warning_missed"]);
   });
 
   it("texto inventado da variação na extração juntada é personal_data_copied", async () => {
-    const check = checkRegressionCase(regressionCaseOf(), await readyOutcome(), [
-      SENTINEL_TERM.toLowerCase(),
-    ]);
+    const check = checkRegressionCase(regressionCaseOf(), await readyOutcome(), {
+      ...EMPTY_CASE_TEXT_REFERENCE,
+      personalDataTextList: [SENTINEL_TERM.toLowerCase()],
+    });
     expect(check.failedCheckList).toEqual(["personal_data_copied"]);
     expect(
-      checkRegressionCase(regressionCaseOf(), await readyOutcome(), ["Nome Nunca Copiado"])
-        .failedCheckList,
+      checkRegressionCase(regressionCaseOf(), await readyOutcome(), {
+        ...EMPTY_CASE_TEXT_REFERENCE,
+        personalDataTextList: ["Nome Nunca Copiado"],
+      }).failedCheckList,
     ).toEqual([]);
   });
 
   it("a evidência por foto, que a extração juntada não guarda, também é conferida", async () => {
-    const check = checkRegressionCase(regressionCaseOf(), await readyOutcome(), [
-      SENTINEL_EVIDENCE.toUpperCase(),
-    ]);
+    const check = checkRegressionCase(regressionCaseOf(), await readyOutcome(), {
+      ...EMPTY_CASE_TEXT_REFERENCE,
+      personalDataTextList: [SENTINEL_EVIDENCE.toUpperCase()],
+    });
     expect(check.failedCheckList).toEqual(["personal_data_copied"]);
   });
 
   it("telefone conta como copiado com qualquer separador entre os dígitos", () => {
     expect(isPersonalDataCopied('{"tema":"fone 11 98472.3610"}', ["(11) 98472-3610"])).toBe(true);
+    expect(isPersonalDataCopied('{"tema":"fone 8472-3610"}', ["84723610"])).toBe(true);
     expect(isPersonalDataCopied('{"tema":"fone 11 98472"}', ["(11) 98472-3610"])).toBe(false);
+  });
+
+  it("palavra do nome conta como copiada só como palavra inteira, sem diferença de maiúsculas", () => {
+    expect(isPersonalDataCopied('{"evidence":"caderno da RAFAELA"}', ["Rafaela"])).toBe(true);
+    expect(isPersonalDataCopied('{"evidence":"Cecília Brandão"}', ["Cecília"])).toBe(true);
+    expect(isPersonalDataCopied('{"evidence":"linhas e colunas"}', ["Lins"])).toBe(false);
+    expect(isPersonalDataCopied('{"evidence":"Rafaelas"}', ["Rafaela"])).toBe(false);
+  });
+
+  it("frase do material na extração é material_copied", async () => {
+    const check = checkRegressionCase(regressionCaseOf(), await readyOutcome(), {
+      ...EMPTY_CASE_TEXT_REFERENCE,
+      materialPhraseList: ["sentinela-evidencia do CADERNO"],
+    });
+    expect(check.failedCheckList).toEqual(["material_copied"]);
+    expect(isMaterialCopied('{"tema":"compras"}', ["Meu coração é um tambor"])).toBe(false);
   });
 
   it("kit que falha na geração, esperado pronto, é kit_outcome_mismatch com resultado failed", async () => {
@@ -173,12 +208,15 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
       request,
       pipelineDependenciesOf(aiProvider, createCountingRenderer().pdfRenderer),
     );
-    const check = checkRegressionCase(regressionCaseOf(), outcome, []);
+    const check = checkRegressionCase(regressionCaseOf(), outcome, EMPTY_CASE_TEXT_REFERENCE);
     expect(check.actualKitOutcome).toBe("failed");
     expect(check.failedCheckList).toEqual(["kit_outcome_mismatch"]);
     expect(
-      checkRegressionCase(regressionCaseOf({ expectedKitOutcome: "failed" }), outcome, [])
-        .failedCheckList,
+      checkRegressionCase(
+        regressionCaseOf({ expectedKitOutcome: "failed" }),
+        outcome,
+        EMPTY_CASE_TEXT_REFERENCE,
+      ).failedCheckList,
     ).toEqual([]);
   });
 
@@ -190,7 +228,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
       request,
       pipelineDependenciesOf(aiProvider, createCountingRenderer().pdfRenderer),
     );
-    const check = checkRegressionCase(regressionCaseOf(), outcome, []);
+    const check = checkRegressionCase(regressionCaseOf(), outcome, EMPTY_CASE_TEXT_REFERENCE);
     expect(check.actualPreview).toEqual({ outcome: "analysis_error", failCode: "ai_unavailable" });
     expect(check.failedCheckList).toContain("preview_outcome_mismatch");
     expect(check.actualKitOutcome).toBe("not_applicable");
@@ -200,7 +238,7 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
     const check = checkRegressionCase(
       regressionCaseOf({ expectedKitOutcome: "not_applicable" }),
       { kind: "crashed", stage: "generate", errorName: "TypeError" },
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     );
     expect(check).toEqual({
       failedCheckList: ["kit_outcome_mismatch"],

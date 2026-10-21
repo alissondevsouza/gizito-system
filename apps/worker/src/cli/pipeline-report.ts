@@ -83,14 +83,14 @@ export type PipelineCrashSummary = {
   readonly errorName: string;
 };
 
-const pipelineStageLabelMap: Readonly<Record<PipelineStage, string>> = {
+export const pipelineStageLabelMap: Readonly<Record<PipelineStage, string>> = {
   analyze: "análise",
   confirm: "confirmação",
   generate: "geração",
   render: "render",
 };
 
-const aiStageLabelMap: Readonly<Record<AiStage, string>> = {
+export const aiStageLabelMap: Readonly<Record<AiStage, string>> = {
   extract: "extração",
   plan: "plano",
   generate: "geração",

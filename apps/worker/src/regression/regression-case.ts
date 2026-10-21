@@ -125,6 +125,9 @@ export function findCaseProblemList(regressionCase: RegressionCase): readonly st
       problemList.push(`${unsupportedTopicId} não é área não atendida de ${subject}`);
     }
   }
+  if (!isPreviewReady && confirmation !== null) {
+    problemList.push("prévia analysis_failed não tem confirmação");
+  }
   if (isPreviewReady && confirmation === null && expectedPreview.requiredTopicIdList.length === 0) {
     problemList.push("prévia preview_ready sem confirmação pede ao menos um assunto obrigatório");
   }
@@ -143,6 +146,24 @@ export function findCaseProblemList(regressionCase: RegressionCase): readonly st
     }
   }
   return problemList;
+}
+
+export const materialPhraseFileSchema = z.strictObject({
+  phraseListByCase: z.record(z.string(), uniqueListSchema(z.string().trim().min(3).max(80)).min(1)),
+});
+
+export async function loadMaterialPhraseMap(
+  path: string,
+): Promise<Result<Readonly<Record<string, readonly string[]>>, readonly string[]>> {
+  const file = Bun.file(path);
+  if (!(await file.exists())) return err([`${path} ausente`]);
+  const parsed = materialPhraseFileSchema.safeParse(await file.json().catch(() => null));
+  if (!parsed.success) {
+    return err(
+      parsed.error.issues.map((issue) => `${path}: ${issue.path.join(".")} ${issue.message}`),
+    );
+  }
+  return ok(parsed.data.phraseListByCase);
 }
 
 export type LoadedRegressionCase = {

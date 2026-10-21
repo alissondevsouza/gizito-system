@@ -11,7 +11,11 @@ import type { PipelineSummary } from "#src/cli/pipeline-report.ts";
 import { DEFAULT_RENDER_CONCURRENCY } from "#src/config.ts";
 import { GENERATION_VERSION } from "#src/pipeline/generate.ts";
 import type { PipelineRequest } from "#src/pipeline/run-pipeline.ts";
-import { type CaseRunOutcome, checkRegressionCase } from "#src/regression/case-check.ts";
+import {
+  type CaseRunOutcome,
+  type CaseTextReference,
+  checkRegressionCase,
+} from "#src/regression/case-check.ts";
 import {
   loadCasePhotoList,
   loadPhotoVariationList,
@@ -21,6 +25,7 @@ import {
 import { createPersonalDataPainter } from "#src/regression/personal-data-painter.ts";
 import {
   type LoadedRegressionCase,
+  loadMaterialPhraseMap,
   loadRegressionCaseList,
 } from "#src/regression/regression-case.ts";
 import { parseRegressionArgs, REGRESSION_USAGE } from "#src/regression/regression-input.ts";
@@ -36,13 +41,14 @@ import {
   caseRequestOf,
   runRegressionCase,
 } from "#src/regression/run-case.ts";
-import { createPdfRenderer } from "#src/render/pdf-renderer.ts";
+import { createPdfRenderer, errorNameOf } from "#src/render/pdf-renderer.ts";
 import { createSemaphore } from "#src/render/semaphore.ts";
 
 const USAGE_EXIT_CODE = 2;
 const CRITICAL_EXIT_CODE = 1;
 const CASES_DIRECTORY = "tests/pedagogy/cases";
 const PHOTO_VARIATION_FILE = "tests/pedagogy/photo-variations.json";
+const MATERIAL_PHRASE_FILE = "tests/pedagogy/material-phrases.json";
 const PHOTO_SOURCE_DIRECTORY = "docs/materiais-fotograficos";
 const DEFAULT_OUTPUT_ROOT = "tests/pedagogy/output/regressao";
 const DOC_DIRECTORY = "docs/pedagogy/regressao";
@@ -94,6 +100,9 @@ const selectedCaseList = selectCaseList(loadedCaseList.value, args.caseIdList);
 const loadedVariationList = await loadPhotoVariationList(PHOTO_VARIATION_FILE);
 if (!loadedVariationList.ok) exitWith(loadedVariationList.error);
 const variationList = loadedVariationList.value;
+const loadedMaterialPhraseMap = await loadMaterialPhraseMap(MATERIAL_PHRASE_FILE);
+if (!loadedMaterialPhraseMap.ok) exitWith(loadedMaterialPhraseMap.error);
+const materialPhraseMap = loadedMaterialPhraseMap.value;
 
 const preparation = await prepareCasePhotoList(selectedCaseList, {
   sourceDirectory: PHOTO_SOURCE_DIRECTORY,
@@ -129,7 +138,22 @@ const dependencies: CaseRunDependencies = {
 };
 const semaphore = createSemaphore(args.concurrency);
 
-async function runCase(loadedCase: LoadedRegressionCase): Promise<CaseResult> {
+function textReferenceOf(caseId: string): CaseTextReference {
+  return {
+    personalDataTextList: personalDataTextListOf(variationList, caseId),
+    materialPhraseList: materialPhraseMap[caseId] ?? [],
+  };
+}
+
+function printCaseLine(caseId: string, result: CaseResult): void {
+  const { failedCheckList, actualKitOutcome } = result.check;
+  const checkText = failedCheckList.length === 0 ? "ok" : failedCheckList.join(", ");
+  console.info(
+    `${failedCheckList.length === 0 ? "✓" : "✗"} ${caseId}: kit ${actualKitOutcome}; ${checkText}`,
+  );
+}
+
+async function executeCase(loadedCase: LoadedRegressionCase): Promise<CaseResult> {
   const { regressionCase } = loadedCase;
   const { caseId } = regressionCase;
   const photoList = await loadCasePhotoList(loadedCase, new Date());
@@ -138,18 +162,10 @@ async function runCase(loadedCase: LoadedRegressionCase): Promise<CaseResult> {
   const outcome: CaseRunOutcome = photoList.ok
     ? await runRegressionCase(request, dependencies)
     : { kind: "crashed", stage: null, errorName: PHOTO_LOAD_ERROR_NAME };
-  const check = checkRegressionCase(
-    regressionCase,
-    outcome,
-    personalDataTextListOf(variationList, caseId),
-  );
+  const check = checkRegressionCase(regressionCase, outcome, textReferenceOf(caseId));
   const caseOutputDirectory = join(outputDirectory, caseId);
   const summary = await writeCaseOutput(outcome, request, caseOutputDirectory);
   await Bun.write(join(caseOutputDirectory, "check.json"), toJson(check));
-  const checkText = check.failedCheckList.length === 0 ? "ok" : check.failedCheckList.join(", ");
-  console.info(
-    `${check.failedCheckList.length === 0 ? "✓" : "✗"} ${caseId}: kit ${check.actualKitOutcome}; ${checkText}`,
-  );
   return {
     regressionCase,
     check,
@@ -157,6 +173,21 @@ async function runCase(loadedCase: LoadedRegressionCase): Promise<CaseResult> {
     crash:
       outcome.kind === "crashed" ? { stage: outcome.stage, errorName: outcome.errorName } : null,
   };
+}
+
+async function runCase(loadedCase: LoadedRegressionCase): Promise<CaseResult> {
+  const { regressionCase } = loadedCase;
+  const result = await executeCase(loadedCase).catch((error: unknown): CaseResult => {
+    const crashed: CaseRunOutcome = { kind: "crashed", stage: null, errorName: errorNameOf(error) };
+    return {
+      regressionCase,
+      check: checkRegressionCase(regressionCase, crashed, textReferenceOf(regressionCase.caseId)),
+      summary: null,
+      crash: { stage: null, errorName: crashed.errorName },
+    };
+  });
+  printCaseLine(regressionCase.caseId, result);
+  return result;
 }
 
 try {

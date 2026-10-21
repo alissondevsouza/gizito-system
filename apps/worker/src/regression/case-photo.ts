@@ -7,10 +7,13 @@ import { photoMediaTypeOf } from "#src/cli/pipeline-input.ts";
 import { computeContentHash, type ExtractionPhoto } from "#src/pipeline/extract.ts";
 import {
   CASE_PHOTO_DIRECTORY_NAME,
+  casePhotoSchema,
   type LoadedRegressionCase,
 } from "#src/regression/regression-case.ts";
 
-const photoFileNameSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*\.(?:png|jpe?g)$/);
+const photoFileNameSchema = casePhotoSchema.shape.fileName;
+const MIN_SEARCHED_NAME_WORD_LENGTH = 4;
+const SEARCHED_PHONE_DIGIT_COUNT = 8;
 const variationTextSchema = z.string().trim().min(3).max(60);
 
 export const photoVariationSchema = z.discriminatedUnion("kind", [
@@ -78,11 +81,20 @@ export function personalDataTextListOf(
   variationList: readonly PhotoVariation[],
   caseId: string,
 ): readonly string[] {
-  return variationList.flatMap((variation) =>
-    variation.caseId === caseId && variation.kind === "personal_data"
-      ? [variation.studentName, variation.schoolName, variation.phone]
-      : [],
-  );
+  return variationList.flatMap((variation) => {
+    if (variation.caseId !== caseId || variation.kind !== "personal_data") return [];
+    const nameWordList = variation.studentName
+      .split(/\s+/)
+      .filter((word) => word.length >= MIN_SEARCHED_NAME_WORD_LENGTH);
+    const phoneDigitText = variation.phone.replace(/\D/g, "");
+    return [
+      variation.studentName,
+      ...nameWordList,
+      variation.schoolName,
+      variation.phone,
+      phoneDigitText.slice(-SEARCHED_PHONE_DIGIT_COUNT),
+    ];
+  });
 }
 
 export async function loadPhotoVariationList(

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { KIT_PRICE_CENTS, MAX_KIT_AI_COST_PRICE_SHARE } from "@gizito/core";
+import {
+  KIT_PRICE_CENTS,
+  MAX_KIT_AI_COST_PRICE_SHARE,
+  MAX_PREVIEW_AI_COST_BRL_CENTS,
+} from "@gizito/core";
+import { unreadableExtraction } from "#src/__tests__/pipeline/__fixtures__/extraction.ts";
 import {
   FRACTIONS_TOPIC_ID,
   PERIMETER_TOPIC_ID,
@@ -13,7 +18,7 @@ import {
   SENTINEL_OTHER,
   SENTINEL_TERM,
 } from "#src/__tests__/regression/__fixtures__/regression.ts";
-import { checkRegressionCase } from "#src/regression/case-check.ts";
+import { checkRegressionCase, EMPTY_CASE_TEXT_REFERENCE } from "#src/regression/case-check.ts";
 import {
   buildRegressionReport,
   type CaseResult,
@@ -40,7 +45,7 @@ function crashedResultOf(caseId: string): CaseResult {
     check: checkRegressionCase(
       regressionCase,
       { kind: "crashed", stage: "generate", errorName: "TypeError" },
-      [],
+      EMPTY_CASE_TEXT_REFERENCE,
     ),
     summary: null,
     crash: { stage: "generate", errorName: "TypeError" },
@@ -95,7 +100,7 @@ describe("relatório da regressão (spec F1-10, RF-06 e RF-07)", () => {
       count: 2,
     });
     expect(report.gateCriterionList[0]).toMatchObject({ value: "2", verdict: "fail" });
-    expect(report.gateCriterionList[1]).toMatchObject({ value: "3 de 3", verdict: "pass" });
+    expect(report.gateCriterionList[1]).toMatchObject({ value: "2 de 3", verdict: "fail" });
     expect(report.topicRowList.map((row) => row.topicRef)).toEqual([
       FRACTIONS_TOPIC_ID,
       PERIMETER_TOPIC_ID,
@@ -143,6 +148,57 @@ describe("relatório da regressão (spec F1-10, RF-06 e RF-07)", () => {
     expect(report.gateCriterionList[2]).toMatchObject({ value: "0 de 1", verdict: "fail" });
   });
 
+  it("o critério 3 passa com a foto ilegível recusada e reprova o caso que quebrou", async () => {
+    const reference = regressionCaseOf();
+    const unreadableCase = regressionCaseOf({
+      caseId: "5-math-desfocada",
+      photoList: [
+        { fileName: "foto-1.png", sha256: "a".repeat(64), expectedLegibility: "unreadable" },
+        { fileName: "foto-2.png", sha256: "a".repeat(64), expectedLegibility: "unreadable" },
+      ],
+      expectedPreview: {
+        ...reference.expectedPreview,
+        outcome: "analysis_failed",
+        failCode: "photos_unreadable",
+        requiredTopicIdList: [],
+        acceptableTopicIdList: [],
+      },
+      expectedKitOutcome: "not_applicable",
+    });
+    const refused = await caseResultOf(unreadableCase, unreadableExtraction);
+    const passing = buildRegressionReport([refused], context);
+    expect(passing.gateCriterionList[2]).toMatchObject({ value: "1 de 1", verdict: "pass" });
+    const crashed: CaseResult = {
+      regressionCase: unreadableCase,
+      check: checkRegressionCase(
+        unreadableCase,
+        { kind: "crashed", stage: "analyze", errorName: "TypeError" },
+        EMPTY_CASE_TEXT_REFERENCE,
+      ),
+      summary: null,
+      crash: { stage: "analyze", errorName: "TypeError" },
+    };
+    const failing = buildRegressionReport([refused, crashed], context);
+    expect(failing.gateCriterionList[2]).toMatchObject({ value: "1 de 2", verdict: "fail" });
+  });
+
+  it("o critério 6 compara o custo médio da extração com R$ 0,10 pelo câmbio", async () => {
+    const ready = await caseResultOf();
+    if (ready.summary === null) throw new Error("resultado sem resumo");
+    const limitUsdCents = MAX_PREVIEW_AI_COST_BRL_CENTS / context.usdBrlRate;
+    const previewAt = (costCents: number) =>
+      withSummary(ready, {
+        aiStageList: ready.summary?.aiStageList.map((entry) =>
+          entry.stage === "extract" ? { ...entry, costCents } : entry,
+        ),
+      });
+    const passing = buildRegressionReport([previewAt(limitUsdCents / 2)], context);
+    expect(passing.gateCriterionList[5]?.verdict).toBe("pass");
+    expect(passing.previewCost?.mean).toBe(limitUsdCents / 2);
+    const failing = buildRegressionReport([previewAt(limitUsdCents * 2)], context);
+    expect(failing.gateCriterionList[5]?.verdict).toBe("fail");
+  });
+
   it("o tempo da geração vai do plano aos PDFs, e o critério 7 não bloqueia", async () => {
     const ready = await caseResultOf();
     const slow = withSummary(ready, {
@@ -184,6 +240,10 @@ describe("relatório da regressão (spec F1-10, RF-06 e RF-07)", () => {
       "| 5-math-critico | preview_ready | ready; esperado not_applicable |",
     );
     expect(markdown).toContain("### Outro");
+    expect(markdown).toContain("### Custo e tempo por etapa");
+    expect(markdown).toContain(
+      "| Caso | Custo extração | Custo plano | Custo geração | Custo revisão |",
+    );
     expect(terminal).toContain("Bloqueadores críticos inesperados: 5-math-critico, 5-math-quebra");
   });
 });
