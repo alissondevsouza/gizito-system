@@ -102,3 +102,35 @@ Corrigidos em `f495acf`, com teste:
 A outra SUGESTÃO, a regra mais rígida do `legibility_mismatch`, fica de propósito e está registrada em Decisões. Para o responsável, foto ilegível, "não é material escolar" e saída inválida dão a mesma tela de trocar a foto.
 
 O ALERTA da contagem de 7 para 12 na spec pedagógica e o CRÍTICO do RF-09 dependem do humano. Os 10 críticos pedem mudança de taxonomia, de prompt, de severidade da revisão, da contagem de regenerações (PRD §7.4) ou do formato do caso, e cada uma é decisão dele (Decisões da spec). Nenhum caso foi recalibrado.
+
+## Correções da rodada 1 (decisões do humano de 21/10/2026)
+
+As correções estão em `f501077`:
+- `tax-v2` com `lp5-word-classes`;
+- `generate` e `review` v2;
+- `min` e `max` no avaliador;
+- relatório com modelo e esforço;
+- seis casos recalibrados;
+- spec pedagógica 1.5.
+
+Testes no fim: lint limpo; typecheck 6 de 6; core 729, integrations 375 e worker 335 pass.
+
+### Rodada 2: casos afetados, com `AI_EFFORT_GENERATE=medium` (`rodada-2`, US$ 3,90)
+
+Foram 13 casos: os 10 críticos da rodada 1, os outros 2 do 5º ano de Português e `7-math-potenciacao-raiz`.
+
+- Prévia certa em 13 de 13. A `tax-v2` deu `lp5-word-classes` com confiança alta para artigos, classes de palavras e singular/plural.
+- 8 de 13 kits prontos, entre eles 4 dos 6 que tinham falhado: `5-math-sistema-monetario-troco`, `5-math-fracoes-decimais-perimetro`, `7-math-equacoes-porcentagem` e `7-portuguese-figuras-de-linguagem`.
+- 5 kits falharam:
+  - 3 por JSON inválido no reparo por item: `5-portuguese-artigos`, `5-portuguese-singular-plural-dado-pessoal` e `6-portuguese-sujeito-predicado`;
+  - 1 por saída inválida duas vezes: `7-portuguese-carta-cortada`;
+  - 1 por plano sem questões contextualizadas, seguido de kit sem as vagas: `7-math-potenciacao-raiz`.
+- Geração com p50 de 2 min 17 s e p95 de 4 min 54 s; kit a US$ 0,30 em média.
+
+### Rodada 3: os 5 que falharam, com o esforço padrão (`rodada-3`, US$ 2,65)
+
+- `5-portuguese-artigos`, `5-portuguese-singular-plural-dado-pessoal` e `6-portuguese-sujeito-predicado` saíram prontos na 1ª tentativa. O JSON inválido da rodada 2 vinha do esforço `medium`, que volta ao valor atual: o `.env` não muda (§15.10 da spec pedagógica).
+- `7-portuguese-carta-cortada` falhou de novo com saída inválida. O diagnóstico, com um provedor que valida fora do adaptador e imprime só os caminhos do Zod, mostrou `baseTextList.N.paragraphList.9` abaixo de 10 caracteres. Os textos-base são cartas, e saudação e assinatura são parágrafos curtos que a spec pedagógica §7.1 não aceita (`kitText[1..10] (10..800)`). Decisão do humano.
+- `7-math-potenciacao-raiz` desta vez deu `no_topic_found`; na rodada 2 tinha dado o assunto vizinho. O caso oscila entre as duas respostas, e a recalibração não resolve. Decisão do humano.
+
+Situação, somando as três rodadas: dos 10 críticos da rodada 1, 8 fecharam, e os 2 que seguem abertos dependem das decisões acima.
