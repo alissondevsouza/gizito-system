@@ -47,7 +47,7 @@ export function regressionCaseOf(override: Partial<RegressionCase> = {}): Regres
       acceptableTopicIdList: [PERIMETER_TOPIC_ID],
       unsupportedTopicIdList: [],
       requiredSourceWarningCodeList: [],
-      acceptableFailCodeList: [],
+      acceptableRefusalList: [],
     },
     confirmation: null,
     expectedKitOutcome: "ready",

@@ -8,7 +8,14 @@ import {
   parseBrazilianNumber,
   type Result,
 } from "@gizito/core";
-import { unit as createUnit, isUnit, type MathNode } from "mathjs";
+import {
+  unit as createUnit,
+  isFunctionNode,
+  isSymbolNode,
+  isUnit,
+  type MathNode,
+  SymbolNode,
+} from "mathjs";
 import {
   type ParsedExpression,
   parseMathExpression,
@@ -53,9 +60,23 @@ function evaluateNode(
   }
 }
 
+const UNIT_SCOPE_PREFIX = "unit:";
+
+function withUnitScopeName(node: MathNode, unitSymbolList: readonly string[]): MathNode {
+  return node.transform((child, path, parent) =>
+    isSymbolNode(child) &&
+    unitSymbolList.includes(child.name) &&
+    !(isFunctionNode(parent) && path === "fn")
+      ? new SymbolNode(`${UNIT_SCOPE_PREFIX}${child.name}`)
+      : child,
+  );
+}
+
 function evaluateNumeric(parsed: ParsedExpression): Result<NumericValue, MathEvaluationErrorCode> {
-  const unitScope = new Map(parsed.unitSymbolList.map((symbol) => [symbol, createUnit(symbol)]));
-  const evaluated = evaluateNode(parsed.node, unitScope);
+  const unitScope = new Map(
+    parsed.unitSymbolList.map((symbol) => [`${UNIT_SCOPE_PREFIX}${symbol}`, createUnit(symbol)]),
+  );
+  const evaluated = evaluateNode(withUnitScopeName(parsed.node, parsed.unitSymbolList), unitScope);
   if (!evaluated.ok) return evaluated;
   const result = evaluated.value;
   if (typeof result === "number") {

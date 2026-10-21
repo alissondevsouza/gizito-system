@@ -17,7 +17,12 @@
     "acceptableTopicIdList": ["lp7-linguistic-variety", "lp7-reading-comprehension"],
     "unsupportedTopicIdList": [],
     "requiredSourceWarningCodeList": [],
-    "acceptableFailCodeList": ["no_topic_found"]
+    "acceptableRefusalList": [
+      {
+        "failCode": "no_topic_found",
+        "requiredSourceWarningCodeList": ["grade_mismatch"]
+      }
+    ]
   },
   "confirmation": {
     "topicIdList": ["lp7-linguistic-variety"],

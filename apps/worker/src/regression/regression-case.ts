@@ -56,6 +56,12 @@ export const casePhotoSchema = z.strictObject({
 });
 export type CasePhoto = z.infer<typeof casePhotoSchema>;
 
+export const acceptableRefusalSchema = z.strictObject({
+  failCode: previewFailCodeSchema,
+  requiredSourceWarningCodeList: uniqueListSchema(sourceWarningCodeSchema),
+});
+export type AcceptableRefusal = z.infer<typeof acceptableRefusalSchema>;
+
 export const expectedPreviewSchema = z.strictObject({
   outcome: z.enum(["preview_ready", "analysis_failed"]),
   failCode: previewFailCodeSchema.nullable(),
@@ -63,7 +69,7 @@ export const expectedPreviewSchema = z.strictObject({
   acceptableTopicIdList: uniqueListSchema(taxonomyTopicIdSchema),
   unsupportedTopicIdList: uniqueListSchema(unsupportedTopicIdSchema),
   requiredSourceWarningCodeList: uniqueListSchema(sourceWarningCodeSchema),
-  acceptableFailCodeList: uniqueListSchema(previewFailCodeSchema).default([]),
+  acceptableRefusalList: z.array(acceptableRefusalSchema).default([]),
 });
 export type ExpectedPreview = z.infer<typeof expectedPreviewSchema>;
 
@@ -126,8 +132,22 @@ export function findCaseProblemList(regressionCase: RegressionCase): readonly st
       problemList.push(`${unsupportedTopicId} não é área não atendida de ${subject}`);
     }
   }
-  if (!isPreviewReady && expectedPreview.acceptableFailCodeList.length > 0) {
+  const { acceptableRefusalList } = expectedPreview;
+  if (!isPreviewReady && acceptableRefusalList.length > 0) {
     problemList.push("recusa aceitável só com a prévia preview_ready");
+  }
+  const refusalCodeList = acceptableRefusalList.map((refusal) => refusal.failCode);
+  if (new Set(refusalCodeList).size !== refusalCodeList.length) {
+    problemList.push("recusa aceitável repetida");
+  }
+  if (acceptableRefusalList.length > 0 && expectedPreview.requiredTopicIdList.length > 0) {
+    problemList.push("caso com recusa aceitável não tem assunto obrigatório");
+  }
+  if (
+    refusalCodeList.includes("photos_unreadable") &&
+    regressionCase.photoList.some((photo) => photo.expectedLegibility === "good")
+  ) {
+    problemList.push("recusa photos_unreadable não combina com foto esperada good");
   }
   if (!isPreviewReady && confirmation !== null) {
     problemList.push("prévia analysis_failed não tem confirmação");
@@ -158,6 +178,7 @@ export const materialPhraseFileSchema = z.strictObject({
 
 export async function loadMaterialPhraseMap(
   path: string,
+  knownCaseIdList: readonly string[],
 ): Promise<Result<Readonly<Record<string, readonly string[]>>, readonly string[]>> {
   const file = Bun.file(path);
   if (!(await file.exists())) return err([`${path} ausente`]);
@@ -166,6 +187,12 @@ export async function loadMaterialPhraseMap(
     return err(
       parsed.error.issues.map((issue) => `${path}: ${issue.path.join(".")} ${issue.message}`),
     );
+  }
+  const unknownCaseIdList = Object.keys(parsed.data.phraseListByCase).filter(
+    (caseId) => !knownCaseIdList.includes(caseId),
+  );
+  if (unknownCaseIdList.length > 0) {
+    return err(unknownCaseIdList.map((caseId) => `${path}: caso desconhecido ${caseId}`));
   }
   return ok(parsed.data.phraseListByCase);
 }

@@ -100,7 +100,10 @@ const selectedCaseList = selectCaseList(loadedCaseList.value, args.caseIdList);
 const loadedVariationList = await loadPhotoVariationList(PHOTO_VARIATION_FILE);
 if (!loadedVariationList.ok) exitWith(loadedVariationList.error);
 const variationList = loadedVariationList.value;
-const loadedMaterialPhraseMap = await loadMaterialPhraseMap(MATERIAL_PHRASE_FILE);
+const loadedMaterialPhraseMap = await loadMaterialPhraseMap(
+  MATERIAL_PHRASE_FILE,
+  loadedCaseList.value.map(({ regressionCase }) => regressionCase.caseId),
+);
 if (!loadedMaterialPhraseMap.ok) exitWith(loadedMaterialPhraseMap.error);
 const materialPhraseMap = loadedMaterialPhraseMap.value;
 

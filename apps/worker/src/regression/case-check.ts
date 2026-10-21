@@ -1,4 +1,4 @@
-import type { MergedExtraction, PhotoExtraction } from "@gizito/core";
+import type { MergedExtraction, PhotoExtraction, SourceWarningCode } from "@gizito/core";
 import type { PipelineRun, PipelineStage } from "#src/pipeline/run-pipeline.ts";
 import type { ExpectedKitOutcome, RegressionCase } from "#src/regression/regression-case.ts";
 
@@ -121,6 +121,7 @@ function checkExtraction(
   regressionCase: RegressionCase,
   { run, photoExtractionList }: Extract<CaseRunOutcome, { kind: "ran" }>,
   textReference: CaseTextReference,
+  requiredWarningCodeList: readonly SourceWarningCode[],
 ): { readonly failedCheckList: CaseCheckCode[]; readonly warningList: string[] } {
   const { expectedPreview } = regressionCase;
   const merged = run.analysis.ok ? run.analysis.value.mergedExtraction : emptyMergedExtraction;
@@ -153,9 +154,7 @@ function checkExtraction(
     );
   });
   if (isLegibilityMismatch) failedCheckList.push("legibility_mismatch");
-  if (
-    expectedPreview.requiredSourceWarningCodeList.some((code) => !warningCodeList.includes(code))
-  ) {
+  if (requiredWarningCodeList.some((code) => !warningCodeList.includes(code))) {
     failedCheckList.push("source_warning_missed");
   }
   const extractionText = JSON.stringify({ photoExtractionList, merged });
@@ -189,11 +188,19 @@ export function checkRegressionCase(
   const actualPreview = actualPreviewOf(run);
   const actualKitOutcome = actualKitOutcomeOf(run);
   const { expectedPreview } = regressionCase;
-  const extraction = checkExtraction(regressionCase, outcome, textReference);
-  const isAcceptedRefusal =
-    actualPreview.outcome === "analysis_failed" &&
-    actualPreview.failCode !== null &&
-    expectedPreview.acceptableFailCodeList.some((code) => code === actualPreview.failCode);
+  const acceptedRefusal =
+    actualPreview.outcome === "analysis_failed"
+      ? expectedPreview.acceptableRefusalList.find(
+          (refusal) => refusal.failCode === actualPreview.failCode,
+        )
+      : undefined;
+  const isAcceptedRefusal = acceptedRefusal !== undefined;
+  const extraction = checkExtraction(
+    regressionCase,
+    outcome,
+    textReference,
+    acceptedRefusal?.requiredSourceWarningCodeList ?? expectedPreview.requiredSourceWarningCodeList,
+  );
   const isPreviewMismatch =
     !isAcceptedRefusal &&
     (actualPreview.outcome !== expectedPreview.outcome ||

@@ -21,7 +21,12 @@
     ],
     "unsupportedTopicIdList": [],
     "requiredSourceWarningCodeList": [],
-    "acceptableFailCodeList": ["no_topic_found"]
+    "acceptableRefusalList": [
+      {
+        "failCode": "no_topic_found",
+        "requiredSourceWarningCodeList": ["grade_mismatch"]
+      }
+    ]
   },
   "confirmation": {
     "topicIdList": ["ma7-integer-multiplication-division"],

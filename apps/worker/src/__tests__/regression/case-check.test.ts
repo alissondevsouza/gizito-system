@@ -243,7 +243,9 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
         ...reference.expectedPreview,
         requiredTopicIdList: [],
         acceptableTopicIdList: [FRACTIONS_TOPIC_ID, PERIMETER_TOPIC_ID],
-        acceptableFailCodeList: ["photos_unreadable"],
+        acceptableRefusalList: [
+          { failCode: "photos_unreadable", requiredSourceWarningCodeList: [] },
+        ],
       },
       confirmation: {
         topicIdList: [FRACTIONS_TOPIC_ID, PERIMETER_TOPIC_ID],
@@ -267,7 +269,9 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
         ...borderCase,
         expectedPreview: {
           ...borderCase.expectedPreview,
-          acceptableFailCodeList: ["no_topic_found"],
+          acceptableRefusalList: [
+            { failCode: "no_topic_found", requiredSourceWarningCodeList: ["grade_mismatch"] },
+          ],
         },
       }),
       (await fixtureRunOf(unreadableExtraction)).outcome,
@@ -277,6 +281,34 @@ describe("verificações do caso (spec F1-10, RF-05)", () => {
       "preview_outcome_mismatch",
       "kit_outcome_mismatch",
     ]);
+  });
+
+  it("a recusa aceita confere os avisos dela, sem virar bloqueador crítico", async () => {
+    const reference = regressionCaseOf();
+    const borderCase = regressionCaseOf({
+      photoList: reference.photoList.map((photo) => ({ ...photo, expectedLegibility: "partial" })),
+      expectedPreview: {
+        ...reference.expectedPreview,
+        requiredTopicIdList: [],
+        acceptableTopicIdList: [FRACTIONS_TOPIC_ID, PERIMETER_TOPIC_ID],
+        acceptableRefusalList: [
+          { failCode: "photos_unreadable", requiredSourceWarningCodeList: ["grade_mismatch"] },
+        ],
+      },
+      confirmation: {
+        topicIdList: [FRACTIONS_TOPIC_ID],
+        otherTopicText: null,
+        perceivedDifficulty: null,
+        noteText: null,
+      },
+    });
+    const refused = checkRegressionCase(
+      borderCase,
+      (await fixtureRunOf(unreadableExtraction)).outcome,
+      EMPTY_CASE_TEXT_REFERENCE,
+    );
+    expect(refused.failedCheckList).toEqual(["source_warning_missed"]);
+    expect(refused.expectedKitOutcome).toBe("not_applicable");
   });
 
   it("caso que quebra é crashed e kit_outcome_mismatch, mesmo esperando not_applicable", () => {

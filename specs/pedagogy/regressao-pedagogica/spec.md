@@ -22,7 +22,8 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
   - assunto obrigatório, aceitável ou confirmado que não passa em `isSelectableTopic` é recusado, e o mesmo assunto não pode ser obrigatório e aceitável;
   - não atendido de outra disciplina é recusado;
   - prévia `preview_ready` sem confirmação pede ao menos um obrigatório;
-  - `acceptableFailCodeList` (opcional, vazia por padrão) só cabe com `preview_ready` e lista as recusas que também valem num caso de fronteira (spec pedagógica 1.5 §12.2), e prévia recusada não tem confirmação;
+  - `acceptableRefusalList` (opcional, vazia por padrão) só cabe com `preview_ready` e sem assunto obrigatório. Lista as recusas que também valem num caso de fronteira, cada uma com os avisos exigidos nela (spec pedagógica 1.5 §12.2). Não repete código, e `photos_unreadable` não combina com foto esperada `good`;
+  - prévia recusada não tem confirmação;
   - a confirmação segue as regras do pedido: total com o "outro" em `MIN_TOPIC_COUNT`..`MAX_TOPIC_COUNT` e "outro" sem área não atendida.
 
   · Aceite: teste unit com um caso válido e um inválido por regra; teste unit que carrega os 35 casos do repositório e não acha problema.
@@ -142,7 +143,7 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 - [x] 6.5 Seis casos recalibrados: quatro de gramática do 5º ano e dois de fronteira · Arquivos: `tests/pedagogy/cases/*/case.json`
 - [x] 6.6 Spec pedagógica 1.5 e `known-issues.md`
 - [x] 6.7 Rodada dos casos afetados com `AI_EFFORT_GENERATE=medium` (rodada 2) e dos que falharam com o esforço padrão (rodada 3) · Verificação: `bun run test:pedagogy --case ...`
-- [x] 6.8 Parágrafo de texto-base de 1 a 800 caracteres e `acceptableFailCodeList` nos dois casos de fronteira (decisões do humano de 21/10/2026, depois da rodada 3) · Arquivos: `packages/core/src/pedagogy/kit/schemas.ts`, `apps/worker/src/regression/{regression-case,case-check,regression-report}.ts`, os dois `case.json` · Verificação: `bun run test`
+- [x] 6.8 Parágrafo de texto-base de 1 a 800 caracteres e `acceptableRefusalList` nos dois casos de fronteira (decisões do humano de 21/10/2026, depois da rodada 3) · Arquivos: `packages/core/src/pedagogy/kit/schemas.ts`, `apps/worker/src/regression/{regression-case,case-check,regression-report}.ts`, os dois `case.json` · Verificação: `bun run test`
 - [ ] 6.9 Rodada completa dos 35 casos com o esforço padrão · Verificação: `bun run test:pedagogy`
 - [ ] 6.10 Revisão neutra, rodada 2, das correções
 
@@ -159,22 +160,10 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 | 2026-10-21 | As receitas das variações e os textos inventados ficam em `tests/pedagogy/photo-variations.json`, fora do `case.json` | O `case.json` segue o §12.2 sem campo novo. A receita da variação é dado de preparação, e a verificação `personal_data_copied` lê os textos dela |
 | 2026-10-21 | Revisão neutra, rodada 1: caso quebrado reprova nos critérios 2 e 3; `material_copied` volta, com as frases dos 10 casos da F1-06 em `tests/pedagogy/material-phrases.json`; a busca de dado pessoal casa cada palavra do nome e os 8 últimos dígitos do telefone; erro fora do `runPipeline` vira `crashed` sem derrubar a rodada; o `report.md` ganha custo e tempo por etapa e os avisos da 1ª tentativa | Achados da revisão (`review.md`) |
 | 2026-10-21 | `legibility_mismatch` reprova a foto esperada `good` que não ficou utilizável por qualquer motivo (ilegível, "não é material escolar" ou saída inválida), e não só a marcada `unreadable` | Para o responsável, as três dão a mesma tela de trocar a foto. A regra mais rígida é de propósito |
-| 2026-10-21 | O humano aprovou as cinco recomendações da rodada 1 (spec pedagógica 1.5 §15.10):
-- `tax-v2` com `lp5-word-classes`, com a revisão do professor pendente;
-- `generate` e `review` v2;
-- `min` e `max` no avaliador;
-- os dois casos de fronteira recalibrados;
-- o teste do esforço `medium` na geração;
-- a contagem de 12 imagens no §13.1.
-
-Pediu também para rodar de novo só o necessário | Decisões que o orquestrador não podia tomar: taxonomia, prompts, validador e texto da spec pedagógica |
+| 2026-10-21 | O humano aprovou as cinco recomendações da rodada 1 (spec pedagógica 1.5 §15.10): `tax-v2` com `lp5-word-classes`, com a revisão do professor pendente; `generate` e `review` v2, com `min` e `max` no avaliador; os casos de fronteira recalibrados; o teste do esforço `medium`; e a contagem de 12 imagens no §13.1. Pediu para rodar de novo só o necessário | Decisões que o orquestrador não podia tomar: taxonomia, prompts, validador e texto da spec pedagógica |
 | 2026-10-21 | A rodada das correções cobre só os casos afetados: os 10 críticos, os outros 2 do 5º ano de Português (a lista de assuntos do ano mudou) e `7-math-potenciacao-raiz` (recalibrado). O esforço vem de `AI_EFFORT_GENERATE=medium` na linha de comando, que vence o `.env`; o `.env` não muda | Pedido do humano. A invariante 11 pede a rodada completa antes da `main`, e isso fica dito no handoff |
-| 2026-10-21 | Depois da rodada 3, o humano decidiu:
-- parágrafo de texto-base de 1 a 800 caracteres, porque a carta tem saudação e assinatura curtas;
-- os casos de fronteira aceitam as duas respostas (`acceptableFailCodeList`);
-- rodada completa antes da `main`.
-
-O esforço `medium` volta ao valor atual pelo JSON inválido nos reparos | O diagnóstico, que valida fora do adaptador e imprime só os caminhos do Zod, achou o parágrafo curto. A oscilação se repetiu nas rodadas 2 e 3 |
+| 2026-10-21 | Depois da rodada 3, o humano decidiu: parágrafo de texto-base de 1 a 800 caracteres, porque a carta tem saudação e assinatura curtas; casos de fronteira que aceitam as duas respostas (`acceptableRefusalList`, com os avisos da recusa); e rodada completa antes da `main`. O esforço `medium` volta ao valor atual pelo JSON inválido nos reparos | O diagnóstico, que valida fora do adaptador e imprime só os caminhos do Zod, achou o parágrafo curto. A oscilação se repetiu nas rodadas 2 e 3 |
+| 2026-10-21 | Revisão neutra, rodada 2: a recusa aceita volta a exigir `grade_mismatch` (CRÍTICO); `min` com minutos passa no avaliador, com o símbolo de unidade renomeado no AST para não colidir com a função `min` (ALERTA); `acceptableRefusalList` sem obrigatório, sem repetir e sem `photos_unreadable` com foto `good`; frases do material só de caso existente; a sobreposição de `lp5-word-classes` com `lp5-nominal-agreement` (`EF05LP26`, gênero e número) vai para a revisão do professor | Achados da revisão (`review.md`) |
 | 2026-10-21 | Correções que mudem prompt, modelo, taxonomia, validador ou o texto da spec pedagógica param para o humano antes de entrar | `prompts-v1.md`, `tax-v1` e a spec pedagógica foram aprovados por ele. As dívidas do `known-issues.md` já dizem "decisão do humano" nesses pontos |
 
 ## Status

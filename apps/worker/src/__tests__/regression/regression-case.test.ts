@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { regressionCaseOf } from "#src/__tests__/regression/__fixtures__/regression.ts";
 import {
   findCaseProblemList,
+  loadMaterialPhraseMap,
   loadRegressionCaseList,
   type RegressionCase,
   regressionCaseSchema,
@@ -119,7 +120,7 @@ describe("formato do caso (spec F1-10, RF-01)", () => {
     ]);
   });
 
-  it("recusa aceitável só cabe com a prévia preview_ready", () => {
+  it("recusa aceitável só cabe com a prévia preview_ready, sem obrigatório e sem repetir", () => {
     const reference = regressionCaseOf();
     const refused = regressionCaseOf({
       expectedPreview: {
@@ -128,21 +129,69 @@ describe("formato do caso (spec F1-10, RF-01)", () => {
         failCode: "no_topic_found",
         requiredTopicIdList: [],
         acceptableTopicIdList: [],
-        acceptableFailCodeList: ["photos_unreadable"],
+        acceptableRefusalList: [{ failCode: "no_topic_found", requiredSourceWarningCodeList: [] }],
       },
       expectedKitOutcome: "not_applicable",
     });
     expect(findCaseProblemList(refused)).toEqual([
       "recusa aceitável só com a prévia preview_ready",
     ]);
-    const parsed = regressionCaseSchema.parse({
-      ...reference,
+    const withRequired = regressionCaseOf({
       expectedPreview: {
         ...reference.expectedPreview,
-        acceptableFailCodeList: undefined,
+        acceptableRefusalList: [
+          { failCode: "no_topic_found", requiredSourceWarningCodeList: ["grade_mismatch"] },
+          { failCode: "no_topic_found", requiredSourceWarningCodeList: [] },
+        ],
       },
     });
-    expect(parsed.expectedPreview.acceptableFailCodeList).toEqual([]);
+    expect(findCaseProblemList(withRequired)).toEqual([
+      "recusa aceitável repetida",
+      "caso com recusa aceitável não tem assunto obrigatório",
+    ]);
+    const unreadableWithGoodPhoto = regressionCaseOf({
+      expectedPreview: {
+        ...reference.expectedPreview,
+        requiredTopicIdList: [],
+        acceptableRefusalList: [
+          { failCode: "photos_unreadable", requiredSourceWarningCodeList: [] },
+        ],
+      },
+      confirmation: {
+        topicIdList: ["ma5-fractions"],
+        otherTopicText: null,
+        perceivedDifficulty: null,
+        noteText: null,
+      },
+    });
+    expect(findCaseProblemList(unreadableWithGoodPhoto)).toEqual([
+      "recusa photos_unreadable não combina com foto esperada good",
+    ]);
+    const parsed = regressionCaseSchema.parse({
+      ...reference,
+      expectedPreview: { ...reference.expectedPreview, acceptableRefusalList: undefined },
+    });
+    expect(parsed.expectedPreview.acceptableRefusalList).toEqual([]);
+  });
+
+  it("frase do material de caso desconhecido é recusada na carga", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "gizito-phrases-"));
+    temporaryDirectoryList.push(directory);
+    const path = join(directory, "material-phrases.json");
+    await Bun.write(
+      path,
+      JSON.stringify({
+        phraseListByCase: { "5-math-teste": ["frase do caso"], "5-math-x": ["outra"] },
+      }),
+    );
+    expect(await loadMaterialPhraseMap(path, ["5-math-teste"])).toEqual({
+      ok: false,
+      error: [`${path}: caso desconhecido 5-math-x`],
+    });
+    expect(await loadMaterialPhraseMap(path, ["5-math-teste", "5-math-x"])).toEqual({
+      ok: true,
+      value: { "5-math-teste": ["frase do caso"], "5-math-x": ["outra"] },
+    });
   });
 
   it("prévia analysis_failed com confirmação é problema", () => {
