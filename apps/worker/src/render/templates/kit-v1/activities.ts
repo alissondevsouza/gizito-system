@@ -34,7 +34,6 @@ const PORTUGUESE_WRITING_LINE_COUNT = 4;
 
 function coverHtml(studyKit: StudyKit, context: KitTemplateContext): SafeHtml {
   return html`<section class="cover" data-section="cover">
-<p class="brand">Gizito</p>
 <div class="cover-main">
 <div class="cover-text">
 <h1>Meu reforço de <span class="cover-subject">${subjectLabelMap[studyKit.subject]}</span></h1>
@@ -42,7 +41,7 @@ function coverHtml(studyKit: StudyKit, context: KitTemplateContext): SafeHtml {
 <h2>Assuntos</h2>
 ${topicListHtml(studyKit)}
 </div>
-<img class="cover-mascot" alt="" src="${context.assets.mascotDataUrlMap.hello}">
+<img class="cover-logo" alt="Gizito" src="${context.assets.logoDataUrl}">
 </div>
 <div class="cover-box">
 <h2>O que tem neste caderno</h2>
@@ -94,7 +93,7 @@ ${studyKit.workedExampleList.map(exampleHtml)}
 
 function tipHtml(studyKit: StudyKit, context: KitTemplateContext): SafeHtml {
   return html`<aside class="tip" data-section="tip">
-<img alt="" src="${context.assets.mascotDataUrlMap.point}">
+<img alt="" src="${context.assets.tipMascotDataUrl}">
 <div><h2>Dica do Gizito</h2><p>${kitTextHtml(studyKit.studyTip)}</p></div>
 </aside>`;
 }

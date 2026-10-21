@@ -29,14 +29,13 @@ function coverHtml(studyKit: StudyKit, context: KitTemplateContext): SafeHtml {
   return html`<section class="cover cover-short" data-section="cover">
 <div class="cover-main">
 <div class="cover-text">
-<p class="brand">Gizito</p>
 <h1>Gabarito de <span class="cover-subject">${subjectLabelMap[studyKit.subject]}</span></h1>
 <p class="cover-grade">${gradeLabelMap[studyKit.grade]}</p>
 <p class="label">Assuntos</p>
 ${topicListHtml(studyKit)}
 ${generatedDateHtml(context.generatedAt)}
 </div>
-<img class="cover-mascot" alt="" src="${context.assets.mascotDataUrlMap.success}">
+<img class="cover-logo" alt="Gizito" src="${context.assets.logoDataUrl}">
 </div>
 <div class="cover-box">
 <p>Respostas comentadas das questões do caderno de atividades, na mesma ordem. Para o responsável conferir depois que a criança resolver.</p>

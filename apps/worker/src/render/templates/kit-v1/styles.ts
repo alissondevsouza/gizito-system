@@ -25,24 +25,22 @@ li { margin: 0 0 1mm; }
 .katex { font-size: 1.1em; }
 .katex .katex-base:has(.mfrac) { margin: 0.3em 0; }
 .section-break { break-before: page; }
-.brand { font-size: 16pt; font-weight: 800; color: var(--color-board); margin: 0 0 10mm; }
 .cover-main { display: flex; align-items: flex-start; gap: 8mm; }
 .cover-text { flex: 1; }
 .cover-subject { font-size: 20pt; }
 .cover-grade { font-size: 14pt; font-weight: 700; margin: 0 0 6mm; }
-.cover-mascot { width: auto; height: 50mm; flex: none; }
+.cover-logo { width: 66mm; height: auto; flex: none; }
 .cover-box { border: 1pt solid var(--color-board); border-radius: 3mm; padding: 4mm 5mm; margin: 8mm 0 6mm; }
 .cover-box h2 { margin-top: 0; }
 .cover-date { font-weight: 700; }
 .ai-note { font-size: 9pt; color: var(--color-muted); border-top: 0.5pt solid var(--color-line); padding-top: 2mm; margin-top: 8mm; }
 .cover-short { border-bottom: 1pt solid var(--color-line); padding: 0 0 4mm; margin: 0 0 7mm; }
-.cover-short .brand { margin: 0 0 3mm; }
 .cover-short .cover-main { align-items: center; }
 .cover-short h1 { margin-bottom: 1.5mm; }
 .cover-short .cover-grade { font-size: 12pt; margin: 0 0 2mm; }
 .cover-short .cover-topics { margin-bottom: 2mm; }
 .cover-short .cover-date { margin: 0; }
-.cover-short .cover-mascot { height: 34mm; }
+.cover-short .cover-logo { width: 46mm; }
 .cover-short .cover-box { margin: 3mm 0 0; padding: 2.5mm 4mm; }
 .cover-short .cover-box p { margin: 0; }
 .cover-short .ai-note { margin-top: 3mm; }

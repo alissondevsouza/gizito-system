@@ -1,11 +1,11 @@
 import { loadKatexStylesheet } from "@gizito/integrations";
 
-export type MascotPose = "hello" | "success" | "point";
-
 export type RenderAssets = {
   readonly stylesheet: string;
   readonly marginalFontStylesheet: string;
-  readonly mascotDataUrlMap: Readonly<Record<MascotPose, string>>;
+  readonly logoDataUrl: string;
+  readonly headerLogoDataUrl: string;
+  readonly tipMascotDataUrl: string;
 };
 
 const fontWeightList = [400, 700, 800] as const;
@@ -49,24 +49,32 @@ async function brandFontFaceList(weightList: readonly FontWeight[]): Promise<rea
   );
 }
 
-async function mascotDataUrl(pose: MascotPose): Promise<string> {
-  return dataUrlOf(new URL(`assets/gizito-${pose}.png`, import.meta.url), "image/png");
+function assetDataUrl(fileName: string, mediaType: string): Promise<string> {
+  return dataUrlOf(new URL(`assets/${fileName}`, import.meta.url), mediaType);
 }
 
 async function readRenderAssets(): Promise<RenderAssets> {
-  const [fontFaceList, marginalFontFaceList, katexStylesheet, hello, success, point] =
-    await Promise.all([
-      brandFontFaceList(fontWeightList),
-      brandFontFaceList(marginalFontWeightList),
-      loadKatexStylesheet(),
-      mascotDataUrl("hello"),
-      mascotDataUrl("success"),
-      mascotDataUrl("point"),
-    ]);
+  const [
+    fontFaceList,
+    marginalFontFaceList,
+    katexStylesheet,
+    logoDataUrl,
+    headerLogoDataUrl,
+    tipMascotDataUrl,
+  ] = await Promise.all([
+    brandFontFaceList(fontWeightList),
+    brandFontFaceList(marginalFontWeightList),
+    loadKatexStylesheet(),
+    assetDataUrl("gizito-logo-cover.jpg", "image/jpeg"),
+    assetDataUrl("gizito-logo-header.jpg", "image/jpeg"),
+    assetDataUrl("gizito-point.png", "image/png"),
+  ]);
   return {
     stylesheet: [...fontFaceList, katexStylesheet].join("\n"),
     marginalFontStylesheet: marginalFontFaceList.join("\n"),
-    mascotDataUrlMap: { hello, success, point },
+    logoDataUrl,
+    headerLogoDataUrl,
+    tipMascotDataUrl,
   };
 }
 

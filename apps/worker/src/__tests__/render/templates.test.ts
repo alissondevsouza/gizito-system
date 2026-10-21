@@ -120,7 +120,7 @@ describe("caderno de atividades (spec F1-08, RF-02)", () => {
     for (const topic of realMathKit.topicList)
       expect(cover).toContain(kitTextHtml(topic.label).value);
     expect(cover).toContain(`Gerado em ${formatKitDate(FIXED_GENERATED_AT)}`);
-    expect(cover).toContain(assets.mascotDataUrlMap.hello);
+    expect(cover).toContain(`alt="Gizito" src="${assets.logoDataUrl}"`);
     expect(cover).toContain(AI_NOTE_TEXT);
     expect(formatKitDate(new Date("2026-10-21T02:30:00.000Z"))).toBe("20/10/2026");
   });
@@ -169,7 +169,8 @@ describe("caderno de atividades (spec F1-08, RF-02)", () => {
     expect(mock).not.toContain(kitTextHtml(realMathKit.studyTip).value);
     expect(mock).not.toContain("<img");
     expect(activities.html.split(kitTextHtml(realMathKit.studyTip).value)).toHaveLength(2);
-    expect(sectionHtml(activities.html, "tip")).toContain(assets.mascotDataUrlMap.point);
+    expect(sectionHtml(activities.html, "tip")).toContain(assets.tipMascotDataUrl);
+    expect(activities.html.split("<img").length - 1).toBe(2);
   });
 
   it("põe o texto-base no bloco das questões que o citam", async () => {
@@ -251,7 +252,7 @@ describe("gabarito (spec F1-08, RF-03)", () => {
     const cover = sectionHtml(documentPairOf(realPortugueseKit).answerKey.html, "cover");
     expect(cover).toContain('Gabarito de <span class="cover-subject">Língua Portuguesa</span>');
     expect(cover).toContain("7º ano");
-    expect(cover).toContain(assets.mascotDataUrlMap.success);
+    expect(cover).toContain(`alt="Gizito" src="${assets.logoDataUrl}"`);
     expect(cover).toContain("Para o responsável conferir depois que a criança resolver.");
     expect(cover).toContain(`Gerado em ${formatKitDate(FIXED_GENERATED_AT)}`);
     for (const topic of realPortugueseKit.topicList)
@@ -263,7 +264,7 @@ describe("gabarito (spec F1-08, RF-03)", () => {
 describe("cabeçalho e rodapé (spec F1-08, RF-04)", () => {
   it("cabeçalho com Gizito, disciplina, ano e assuntos; rodapé com o arquivo e a página", () => {
     const { activities, answerKey } = documentPairOf(realMathKit);
-    expect(activities.headerHtml).toContain("Gizito");
+    expect(activities.headerHtml).toContain(`alt="Gizito" src="${assets.headerLogoDataUrl}"`);
     expect(activities.headerHtml).toContain("Matemática · 5º ano");
     expect(activities.headerHtml).toContain(
       realMathKit.topicList.map((topic) => topic.label).join(", "),

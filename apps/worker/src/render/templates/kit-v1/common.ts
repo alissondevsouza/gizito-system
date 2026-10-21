@@ -101,9 +101,9 @@ function marginalFontHtml(assets: RenderAssets): SafeHtml {
 
 export function headerHtml(studyKit: StudyKit, assets: RenderAssets): string {
   const topicText = studyKit.topicList.map((topic) => topic.label).join(", ");
-  return html`${marginalFontHtml(assets)}<div style="${marginalStyle}"><span><b style="color:#214c45">Gizito</b> · ${
+  return html`${marginalFontHtml(assets)}<div style="${marginalStyle};align-items:center"><span style="display:flex;align-items:center;gap:2mm"><img alt="Gizito" src="${assets.headerLogoDataUrl}" style="height:7mm;width:auto"><span>${
     subjectLabelMap[studyKit.subject]
-  } · ${gradeLabelMap[studyKit.grade]}</span><span style="overflow:hidden;text-overflow:ellipsis">${topicText}</span></div>`
+  } · ${gradeLabelMap[studyKit.grade]}</span></span><span style="overflow:hidden;text-overflow:ellipsis">${topicText}</span></div>`
     .value;
 }
 
