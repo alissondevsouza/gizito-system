@@ -72,16 +72,16 @@ flowchart LR
 ### 1.4 Pendências do humano, com antecedência
 
 - [x] `git init` e primeiro commit — necessário em F0-01 — feito em 14/10/2026
-- [ ] Chave do provedor de IA — necessário em F1-05 — provedor decidido em 20/10/2026 (Anthropic: Haiku 5.5 na extração, Sonnet 5.5 na geração e revisão, PRD 1.4 §12.1); falta a conta com limite de gasto e a chave no `.env`
-- [ ] 40 materiais fotografados (4 anos × 2 disciplinas × 5), com manuscritos, fotos ruins e dados pessoais a cobrir — necessário em F1-10 — começar no início de F1; leva semanas
-- [ ] Professor(a) para revisar amostra — necessário em F1-11 — combinar em F1; a taxonomia da F1-01 (`docs/pedagogy/taxonomia.md`) já foi revisada e aprovada pelo professor em 19/10/2026
-- [ ] Conta Mercado Pago pessoa física, chave Pix, aplicação e credenciais de teste — necessário em F2-03 — começar em F0, para a conta envelhecer
-- [ ] Domínio e consulta de anterioridade no INPI — necessário em F2-07 e antes de divulgar — começar em F0
+- [x] Chave do provedor de IA — necessário em F1-05 — provedor decidido em 20/10/2026 (Anthropic: Haiku 5.5 na extração, Sonnet 5.5 na geração e revisão, PRD 1.4 §12.1); chave no `.env` usada pelos testes contra a API em 20/10/2026 e limite de gasto na conta confirmado em 21/10/2026
+- [ ] 40 materiais fotografados (4 anos × 2 disciplinas × 5), com manuscritos, fotos ruins e dados pessoais a cobrir — necessário em F1-10 — começar no início de F1; leva semanas. Em 21/10/2026 chegaram 30 imagens em `docs/materiais-fotograficos/`, fora do git. São geradas por IA (20 trazem o manifesto C2PA da OpenAI; as outras 10 são recortes de um mosaico), e o §12.1 da spec pedagógica pede fotos reais: usá-las na regressão é decisão do humano. Faltam 10 imagens (2 de Matemática do 4º, 1 de Português do 4º, 1 de Matemática do 5º, 1 de cada disciplina do 6º, 1 de Matemática do 7º, 3 de Português do 7º). Faltam também, do §13.1, 1 foto totalmente ilegível, 4 com dado pessoal inventado visível e mais 1 com assunto não atendido junto de atendidos. Três imagens têm conteúdo de outro ano (`grade_mismatch`): sujeito e predicado no 6º, potenciação no 7º, carta no 7º
+- [x] Professor(a) para revisar amostra — necessário em F1-11 — combinar em F1; a taxonomia da F1-01 (`docs/pedagogy/taxonomia.md`) já foi revisada e aprovada pelo professor em 19/10/2026; revisão da amostra combinada, confirmado em 21/10/2026
+- [ ] Conta Mercado Pago pessoa física, chave Pix, aplicação e credenciais de teste — necessário em F2-03 — começar em F0, para a conta envelhecer; conta criada (confirmado em 21/10/2026), faltam as credenciais de teste
+- [ ] Domínio e consulta de anterioridade no INPI — necessário em F2-07 e antes de divulgar — começar em F0; `gizito.com.br` disponível para registro em 21/10/2026, ainda não registrado; consulta ao INPI sem registro aqui
 - [ ] Bucket R2 — necessário em F2-01 — começar no início de F2
 - [ ] Resend com domínio autenticado (SPF, DKIM, DMARC) — necessário em F2-07 — começar no início de F2; DNS leva horas a dias
 - [ ] VPS — necessário em F2-13 — começar no meio de F2
-- [ ] Chip e aparelho dedicados ao WhatsApp, número aquecido com uso normal — necessário em F2-10 — comprar em F1; aquecer 1 a 2 semanas
-- [ ] Seis poses do mascote geradas a partir de `docs/gizito-image/mascote-sem-fundo.png` — necessário em F2-08 — fazer em F1, em paralelo. Hoje existem só as explorações de referência do design doc 3.4, nenhuma pose de produção
+- [ ] Chip e aparelho dedicados ao WhatsApp, número aquecido com uso normal — necessário em F2-10 — comprar em F1; aquecer 1 a 2 semanas; ainda não comprados em 21/10/2026
+- [ ] Seis poses do mascote geradas a partir de `docs/gizito-image/mascote-sem-fundo.png` — necessário em F2-08 — fazer em F1, em paralelo. Seis imagens em `docs/gizito-image/mascotes-poses/` (21/10/2026), com fundo transparente e o personagem da base canônica: braços abertos (01), joinha (02), comemorando (03), carregando livros (04), dedo para cima (05) e mão no queixo (06). Cobrem `hello`, `success`, `point` e `thinking` do design doc 3.2; faltam `idle` (postura neutra, braço abaixado) e `concern` (acolhedora, para foto ilegível e erro), que podem substituir uma das duas de comemoração e a dos livros
 - [ ] Textos legais (termos com arrependimento, privacidade) — necessário em F2-12 — redigir em F2
 
 ## 2. Visão geral
@@ -159,7 +159,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 - [ ] **F1-06 `pipeline-extracao` — em andamento** — worker · M · depende: F1-01, F1-03, F1-05 · `specs/worker/pipeline-extracao/`
   - Entrega: prompt `extract` v1; mapeamento para a taxonomia com confiança; `material_profile`; legibilidade por foto; cache por hash; aviso de dado pessoal; assuntos ainda não atendidos sinalizados (PRD 7.7)
   - Pronto quando: em 10 casos reais, assuntos corretos; foto ilegível recusada; sem transcrição integral
-  - Feito até agora (20/10/2026): prompt `extract` v1 transcrito de `prompts-v1.md` (teste compara com o doc) e `analyzeMaterial` em `apps/worker/src/pipeline/`: uma chamada por foto em paralelo, uma nova chamada para saída inválida, cache por hash com a extração já sanitizada e validade da foto, junção e decisão da prévia da F1-03, custo por chamada para o `ai_call`. `test:extract-live` com cinco fotos sintéticas passou contra a API (US$ 0,0004 a 0,0015 por foto). Revisão neutra aprovada na rodada 1, com os dois alertas corrigidos. Faltam o merge e os 10 casos reais, que esperam as fotos (F1-10)
+  - Feito até agora (20/10/2026): prompt `extract` v1 transcrito de `prompts-v1.md` (teste compara com o doc) e `analyzeMaterial` em `apps/worker/src/pipeline/`: uma chamada por foto em paralelo, uma nova chamada para saída inválida, cache por hash com a extração já sanitizada e validade da foto, junção e decisão da prévia da F1-03, custo por chamada para o `ai_call`. `test:extract-live` com cinco fotos sintéticas passou contra a API (US$ 0,0004 a 0,0015 por foto). Revisão neutra aprovada na rodada 1, com os dois alertas corrigidos. Mesclada em 20/10/2026 (`31b3a8b`). Faltam os 10 casos reais, que esperam fotos reais (pendência 1.4; F1-10)
 - [ ] **F1-07 `pipeline-geracao`** — worker · L · depende: F1-03, F1-04, F1-05, F1-06
   - Entrega: prompts `plan`, `generate`, `review` v1; orquestração das etapas; uma regeneração; `ai_call` por chamada; limite de custo por pedido
   - Pronto quando: kit válido em 10 casos; fixtures defeituosas disparam cada bloqueador
