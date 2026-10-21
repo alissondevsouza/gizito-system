@@ -1,100 +1,24 @@
 import { describe, expect, it } from "bun:test";
-import {
-  ACTIVITIES_PAGE_RANGE,
-  createValidationIssue,
-  err,
-  type MergedTopicCandidate,
-  ok,
-  studyKitSchema,
-} from "@gizito/core";
-import { FIXTURE_MATERIAL_PROFILE, MATH_TOPIC_REF_LIST } from "@gizito/core/testing";
-import { isKatexParsable } from "@gizito/integrations";
-import type { FakeAiProvider } from "@gizito/integrations/fakes";
+import { err, type MergedTopicCandidate, ok, studyKitSchema } from "@gizito/core";
+import { MATH_TOPIC_REF_LIST } from "@gizito/core/testing";
 import {
   photoExtractionOf,
-  syntheticImage,
   topicCandidateOf,
   unreadableExtraction,
 } from "#src/__tests__/pipeline/__fixtures__/extraction.ts";
+import { OTHER_TOPIC_TEXT, stageListOf } from "#src/__tests__/pipeline/__fixtures__/generation.ts";
 import {
-  createFixtureAiProvider,
-  fixtureOf,
-  OTHER_TOPIC_TEXT,
-  stageListOf,
-} from "#src/__tests__/pipeline/__fixtures__/generation.ts";
+  aiProviderWithExtraction,
+  createCountingRenderer,
+  pipelineDependenciesOf as dependenciesOf,
+  FRACTIONS_TOPIC_ID,
+  pipelineRequestOf as requestOf,
+} from "#src/__tests__/pipeline/__fixtures__/pipeline.ts";
 import {
   confirmTopicRefList,
-  type PipelineDependencies,
-  type PipelineRequest,
   type PipelineStage,
   runPipeline,
 } from "#src/pipeline/run-pipeline.ts";
-import type { PdfRenderer } from "#src/render/pdf-renderer.ts";
-
-const fixture = fixtureOf("math");
-const fractionsTopicId = "ma5-fractions";
-const perimeterTopicId = "ma5-perimeter-area";
-const renderedPdf = ok({
-  bytes: new TextEncoder().encode("%PDF-1.7"),
-  pageCount: ACTIVITIES_PAGE_RANGE.min,
-});
-
-function createCountingRenderer(failing = false) {
-  const renderList: string[] = [];
-  const pdfRenderer: PdfRenderer = {
-    async render(document) {
-      renderList.push(document.itemAttribute);
-      return failing
-        ? err({ issueList: [createValidationIssue("render_failed")], errorName: "RenderError" })
-        : renderedPdf;
-    },
-    async close() {},
-  };
-  return { pdfRenderer, renderList };
-}
-
-function aiProviderWithExtraction(
-  extraction = photoExtractionOf({
-    topicCandidateList: [topicCandidateOf(fractionsTopicId), topicCandidateOf(perimeterTopicId)],
-    materialProfile: FIXTURE_MATERIAL_PROFILE,
-  }),
-): FakeAiProvider {
-  const aiProvider = createFixtureAiProvider(fixture);
-  aiProvider.respondWith("extract", () => ({ kind: "output", output: extraction }));
-  return aiProvider;
-}
-
-async function requestOf(override: Partial<PipelineRequest> = {}): Promise<PipelineRequest> {
-  return {
-    grade: "5",
-    subject: "math",
-    photoList: [
-      { image: await syntheticImage(10), insertDatetime: new Date() },
-      { image: await syntheticImage(20), insertDatetime: new Date() },
-    ],
-    topicIdList: null,
-    otherTopicText: OTHER_TOPIC_TEXT,
-    perceivedDifficulty: null,
-    noteText: null,
-    ...override,
-  };
-}
-
-function dependenciesOf(
-  aiProvider: FakeAiProvider,
-  pdfRenderer: PdfRenderer,
-  override: Partial<PipelineDependencies> = {},
-): PipelineDependencies {
-  return {
-    aiProvider,
-    extractModel: "claude-haiku-5-5",
-    mathEvaluator: fixture.mathEvaluator,
-    isMathMarkupParsable: isKatexParsable,
-    pdfRenderer,
-    now: () => new Date(),
-    ...override,
-  };
-}
 
 function candidateOf(
   topicId: string,
@@ -160,7 +84,7 @@ describe("runPipeline para na etapa certa (spec F1-09, RF-04)", () => {
   it("sem candidato high nem outro, para na confirmação sem gerar", async () => {
     const aiProvider = aiProviderWithExtraction(
       photoExtractionOf({
-        topicCandidateList: [topicCandidateOf(fractionsTopicId, { confidence: "medium" })],
+        topicCandidateList: [topicCandidateOf(FRACTIONS_TOPIC_ID, { confidence: "medium" })],
       }),
     );
     const run = await runPipeline(

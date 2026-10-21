@@ -88,10 +88,10 @@ Riscos: Chromium ausente na máquina vira `render_failed` com `errorName`. O uso
 - [x] 1.2 Testes RF-03 a RF-07 · Arquivos: `apps/worker/src/__tests__/pipeline/run-pipeline.test.ts`
 
 ### M2 — Comando
-- [ ] 2.1 `parsePipelineArgs` e `loadPipelinePhotoList` com testes RF-01 e RF-02 · Arquivos: `apps/worker/src/cli/pipeline-input.ts`, `apps/worker/src/__tests__/cli/pipeline-input.test.ts`
-- [ ] 2.2 `buildPipelineSummary` e `formatPipelineSummary` com testes RF-08 · Arquivos: `apps/worker/src/cli/pipeline-report.ts`, `apps/worker/src/__tests__/cli/pipeline-report.test.ts`
-- [ ] 2.3 Script e `package.json` da raiz · Arquivos: `apps/worker/scripts/pipeline.ts`, `package.json` · Verificação: `bun run pipeline` sem argumentos mostra o uso; com argumento inválido, a mensagem e saída 2
-- [ ] 2.4 `bun run lint`, `bun run typecheck`, `bun run test`
+- [x] 2.1 `parsePipelineArgs` e `loadPipelinePhotoList` com testes RF-01 e RF-02 · Arquivos: `apps/worker/src/cli/pipeline-input.ts`, `apps/worker/src/__tests__/cli/pipeline-input.test.ts`
+- [x] 2.2 `buildPipelineSummary` e `formatPipelineSummary` com testes RF-08 · Arquivos: `apps/worker/src/cli/pipeline-report.ts`, `apps/worker/src/__tests__/cli/pipeline-report.test.ts`
+- [x] 2.3 Script e `package.json` da raiz · Arquivos: `apps/worker/scripts/pipeline.ts`, `package.json` · Verificação: `bun run pipeline` sem argumentos mostra o uso; com argumento inválido, a mensagem e saída 2
+- [x] 2.4 `bun run lint`, `bun run typecheck`, `bun run test`
 
 ### M3 — Execução real e docs
 - [ ] 3.1 Execução real com uma imagem de Matemática e uma de Português (RF-09)
@@ -108,4 +108,4 @@ Riscos: Chromium ausente na máquina vira `render_failed` com `errorName`. O uso
 
 ## Status
 
-M1 concluído. M2 em andamento: parser, resumo e script.
+M1 e M2 concluídos. M3 em andamento: execução real e docs.
