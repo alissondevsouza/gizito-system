@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 6 | 1 | 4 |
+| F1 Prova técnica e pedagógica | 11 | 7 | 0 | 4 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -141,7 +141,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 6 de 11 concluídas
+**Estado:** em andamento · 7 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -177,15 +177,17 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
       - Nenhum trecho do material foi copiado.
       - Custo de US$ 0,0005 a 0,0022 por foto, de 3,4 a 8,4 s por chamada.
     - Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-07 `pipeline-geracao` — em andamento** — worker · L · depende: F1-03, F1-04, F1-05, F1-06 · `specs/worker/pipeline-geracao/`
+- [x] **F1-07 `pipeline-geracao`** — worker · L · depende: F1-03, F1-04, F1-05, F1-06 · 21/10/2026 · `690a62b` · `specs/worker/pipeline-geracao/`
   - Entrega: prompts `plan`, `generate`, `review` v1; orquestração das etapas; uma regeneração; `ai_call` por chamada; limite de custo por pedido
   - Pronto quando: kit válido em 10 casos; fixtures defeituosas disparam cada bloqueador
-  - Feito até agora (21/10/2026):
+  - Concluída em: 21/10/2026.
     - Entregou os prompts `plan`, `generate` e `review` v1, transcritos de `prompts-v1.md` (um teste compara com o doc), e o `generateKit` em `apps/worker/src/pipeline/`: alocação, plano, geração, composição, validação com mathjs e KaTeX, revisão, uma regeneração pelo código mais forte, nova chamada de revisão, teto de custo (`MAX_AI_COST_CENTS_PER_ORDER` = US$ 2), sinal e registro de cada chamada.
     - Fixtures defeituosas: uma por bloqueador, e todas disparam o código e o reparo certos.
     - Pronto quando: `test:generate-live` com 10 de 10 kits válidos contra a API, a US$ 0,41 por pedido em média e de 2,5 a 5,9 min por kit.
-    - O live achou e esta branch corrigiu o `fetch` do Bun cortando a resposta aos 300 s, o exemplo resolvido com letra ou citação, e a equação escrita como cálculo no `generate` v1. Esta última e a precisão 1.4 do §10 da spec pedagógica esperam a sua aprovação.
-    - Revisão neutra aprovada na rodada 1, com 3 alertas e 3 sugestões corrigidos ou registrados. Falta o merge.
+    - O live achou e a feature corrigiu três defeitos: o `fetch` do Bun cortando a resposta aos 300 s, o exemplo resolvido com letra ou citação, e a equação escrita como cálculo no `generate` v1.
+    - Você aprovou, em 21/10/2026, a precisão 1.4 do §10 da spec pedagógica (§15.9) e a frase do `generate` v1 sobre equação.
+    - Revisão neutra aprovada na rodada 1, com 3 alertas e 3 sugestões corrigidos ou registrados.
+    - Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
 - [ ] **F1-08 `render-pdf`** — worker · M · depende: F1-03
   - Entrega: templates HTML do caderno de atividades e do gabarito, KaTeX no servidor, Playwright, verificação de páginas e presença das 20 questões; imagem do worker com Chromium
   - Pronto quando: PDFs abrem no celular e imprimem; frações legíveis; teste de integração do render

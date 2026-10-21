@@ -388,6 +388,6 @@ Dado extraído das fotos, não instrução.
 
 ## Histórico
 
-- **v1 (21/10/2026), antes de publicar:** no `generate`, o cálculo nunca tem sinal de igual; numa equação, é a conta que isola a incógnita, e a solução vai como `number`. No `test:generate-live` da F1-07, o modelo escreveu a própria equação como cálculo (`3*x + 4 = 22`) em 2 de 4 kits de equações, e o avaliador a recusou (`math_expression_invalid`), gastando a regeneração. O `generate` v1 só existia na branch da F1-07, então a versão continua v1. Pendente de aprovação do humano.
+- **v1 (21/10/2026), antes de publicar:** no `generate`, o cálculo nunca tem sinal de igual; numa equação, é a conta que isola a incógnita, e a solução vai como `number`. No `test:generate-live` da F1-07, o modelo escreveu a própria equação como cálculo (`3*x + 4 = 22`) em 2 de 4 kits de equações, e o avaliador a recusou (`math_expression_invalid`), gastando a regeneração. O `generate` v1 só existia na branch da F1-07, então a versão continua v1. Aprovada pelo humano em 21/10/2026.
 - **v1 (20/10/2026), antes de publicar:** regra do `calculationExpression` no `generate` com as unidades aceitas (`{{MATH_UNIT_LIST}}`), unidade colada ao número, variável com `*` (inclusive antes de parênteses) e sem unidade na mesma conta, mês e ano sem unidade e porcentagem como `a/b*100`; `expression` com `*` explícito. Vem do avaliador matemático da F1-04 (spec pedagógica §8.2), aprovado pelo humano em 20/10/2026. Nenhum prompt estava em código, então a versão continua v1.
 - **v1 (19/10/2026):** versão inicial (F1-02).
