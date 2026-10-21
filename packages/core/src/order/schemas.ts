@@ -5,6 +5,7 @@ import {
   MAX_NOTE_LENGTH,
   MAX_OTHER_TOPIC_LENGTH,
   MAX_TOPIC_COUNT,
+  MIN_OTHER_TOPIC_LENGTH,
   MIN_TOPIC_COUNT,
   PUBLIC_TOKEN_LENGTH,
   SHORT_CODE_ALPHABET,
@@ -42,7 +43,11 @@ export const phoneSchema = z.string().regex(/^\+[1-9]\d{9,14}$/);
 export type Phone = z.infer<typeof phoneSchema>;
 
 export const noteTextSchema = z.string().trim().max(MAX_NOTE_LENGTH);
-export const otherTopicTextSchema = z.string().trim().min(2).max(MAX_OTHER_TOPIC_LENGTH);
+export const otherTopicTextSchema = z
+  .string()
+  .trim()
+  .min(MIN_OTHER_TOPIC_LENGTH)
+  .max(MAX_OTHER_TOPIC_LENGTH);
 
 export const topicIdSchema = z
   .string()

@@ -2,8 +2,17 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { MAX_NOTE_LENGTH, MAX_OTHER_TOPIC_LENGTH, MAX_PHOTO_BYTES } from "@gizito/core";
-import { loadPipelinePhotoList, parsePipelineArgs } from "#src/cli/pipeline-input.ts";
+import {
+  MAX_NOTE_LENGTH,
+  MAX_OTHER_TOPIC_LENGTH,
+  MAX_PHOTO_BYTES,
+  MIN_OTHER_TOPIC_LENGTH,
+} from "@gizito/core";
+import {
+  loadPipelinePhotoList,
+  parseAiEnvironment,
+  parsePipelineArgs,
+} from "#src/cli/pipeline-input.ts";
 
 const requiredArgList = ["--grade", "5", "--subject", "math"];
 
@@ -38,6 +47,13 @@ describe("parsePipelineArgs aceita o comando (spec F1-09, RF-01)", () => {
       argsOf(["--photos", "a.png", "--photos", "b.jpeg", "c.png", ...requiredArgList])
         .photoPathList,
     ).toEqual(["a.png", "b.jpeg", "c.png"]);
+  });
+
+  it("as fotos seguem a ordem da linha de comando, também entre --photos", () => {
+    expect(
+      argsOf(["--photos", "a.png", "b.png", ...requiredArgList, "--photos", "c.png", "d.png"])
+        .photoPathList,
+    ).toEqual(["a.png", "b.png", "c.png", "d.png"]);
   });
 
   it("cada opcional chega aparado", () => {
@@ -127,6 +143,16 @@ describe("parsePipelineArgs recusa antes de qualquer chamada (spec F1-09, RF-02)
     ],
     ["--topics vazio", ["--photos", "a.png", ...requiredArgList, "--topics", ","], "somam 0"],
     [
+      "caminho solto antes de --photos",
+      ["a.png", "--photos", "b.png", ...requiredArgList],
+      "caminho solto antes de --photos: a.png",
+    ],
+    [
+      "outro curto demais",
+      ["--photos", "a.png", ...requiredArgList, "--other", "a"],
+      `--other aceita de ${MIN_OTHER_TOPIC_LENGTH} a ${MAX_OTHER_TOPIC_LENGTH} caracteres`,
+    ],
+    [
       "outro longo demais",
       ["--photos", "a.png", ...requiredArgList, "--other", "x".repeat(MAX_OTHER_TOPIC_LENGTH + 1)],
       "--other aceita",
@@ -148,6 +174,41 @@ describe("parsePipelineArgs recusa antes de qualquer chamada (spec F1-09, RF-02)
     ],
   ])("%s", (_name, argv, expectedText) => {
     expect(errorListOf(argv).some((error) => error.includes(expectedText))).toBe(true);
+  });
+});
+
+describe("parseAiEnvironment (spec F1-09, RF-02)", () => {
+  it("devolve a configuração de IA do ambiente", () => {
+    expect(
+      parseAiEnvironment({
+        AI_API_KEY: "chave-de-teste",
+        AI_MODEL_EXTRACT: "claude-haiku-5-5",
+        AI_MODEL_GENERATE: "claude-sonnet-5-5",
+        AI_EFFORT_GENERATE: "high",
+        OTHER_VARIABLE: "ignorada",
+      }),
+    ).toEqual({
+      ok: true,
+      value: {
+        AI_API_KEY: "chave-de-teste",
+        AI_MODEL_EXTRACT: "claude-haiku-5-5",
+        AI_MODEL_GENERATE: "claude-sonnet-5-5",
+        AI_EFFORT_GENERATE: "high",
+      },
+    });
+  });
+
+  it("recusa citando só o nome das variáveis, nunca o valor", () => {
+    const parsed = parseAiEnvironment({
+      AI_API_KEY: "SENTINELA-SEGREDO",
+      AI_MODEL_EXTRACT: " ",
+      AI_EFFORT_EXTRACT: "SENTINELA-ESFORCO",
+    });
+    if (parsed.ok) throw new Error("ambiente aceito sem modelo");
+    expect(parsed.error).toEqual([
+      "variável de IA ausente ou inválida no .env: AI_MODEL_EXTRACT, AI_MODEL_GENERATE, AI_EFFORT_EXTRACT",
+    ]);
+    expect(parsed.error.join("")).not.toContain("SENTINELA");
   });
 });
 

@@ -1,17 +1,28 @@
-import { describe, expect, it } from "bun:test";
-import { err, type MergedTopicCandidate, ok, studyKitSchema } from "@gizito/core";
+import { describe, expect, it, spyOn } from "bun:test";
+import {
+  err,
+  JOB_MAX_RUN_SECONDS,
+  type MergedTopicCandidate,
+  ok,
+  studyKitSchema,
+} from "@gizito/core";
 import { MATH_TOPIC_REF_LIST } from "@gizito/core/testing";
 import {
   photoExtractionOf,
   topicCandidateOf,
   unreadableExtraction,
 } from "#src/__tests__/pipeline/__fixtures__/extraction.ts";
-import { OTHER_TOPIC_TEXT, stageListOf } from "#src/__tests__/pipeline/__fixtures__/generation.ts";
+import {
+  OTHER_TOPIC_TEXT,
+  reviewWithIssueOf,
+  stageListOf,
+} from "#src/__tests__/pipeline/__fixtures__/generation.ts";
 import {
   aiProviderWithExtraction,
   createCountingRenderer,
   pipelineDependenciesOf as dependenciesOf,
   FRACTIONS_TOPIC_ID,
+  pipelineFixture,
   pipelineRequestOf as requestOf,
 } from "#src/__tests__/pipeline/__fixtures__/pipeline.ts";
 import {
@@ -109,6 +120,38 @@ describe("runPipeline para na etapa certa (spec F1-09, RF-04)", () => {
     expect(run.outcome).toEqual({ status: "failed", stage: "render", code: "render_failed" });
     expect(run.generation?.ok).toBe(true);
   });
+
+  it("bloqueador também depois da regeneração para na geração com o último kit, sem render", async () => {
+    const aiProvider = aiProviderWithExtraction();
+    const flaggedReview = reviewWithIssueOf(pipelineFixture.studyKit, [
+      { itemId: "p1", code: "off_topic" },
+    ]);
+    aiProvider.enqueueOutput("review", flaggedReview);
+    aiProvider.enqueueOutput("review", {
+      ...flaggedReview,
+      itemReviewList: flaggedReview.itemReviewList.filter((review) => review.itemId === "p1"),
+    });
+    const { pdfRenderer, renderList } = createCountingRenderer();
+    const run = await runPipeline(await requestOf(), dependenciesOf(aiProvider, pdfRenderer));
+    expect(run.outcome).toEqual({
+      status: "failed",
+      stage: "generate",
+      code: "generation_blocked",
+    });
+    if (run.generation === null || run.generation.ok) throw new Error("geração sem falha");
+    expect(run.generation.error.lastStudyKit?.practiceQuestionList[0]?.questionId).toBe("p1");
+    expect(run.render).toBeNull();
+    expect(renderList).toEqual([]);
+    expect(run.aiCallList.map((call) => call.stage)).toEqual([
+      "extract",
+      "extract",
+      "plan",
+      "generate",
+      "review",
+      "generate",
+      "review",
+    ]);
+  });
 });
 
 describe("confirmTopicRefList (spec F1-09, RF-05)", () => {
@@ -186,17 +229,28 @@ describe("runPipeline com teto de tempo por etapa (spec F1-09, RF-06)", () => {
     ).toEqual(["analyze", "analyze", "generate", "generate", "generate"]);
   });
 
-  it("sem fábrica injetada, toda chamada sai com um sinal ainda ativo", async () => {
+  it("sem fábrica injetada, cada etapa-job ganha um timeout de JOB_MAX_RUN_SECONDS", async () => {
     const aiProvider = aiProviderWithExtraction();
-    await runPipeline(
-      await requestOf(),
-      dependenciesOf(aiProvider, createCountingRenderer().pdfRenderer),
-    );
-    expect(
-      aiProvider.requestList.every(
-        (record) => record.request.signal instanceof AbortSignal && !record.request.signal.aborted,
-      ),
-    ).toBe(true);
+    const timeoutSpy = spyOn(AbortSignal, "timeout");
+    try {
+      await runPipeline(
+        await requestOf(),
+        dependenciesOf(aiProvider, createCountingRenderer().pdfRenderer),
+      );
+      expect(timeoutSpy.mock.calls).toEqual([
+        [JOB_MAX_RUN_SECONDS * 1000],
+        [JOB_MAX_RUN_SECONDS * 1000],
+      ]);
+      const timeoutSignalList = timeoutSpy.mock.results.map((result) => result.value);
+      expect(
+        aiProvider.requestList.every(
+          (record) =>
+            timeoutSignalList.includes(record.request.signal) && !record.request.signal?.aborted,
+        ),
+      ).toBe(true);
+    } finally {
+      timeoutSpy.mockRestore();
+    }
   });
 
   it("sinal abortado para o pedido com ai_aborted", async () => {
@@ -223,13 +277,14 @@ describe("runPipeline soma a extração ao teto de custo (spec F1-09, RF-07)", (
       .reduce((total, call) => total + call.costCents, 0);
     expect(extractCostCents).toBeGreaterThan(0);
     const aiProvider = aiProviderWithExtraction();
+    const { pdfRenderer, renderList } = createCountingRenderer();
     const run = await runPipeline(
       await requestOf(),
-      dependenciesOf(aiProvider, createCountingRenderer().pdfRenderer, {
-        maxCostCents: extractCostCents,
-      }),
+      dependenciesOf(aiProvider, pdfRenderer, { maxCostCents: extractCostCents }),
     );
     expect(run.outcome).toEqual({ status: "failed", stage: "generate", code: "ai_cost_exceeded" });
     expect(stageListOf(aiProvider)).toEqual(["extract", "extract"]);
+    expect(run.render).toBeNull();
+    expect(renderList).toEqual([]);
   });
 });

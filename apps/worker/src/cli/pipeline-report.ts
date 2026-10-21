@@ -21,7 +21,9 @@ import {
   type PipelineRun,
   type PipelineStage,
   pipelineStageList,
+  TOPIC_CONFIRMATION_REQUIRED_CODE,
 } from "#src/pipeline/run-pipeline.ts";
+import { errorNameOf } from "#src/render/pdf-renderer.ts";
 
 export type PipelineSummary = {
   readonly status: "ready" | "failed";
@@ -73,6 +75,12 @@ export type PipelineSummary = {
   readonly totalCostCents: number;
   readonly totalDurationMs: number;
   readonly aiCallList: readonly AiCallRecord[];
+};
+
+export type PipelineCrashSummary = {
+  readonly status: "crashed";
+  readonly failedStage: PipelineStage | null;
+  readonly errorName: string;
 };
 
 const pipelineStageLabelMap: Readonly<Record<PipelineStage, string>> = {
@@ -236,7 +244,7 @@ export function formatPipelineSummary(summary: PipelineSummary, outputDirectory:
       .join(", ");
     lineList.push(`  Candidatos: ${candidateText}`);
   }
-  if (summary.failCode === "topic_confirmation_required") {
+  if (summary.failCode === TOPIC_CONFIRMATION_REQUIRED_CODE) {
     lineList.push("  Nenhum candidato de confiança alta: escolha os assuntos com --topics");
   }
   if (summary.unsupportedTopicIdList.length > 0) {
@@ -280,4 +288,26 @@ export function formatPipelineSummary(summary: PipelineSummary, outputDirectory:
     .join(" · ");
   lineList.push(`  Tempo: ${formatDuration(summary.totalDurationMs)} (${stageDurationText})`);
   return lineList.join("\n");
+}
+
+export function buildPipelineCrashSummary(
+  failedStage: PipelineStage | null,
+  error: unknown,
+): PipelineCrashSummary {
+  return {
+    status: "crashed",
+    failedStage,
+    errorName: errorNameOf(error),
+  };
+}
+
+export function formatPipelineCrashSummary(
+  summary: PipelineCrashSummary,
+  outputDirectory: string,
+): string {
+  const stage =
+    summary.failedStage === null
+      ? "antes da primeira etapa"
+      : `na etapa de ${pipelineStageLabelMap[summary.failedStage]}`;
+  return `Erro inesperado ${stage}: ${summary.errorName}; resumo em ${outputDirectory}`;
 }

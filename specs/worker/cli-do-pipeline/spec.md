@@ -15,7 +15,7 @@ Roadmap F1-09: um comando gera um kit a partir de fotos de caderno, sem web, ban
 
 ## Requisitos e critérios de aceite
 
-- **RF-01 — Comando.** `bun run pipeline` na raiz aceita `--photos <arquivo>...` (repetível; caminhos soltos depois de `--photos` também contam como fotos, para o glob do shell funcionar), `--grade 4|5|6|7`, `--subject math|portuguese` e, opcionais, `--topics id,id`, `--other "texto"`, `--difficulty basic|intermediate|unknown`, `--note "texto"` e `--out <pasta>`. Os caminhos são relativos à raiz do repositório, onde o `bun run` executa. · Aceite: teste unit do parser com fotos repetidas e soltas, cada opcional e ausência de opcionais.
+- **RF-01 — Comando.** `bun run pipeline` na raiz aceita `--photos <arquivo>...` (repetível; caminhos soltos depois de `--photos` também contam como fotos, para o glob do shell funcionar, na ordem da linha de comando; caminho solto antes do primeiro `--photos` é recusado), `--grade 4|5|6|7`, `--subject math|portuguese` e, opcionais, `--topics id,id`, `--other "texto"`, `--difficulty basic|intermediate|unknown`, `--note "texto"` e `--out <pasta>`. Os caminhos são relativos à raiz do repositório, onde o `bun run` executa. · Aceite: teste unit do parser com fotos repetidas e soltas, cada opcional e ausência de opcionais.
 - **RF-02 — Entrada validada antes de qualquer chamada de IA.** O comando recusa, com mensagem pt-BR por campo e código de saída 2:
   - foto ausente, fora de 1..`MAX_PHOTO_COUNT`, extensão fora de `.jpg`, `.jpeg` e `.png`, ou acima de `MAX_PHOTO_BYTES`;
   - ano ou disciplina fora dos enums do core;
@@ -43,7 +43,7 @@ Roadmap F1-09: um comando gera um kit a partir de fotos de caderno, sem web, ban
   - `study_kit.failed.json` quando a geração falha com um último kit;
   - `summary.json` sempre.
 
-  O resumo lista resultado, etapa e código da parada, fotos (estado, legibilidade, se é utilizável, problemas), candidatos (id, confiança, fotos), não atendidos e avisos por código, assuntos confirmados, tentativas com os códigos de bloqueador e aviso por item, páginas e avisos do render, e, por etapa, chamadas, tokens, custo e duração, com os totais. O terminal mostra o mesmo resumo em pt-BR, com custo em US$ (o `costCents` é em centavos de dólar, ADR-0011). O resumo e o terminal nunca trazem evidência, termos ou temas do perfil, texto do "outro", observação, trecho do kit ou `excerpt` de issue (invariante 9). Saída 0 com o kit pronto, 1 com o pedido parado. · Aceite: teste unit do resumo e do texto, com textos-sentinela no "outro", na observação e na evidência que não aparecem na saída.
+  O resumo lista resultado, etapa e código da parada, fotos (estado, legibilidade, se é utilizável, problemas), candidatos (id, confiança, fotos), não atendidos e avisos por código, assuntos confirmados, tentativas com os códigos de bloqueador e aviso por item, páginas e avisos do render, e, por etapa, chamadas, tokens, custo e duração, com os totais. O terminal mostra o mesmo resumo em pt-BR, com custo em US$ (o `costCents` é em centavos de dólar, ADR-0011). O resumo e o terminal nunca trazem evidência, termos ou temas do perfil, texto do "outro", observação, trecho do kit ou `excerpt` de issue (invariante 9). Saída 0 com o kit pronto, 1 com o pedido parado. Um erro inesperado (exceção fora do `Result`) grava um `summary.json` só com a etapa e o nome do erro, sem a mensagem, e sai com 3. · Aceite: teste unit do resumo e do texto, com textos-sentinela no "outro", na observação e na evidência que não aparecem na saída.
 - **RF-09 — Pronto quando (roadmap).** Um comando gera um kit a partir de uma imagem de caderno de teste. · Aceite: execução real com uma imagem de `docs/materiais-fotograficos/` de cada disciplina, com resultado no `review.md`; o humano abre os PDFs.
 
 ## Fora de escopo
@@ -105,7 +105,9 @@ Riscos: Chromium ausente na máquina vira `render_failed` com `errorName`. O uso
 | 2026-10-21 | Confirmação padrão = candidatos `high` na ordem da prévia | É a sugestão da spec pedagógica §3.3 para os chips pré-marcados da F2-09; mantém o "um comando" sem inventar regra |
 | 2026-10-21 | `--topics` na ordem dada, sem reordenar pela prévia | A ordem de relevância é entrada de quem roda o comando; a regra do §4 fica para a F2-03, no core |
 | 2026-10-21 | O custo da extração entra no teto da geração | Mesmo critério do `test:generate-live` da F1-07; o teto é por pedido |
+| 2026-10-21 | `MIN_OTHER_TOPIC_LENGTH = 2` no core, usado pelo `otherTopicTextSchema` | A mensagem do `--other` cita o mínimo, e o app não repete número de negócio (revisão neutra) |
+| 2026-10-21 | Roadmap com F1-09 em andamento até a aprovação dos PDFs pelo humano | Mesmo critério da F1-07 e da F1-08: `[x]` e hash depois da aprovação (revisão neutra) |
 
 ## Status
 
-M1, M2 e M3 concluídos. Execução real: Matemática 5º ano (US$ 0,37, 3 min 19 s, 11 + 5 páginas) e Português 6º ano (US$ 0,41, 3 min 42 s, 10 + 4 páginas), ambos prontos na primeira tentativa. Próximo passo: revisão neutra. Pendente do humano: abrir os PDFs de `tests/pedagogy/output/pipeline/f1-09-live-*/`.
+Implementação, execução real e revisão neutra concluídas (aprovada na rodada 1; alertas corrigidos, ver `review.md`). Execução real: Matemática 5º ano (US$ 0,37, 3 min 19 s, 11 + 5 páginas) e Português 6º ano (US$ 0,41, 3 min 42 s, 10 + 4 páginas), ambos prontos na primeira tentativa. Pendente do humano: abrir os PDFs de `tests/pedagogy/output/pipeline/f1-09-live-*/` e aprovar; depois, `[x]` no roadmap com o hash do merge.

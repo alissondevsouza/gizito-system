@@ -1,7 +1,9 @@
 import { extname } from "node:path";
 import { parseArgs } from "node:util";
 import {
+  type AiEnvironment,
   type AiImage,
+  aiEnvironmentSchema,
   countOrderTopics,
   err,
   findUnsupportedTopicList,
@@ -14,6 +16,7 @@ import {
   MAX_PHOTO_BYTES,
   MAX_PHOTO_COUNT,
   MAX_TOPIC_COUNT,
+  MIN_OTHER_TOPIC_LENGTH,
   MIN_TOPIC_COUNT,
   noteTextSchema,
   OTHER_TOPIC_REF,
@@ -69,7 +72,7 @@ export const PIPELINE_USAGE = [
   `  --grade       ano: ${gradeList.join(", ")}`,
   `  --subject     disciplina: ${subjectList.join(", ")}`,
   "  --topics      ids da taxonomia separados por vírgula, na ordem de relevância; sem ele, os assuntos de confiança alta da prévia",
-  `  --other       assunto "outro", até ${MAX_OTHER_TOPIC_LENGTH} caracteres; entra por último`,
+  `  --other       assunto "outro", de ${MIN_OTHER_TOPIC_LENGTH} a ${MAX_OTHER_TOPIC_LENGTH} caracteres; entra por último`,
   `  --difficulty  dificuldade percebida: ${perceivedDifficultyList.join(", ")}`,
   `  --note        observação, até ${MAX_NOTE_LENGTH} caracteres`,
   "  --out         pasta de saída; padrão tests/pedagogy/output/pipeline/<data-hora>/",
@@ -96,10 +99,13 @@ function readOptions(argv: readonly string[]): OptionReader {
     tokens: true,
   });
   const valueListByOption = new Map<OptionName, string[]>();
-  const positionalList: string[] = [];
+  const photoPathList: string[] = [];
   const errorList: string[] = [];
   for (const token of tokens) {
-    if (token.kind === "positional") positionalList.push(token.value);
+    if (token.kind === "positional") {
+      if (valueListByOption.has("photos")) photoPathList.push(token.value);
+      else errorList.push(`caminho solto antes de --photos: ${token.value}`);
+    }
     if (token.kind !== "option") continue;
     if (!isOptionName(token.name)) {
       errorList.push(`opção desconhecida: ${token.rawName}`);
@@ -110,10 +116,11 @@ function readOptions(argv: readonly string[]): OptionReader {
         ...(valueListByOption.get(token.name) ?? []),
         token.value,
       ]);
+      if (token.name === "photos") photoPathList.push(token.value);
     }
   }
   return {
-    photoPathList: [...(valueListByOption.get("photos") ?? []), ...positionalList],
+    photoPathList,
     optionValueOf: (name) => {
       const valueList = valueListByOption.get(name) ?? [];
       if (valueList.length > 1) errorList.push(`--${name} aparece mais de uma vez`);
@@ -147,7 +154,9 @@ function parseOtherTopicText(
   if (value === null) return null;
   const parsed = otherTopicTextSchema.safeParse(value);
   if (!parsed.success) {
-    errorList.push(`--other aceita até ${MAX_OTHER_TOPIC_LENGTH} caracteres`);
+    errorList.push(
+      `--other aceita de ${MIN_OTHER_TOPIC_LENGTH} a ${MAX_OTHER_TOPIC_LENGTH} caracteres`,
+    );
     return null;
   }
   for (const unsupportedTopic of subject === null
@@ -247,6 +256,15 @@ export function parsePipelineArgs(
     noteText: noteText === "" ? null : noteText,
     outputDirectory,
   });
+}
+
+export function parseAiEnvironment(
+  environment: Readonly<Record<string, string | undefined>>,
+): Result<AiEnvironment, readonly string[]> {
+  const parsed = aiEnvironmentSchema.safeParse(environment);
+  if (parsed.success) return ok(parsed.data);
+  const keyList = [...new Set(parsed.error.issues.map((issue) => issue.path.join(".")))];
+  return err([`variável de IA ausente ou inválida no .env: ${keyList.join(", ")}`]);
 }
 
 export async function loadPipelinePhotoList(

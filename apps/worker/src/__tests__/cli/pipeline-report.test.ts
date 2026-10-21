@@ -13,7 +13,12 @@ import {
   pipelineFixture,
   pipelineRequestOf,
 } from "#src/__tests__/pipeline/__fixtures__/pipeline.ts";
-import { buildPipelineSummary, formatPipelineSummary } from "#src/cli/pipeline-report.ts";
+import {
+  buildPipelineCrashSummary,
+  buildPipelineSummary,
+  formatPipelineCrashSummary,
+  formatPipelineSummary,
+} from "#src/cli/pipeline-report.ts";
 import { runPipeline } from "#src/pipeline/run-pipeline.ts";
 
 const OTHER_SENTINEL = "SENTINELA-OUTRO troco";
@@ -146,5 +151,24 @@ describe("buildPipelineSummary e formatPipelineSummary (spec F1-09, RF-08)", () 
     );
     expect(text).toContain(`Candidatos: ${FRACTIONS_TOPIC_ID} (média)`);
     expect(text).toContain("escolha os assuntos com --topics");
+  });
+
+  it("erro inesperado vira resumo com a etapa e o nome do erro, sem a mensagem", () => {
+    const crashSummary = buildPipelineCrashSummary(
+      "generate",
+      new RangeError(`pedido com ${OTHER_SENTINEL}`),
+    );
+    expect(crashSummary).toEqual({
+      status: "crashed",
+      failedStage: "generate",
+      errorName: "RangeError",
+    });
+    const text = formatPipelineCrashSummary(crashSummary, OUTPUT_DIRECTORY);
+    expect(text).toBe(
+      `Erro inesperado na etapa de geração: RangeError; resumo em ${OUTPUT_DIRECTORY}`,
+    );
+    expect(
+      formatPipelineCrashSummary(buildPipelineCrashSummary(null, "falha"), OUTPUT_DIRECTORY),
+    ).toBe(`Erro inesperado antes da primeira etapa: UnknownError; resumo em ${OUTPUT_DIRECTORY}`);
   });
 });

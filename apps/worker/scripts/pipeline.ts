@@ -1,6 +1,5 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { aiEnvironmentSchema } from "@gizito/core";
 import {
   createAnthropicProvider,
   createMathjsEvaluator,
@@ -9,9 +8,15 @@ import {
 import {
   loadPipelinePhotoList,
   PIPELINE_USAGE,
+  parseAiEnvironment,
   parsePipelineArgs,
 } from "#src/cli/pipeline-input.ts";
-import { buildPipelineSummary, formatPipelineSummary } from "#src/cli/pipeline-report.ts";
+import {
+  buildPipelineCrashSummary,
+  buildPipelineSummary,
+  formatPipelineCrashSummary,
+  formatPipelineSummary,
+} from "#src/cli/pipeline-report.ts";
 import { DEFAULT_RENDER_CONCURRENCY } from "#src/config.ts";
 import {
   type PipelineRequest,
@@ -23,6 +28,7 @@ import { createPdfRenderer } from "#src/render/pdf-renderer.ts";
 
 const USAGE_EXIT_CODE = 2;
 const FAILED_EXIT_CODE = 1;
+const CRASHED_EXIT_CODE = 3;
 const DEFAULT_OUTPUT_ROOT = "tests/pedagogy/output/pipeline";
 
 const stageStartTextMap: Readonly<Record<PipelineStage, string>> = {
@@ -66,13 +72,10 @@ const parsed = parsePipelineArgs(process.argv.slice(2));
 if (!parsed.ok) exitWithUsage(parsed.error);
 const args = parsed.value;
 
-const environment = aiEnvironmentSchema.safeParse(process.env);
-if (!environment.success) {
-  const keyList = [...new Set(environment.error.issues.map((issue) => issue.path.join(".")))];
-  exitWithUsage([`variável de IA ausente ou inválida no .env: ${keyList.join(", ")}`]);
-}
+const environment = parseAiEnvironment(process.env);
+if (!environment.ok) exitWithUsage(environment.error);
 const { AI_API_KEY, AI_MODEL_EXTRACT, AI_MODEL_GENERATE, AI_EFFORT_EXTRACT, AI_EFFORT_GENERATE } =
-  environment.data;
+  environment.value;
 
 const loaded = await loadPipelinePhotoList(args.photoPathList, new Date());
 if (!loaded.ok) exitWithUsage(loaded.error);
@@ -94,6 +97,7 @@ const aiProvider = createAnthropicProvider({
   generate: { model: AI_MODEL_GENERATE, effort: AI_EFFORT_GENERATE },
 });
 const pdfRenderer = createPdfRenderer({ concurrency: DEFAULT_RENDER_CONCURRENCY });
+const progress: { stage: PipelineStage | null } = { stage: null };
 try {
   const run = await runPipeline(request, {
     aiProvider,
@@ -102,11 +106,20 @@ try {
     isMathMarkupParsable: isKatexParsable,
     pdfRenderer,
     now: () => new Date(),
-    onStageStart: (stage) => console.info(stageStartTextMap[stage]),
+    onStageStart: (stage) => {
+      progress.stage = stage;
+      console.info(stageStartTextMap[stage]);
+    },
   });
   const summary = await writeOutput(run, request, outputDirectory);
   console.info(`\n${formatPipelineSummary(summary, outputDirectory)}`);
   process.exitCode = run.outcome.status === "ready" ? 0 : FAILED_EXIT_CODE;
+} catch (error) {
+  const crashSummary = buildPipelineCrashSummary(progress.stage, error);
+  await mkdir(outputDirectory, { recursive: true });
+  await Bun.write(join(outputDirectory, "summary.json"), toJson(crashSummary));
+  console.error(formatPipelineCrashSummary(crashSummary, outputDirectory));
+  process.exitCode = CRASHED_EXIT_CODE;
 } finally {
   await pdfRenderer.close();
 }

@@ -118,6 +118,7 @@ export const KIT_RETENTION_MONTHS = 12;
 export const RETENTION_PURGE_INTERVAL_HOURS = 24;
 
 export const MAX_NOTE_LENGTH = 300;
+export const MIN_OTHER_TOPIC_LENGTH = 2;
 export const MAX_OTHER_TOPIC_LENGTH = 80;
 export const MAX_EMAIL_LENGTH = 254;
 
