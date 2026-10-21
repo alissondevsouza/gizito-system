@@ -172,7 +172,12 @@ ${tipHtml(studyKit, context)}
 ${practiceHtml(studyKit)}
 ${mockHtml(studyKit)}`;
   return {
-    html: documentHtml(`Atividades de ${subjectLabelMap[studyKit.subject]}`, context.assets, body),
+    html: documentHtml(
+      "activities",
+      `Atividades de ${subjectLabelMap[studyKit.subject]}`,
+      context.assets,
+      body,
+    ),
     headerHtml: headerHtml(studyKit, context.assets),
     footerHtml: footerHtml("Atividades", context.assets),
     itemAttribute: "data-kit-item",

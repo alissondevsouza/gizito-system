@@ -37,7 +37,14 @@ export function formatKitDate(date: Date): string {
   return kitDateFormat.format(date);
 }
 
-export function documentHtml(title: string, assets: RenderAssets, body: SafeHtml): string {
+export type DocumentKind = "activities" | "answer-key";
+
+export function documentHtml(
+  kind: DocumentKind,
+  title: string,
+  assets: RenderAssets,
+  body: SafeHtml,
+): string {
   return html`<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -46,7 +53,7 @@ export function documentHtml(title: string, assets: RenderAssets, body: SafeHtml
 <style>${trustedHtml(assets.stylesheet)}</style>
 <style>${trustedHtml(kitV1Stylesheet)}</style>
 </head>
-<body>${body}</body>
+<body class="${kind}">${body}</body>
 </html>`.value;
 }
 

@@ -28,5 +28,6 @@ jobs:
       - run: bun run typecheck
       - run: bun run test
       - run: docker compose up -d --wait postgres
+      - run: bun run --cwd apps/worker browser:install --with-deps
       - run: bun run test:integration
       - run: bun run build

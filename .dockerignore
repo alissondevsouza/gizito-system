@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/.turbo
+**/.env
+**/.env.*
+**/src/__tests__
+.git
+.github
+.claude
+docs
+specs
+tests
+apps/api/*
+!apps/api/package.json
+apps/web/*
+!apps/web/package.json

@@ -23,6 +23,7 @@ ul, ol { margin: 0 0 2mm; padding-left: 6mm; }
 li { margin: 0 0 1mm; }
 .label { font-weight: 800; }
 .katex { font-size: 1.1em; }
+.katex .katex-base:has(.mfrac) { margin: 0.3em 0; }
 .section-break { break-before: page; }
 .brand { font-size: 16pt; font-weight: 800; color: var(--color-board); margin: 0 0 10mm; }
 .cover-main { display: flex; align-items: flex-start; gap: 8mm; }
@@ -57,7 +58,7 @@ li { margin: 0 0 1mm; }
 .options li { display: flex; align-items: baseline; gap: 2mm; margin: 0 0 1.5mm; }
 .options.compact { display: grid; grid-template-columns: 1fr 1fr; column-gap: 6mm; }
 .option-label { flex: none; width: 6mm; height: 6mm; border: 0.75pt solid var(--color-ink); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10pt; font-weight: 800; }
-.work-space { border: 0.75pt dashed var(--color-muted); border-radius: 2mm; padding: 1mm 2mm; margin: 2mm 0 0; font-size: 9pt; color: var(--color-muted); }
+.work-space { border: 0.75pt solid var(--color-muted); border-radius: 2mm; padding: 1mm 2mm; margin: 2mm 0 0; font-size: 9pt; color: var(--color-muted); }
 .work-space.open { height: 30mm; }
 .work-space.choice { height: 20mm; }
 .answer-line { display: flex; align-items: flex-end; gap: 2mm; margin: 3mm 0 0; }
@@ -75,5 +76,7 @@ li { margin: 0 0 1mm; }
 .steps { margin: 1mm 0 2mm; }
 .accepted .label { margin: 0 0 0.5mm; }
 .accepted ul { margin-bottom: 1.5mm; }
+.answer-key { font-size: 11pt; line-height: 1.35; }
+.answer-key .answer { margin-bottom: 4.5mm; }
 .evidence { border-left: 1.5pt solid var(--color-muted); padding-left: 3mm; }
 `;

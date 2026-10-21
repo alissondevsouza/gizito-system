@@ -107,7 +107,12 @@ export function answerKeyDocument(studyKit: StudyKit, context: KitTemplateContex
   const body = html`${coverHtml(studyKit, context)}
 <div class="section-break">${answerBlockList.map((block) => answerBlockHtml(studyKit, block))}</div>`;
   return {
-    html: documentHtml(`Gabarito de ${subjectLabelMap[studyKit.subject]}`, context.assets, body),
+    html: documentHtml(
+      "answer-key",
+      `Gabarito de ${subjectLabelMap[studyKit.subject]}`,
+      context.assets,
+      body,
+    ),
     headerHtml: headerHtml(studyKit, context.assets),
     footerHtml: footerHtml("Gabarito", context.assets),
     itemAttribute: "data-kit-answer",

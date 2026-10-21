@@ -68,14 +68,14 @@ Etapa 8 do pipeline (spec pedagógica §1, §2 marcação, §7.2, §8.6): do `st
 - [x] 1.4 templates `kit-v1` do caderno e do gabarito, registro por `formatVersion`, fixtures reais · Verificação: testes unitários e snapshot estrutural
 
 ### M2 — Playwright, conferência e orquestração
-- [ ] 2.1 `pdf-renderer.ts` (browser compartilhado, semáforo, contexto isolado, conferência do DOM, PDF, páginas) e `RENDER_CONCURRENCY` no config · Verificação: integração com Chromium
-- [ ] 2.2 `render-kit.ts` (template, dois documentos, segunda tentativa, aviso de páginas) · Verificação: unit com renderer falso e integração com as fixtures reais
-- [ ] 2.3 script `render:kit` e `browser:install`; passo do Chromium na CI · Verificação: `render:kit` nas fixtures; `bun run lint`, `typecheck`, `test`, `test:integration`, `build`
+- [x] 2.1 `pdf-renderer.ts` (browser compartilhado, semáforo, contexto isolado, conferência do DOM, PDF, páginas) e `RENDER_CONCURRENCY` no config · Verificação: integração com Chromium
+- [x] 2.2 `render-kit.ts` (template, dois documentos, segunda tentativa, aviso de páginas) · Verificação: unit com renderer falso e integração com as fixtures reais
+- [x] 2.3 script `render:kit` e `browser:install`; passo do Chromium na CI · Verificação: `render:kit` nas fixtures; `bun run lint`, `typecheck`, `test`, `test:integration`, `build`
 
 ### M3 — Imagem e visto funcionando
-- [ ] 3.1 `apps/worker/Dockerfile` e `.dockerignore` · Verificação: `docker build` e `render:kit` dentro do container
-- [ ] 3.2 os 10 kits reais renderizados, páginas medidas, páginas em imagem conferidas · Verificação: tabela no `review.md`
-- [ ] 3.3 known-issues (logotipo em texto, imagem fora da CI) e lessons, se houver · Verificação: leitura
+- [x] 3.1 `apps/worker/Dockerfile` e `.dockerignore` · Verificação: `docker build` e `render:kit` dentro do container
+- [x] 3.2 os 10 kits reais renderizados, páginas medidas, páginas em imagem conferidas · Verificação: tabela no `review.md`
+- [x] 3.3 known-issues (logotipo em texto, imagem fora da CI) e lessons, se houver · Verificação: leitura
 
 ### M4 — Revisão neutra
 - [ ] 4.1 `gizito-implement-verifier` com spec, branch e comandos; veredito no `review.md` · Verificação: sem CRÍTICO aberto
@@ -94,7 +94,11 @@ Etapa 8 do pipeline (spec pedagógica §1, §2 marcação, §7.2, §8.6): do `st
 | 2026-10-21 | `DOM` no `lib` do tsconfig do worker | a conferência roda dentro do Chromium (`page.evaluate`) e precisa dos tipos do DOM; o resto do worker não usa |
 | 2026-10-21 | Nunito embutida também no cabeçalho e no rodapé (só 400 e 800) | o Chromium renderiza o cabeçalho num documento separado, sem as fontes da página, e caía no DejaVu |
 | 2026-10-21 | Respostas aceitas em lista, uma por linha | unidas por "; ", respostas que terminam em ponto saíam com ".;" |
+| 2026-10-21 | Margem vertical de 0,3 em só no `katex-base` com fração (`:has(.mfrac)`) | em `\displaystyle` a tinta da fração passa da caixa do `katex-base`: linhas quebradas se sobrepunham e o topo vazava para a página anterior; margem em toda fórmula afastava linhas sem fração |
+| 2026-10-21 | Gabarito com corpo de 11 pt e entrelinha 1,35 | com 12 pt, 8 dos 10 kits reais davam 7 páginas no gabarito (faixa 3–6); o design doc §9 permite 11–12 pt, e o gabarito é lido pelo responsável |
+| 2026-10-21 | Espaço de cálculo com borda sólida, não tracejada | o Skia desenha cada traço como um caminho: o caderno de Matemática ia de 226 KB para 746 KB |
+| 2026-10-21 | Imagem roda o código-fonte (`bun apps/worker/src/index.ts`), sem o `dist` | o render lê fontes e mascotes por caminho relativo ao módulo e pelo `import.meta.resolve`, que o bundle do `bun build` não leva; o deploy é da F2-13 |
 | 2026-10-21 | Nota de IA nas duas capas: "Material complementar gerado com apoio de inteligência artificial. Não substitui o professor nem garante nota. Em caso de dúvida, consulte o material da escola ou o professor." | junta o texto do PRD §6 e o do design doc §9 |
 
 ## Status
-M1 feito (checkpoint). M2: renderer e orquestração escritos com testes unitários; falta a integração com Chromium, o passo da CI e conferir o script. Pendência do humano: linha `RENDER_CONCURRENCY=2` no `.env.example`; abrir os PDFs no celular e imprimir (pronto quando).
+M1 a M3 feitos. Próximo: M4, revisão neutra. Pendências do humano: linha `RENDER_CONCURRENCY=2` no `.env.example` (a permissão do projeto bloqueia o agente); abrir os PDFs de amostra no celular e imprimir (pronto quando).

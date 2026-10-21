@@ -6,6 +6,14 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-21] PDF pelo Chromium: borda tracejada pesa, cabeçalho não vê as fontes da página, fração em `\displaystyle` sai da linha — F1-08
+
+- O Skia desenha cada traço de uma borda `dashed` como um caminho separado no PDF. As 20 caixas tracejadas de espaço de cálculo somaram ~520 KB, e o caderno de Matemática passou de 226 KB para 746 KB. Nos PDFs, usar borda sólida.
+- O `headerTemplate` e o `footerTemplate` do `page.pdf` são documentos separados. Eles não veem as `@font-face` da página e caem na fonte do sistema (DejaVu, visto com `pdffonts`). A fonte vai em `<style>` dentro do próprio template, em `data:`.
+- KaTeX 0.19: as classes viraram `katex-base` e `katex-strut` (antes `base` e `strut`). Em fração `\displaystyle` (e em `\dfrac`), a tinta passa da caixa do `katex-base`. As linhas quebradas de uma fórmula longa se sobrepõem, e, no topo de uma página, os numeradores vazam para o pé da anterior. Margem vertical só no `katex-base` com fração (`:has(.mfrac)`) resolve sem afastar as outras linhas. A conferência do DOM não pega esse vazamento, porque nada sai da largura nem é cortado: conferir em imagem (`pdftoppm`).
+- O `\frac` inline do KaTeX sai com dígitos de ~7 pt num corpo de 12 pt. Para criança, cada trecho é renderizado em `\displaystyle`.
+- Playwright 1.64 sob o Bun 1.3.11 funciona (launch, `setContent`, `page.pdf`), e `page.evaluate` roda com `javaScriptEnabled: false` no contexto, fora do mundo da página.
+
 ## [2026-10-21] Bun: `fetch` sem dado por 300 s cai com `TimeoutError`; regra de `refine` não chega ao modelo — F1-07
 
 - O `fetch` do Bun 1.3 tem um timeout de inatividade de 300 s que não aparece nos tipos nem na documentação. Medido com servidor local: sem nenhum byte por 300 s, `TimeoutError: The operation timed out.`; com dado a cada 10 s, um stream de 330 s termina; com `timeout: false` no `init`, a resposta de 320 s chega. No primeiro live da geração, 5 de 10 chamadas do Sonnet 5.5 morreram aos ~300 s como `ai_unavailable` (raciocínio oculto e fila da API deixam o stream mudo), antes do timeout de 10 min do SDK. O adaptador usa `fetchWithoutIdleTimeout` (`timeout: false`, tipado por `declare global` em `BunFetchRequestInit`). O timer do SDK só cobre até os cabeçalhos; depois disso, quem limita o stream é o `signal` do job.
