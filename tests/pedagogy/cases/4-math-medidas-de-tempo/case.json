@@ -1,0 +1,24 @@
+{
+  "caseId": "4-math-medidas-de-tempo",
+  "grade": "4",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "4-matematica-medidas-de-tempo.png",
+      "sha256": "c4e6cee2f53ebdf384544d4414e29f61870c1e568dfc771b8f198238113e3e11",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "figures"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma4-time"],
+    "acceptableTopicIdList": ["ma4-tables-graphs"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página inteira de medidas de tempo com relógio e calendário desenhados."
+}

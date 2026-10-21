@@ -1,0 +1,24 @@
+{
+  "caseId": "4-portuguese-substantivos-comuns-proprios",
+  "grade": "4",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "4-portugues-substantivos-comuns-e-proprios.png",
+      "sha256": "2c0c93510faa54be54ab11a868d2ff17ea0a10dbb73ce7b6db25360386659d97",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp4-nouns-adjectives"],
+    "acceptableTopicIdList": ["lp4-syllables-stress", "lp4-spelling"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página de substantivos com separação silábica no fim; dedo aparece na borda. Base de uma variação com dado pessoal."
+}

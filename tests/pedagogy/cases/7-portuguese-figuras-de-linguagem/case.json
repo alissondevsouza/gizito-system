@@ -1,0 +1,24 @@
+{
+  "caseId": "7-portuguese-figuras-de-linguagem",
+  "grade": "7",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "7-portugues-figuras-de-linguagem.png",
+      "sha256": "ce2ae3a1caf5d1ac3cc2c2f8c4886f982410a9da121b19a0442f8b1b0af9d5a3",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp7-figures-of-speech"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Figuras de linguagem com exemplos. Caso da F1-06 e da F1-07."
+}

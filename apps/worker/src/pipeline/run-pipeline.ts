@@ -22,7 +22,10 @@ import {
   type ExtractionPhoto,
   type MaterialAnalysis,
 } from "#src/pipeline/extract.ts";
-import { createMemoryExtractionCache } from "#src/pipeline/extraction-cache.ts";
+import {
+  createMemoryExtractionCache,
+  type ExtractionCache,
+} from "#src/pipeline/extraction-cache.ts";
 import {
   type GeneratedKit,
   type GenerationFailure,
@@ -65,6 +68,7 @@ export type PipelineDependencies = {
   readonly maxCostCents?: number;
   readonly createStageSignal?: () => AbortSignal;
   readonly onStageStart?: (stage: PipelineStage) => void;
+  readonly extractionCache?: ExtractionCache;
 };
 
 export type PipelineOutcome =
@@ -120,7 +124,13 @@ export async function runPipeline(
   request: PipelineRequest,
   dependencies: PipelineDependencies,
 ): Promise<PipelineRun> {
-  const { aiProvider, now, createStageSignal = createJobSignal, onStageStart } = dependencies;
+  const {
+    aiProvider,
+    now,
+    createStageSignal = createJobSignal,
+    onStageStart,
+    extractionCache = createMemoryExtractionCache(),
+  } = dependencies;
   const durationMsByStage: Partial<Record<PipelineStage, number>> = {};
   const timed = async <T>(stage: PipelineStage, work: () => Promise<T>): Promise<T> => {
     onStageStart?.(stage);
@@ -135,7 +145,7 @@ export async function runPipeline(
   const analysis = await timed("analyze", () =>
     analyzeMaterial(request.photoList, context, {
       aiProvider,
-      cache: createMemoryExtractionCache(),
+      cache: extractionCache,
       extractModel: dependencies.extractModel,
       now,
       signal: createStageSignal(),

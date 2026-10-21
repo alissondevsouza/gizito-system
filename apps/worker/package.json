@@ -13,7 +13,6 @@
     "test": "bun test --path-ignore-patterns '**/integration/**'",
     "test:integration": "bun test src/__tests__/integration",
     "test:extract-live": "EXTRACT_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/pipeline/extract-live.test.ts",
-    "test:extract-cases-live": "EXTRACT_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/pipeline/extract-cases-live.test.ts",
     "test:generate-live": "GENERATE_LIVE_TEST=1 bun --env-file=../../.env test --max-concurrency=5 src/__tests__/pipeline/generate-live.test.ts",
     "render:kit": "bun scripts/render-kit.ts",
     "browser:install": "playwright install --only-shell chromium"

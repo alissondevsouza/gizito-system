@@ -1,0 +1,24 @@
+{
+  "caseId": "4-portuguese-substantivos-dado-pessoal",
+  "grade": "4",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "4-portugues-substantivos-comuns-e-proprios-dado-pessoal.png",
+      "sha256": "068e8827ca13f525e749480b6b8d41c9f355502d596cb178d78aa37d61998138",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "personal_data"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp4-nouns-adjectives"],
+    "acceptableTopicIdList": ["lp4-syllables-stress", "lp4-spelling"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": ["personal_data_visible"]
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Variação com nome, escola e telefone inventados escritos na página: sinaliza personal_data_visible sem copiar o dado."
+}

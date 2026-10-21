@@ -1,0 +1,24 @@
+{
+  "caseId": "6-math-angulos",
+  "grade": "6",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "6-matematica-angulos.png",
+      "sha256": "512a70968d01baa0e2d7a9faad86f10653a81aaa4c394c2ea1ea1e56d6034bb4",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "figures"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma6-angles"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página de ângulos com desenhos. Caso da F1-06 e da F1-07."
+}

@@ -1,0 +1,24 @@
+{
+  "caseId": "5-math-sistema-monetario-troco",
+  "grade": "5",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "5-matematica-sistema-monetario-e-troco.png",
+      "sha256": "4ecfda50049e62ff9879ceb31efc5c740d2c5e586582694cf34c5b927de466cd",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma5-addition-subtraction"],
+    "acceptableTopicIdList": ["ma5-decimal-numbers", "ma5-multiplication-division"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página de dinheiro e troco com decimais; no 5º ano o assunto é adição e subtração com decimais."
+}

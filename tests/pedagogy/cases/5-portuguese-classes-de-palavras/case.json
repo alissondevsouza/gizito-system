@@ -1,0 +1,34 @@
+{
+  "caseId": "5-portuguese-classes-de-palavras",
+  "grade": "5",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "5-portugues-classes-de-palavras.png",
+      "sha256": "e8c097795d85c8b09cea76a6aff9c103ae9df70ddc8bca414c9a55bbc578e60e",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": [],
+    "acceptableTopicIdList": [
+      "lp5-pronouns",
+      "lp5-verb-tenses",
+      "lp5-word-formation",
+      "lp5-nominal-agreement"
+    ],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": {
+    "topicIdList": ["lp5-pronouns"],
+    "otherTopicText": null,
+    "perceivedDifficulty": null,
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Classes de palavras não têm id no 5º ano da tax-v1; espera prévia com assunto vizinho e confirmação em pronomes."
+}

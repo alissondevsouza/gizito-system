@@ -1,0 +1,24 @@
+{
+  "caseId": "5-math-multiplicacao-cortada",
+  "grade": "5",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "5-matematica-multiplicacao.png",
+      "sha256": "83259a07d1c28f9ac1c0b8f8f1768ea998674e724c191c2d6beede13c9e65a7f",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma5-multiplication-division"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Recorte com multiplicação por dois algarismos e parte de uma página de Português ao lado."
+}

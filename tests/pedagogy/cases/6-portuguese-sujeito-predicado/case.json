@@ -1,0 +1,24 @@
+{
+  "caseId": "6-portuguese-sujeito-predicado",
+  "grade": "6",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "6-portugues-sujeito-e-predicado.png",
+      "sha256": "1bfffc78c96e0ab62757ef889a480c262eed3523be3f92353364072d4c735cc4",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "grade_mismatch"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp6-sentence-clause"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Sujeito e predicado é assunto do 7º ano na tax-v1; espera o vizinho do 6º ano (oração). Sombra forte num canto."
+}

@@ -206,11 +206,11 @@ export function buildPipelineSummary(run: PipelineRun, request: PipelineRequest)
   };
 }
 
-function formatDollar(costCents: number): string {
+export function formatDollar(costCents: number): string {
   return dollarFormat.format(costCents / 100);
 }
 
-function formatDuration(durationMs: number): string {
+export function formatDuration(durationMs: number): string {
   const totalSeconds = durationMs / 1000;
   if (totalSeconds < 60) return `${secondFormat.format(totalSeconds)} s`;
   const minuteCount = Math.floor(totalSeconds / 60);

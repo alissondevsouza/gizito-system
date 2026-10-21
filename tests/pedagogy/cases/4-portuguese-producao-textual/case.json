@@ -1,0 +1,24 @@
+{
+  "caseId": "4-portuguese-producao-textual",
+  "grade": "4",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "4-portugues-producao-textual.png",
+      "sha256": "18278a5ae657510565e80a9e21bb6962a4eb41ee90bf782c590ad5de95bacce8",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "unsupported_topic", "only_unsupported"],
+  "expectedPreview": {
+    "outcome": "analysis_failed",
+    "failCode": "only_unsupported_topics",
+    "requiredTopicIdList": [],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": ["lp-essay-writing"],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "not_applicable",
+  "note": "Recorte com proposta de redação, área ainda não atendida: a prévia recusa com only_unsupported_topics. Caso da F1-06."
+}

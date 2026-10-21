@@ -1,0 +1,55 @@
+{
+  "variationList": [
+    {
+      "kind": "blur",
+      "caseId": "4-portuguese-pontuacao-desfocada",
+      "fileName": "4-portugues-pontuacao-desfocada.png",
+      "sourceFileName": "4-portugues-pontuacao.png",
+      "sigma": 14
+    },
+    {
+      "kind": "personal_data",
+      "caseId": "4-portuguese-substantivos-dado-pessoal",
+      "fileName": "4-portugues-substantivos-comuns-e-proprios-dado-pessoal.png",
+      "sourceFileName": "4-portugues-substantivos-comuns-e-proprios.png",
+      "studentName": "Rafaela Duarte Nogueira",
+      "schoolName": "E. M. Professora Cecília Brandão",
+      "phone": "(11) 98472-3610",
+      "leftPercent": 20,
+      "topPercent": 92.6
+    },
+    {
+      "kind": "personal_data",
+      "caseId": "5-portuguese-singular-plural-dado-pessoal",
+      "fileName": "5-portugues-singular-e-plural-dado-pessoal.png",
+      "sourceFileName": "5-portugues-singular-e-plural.png",
+      "studentName": "Davi Monteiro Albuquerque",
+      "schoolName": "Escola Estadual Vila Esperança",
+      "phone": "(21) 97315-2048",
+      "leftPercent": 56,
+      "topPercent": 41
+    },
+    {
+      "kind": "personal_data",
+      "caseId": "6-math-razao-proporcao-dado-pessoal",
+      "fileName": "6-matematica-razao-e-proporcao-dado-pessoal.png",
+      "sourceFileName": "6-matematica-razao-e-proporcao.png",
+      "studentName": "Isadora Pacheco Lins",
+      "schoolName": "Colégio Municipal Santa Rita",
+      "phone": "(31) 99654-1827",
+      "leftPercent": 55,
+      "topPercent": 2.5
+    },
+    {
+      "kind": "personal_data",
+      "caseId": "7-math-equacoes-porcentagem-dado-pessoal",
+      "fileName": "7-matematica-equacoes-porcentagem-e-geometria-dado-pessoal.png",
+      "sourceFileName": "7-matematica-equacoes-porcentagem-e-geometria.png",
+      "studentName": "Bernardo Teixeira Campos",
+      "schoolName": "Escola Municipal Jardim das Acácias",
+      "phone": "(41) 98237-5961",
+      "leftPercent": 57,
+      "topPercent": 88.6
+    }
+  ]
+}

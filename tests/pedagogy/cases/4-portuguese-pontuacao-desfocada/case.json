@@ -1,0 +1,24 @@
+{
+  "caseId": "4-portuguese-pontuacao-desfocada",
+  "grade": "4",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "4-portugues-pontuacao-desfocada.png",
+      "sha256": "0f2e2e35c1484aa11738e89369ec3d4d4943ce6595a92fa800acf5035e3c37a2",
+      "expectedLegibility": "unreadable"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo"],
+  "expectedPreview": {
+    "outcome": "analysis_failed",
+    "failCode": "photos_unreadable",
+    "requiredTopicIdList": [],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "not_applicable",
+  "note": "Variação da página de pontuação desfocada até ficar ilegível (sigma 14, a da F1-06): a prévia recusa com photos_unreadable."
+}

@@ -1,0 +1,24 @@
+{
+  "caseId": "5-portuguese-artigos",
+  "grade": "5",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "5-portugues-artigos-definidos-indefinidos.png",
+      "sha256": "189d4d2e982645514f8df6f1f97ff5ea33d16907960b52d270500df1b8c3aee5",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp5-nominal-agreement"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Artigos definidos e indefinidos não têm id no 5º ano da tax-v1; o mais próximo é a concordância nominal."
+}

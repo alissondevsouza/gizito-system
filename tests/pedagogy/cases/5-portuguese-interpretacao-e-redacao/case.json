@@ -1,0 +1,34 @@
+{
+  "caseId": "5-portuguese-interpretacao-e-redacao",
+  "grade": "5",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "5-portugues-interpretacao-e-producao-textual.png",
+      "sha256": "de3a436aa1f91c2758e510dc237bf47b3302f38ec4a81e725a06fc96c202734e",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "unsupported_topic"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp5-explicit-information"],
+    "acceptableTopicIdList": [
+      "lp5-main-idea",
+      "lp5-inference-humor",
+      "lp5-narrative",
+      "lp5-word-meaning"
+    ],
+    "unsupportedTopicIdList": ["lp-essay-writing"],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": {
+    "topicIdList": ["lp5-explicit-information"],
+    "otherTopicText": null,
+    "perceivedDifficulty": null,
+    "noteText": "Ela lê rápido demais e responde sem voltar ao texto."
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Interpretação de texto junto de proposta de redação não atendida; confirmação com observação, da F1-07."
+}

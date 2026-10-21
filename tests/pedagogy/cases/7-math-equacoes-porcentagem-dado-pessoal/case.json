@@ -1,0 +1,24 @@
+{
+  "caseId": "7-math-equacoes-porcentagem-dado-pessoal",
+  "grade": "7",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "7-matematica-equacoes-porcentagem-e-geometria-dado-pessoal.png",
+      "sha256": "f974f310a8fadd1d8c2dba21055b824034eb0e476ea5f21e0ce542682469622a",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "figures", "personal_data"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma7-linear-equations", "ma7-percentage"],
+    "acceptableTopicIdList": ["ma7-area", "ma7-measurement", "ma7-algebraic-expressions"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": ["personal_data_visible"]
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Variação com nome, escola e telefone inventados escritos na página: sinaliza personal_data_visible sem copiar o dado."
+}

@@ -1,0 +1,29 @@
+{
+  "caseId": "6-portuguese-substantivos-formacao",
+  "grade": "6",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "6-portugues-substantivos-primitivos-derivados-coletivos.png",
+      "sha256": "df25efbda7524830bda2e2e417e104b01cef4f344a83b27b9e8c269cd1dcdbe4",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp6-nouns"],
+    "acceptableTopicIdList": ["lp6-word-formation"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": {
+    "topicIdList": ["lp6-nouns", "lp6-word-formation"],
+    "otherTopicText": null,
+    "perceivedDifficulty": null,
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Substantivos primitivos, derivados e coletivos. Caso da F1-06 e da F1-07."
+}

@@ -1,0 +1,29 @@
+{
+  "caseId": "4-math-adicao-subtracao-cortada",
+  "grade": "4",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "4-matematica-adicao-e-subtracao.png",
+      "sha256": "26f49a819aec56e39549d5754818ef9915076a14416aa0117676843126751c5a",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "ambiguous_statement"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma4-addition-subtraction"],
+    "acceptableTopicIdList": ["ma4-place-value", "ma4-natural-numbers"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": {
+    "topicIdList": ["ma4-addition-subtraction", "ma4-place-value"],
+    "otherTopicText": null,
+    "perceivedDifficulty": "basic",
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Recorte de página com contas armadas e o último exercício cortado; confirmação com dificuldade básica, da F1-07."
+}

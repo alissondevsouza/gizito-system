@@ -16,6 +16,7 @@
     "db:migrate": "turbo run db:migrate",
     "taxonomy:doc": "turbo run taxonomy:doc",
     "pipeline": "bun --env-file=.env apps/worker/scripts/pipeline.ts",
+    "test:pedagogy": "bun --env-file=.env apps/worker/scripts/pedagogy-regression.ts",
     "lint": "biome check .",
     "format": "biome check --write ."
   },

@@ -1,0 +1,24 @@
+{
+  "caseId": "6-portuguese-tempos-verbais",
+  "grade": "6",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "6-portugues-tempos-verbais.png",
+      "sha256": "282f46f47859ffbfe311ef59a716b8b6156e4db3ce2cf092b00eb64f4f790752",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp6-verb-moods"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página de tempos verbais, legível."
+}

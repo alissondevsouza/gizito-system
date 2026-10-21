@@ -42,6 +42,11 @@ export const MAX_REPAIR_ITEM_COUNT = 8;
 export const REVIEW_OUTPUT_RETRY_COUNT = 1;
 export const MAX_AI_COST_CENTS_PER_ORDER = 200;
 
+export const REGRESSION_MIN_EXTRACTION_PASS_RATE = 0.9;
+export const MAX_KIT_AI_COST_PRICE_SHARE = 0.1;
+export const MAX_PREVIEW_AI_COST_BRL_CENTS = 10;
+export const GENERATION_P95_TARGET_SECONDS = 5 * 60;
+
 export const OTHER_TOPIC_REF = "other";
 
 export const MAX_TOPIC_CANDIDATE_COUNT = 6;

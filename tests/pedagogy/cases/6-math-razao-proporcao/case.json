@@ -1,0 +1,29 @@
+{
+  "caseId": "6-math-razao-proporcao",
+  "grade": "6",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "6-matematica-razao-e-proporcao.png",
+      "sha256": "3acffb713705f2b9f8de7d1ee5061bf54bc0cafca0c61a0f347386296ab8a5e3",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "fractions", "ambiguous_statement"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma6-sharing-ratio"],
+    "acceptableTopicIdList": [
+      "ma6-fractions",
+      "ma6-measurement",
+      "ma6-fraction-of-quantity",
+      "ma6-unknown-value"
+    ],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Razão, proporção e escala; um exercício resolve a razão com notação confusa. Base de uma variação com dado pessoal."
+}

@@ -1,0 +1,24 @@
+{
+  "caseId": "7-math-equacoes-porcentagem",
+  "grade": "7",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "7-matematica-equacoes-porcentagem-e-geometria.png",
+      "sha256": "28e8ed9d5ea8d228520ba6f4a4ea40fb9355414bf52b7a8f1fe52d3a2f40c421",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "figures"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma7-linear-equations", "ma7-percentage"],
+    "acceptableTopicIdList": ["ma7-area", "ma7-measurement", "ma7-algebraic-expressions"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Equações, porcentagem e geometria na mesma página, sem ano escrito. Caso da F1-07; base de uma variação com dado pessoal."
+}

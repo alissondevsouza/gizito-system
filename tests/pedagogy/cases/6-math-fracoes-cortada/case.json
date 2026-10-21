@@ -1,0 +1,24 @@
+{
+  "caseId": "6-math-fracoes-cortada",
+  "grade": "6",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "6-matematica-fracoes.png",
+      "sha256": "50236a0e76a29177f372e3f6e706a2ede577d89851915af818de1a829afb8503",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "fractions", "figures"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma6-fractions"],
+    "acceptableTopicIdList": ["ma6-fraction-of-quantity", "ma6-fraction-decimal"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Recorte com frações representadas por figuras, cortado à direita."
+}

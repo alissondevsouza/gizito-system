@@ -1,0 +1,29 @@
+{
+  "caseId": "6-portuguese-verbos-com-outro",
+  "grade": "6",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "6-portugues-verbos.png",
+      "sha256": "1faf205e1d7b4005cccbf8880d89d013ca6e37b33e7dedb1bad25d6da95b6f72",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "other_topic"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp6-verb-moods"],
+    "acceptableTopicIdList": ["lp6-sentence-clause"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": {
+    "topicIdList": ["lp6-verb-moods"],
+    "otherTopicText": "uso dos porquês",
+    "perceivedDifficulty": null,
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Recorte de verbos cortado à direita; confirmação com assunto outro de ortografia."
+}

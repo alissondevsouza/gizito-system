@@ -1,0 +1,24 @@
+{
+  "caseId": "5-portuguese-singular-plural-dado-pessoal",
+  "grade": "5",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "5-portugues-singular-e-plural-dado-pessoal.png",
+      "sha256": "01af9f77a822a1270c9d702685a1c6b3801b383f8db4b32591ecb59e8c30dbaf",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "personal_data"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp5-nominal-agreement"],
+    "acceptableTopicIdList": ["lp5-spelling", "lp5-word-formation"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": ["personal_data_visible"]
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Variação com nome, escola e telefone inventados escritos na página: sinaliza personal_data_visible sem copiar o dado."
+}

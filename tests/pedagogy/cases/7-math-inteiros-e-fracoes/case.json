@@ -1,0 +1,34 @@
+{
+  "caseId": "7-math-inteiros-e-fracoes",
+  "grade": "7",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "7-matematica-numeros-inteiros-e-fracoes.png",
+      "sha256": "b2f27f13f02615103ba69222c8613b5cf165d41707b204bd932b0887753963a6",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "fractions"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma7-integer-addition-subtraction", "ma7-rational-operations"],
+    "acceptableTopicIdList": [
+      "ma7-integers",
+      "ma7-integer-multiplication-division",
+      "ma7-rational-numbers",
+      "ma7-fractions-ratio"
+    ],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": {
+    "topicIdList": ["ma7-integer-addition-subtraction", "ma7-rational-operations"],
+    "otherTopicText": null,
+    "perceivedDifficulty": "intermediate",
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Inteiros e frações; confirmação com dificuldade intermediária, da F1-07. Caso da F1-06."
+}

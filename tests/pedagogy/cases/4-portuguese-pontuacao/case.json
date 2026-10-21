@@ -1,0 +1,24 @@
+{
+  "caseId": "4-portuguese-pontuacao",
+  "grade": "4",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "4-portugues-pontuacao.png",
+      "sha256": "bd40943353887cd07dc9a50462c6c924469525829d27690ba730d1fd5379edd9",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp4-punctuation"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página de pontuação, legível; base da variação desfocada. Caso da F1-06 e da F1-07."
+}

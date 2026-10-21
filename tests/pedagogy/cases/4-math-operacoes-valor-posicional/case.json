@@ -1,0 +1,30 @@
+{
+  "caseId": "4-math-operacoes-valor-posicional",
+  "grade": "4",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "4-matematica-operacoes-e-valor-posicional.png",
+      "sha256": "33b0296cfa1a848097574fc7c186d84262f67652eeb9c8968fd6863c9d8cd2ac",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "fractions", "figures"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma4-multiplication", "ma4-place-value"],
+    "acceptableTopicIdList": [
+      "ma4-division",
+      "ma4-unit-fractions",
+      "ma4-addition-subtraction",
+      "ma4-natural-numbers",
+      "ma4-inverse-operations"
+    ],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página sem ano escrito, com vários assuntos do 4º ano, incluindo fração com figura."
+}

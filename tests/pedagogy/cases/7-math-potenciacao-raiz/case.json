@@ -1,0 +1,24 @@
+{
+  "caseId": "7-math-potenciacao-raiz",
+  "grade": "7",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "7-matematica-potenciacao-e-raiz-quadrada.png",
+      "sha256": "eeb132f851da157c19a2a795672c5d7a540dc7b3ce1b4f870ece50026228693c",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "grade_mismatch"],
+  "expectedPreview": {
+    "outcome": "analysis_failed",
+    "failCode": "no_topic_found",
+    "requiredTopicIdList": [],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": ["grade_mismatch"]
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "not_applicable",
+  "note": "Potenciação é do 6º ano e raiz quadrada do 8º na tax-v1: sem assunto do 7º ano, a prévia recusa com o texto de outro ano."
+}

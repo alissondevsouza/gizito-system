@@ -1,0 +1,29 @@
+{
+  "caseId": "5-math-divisao-com-outro",
+  "grade": "5",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "5-matematica-divisao.png",
+      "sha256": "0672624dbdcc2fcee8a658a97f56180bce6d46fbfe534d8ff98c893f1d77b852",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "other_topic"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma5-multiplication-division"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": {
+    "topicIdList": ["ma5-multiplication-division"],
+    "otherTopicText": "problemas com dinheiro e troco",
+    "perceivedDifficulty": null,
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Recorte com divisões pelo método da chave; confirmação com assunto outro, da F1-07."
+}

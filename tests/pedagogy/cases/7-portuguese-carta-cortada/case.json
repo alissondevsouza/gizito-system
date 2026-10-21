@@ -1,0 +1,24 @@
+{
+  "caseId": "7-portuguese-carta-cortada",
+  "grade": "7",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "7-portugues-genero-textual-carta.png",
+      "sha256": "05fe58178c19431fcd573304bc228c948be115e2f881f55a67cf83072b0441fc",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "grade_mismatch"],
+  "expectedPreview": {
+    "outcome": "analysis_failed",
+    "failCode": "no_topic_found",
+    "requiredTopicIdList": [],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": ["grade_mismatch"]
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "not_applicable",
+  "note": "Partes da carta são assunto do 4º ano na tax-v1: sem assunto do 7º ano, a prévia recusa com o texto de outro ano."
+}

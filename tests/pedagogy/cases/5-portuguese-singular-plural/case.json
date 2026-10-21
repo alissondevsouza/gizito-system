@@ -1,0 +1,24 @@
+{
+  "caseId": "5-portuguese-singular-plural",
+  "grade": "5",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "5-portugues-singular-e-plural.png",
+      "sha256": "31a31991042bdb9389107128f2ad32553a358adfd672b52ba691e45acdfb9fdf",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp5-nominal-agreement"],
+    "acceptableTopicIdList": ["lp5-spelling", "lp5-word-formation"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Singular e plural não têm id no 5º ano da tax-v1; o mais próximo é a concordância nominal. Base de uma variação com dado pessoal."
+}

@@ -1,0 +1,24 @@
+{
+  "caseId": "4-portuguese-substantivos-cortada",
+  "grade": "4",
+  "subject": "portuguese",
+  "photoList": [
+    {
+      "fileName": "4-portugues-substantivos.png",
+      "sha256": "122d111237b3bc2fee37978f210e1282067a3b08564e3bb9dc3162ba9e13a3d1",
+      "expectedLegibility": "partial"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["lp4-nouns-adjectives"],
+    "acceptableTopicIdList": [],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Recorte de 301 por 506 pixels com as frases cortadas à direita."
+}

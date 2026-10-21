@@ -1,0 +1,24 @@
+{
+  "caseId": "6-math-poligonos-perimetro-area",
+  "grade": "6",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "6-matematica-poligonos-perimetro-e-area.png",
+      "sha256": "817ca502a5919ee71ffb48ab58becbb06d10df9e6f2dfda124bde8ae901aa297",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "bad_photo", "figures"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma6-polygons", "ma6-perimeter-area"],
+    "acceptableTopicIdList": ["ma6-measurement", "ma6-quadrilaterals"],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página com polígonos, perímetro e área desenhados, com luz forte de um lado."
+}

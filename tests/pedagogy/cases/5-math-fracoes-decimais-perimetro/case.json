@@ -1,0 +1,33 @@
+{
+  "caseId": "5-math-fracoes-decimais-perimetro",
+  "grade": "5",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "5-matematica-fracoes-decimais-e-perimetro.png",
+      "sha256": "fb41aa623b2d67d402158fc658f8bc7f727a7d690a5d330b0ed9562b7afc9d88",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "fractions", "figures"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": [
+      "ma5-equivalent-fractions",
+      "ma5-decimal-numbers",
+      "ma5-perimeter-area"
+    ],
+    "acceptableTopicIdList": [
+      "ma5-fractions",
+      "ma5-comparing-rationals",
+      "ma5-addition-subtraction",
+      "ma5-multiplication-division"
+    ],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": []
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Página com frações, decimais, perímetro com figuras e operações; confirmação padrão com os três obrigatórios, que inclui o perímetro."
+}

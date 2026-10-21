@@ -11,16 +11,15 @@ import {
   parseAiEnvironment,
   parsePipelineArgs,
 } from "#src/cli/pipeline-input.ts";
+import { toJson, writePipelineOutput } from "#src/cli/pipeline-output.ts";
 import {
   buildPipelineCrashSummary,
-  buildPipelineSummary,
   formatPipelineCrashSummary,
   formatPipelineSummary,
 } from "#src/cli/pipeline-report.ts";
 import { DEFAULT_RENDER_CONCURRENCY } from "#src/config.ts";
 import {
   type PipelineRequest,
-  type PipelineRun,
   type PipelineStage,
   runPipeline,
 } from "#src/pipeline/run-pipeline.ts";
@@ -42,30 +41,6 @@ function exitWithUsage(errorList: readonly string[]): never {
   for (const error of errorList) console.error(`- ${error}`);
   console.error(`\n${PIPELINE_USAGE}`);
   process.exit(USAGE_EXIT_CODE);
-}
-
-function toJson(value: unknown): string {
-  return `${JSON.stringify(value, null, 2)}\n`;
-}
-
-async function writeOutput(run: PipelineRun, request: PipelineRequest, outputDirectory: string) {
-  await mkdir(outputDirectory, { recursive: true });
-  const { generation, render } = run;
-  if (generation?.ok) {
-    await Bun.write(join(outputDirectory, "study_kit.json"), toJson(generation.value.studyKit));
-  } else if (generation?.error.lastStudyKit) {
-    await Bun.write(
-      join(outputDirectory, "study_kit.failed.json"),
-      toJson(generation.error.lastStudyKit),
-    );
-  }
-  if (render?.ok) {
-    await Bun.write(join(outputDirectory, "activities.pdf"), render.value.activities.bytes);
-    await Bun.write(join(outputDirectory, "answer-key.pdf"), render.value.answerKey.bytes);
-  }
-  const summary = buildPipelineSummary(run, request);
-  await Bun.write(join(outputDirectory, "summary.json"), toJson(summary));
-  return summary;
 }
 
 const parsed = parsePipelineArgs(process.argv.slice(2));
@@ -111,7 +86,7 @@ try {
       console.info(stageStartTextMap[stage]);
     },
   });
-  const summary = await writeOutput(run, request, outputDirectory);
+  const summary = await writePipelineOutput(run, request, outputDirectory);
   console.info(`\n${formatPipelineSummary(summary, outputDirectory)}`);
   process.exitCode = run.outcome.status === "ready" ? 0 : FAILED_EXIT_CODE;
 } catch (error) {

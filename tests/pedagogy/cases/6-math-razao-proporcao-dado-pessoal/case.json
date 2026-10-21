@@ -1,0 +1,29 @@
+{
+  "caseId": "6-math-razao-proporcao-dado-pessoal",
+  "grade": "6",
+  "subject": "math",
+  "photoList": [
+    {
+      "fileName": "6-matematica-razao-e-proporcao-dado-pessoal.png",
+      "sha256": "b2f699e1d992a9b691afaf84e447cb09db77be9973d13e3a4e062c531692e2d6",
+      "expectedLegibility": "good"
+    }
+  ],
+  "tagList": ["handwritten", "fractions", "personal_data"],
+  "expectedPreview": {
+    "outcome": "preview_ready",
+    "failCode": null,
+    "requiredTopicIdList": ["ma6-sharing-ratio"],
+    "acceptableTopicIdList": [
+      "ma6-fractions",
+      "ma6-measurement",
+      "ma6-fraction-of-quantity",
+      "ma6-unknown-value"
+    ],
+    "unsupportedTopicIdList": [],
+    "requiredSourceWarningCodeList": ["personal_data_visible"]
+  },
+  "confirmation": null,
+  "expectedKitOutcome": "ready",
+  "note": "Variação com nome, escola e telefone inventados escritos na página: sinaliza personal_data_visible sem copiar o dado."
+}
