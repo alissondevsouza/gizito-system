@@ -42,7 +42,7 @@ flowchart LR
   B --> C[F1 schemas e validações do kit]
   C --> D[F1 pipeline extração e geração]
   D --> E[F1 render dos dois PDFs]
-  E --> F[F1 regressão com 40 casos]
+  E --> F[F1 regressão com 35 casos]
   F --> G[F2 pedidos, Pix e jobs]
   G --> H[F2 web, WhatsApp, admin]
   H --> I[F2 deploy e aceite do MVP]
@@ -53,7 +53,7 @@ flowchart LR
 
 | Risco | Onde se resolve | Mitigação |
 |---|---|---|
-| Extração ruim em caderno manuscrito derruba a prévia e a conversão | F1-06, F1-10 | 10 casos manuscritos entre os 40; `legibility_score` por foto; recusa antes do Pix |
+| Extração ruim em caderno manuscrito derruba a prévia e a conversão | F1-06, F1-10 | 30 imagens manuscritas geradas por IA na regressão, sem foto real (risco assumido, PRD 7.6); `legibility_score` por foto; recusa antes do Pix; extração em caderno real medida em produção |
 | Recálculo matemático cobre aritmética, não interpretação do problema | F1-03, F1-07 | o modelo devolve a expressão de cálculo e a resposta; mathjs confere a expressão; a revisão por modelo confere a interpretação; ambos são bloqueadores |
 | pg-boss pode não rodar bem no Bun | F0-06 | spike de 1 dia antes de qualquer job; alternativa pronta com `FOR UPDATE SKIP LOCKED` |
 | Playwright com Chromium no container do worker | F1-08, F2-13 | imagem própria do worker testada em F1; render em F1 já roda no container |
@@ -65,7 +65,7 @@ flowchart LR
 
 ### 1.3 O que anda em paralelo
 
-- Em F1, enquanto o pipeline é construído, você coleta os 40 materiais, combina a revisão com um professor, cria a conta do Mercado Pago, registra o domínio, compra o chip e gera as seis poses do mascote.
+- Em F1, enquanto o pipeline é construído, você coleta os materiais dos casos, combina a revisão com um professor, cria a conta do Mercado Pago, registra o domínio, compra o chip e gera as seis poses do mascote.
 - Em F2, o web (F2-08, F2-09) pode ser implementado contra a API com adaptadores falsos ao mesmo tempo que pagamentos e jobs; são módulos disjuntos.
 - WhatsApp (F2-10) e admin (F2-11) são independentes entre si e dependem só do job de geração.
 
@@ -73,7 +73,7 @@ flowchart LR
 
 - [x] `git init` e primeiro commit — necessário em F0-01 — feito em 14/10/2026
 - [x] Chave do provedor de IA — necessário em F1-05 — provedor decidido em 20/10/2026 (Anthropic: Haiku 5.5 na extração, Sonnet 5.5 na geração e revisão, PRD 1.4 §12.1); chave no `.env` usada pelos testes contra a API em 20/10/2026 e limite de gasto na conta confirmado em 21/10/2026
-- [ ] 40 materiais fotografados (4 anos × 2 disciplinas × 5), com manuscritos, fotos ruins e dados pessoais a cobrir — necessário em F1-10 — começar no início de F1; leva semanas. Em 21/10/2026 chegaram 30 imagens em `docs/materiais-fotograficos/`, fora do git. São geradas por IA (20 trazem o manifesto C2PA da OpenAI; as outras 10 são recortes de um mosaico), e o §12.1 da spec pedagógica pede fotos reais: usá-las na regressão é decisão do humano. Faltam 10 imagens (2 de Matemática do 4º, 1 de Português do 4º, 1 de Matemática do 5º, 1 de cada disciplina do 6º, 1 de Matemática do 7º, 3 de Português do 7º). Faltam também, do §13.1, 1 foto totalmente ilegível, 4 com dado pessoal inventado visível e mais 1 com assunto não atendido junto de atendidos. Três imagens têm conteúdo de outro ano (`grade_mismatch`): sujeito e predicado no 6º, potenciação no 7º, carta no 7º
+- [x] Materiais dos casos da regressão — necessário em F1-10 — 30 imagens de caderno geradas por IA em `docs/materiais-fotograficos/` (21/10/2026), fora do git, de 2 a 5 por ano × disciplina. Os 40 materiais fotografados de antes viraram 35 casos: as 30 imagens e 5 variações delas que a F1-10 gera (1 ilegível e 4 com dado pessoal inventado). Fotos reais não serão coletadas antes do lançamento; a extração em caderno real é medida em produção. Decisão do humano em 21/10/2026, com o risco assumido (PRD 1.5 §7.6, spec pedagógica 1.3 §13.1 e §15.8)
 - [x] Professor(a) para revisar amostra — necessário em F1-11 — combinar em F1; a taxonomia da F1-01 (`docs/pedagogy/taxonomia.md`) já foi revisada e aprovada pelo professor em 19/10/2026; revisão da amostra combinada, confirmado em 21/10/2026
 - [ ] Conta Mercado Pago pessoa física, chave Pix, aplicação e credenciais de teste — necessário em F2-03 — começar em F0, para a conta envelhecer; conta criada (confirmado em 21/10/2026), faltam as credenciais de teste
 - [ ] Domínio e consulta de anterioridade no INPI — necessário em F2-07 e antes de divulgar — começar em F0; `gizito.com.br` disponível para registro em 21/10/2026, ainda não registrado; consulta ao INPI sem registro aqui
@@ -81,7 +81,15 @@ flowchart LR
 - [ ] Resend com domínio autenticado (SPF, DKIM, DMARC) — necessário em F2-07 — começar no início de F2; DNS leva horas a dias
 - [ ] VPS — necessário em F2-13 — começar no meio de F2
 - [ ] Chip e aparelho dedicados ao WhatsApp, número aquecido com uso normal — necessário em F2-10 — comprar em F1; aquecer 1 a 2 semanas; ainda não comprados em 21/10/2026
-- [ ] Seis poses do mascote geradas a partir de `docs/gizito-image/mascote-sem-fundo.png` — necessário em F2-08 — fazer em F1, em paralelo. Seis imagens em `docs/gizito-image/mascotes-poses/` (21/10/2026), com fundo transparente e o personagem da base canônica: braços abertos (01), joinha (02), comemorando (03), carregando livros (04), dedo para cima (05) e mão no queixo (06). Cobrem `hello`, `success`, `point` e `thinking` do design doc 3.2; faltam `idle` (postura neutra, braço abaixado) e `concern` (acolhedora, para foto ilegível e erro), que podem substituir uma das duas de comemoração e a dos livros
+- [x] Seis poses do mascote geradas a partir de `docs/gizito-image/mascote-sem-fundo.png` — necessário em F2-08 — fazer em F1, em paralelo. Oito imagens em `docs/gizito-image/mascotes-poses/` (21/10/2026), com fundo transparente, conferidas contra o design doc 3.1 e 3.4. Mapa dos estados do 3.2:
+  - `hello`: 01, braços abertos;
+  - `success`: 02, joinha, com a 03 (comemorando) como alternativa;
+  - `point`: 05, dedo para cima;
+  - `thinking`: 06, mão no queixo;
+  - `idle`: 07, postura neutra;
+  - `concern`: 08, acolhedora.
+
+  A 04 (carregando livros) serve para ilustração de seção
 - [ ] Textos legais (termos com arrependimento, privacidade) — necessário em F2-12 — redigir em F2
 
 ## 2. Visão geral
@@ -89,7 +97,7 @@ flowchart LR
 | Fase | Objetivo | Saída principal | Critério de saída | Esforço estimado | Estado |
 |---|---|---|---|---|---|
 | F0 Fundação | Repositório pronto para construir | monorepo, infra local, core e db com máquina de estados e fila, docs técnicos | lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos | 1 a 2 semanas | concluída |
-| F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 40 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | em andamento |
+| F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 35 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | em andamento |
 | F2 Fluxo comercial | Compra ponta a ponta em produção | API, worker, web, WhatsApp, admin, legal, deploy | checklist da seção 10 do PRD completa; compra real feita por você e entregue num celular real | 4 a 6 semanas | pendente |
 | F3 Piloto pago | Validar H1 a H4 com dinheiro real | 10 a 20 responsáveis, auditoria semanal, métricas | memo de decisão com evidência das hipóteses | 3 a 4 semanas de calendário | pendente |
 | F4 Pós-validação | Crescer só com gatilho | 8º e 9º ano, preço, WhatsApp oficial, novas matérias | por gatilho, item a item | aberto | pendente |
@@ -158,8 +166,8 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 - [ ] **F1-06 `pipeline-extracao` — em andamento** — worker · M · depende: F1-01, F1-03, F1-05 · `specs/worker/pipeline-extracao/`
   - Entrega: prompt `extract` v1; mapeamento para a taxonomia com confiança; `material_profile`; legibilidade por foto; cache por hash; aviso de dado pessoal; assuntos ainda não atendidos sinalizados (PRD 7.7)
-  - Pronto quando: em 10 casos reais, assuntos corretos; foto ilegível recusada; sem transcrição integral
-  - Feito até agora (20/10/2026): prompt `extract` v1 transcrito de `prompts-v1.md` (teste compara com o doc) e `analyzeMaterial` em `apps/worker/src/pipeline/`: uma chamada por foto em paralelo, uma nova chamada para saída inválida, cache por hash com a extração já sanitizada e validade da foto, junção e decisão da prévia da F1-03, custo por chamada para o `ai_call`. `test:extract-live` com cinco fotos sintéticas passou contra a API (US$ 0,0004 a 0,0015 por foto). Revisão neutra aprovada na rodada 1, com os dois alertas corrigidos. Mesclada em 20/10/2026 (`31b3a8b`). Faltam os 10 casos reais, que esperam fotos reais (pendência 1.4; F1-10)
+  - Pronto quando: em 10 casos das imagens da regressão (geradas por IA, PRD 7.6), assuntos corretos; foto ilegível recusada; sem transcrição integral
+  - Feito até agora (20/10/2026): prompt `extract` v1 transcrito de `prompts-v1.md` (teste compara com o doc) e `analyzeMaterial` em `apps/worker/src/pipeline/`: uma chamada por foto em paralelo, uma nova chamada para saída inválida, cache por hash com a extração já sanitizada e validade da foto, junção e decisão da prévia da F1-03, custo por chamada para o `ai_call`. `test:extract-live` com cinco fotos sintéticas passou contra a API (US$ 0,0004 a 0,0015 por foto). Revisão neutra aprovada na rodada 1, com os dois alertas corrigidos. Mesclada em 20/10/2026 (`31b3a8b`). Faltam os 10 casos, agora com as imagens geradas por IA (decisão do humano em 21/10/2026)
 - [ ] **F1-07 `pipeline-geracao`** — worker · L · depende: F1-03, F1-04, F1-05, F1-06
   - Entrega: prompts `plan`, `generate`, `review` v1; orquestração das etapas; uma regeneração; `ai_call` por chamada; limite de custo por pedido
   - Pronto quando: kit válido em 10 casos; fixtures defeituosas disparam cada bloqueador
@@ -170,7 +178,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `bun run pipeline --photos ... --grade ... --subject ...` gera `study_kit.json`, os dois PDFs e um resumo de custo e tempo
   - Pronto quando: você gera um kit de um caderno de teste com um comando
 - [ ] **F1-10 `regressao-pedagogica`** — pedagogy, tests · M · depende: F1-09
-  - Entrega: formato de caso, runner `bun run test:pedagogy`, relatório por caso; 40 casos coletados e rodados; defeitos corrigidos viram casos
+  - Entrega: formato de caso, runner `bun run test:pedagogy`, relatório por caso; 35 casos rodados (30 imagens geradas por IA e 5 variações delas, spec pedagógica §13.1); defeitos corrigidos viram casos
   - Pronto quando: zero bloqueador crítico inesperado; relatório gravado em `docs/pedagogy/`
 - [ ] **F1-11 `homologacao-e-amostras`** — pedagogy · P · depende: F1-10
   - Entrega: revisão de amostra por professor; 2 kits de amostra (Matemática e Português) marcados como amostra; custo por prévia e por kit, e tempo, registrados no PRD seção 3

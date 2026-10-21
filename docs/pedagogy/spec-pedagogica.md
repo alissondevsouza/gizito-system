@@ -1,8 +1,8 @@
-# Spec pedagógica executável — v1.2
+# Spec pedagógica executável — v1.3
 
 > Contrato que as features F1-03 a F1-08 e F1-10 implementam, a partir do PRD 1.3 §6–7, do design doc 1.6 §5.2, §6.3 e §9 e de `docs/engineering/jobs.md` §2. Prompts v1 em [`prompts-v1.md`](prompts-v1.md); assuntos e assuntos ainda não atendidos em [`taxonomia.md`](taxonomia.md), gerado do core.
 >
-> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). A 1.1 registra as precisões da F1-03, aprovadas pelo humano em 20/10/2026 (§15.6). A 1.2 registra a equivalência do avaliador matemático da F1-04 (§8.2), aprovada pelo humano em 20/10/2026 (§15.7). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
+> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). A 1.1 registra as precisões da F1-03, aprovadas pelo humano em 20/10/2026 (§15.6). A 1.2 registra a equivalência do avaliador matemático da F1-04 (§8.2), aprovada pelo humano em 20/10/2026 (§15.7). A 1.3 troca as fotos reais da regressão por imagens geradas por IA e as variações delas (§12.1, §13.1, §13.2), decisão do humano em 21/10/2026 (§15.8). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
 
 Leia a seção que a sua feature toca (§14 diz qual).
 
@@ -381,7 +381,7 @@ Já existem e são usadas aqui: `MAX_PHOTO_COUNT`, `MIN_TOPIC_COUNT`, `MAX_TOPIC
 ### 12.1 Onde ficam
 
 - `tests/pedagogy/cases/{grade}-{subject}-{slug}/case.json` (no git) e `tests/pedagogy/cases/{grade}-{subject}-{slug}/photos/` (**fora do git**, regra de `testing.md`). O nome do diretório é o `caseId` (ex.: `5-math-fracoes-manuscrito`).
-- Fotos reais com os dados pessoais cobertos; nos casos de dado pessoal, nomes e telefones **inventados** escritos no caderno, nunca reais. O humano guarda as fotos fora do repositório; o `case.json` grava o SHA-256 de cada uma e o runner recusa foto diferente.
+- Na v1, as fotos são as 30 imagens de caderno geradas por IA que o humano entregou em 21/10/2026 e as 5 variações delas do §13.1 (§15.8). A F1-10 copia as imagens para `photos/` e gera as variações com um script versionado. Foto real, quando entrar, chega com os dados pessoais cobertos. Nos casos de dado pessoal, nomes e telefones são sempre **inventados**, nunca reais. As fotos ficam fora do repositório; o `case.json` grava o SHA-256 de cada uma e o runner recusa foto diferente.
 - Saída de cada rodada em `tests/pedagogy/output/{runId}/` (fora do git): `study_kit.json`, os dois PDFs, as issues e o relatório completo, para leitura humana.
 - Resumo da rodada em `docs/pedagogy/regressao/{AAAA-MM-DD}-{generationVersion}.md`, só com ids, códigos e números: nunca evidência, perfil, nota da revisão ou trecho do kit (regra de `docs.md`).
 
@@ -418,16 +418,33 @@ Relatório agregado (por caso e por `topicRef`, com o "outro" à parte): casos a
 
 ## 13. Homologação (PRD §7.6) e gate F1 → F2
 
-### 13.1 Os 40 casos
+### 13.1 Os casos da v1
 
-4 anos × 2 disciplinas × 5 casos, com no mínimo: 10 manuscritos, 4 com foto ruim (1 totalmente ilegível, que deve ser recusada), 4 de Matemática com frações, 2 com enunciado ambíguo no material, 4 com dado pessoal inventado visível, 2 com assunto não atendido junto de assuntos atendidos, 1 só com assunto não atendido e 2 com "outro". Um caso pode somar tags.
+São 35 casos (§15.8), um caso por imagem:
+
+- **30 imagens de caderno geradas por IA**, com o ano e a disciplina do nome do arquivo. Por ano × disciplina, cada célula tem de 2 a 5 imagens. As que trazem conteúdo de outro ano levam `grade_mismatch`.
+- **5 variações delas**, geradas pela F1-10:
+  - 1 imagem desfocada até ficar ilegível, que deve ser recusada (`bad_photo`, legibilidade `unreadable`);
+  - 4 imagens com nome de aluno, nome de escola e telefone inventados escritos sobre a página (`personal_data`).
+
+O que as 30 imagens cobrem, na contagem de 21/10/2026:
+- todas são manuscritas;
+- 5 de Matemática têm frações;
+- 2 têm enunciado ambíguo;
+- 1 tem só assunto não atendido, e 1 tem assunto não atendido junto de assuntos atendidos;
+- 7 estão cortadas ou com sombra;
+- 3 trazem conteúdo de outro ano.
+
+Os 2 casos com "outro" são casos existentes que recebem `otherTopicText` no `case.json`. Um caso pode somar tags.
+
+Foto real entra como caso novo quando existir, com as mesmas tags. A meta original continua como referência: 4 anos × 2 disciplinas × 5 casos, com no mínimo 10 manuscritos, 4 com foto ruim (1 totalmente ilegível), 4 de Matemática com frações, 2 com enunciado ambíguo, 4 com dado pessoal inventado visível, 2 com assunto não atendido junto de atendidos, 1 só com assunto não atendido e 2 com "outro".
 
 ### 13.2 Critérios do gate (aprovados em 20/10/2026)
 
 | # | Critério | Meta |
 |---|---|---|
-| 1 | Bloqueador crítico inesperado (`kit_outcome_mismatch` ou `preview_outcome_mismatch`) | 0 nos 40 casos |
-| 2 | Extração (`required_topic_missing`, `unexpected_topic`, `unsupported_topic_missed`) | ao menos 36 dos 40 casos sem falha |
+| 1 | Bloqueador crítico inesperado (`kit_outcome_mismatch` ou `preview_outcome_mismatch`) | 0 nos casos |
+| 2 | Extração (`required_topic_missing`, `unexpected_topic`, `unsupported_topic_missed`) | ao menos 90% dos casos sem falha (32 dos 35) |
 | 3 | Foto ilegível recusada e `personal_data_visible` sinalizado | 100% dos casos com essas tags |
 | 4 | Auditoria do professor | zero defeito crítico na amostra (§13.3) |
 | 5 | Custo médio por kit (todas as chamadas de IA do pedido, com extração e regeneração) | ≤ 10% de `KIT_PRICE_CENTS` |
@@ -460,7 +477,7 @@ A mesma rubrica serve à auditoria amostral semanal em produção (PRD §7.6).
 | F1-06 `pipeline-extracao` | §1, §3, `prompts-v1.md` | prompt `extract` v1, chamada por foto, cache com expiração, chamada de `mergePhotoExtractionList` e `decidePreviewOutcome` da F1-03 (por isso depende da F1-03) |
 | F1-07 `pipeline-geracao` | §1, §5–§10, `prompts-v1.md` | prompts `plan`, `generate` (com reparo) e `review` v1; orquestração; regeneração; `checkMathMarkup`; `ai_call`; teto de custo |
 | F1-08 `render-pdf` | §2 marcação, §7.2, §8.6 | templates por `formatVersion`, alternativas a partir do `value`, gabarito por `listAnswerKey`, códigos de render |
-| F1-10 `regressao-pedagogica` | §12, §13 | runner, formato de caso, relatório |
+| F1-10 `regressao-pedagogica` | §12, §13 | runner, formato de caso, relatório, as 5 variações do §13.1 |
 | F1-11 `homologacao-e-amostras` | §13 | auditoria e metas no PRD §3 |
 | F2-02, F2-03, F2-09 | §3.3, §4 | persistência da extração, decisão da prévia, recusa do "outro", bloco "O que entendi" |
 
@@ -468,7 +485,7 @@ A mesma rubrica serve à auditoria amostral semanal em produção (PRD §7.6).
 
 Propostas desta spec que interpretam o PRD ou o design doc, aprovadas pelo humano em 20/10/2026 sem mudanças. Mudar qualquer uma depois é decisão dele, com nova versão desta spec.
 
-1. **Metas do gate (§13.2):** extração em 36 dos 40 casos, custo por prévia ≤ R$ 0,10, amostra de 10 kits para o professor e a rubrica do §13.3.
+1. **Metas do gate (§13.2):** extração em 36 dos 40 casos (90% dos casos desde a 1.3, §15.8), custo por prévia ≤ R$ 0,10, amostra de 10 kits para o professor e a rubrica do §13.3.
 2. **Dificuldade percebida (§5):** "básica" troca uma intermediária por uma fácil em cada bloco; "intermediária" faz o contrário; "não sei" não muda nada. O PRD §6 só diz que ela desloca até 1 questão entre fácil e intermediária.
 3. **Relevância (§4, §5):** a ordem da prévia é a relevância, e as questões que sobram do mínimo vão aos primeiros assuntos.
 4. **Avisos em vez de bloqueadores:** `expression_number_not_in_statement` e `non_computable_excess` (§8.2), pelos motivos da tabela. A regressão mede quantas vezes disparam e pode promovê-los.
@@ -484,7 +501,16 @@ Propostas desta spec que interpretam o PRD ou o design doc, aprovadas pelo human
 
 7. **Equivalência do avaliador matemático (F1-04), aprovada pelo humano em 20/10/2026.** Em §8.2: (a) o lado sem unidade é lido na unidade do outro; (b) `%`, `R$`, mês e ano são unidades opacas, sem conversão; (c) texto e conjunto de Matemática sem diferença de maiúscula; (d) letra que também é unidade (`m`, `h`, `t`…) só é unidade em expressão com unidade; quando a leitura como medida falha (`2t + 3`, `2b + 2h`), a expressão é lida como álgebra. Consequências: `3h + 2h` e `4l` são lidos como 5 horas e 4 litros quando a conta fecha como medida, e mesmo assim `4l` é igual a `l + l + l + l` (o lado algébrico faz o outro ser lido como álgebra); `3 * m * 4 * m` (unidade com `*`) é álgebra e não é igual a `12 m²`. O prompt `generate` da F1-07 deve pedir unidade colada ao número e variável com `*` (known-issues). A alternativa a (a), exigir unidade nos dois lados, bloquearia o kit sempre que o modelo escrevesse a conta sem unidade, que é o caso comum.
 
+8. **Regressão da v1 sem foto real, decisão do humano em 21/10/2026.**
+   - **Motivo:** o humano não tem como conseguir fotos reais de caderno antes do lançamento e prioriza lançar rápido, com o risco assumido.
+   - **Casos:** a regressão usa as 30 imagens geradas por IA que ele entregou e 5 variações delas, feitas pela F1-10: 1 ilegível e 4 com dado pessoal inventado. São 35 casos (§13.1).
+   - **Critério 2 do §13.2:** passa de 36 em 40 para 90% dos casos; os outros critérios não mudam.
+   - **Risco:** as imagens geradas são mais limpas que caderno real (letra uniforme, sem rasura, respostas certas), então o critério 2 não prova a extração em caderno real.
+   - **Em produção:** a extração em caderno real é medida em produção (PRD 1.5 §7.6, known-issues).
+
 ## 16. Histórico
+
+- **1.3 (21/10/2026):** a regressão da v1 passa a ter 35 casos: 30 imagens de caderno geradas por IA e 5 variações delas (1 ilegível e 4 com dado pessoal inventado). Mudaram o §12.1, o §13.1, os critérios 1 e 2 do §13.2 (o 2 passa a 90% dos casos) e a linha da F1-10 no §14. A meta original de 40 fotos reais fica como referência. Decisão do humano (§15.8).
 
 - **1.2 (20/10/2026):** equivalência do `MathEvaluator` da F1-04 em §8.2 (expressão aceita, tolerância, unidades e tabela, lado sem unidade, `%` opaco, letra de unidade e leitura de álgebra, expressão com variável, conjunto e texto), aprovada pelo humano (§15.7); `math_expression_invalid` também para `expectedAnswer` e alternativa do tipo `expression` (§8.2), decisão do humano.
 - **1.1 (20/10/2026):** precisões da F1-03: `evidence` com dado pessoal trocada por texto fixo em vez de descartar o candidato, `sanitizePhotoExtraction` e `mergedExtractionSchema` (§3.3); `R$` com duas casas, `%` e `°` colados ao número (§7.2); comparação de texto em Português e da citação, tag HTML mais precisa e falsos positivos novos (§8.4); `decideRepair` e bloqueador de item sem item subindo para `plano` (§10, §14); aprovadas pelo humano (§15.6): ordem dos candidatos, `evidence` trocada, padrão `__`, tag, exceções de figura e precisão de telefone e CPF; termos de sentido comum fora de `blockedTermList`.

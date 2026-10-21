@@ -1,7 +1,7 @@
-# PRD — Gizito | MVP v1.4
+# PRD — Gizito | MVP v1.5
 
 **Status:** especificação proposta para implementação  
-**Data:** 14/10/2026 · revisão 1.4 em 20/10/2026 (ver seção 13)  
+**Data:** 14/10/2026 · revisão 1.5 em 21/10/2026 (ver seção 13)  
 **Produto:** gerador de kits personalizados para preparação de provas escolares  
 **Modelo de receita:** pagamento único por kit via Pix  
 **Nome:** **Gizito**
@@ -225,11 +225,11 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 **Regra de segurança de qualidade:** validação por LLM é assistiva e **não prova correção**. Casos ambíguos ou incorrigíveis devem falhar de forma segura, com nova geração ou suporte/reembolso.
 
 ### 7.6 Homologação pedagógica e garantia contínua (sem revisão humana no fluxo)
-- Montar **mínimo de 40 casos de teste**: 4 anos × 2 disciplinas × pelo menos 5 materiais/assuntos por combinação.
+- Montar **35 casos de teste** na v1: 30 imagens de caderno manuscrito geradas por IA, de 2 a 5 por ano × disciplina, e 5 variações delas (uma foto ilegível e quatro com dado pessoal inventado). A v1 não tem foto real de caderno: o humano decidiu em 21/10/2026 lançar assim, com o risco assumido, e a extração em material real é medida em produção. Fotos reais entram como casos novos quando existirem.
 - Incluir fotos ruins, textos manuscritos, frações, enunciados ambíguos e situações com dados pessoais.
 - Revisão por pelo menos um professor com experiência no segmento, em amostra representativa.
 - **Critério de lançamento:** nenhum erro crítico (gabarito incorreto, enunciado impossível ou matéria errada) na amostra auditada; todos os defeitos críticos encontrados devem ser corrigidos e os casos adicionados aos testes de regressão. Isso não equivale a garantia de erro zero em produção.
-- **Regressão obrigatória:** os 40 casos rodam a cada mudança de prompt, modelo, taxonomia ou validador; nenhuma mudança vai a produção com regressão em bloqueador crítico.
+- **Regressão obrigatória:** os casos da homologação rodam a cada mudança de prompt, modelo, taxonomia ou validador; nenhuma mudança vai a produção com regressão em bloqueador crítico.
 - **Auditoria amostral pós-entrega:** semanalmente, uma amostra dos kits entregues é lida por humano; defeitos viram novos casos de regressão e, se graves, republicação do PDF corrigido sem nova cobrança.
 - Em produção: botão “Reportar erro”, trilha de investigação e possibilidade de republicar o PDF corrigido sem nova cobrança.
 
@@ -333,13 +333,13 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 - [ ] Responsável encontra suporte, preço, kit de amostra e informações de compra/privacidade antes do pagamento.
 - [ ] Painel administrativo permite detectar e resolver falhas e republicar PDFs sem editar banco manualmente.
 - [ ] “Receber no WhatsApp” vincula o número apenas por mensagem iniciada pelo responsável, entrega link e PDFs, e o pedido é entregue por e-mail mesmo com o WhatsApp desligado.
-- [ ] Homologação pedagógica de 40 casos concluída, sem erros críticos pendentes, com os casos rodando como regressão.
+- [ ] Homologação pedagógica dos 35 casos (7.6) concluída, sem erros críticos pendentes, com os casos rodando como regressão.
 
 ## 11. Prioridade de implementação
 
 Detalhamento em features, dependências, pendências do humano e critérios de passagem em `docs/product/roadmap-v1.md`.
 
-**Fase 1 — Prova técnica/pedagógica:** taxonomia v1 (4º–7º × 2 disciplinas) → upload local de fotos → extração com perfil do material → JSON validado → recálculo matemático → dois PDFs; biblioteca de 40 casos rodando como regressão; medição de custo por prévia e por kit; geração dos dois kits de amostra. Tudo isso antes de qualquer checkout.
+**Fase 1 — Prova técnica/pedagógica:** taxonomia v1 (4º–7º × 2 disciplinas) → upload local de fotos → extração com perfil do material → JSON validado → recálculo matemático → dois PDFs; biblioteca de 35 casos rodando como regressão; medição de custo por prévia e por kit; geração dos dois kits de amostra. Tudo isso antes de qualquer checkout.
 
 **Fase 2 — Fluxo comercial:** landing com amostra → prévia → e-mail → Pix (Mercado Pago) → webhook → job → entrega privada por e-mail e WhatsApp (Evolution API); incluir termos, suporte e painel admin.
 
@@ -352,7 +352,7 @@ Detalhamento em features, dependências, pendências do humano e critérios de p
 ### 12.1 Decididas nesta revisão
 - **Gateway Pix: Mercado Pago**, Orders API, conta pessoa física (seção 9.1). Pendências operacionais: cadastrar chave Pix na conta, confirmar a taxa vigente, criar usuários de teste.
 - **WhatsApp: Evolution API com Baileys, em modo somente resposta**, já no piloto (seção 9.2). Pendências: chip e aparelho dedicados, aquecimento do número, política de privacidade atualizada.
-- **Provedor de IA na Fase 1: Anthropic (Claude)**, com Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão (decisão do humano em 20/10/2026). Os modelos são configuração (`AI_MODEL_EXTRACT`, `AI_MODEL_GENERATE`); a regressão dos 40 casos e o custo medido na Fase 1 confirmam a escolha. Se o custo por kit passar da meta, Gemini ou GPT são testados atrás da mesma interface `AiProvider`. Pendências: conta e chave da API com limite de gasto, conferência da política de dados da API e o provedor como suboperador na política de privacidade.
+- **Provedor de IA na Fase 1: Anthropic (Claude)**, com Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão (decisão do humano em 20/10/2026). Os modelos são configuração (`AI_MODEL_EXTRACT`, `AI_MODEL_GENERATE`); a regressão dos casos da homologação e o custo medido na Fase 1 confirmam a escolha. Se o custo por kit passar da meta, Gemini ou GPT são testados atrás da mesma interface `AiProvider`. Pendências: conta e chave da API com limite de gasto, conferência da política de dados da API e o provedor como suboperador na política de privacidade.
 
 ### 12.2 Em aberto (não bloqueiam o protótipo)
 1. **Marca:** consulta de anterioridade de “Gizito” no INPI e disponibilidade de domínio (`gizito.com.br` e variações) antes de divulgar.
@@ -363,6 +363,7 @@ Detalhamento em features, dependências, pendências do humano e critérios de p
 
 ## 13. Histórico de revisões
 
+- **1.5 (21/10/2026):** homologação da v1 com 35 casos em vez de 40 (7.6, 10, 11, 12.1): 30 imagens de caderno geradas por IA e 5 variações delas, sem foto real; a extração em caderno real passa a ser medida em produção. Motivo: não há como conseguir fotos reais antes do lançamento, e o humano prioriza lançar rápido, com o risco assumido. Decisão do humano em 21/10/2026.
 - **1.4 (20/10/2026):** provedor de IA decidido para a Fase 1: Anthropic, com Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão, e Gemini ou GPT como alternativa se o custo por kit passar da meta (12.1, antes em aberto em 12.2). Decisão do humano na F1-05.
 - **1.3 (19/10/2026):** assuntos ainda não atendidos (7.7): o material que trata de assunto deixado fora da taxonomia v1 por depender de figura ou oralidade é sinalizado na prévia; esse assunto não pode ser confirmado nem pedido como “outro”, o kit sai com os demais e, sem nenhum atendido, não há checkout (5, 6, 7.4, 10). Motivo: pelo caminho “outro”, o kit falharia depois do Pix no bloqueador de figura ausente. Decisão do humano na F1-01.
 - **1.2 (14/10/2026):** gateway Pix decidido: Mercado Pago via Orders API, conta pessoa física, com tabela comparativa e roteiro de integração (9.1); WhatsApp entra no MVP via Evolution API com Baileys em modo somente resposta, com fluxo, salvaguardas e caminho de migração para a API oficial (9.2); botão “Receber no WhatsApp” nas páginas de processamento e entrega; código curto do pedido; feature flag do canal; interfaces `PaymentGateway` e `NotificationChannel`; Redis e Evolution API no Compose; seção 12 reorganizada em decididas e em aberto.
