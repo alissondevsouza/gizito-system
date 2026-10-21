@@ -234,7 +234,9 @@ describe("gabarito (spec F1-08, RF-03)", () => {
       const answer = entry.answer.expectedAnswer;
       if (answer.kind === "text") {
         for (const accepted of answer.acceptedList) {
-          expect(answerKey.html).toContain(`<li>${kitTextHtml(accepted).value}</li>`);
+          expect(answerKey.html).toContain(
+            `<span class="accepted-item">${kitTextHtml(accepted).value}</span>`,
+          );
         }
       }
       if (entry.answer.evidenceQuote !== null) {

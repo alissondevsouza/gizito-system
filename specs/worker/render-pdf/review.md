@@ -83,3 +83,6 @@ Contestado:
 - **Rótulo do assunto no cabeçalho:** o cabeçalho do Playwright é outro documento, sem o CSS do KaTeX, e não consegue renderizar fórmula. Os rótulos da taxonomia não têm marcação; só o rótulo do "outro", escrito pelo modelo, poderia ter. Escrever cru no cabeçalho e renderizado na capa é a melhor saída de cada lugar.
 
 Depois das correções: `bun run lint` limpo, `typecheck` 6/6, `test` com core 729, api 25, db 98, integrations 371 e worker 228, `test:integration` com api 3, worker 36 e db 129, `build` 3/3; os 10 kits com as mesmas páginas; imagem reconstruída e `render:kit` no container de novo `Ok`.
+
+## Depois da aprovação do humano (21/10/2026)
+O humano aprovou os PDFs (celular, computador e impressão) e escolheu o caminho 2 para o gabarito: capa curta no alto da primeira página e respostas logo abaixo. As respostas aceitas passaram para a mesma linha, separadas por "·". Páginas do gabarito nos 10 kits reais: 4-math 5, 4-portuguese 5, 5-math-divisao 5, 5-math-fracoes 5, 5-portuguese 5, 6-math 5, 6-portuguese 4, 7-math-equacoes 5, 7-math-inteiros 5, 7-portuguese 5; atividades sem mudança. Mudança de layout coberta pelo snapshot estrutural (só saiu o título "Assuntos" da capa do gabarito) e pelos testes da capa; sem nova rodada de verifier, pelo fluxo enxuto (um verifier por feature).

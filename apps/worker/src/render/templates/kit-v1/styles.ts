@@ -35,6 +35,17 @@ li { margin: 0 0 1mm; }
 .cover-box h2 { margin-top: 0; }
 .cover-date { font-weight: 700; }
 .ai-note { font-size: 9pt; color: var(--color-muted); border-top: 0.5pt solid var(--color-line); padding-top: 2mm; margin-top: 8mm; }
+.cover-short { border-bottom: 1pt solid var(--color-line); padding: 0 0 4mm; margin: 0 0 7mm; }
+.cover-short .brand { margin: 0 0 3mm; }
+.cover-short .cover-main { align-items: center; }
+.cover-short h1 { margin-bottom: 1.5mm; }
+.cover-short .cover-grade { font-size: 12pt; margin: 0 0 2mm; }
+.cover-short .cover-topics { margin-bottom: 2mm; }
+.cover-short .cover-date { margin: 0; }
+.cover-short .cover-mascot { height: 34mm; }
+.cover-short .cover-box { margin: 3mm 0 0; padding: 2.5mm 4mm; }
+.cover-short .cover-box p { margin: 0; }
+.cover-short .ai-note { margin-top: 3mm; }
 .review-topic { margin: 0 0 6mm; }
 .review-topic h2 { margin-top: 0; }
 .key-points { border-left: 2pt solid var(--color-board); padding: 1mm 0 1mm 4mm; margin: 3mm 0 0; break-inside: avoid; }
@@ -74,8 +85,7 @@ li { margin: 0 0 1mm; }
 .exam-instructions { margin: 3mm 0 0; font-size: 11pt; }
 .answer-main { font-weight: 800; margin: 0 0 1.5mm; }
 .steps { margin: 1mm 0 2mm; }
-.accepted .label { margin: 0 0 0.5mm; }
-.accepted ul { margin-bottom: 1.5mm; }
+.accepted-item + .accepted-item::before { content: " · "; color: var(--color-muted); font-weight: 800; }
 .answer-key { font-size: 11pt; line-height: 1.35; }
 .answer-key .answer { margin-bottom: 4.5mm; }
 .evidence { border-left: 1.5pt solid var(--color-muted); padding-left: 3mm; }

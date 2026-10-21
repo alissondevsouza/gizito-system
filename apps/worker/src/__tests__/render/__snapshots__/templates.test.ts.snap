@@ -48,7 +48,6 @@ exports[`snapshot estrutural do kit-v1 (spec F1-08, RF-02 e RF-03) Matemática: 
   "answerKey": [
     "section:cover",
     "h1:Gabarito de Matemática",
-    "h2:Assuntos",
     "section:answers-practice",
     "h1:Exercícios de fixação",
     "answer:p1",
@@ -130,7 +129,6 @@ exports[`snapshot estrutural do kit-v1 (spec F1-08, RF-02 e RF-03) Português: s
   "answerKey": [
     "section:cover",
     "h1:Gabarito de Língua Portuguesa",
-    "h2:Assuntos",
     "section:answers-practice",
     "h1:Exercícios de fixação",
     "answer:p1",

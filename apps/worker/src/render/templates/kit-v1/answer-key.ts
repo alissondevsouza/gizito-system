@@ -26,21 +26,21 @@ import {
 const answerBlockList: readonly QuestionBlock[] = ["practice", "mock"];
 
 function coverHtml(studyKit: StudyKit, context: KitTemplateContext): SafeHtml {
-  return html`<section class="cover" data-section="cover">
-<p class="brand">Gizito</p>
+  return html`<section class="cover cover-short" data-section="cover">
 <div class="cover-main">
 <div class="cover-text">
+<p class="brand">Gizito</p>
 <h1>Gabarito de <span class="cover-subject">${subjectLabelMap[studyKit.subject]}</span></h1>
 <p class="cover-grade">${gradeLabelMap[studyKit.grade]}</p>
-<h2>Assuntos</h2>
+<p class="label">Assuntos</p>
 ${topicListHtml(studyKit)}
+${generatedDateHtml(context.generatedAt)}
 </div>
 <img class="cover-mascot" alt="" src="${context.assets.mascotDataUrlMap.success}">
 </div>
 <div class="cover-box">
 <p>Respostas comentadas das questões do caderno de atividades, na mesma ordem. Para o responsável conferir depois que a criança resolver.</p>
 </div>
-${generatedDateHtml(context.generatedAt)}
 ${aiNoteHtml()}
 </section>`;
 }
@@ -59,9 +59,9 @@ function mainAnswerHtml(entry: AnswerKeyEntry): SafeHtml {
 function acceptedHtml(entry: AnswerKeyEntry): SafeHtml | null {
   const answer = entry.answer.expectedAnswer;
   if (answer.kind !== "text" || answer.acceptedList.length === 0) return null;
-  return html`<div class="accepted"><p class="label">Também vale:</p><ul>${answer.acceptedList.map(
-    (accepted) => html`<li>${kitTextHtml(accepted)}</li>`,
-  )}</ul></div>`;
+  return html`<p class="accepted"><span class="label">Também vale:</span> ${answer.acceptedList.map(
+    (accepted) => html`<span class="accepted-item">${kitTextHtml(accepted)}</span>`,
+  )}</p>`;
 }
 
 function evidenceHtml(studyKit: StudyKit, entry: AnswerKeyEntry): SafeHtml | null {
@@ -105,7 +105,7 @@ ${listAnswerKey(studyKit)
 
 export function answerKeyDocument(studyKit: StudyKit, context: KitTemplateContext): RenderDocument {
   const body = html`${coverHtml(studyKit, context)}
-<div class="section-break">${answerBlockList.map((block) => answerBlockHtml(studyKit, block))}</div>`;
+${answerBlockList.map((block) => answerBlockHtml(studyKit, block))}`;
   return {
     html: documentHtml(
       "answer-key",

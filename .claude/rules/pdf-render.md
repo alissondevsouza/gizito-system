@@ -18,7 +18,7 @@ paths:
 - Todo texto do kit entra escapado; só os trechos entre `\(` e `\)` passam pelo KaTeX. Nenhum texto vindo do modelo vira HTML.
 - Playwright com browser compartilhado e `page.pdf({ format: "A4", printBackground: false })`; timeout por render; semáforo de concorrência (`RENDER_CONCURRENCY`).
 - Simulado com cabeçalho de prova (nome, data, tempo sugerido), numeração própria e espaço de resposta padronizado; questões abertas com linhas; Matemática com espaço de cálculo.
-- Gabarito começa em página nova, na ordem dos blocos, com a justificativa e as etapas essenciais.
+- Gabarito começa logo abaixo da capa curta, na primeira página (economia de impressão, decisão do humano em 21/10/2026), na ordem dos blocos, com a justificativa e as etapas essenciais.
 
 ## Verificação antes de publicar
 - Contar páginas (esperado: atividades 8–14, gabarito 3–6; fora da faixa é aviso, não bloqueio).
