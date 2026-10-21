@@ -4,7 +4,7 @@ module: worker
 size: M
 status: done
 branch: feat/worker/pipeline-extracao
-updated: 2026-10-20
+updated: 2026-10-21
 ---
 
 # pipeline-extracao (F1-06)
@@ -53,6 +53,7 @@ A etapa `extract` do pipeline (spec pedagógica §1, §3; `prompts-v1.md` extrac
 - [x] 3.1 `test:extract-live` com fotos sintéticas, rodado contra a API · Arquivos: `apps/worker/src/__tests__/pipeline/extract-live.test.ts`, `apps/worker/package.json` · Verificação: `bun run --cwd apps/worker test:extract-live`
 - [x] 3.2 `bun run test:pedagogy`: não existe até a F1-10; registrar no known-issues (entrada da regressão) que o `extract` v1 entrou sem ela
 - [x] 3.3 Revisão neutra, `review.md`, roadmap "feito até agora"
+- [x] 3.4 Pronto quando: 10 casos das imagens da regressão e 1 variação desfocada contra a API · Arquivos: `apps/worker/src/__tests__/pipeline/{extract-cases-live.test.ts,__fixtures__/extraction-cases.ts}`, `apps/worker/package.json` · Verificação: `bun run --cwd apps/worker test:extract-cases-live`
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -66,6 +67,7 @@ A etapa `extract` do pipeline (spec pedagógica §1, §3; `prompts-v1.md` extrac
 | 2026-10-20 | Fotos do live desenhadas em HTML e renderizadas uma vez pelo Chrome headless (`google-chrome --headless=new --screenshot --window-size=1000,1400`), guardadas em JPEG com a fonte HTML ao lado | O libvips do sharp não tem fontes nem a operação de texto; gerar no teste exigiria Chrome na máquina de quem roda |
 | 2026-10-20 | Foto repetida no mesmo pedido não é deduplicada na etapa | O lugar é o upload (F2-01), que já tem o `content_hash`; na etapa, ela só custa uma chamada a mais e conta duas vezes na junção (known-issues) |
 | 2026-10-20 | `AI_EFFORT_EXTRACT` fora da chave do cache na v1, decisão do humano | A chave do §3 não o inclui; trocar o esforço reaproveita saídas por até 30 dias (known-issues) |
+| 2026-10-21 | Os casos do "pronto quando" ficam numa tabela do teste, com o SHA-256 de cada imagem e a leitura em `docs/materiais-fotograficos/` (fora do git). A foto ilegível é a página de pontuação desfocada com sigma 14 em memória | As imagens geradas por IA substituem as fotos reais (decisão do humano, PRD 1.5 §7.6). O formato `case.json` e o lugar dos casos são da F1-10, que leva estes 11 para `tests/pedagogy/cases/` e substitui o teste pelo runner. As verificações seguem os códigos do §12.3 da spec pedagógica, mais `material_copied` para a transcrição |
 
 ## Status
-Pronta para o humano em 20/10/2026: M1 a M3 feitos, revisão neutra APROVADA na rodada 1 com os ALERTAs corrigidos (`review.md`), `test:extract-live` 5 de 5 na versão final. Pendência para o humano: os 10 casos reais do "pronto quando" esperam as fotos (F1-10). `AI_EFFORT_EXTRACT` fica fora da chave do cache na v1 (decisão do humano, 20/10/2026).
+Pronta para o humano em 20/10/2026: M1 a M3 feitos, revisão neutra APROVADA na rodada 1 com os ALERTAs corrigidos (`review.md`), `test:extract-live` 5 de 5 na versão final. Em 21/10/2026, o "pronto quando" foi cumprido: `test:extract-cases-live` passou 11 de 11 contra a API, com 10 imagens da regressão e 1 variação desfocada (`review.md`). `AI_EFFORT_EXTRACT` fica fora da chave do cache na v1 (decisão do humano, 20/10/2026).

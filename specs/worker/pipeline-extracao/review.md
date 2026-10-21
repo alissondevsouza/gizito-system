@@ -52,3 +52,36 @@ Não aplicável ainda: o prompt `extract` v1 entrou e `bun run test:pedagogy` s�
 - SUGESTÃO foto repetida, adiada: o lugar é o upload da F2-01, que já tem o `content_hash` (known-issues LOW). `AI_EFFORT_EXTRACT` fica fora da chave na v1, por decisão do humano em 20/10/2026 (known-issues LOW).
 - SUGESTÃO fixtures, feita: fonte HTML e CSS das três páginas em `apps/worker/src/__tests__/pipeline/__fixtures__/photos/source/` e o comando do Chrome headless nas Decisões da spec.
 - Sem CRÍTICO: pelo fluxo, não há rodada 2 de verifier.
+
+## Pronto quando: casos das imagens da regressão (21/10/2026)
+
+Os casos usam as imagens de caderno geradas por IA, que substituem as fotos reais por decisão do humano (PRD 1.5 §7.6). São 10 imagens de `docs/materiais-fotograficos/` e 1 variação desfocada.
+
+Os assuntos esperados foram definidos pelo orquestrador ao ver cada imagem. Não houve verificador neutro nesta rodada.
+
+Comando: `bun run --cwd apps/worker test:extract-cases-live`, com o modelo de `AI_MODEL_EXTRACT` (Haiku 5.5). Resultado: 11 de 11, 72,6 s.
+
+| Caso | Prévia | Candidatos (todos `high`) | Não atendido | Chamadas | Custo (¢ US$) |
+|---|---|---|---|---|---|
+| `4-math-adicao-subtracao-cortada` | `preview_ready` | 1, obrigatório | — | 1 | 0,120 |
+| `4-portuguese-pontuacao` | `preview_ready` | 1, obrigatório | — | 1 | 0,147 |
+| `4-portuguese-producao-textual` | `only_unsupported_topics` | 0 | `lp-essay-writing` | 1 | 0,052 |
+| `5-math-divisao-cortada` | `preview_ready` | 1, obrigatório | — | 1 | 0,118 |
+| `5-math-fracoes-decimais-perimetro` | `preview_ready` | 5: 3 obrigatórios, 2 aceitáveis | — | 1 | 0,117 |
+| `5-portuguese-interpretacao-e-redacao` | `preview_ready` | 1, obrigatório | `lp-essay-writing` | 1 | 0,166 |
+| `6-math-angulos` | `preview_ready` | 1, obrigatório | — | 1 | 0,152 |
+| `6-portuguese-substantivos` | `preview_ready` | 1, obrigatório | — | 1 | 0,139 |
+| `7-math-inteiros-e-fracoes` | `preview_ready` | 4: 2 obrigatórios, 2 aceitáveis | — | 1 | 0,181 |
+| `7-portuguese-figuras-de-linguagem` | `preview_ready` | 1, obrigatório | — | 2 (`ai_output_invalid`, depois `ok`) | 0,219 |
+| `4-portuguese-pontuacao-desfocada` | `photos_unreadable` | 0 | — | 1 | 0,054 |
+
+Resultado das verificações:
+- Nenhum `material_copied`: nenhum trecho do material aparece na evidência nem no perfil gravados no cache.
+- Nenhum aviso de fonte.
+- Nenhuma issue da sanitização.
+
+Custo e tempo: de US$ 0,0005 a 0,0022 por foto, com 6,6 mil a 8,7 mil tokens de entrada, e de 3,4 a 8,4 s por chamada. As chamadas mais baratas leram o system do cache do provedor. Uma prévia de 5 fotos sai abaixo de R$ 0,10.
+
+Observações para a F1-10:
+- **Saída inválida:** 1 das 12 chamadas voltou `ai_output_invalid`, e a nova chamada resolveu. O motivo não aparece no `AiFailure`. Vale medir a taxa nos 35 casos.
+- **Corte das fatias:** as imagens cortadas saíram `good`; só uma recebeu `cropped`.

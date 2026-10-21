@@ -1,9 +1,9 @@
-# Gizito — Roadmap de Implementação v1.4
+# Gizito — Roadmap de Implementação v1.5
 
 **Status:** em execução  
 **Fase atual:** F1 — Prova técnica e pedagógica  
 **Data:** 14/10/2026  
-**Estado atualizado em:** 20/10/2026  
+**Estado atualizado em:** 21/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
 **Como usar:** cada feature vira uma spec em `specs/{modulo}/{slug}/` executada pelo fluxo `gizito-spec-driven`; as fases só avançam quando o critério de saída é atendido  
 **Como marcar:** `[x]` concluída, com data e commit ou spec ao lado · `[ ]` com **em andamento** no título quando iniciada, com o sub-item "Feito até agora" · `[ ]` sem marca é pendente. Ao concluir uma feature, marcar o item e trocar "Feito até agora" por "Concluída em". Ao fechar uma fase, marcar o gate, atualizar a coluna Estado da seção 2, o bloco "Estado atual" abaixo e a tabela de estado de `docs/README.md`
@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 5 | 1 | 5 |
+| F1 Prova técnica e pedagógica | 11 | 6 | 0 | 5 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -141,7 +141,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 5 de 11 concluídas
+**Estado:** em andamento · 6 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -164,10 +164,19 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Pronto quando: suíte de contrato passa no real (com chave) e no fake
   - Concluída em: 20/10/2026. `createAnthropicProvider` (streaming, cache do system, foto reduzida sem metadado, erros tipados, custo em centavos de dólar; saída estruturada em extração, plano e revisão, e JSON em texto na geração, porque a API recusa a gramática do kit) e `createFakeAiProvider` em `packages/integrations`; `AiProvider` com `Result` no core; ADR-0011. Revisão neutra reprovada nas rodadas 1 e 2, com tudo corrigido. `test:ai-live` contra a API real com 16 de 16 casos, incluindo os sete schemas de saída do core. Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
 
-- [ ] **F1-06 `pipeline-extracao` — em andamento** — worker · M · depende: F1-01, F1-03, F1-05 · `specs/worker/pipeline-extracao/`
+- [x] **F1-06 `pipeline-extracao`** — worker · M · depende: F1-01, F1-03, F1-05 · 21/10/2026 · `31b3a8b` · `specs/worker/pipeline-extracao/`
   - Entrega: prompt `extract` v1; mapeamento para a taxonomia com confiança; `material_profile`; legibilidade por foto; cache por hash; aviso de dado pessoal; assuntos ainda não atendidos sinalizados (PRD 7.7)
   - Pronto quando: em 10 casos das imagens da regressão (geradas por IA, PRD 7.6), assuntos corretos; foto ilegível recusada; sem transcrição integral
-  - Feito até agora (20/10/2026): prompt `extract` v1 transcrito de `prompts-v1.md` (teste compara com o doc) e `analyzeMaterial` em `apps/worker/src/pipeline/`: uma chamada por foto em paralelo, uma nova chamada para saída inválida, cache por hash com a extração já sanitizada e validade da foto, junção e decisão da prévia da F1-03, custo por chamada para o `ai_call`. `test:extract-live` com cinco fotos sintéticas passou contra a API (US$ 0,0004 a 0,0015 por foto). Revisão neutra aprovada na rodada 1, com os dois alertas corrigidos. Mesclada em 20/10/2026 (`31b3a8b`). Faltam os 10 casos, agora com as imagens geradas por IA (decisão do humano em 21/10/2026)
+  - Concluída em: 21/10/2026.
+    - Entregou o prompt `extract` v1, transcrito de `prompts-v1.md` (um teste compara com o doc), e o `analyzeMaterial` em `apps/worker/src/pipeline/`: uma chamada por foto em paralelo; uma nova chamada para saída inválida; cache por hash com a extração já sanitizada e a validade da foto; junção e decisão da prévia da F1-03; custo por chamada para o `ai_call`.
+    - `test:extract-live` com cinco fotos sintéticas passou contra a API.
+    - Revisão neutra aprovada na rodada 1, com os dois alertas corrigidos; mesclada em 20/10/2026 (`31b3a8b`).
+    - Pronto quando: `test:extract-cases-live` passou 11 de 11 contra a API em 21/10/2026. São 10 imagens da regressão e 1 variação desfocada, cobrindo 4 anos × 2 disciplinas.
+      - Todos os assuntos obrigatórios saíram, e nenhum candidato `high` fora dos aceitáveis.
+      - Redação sozinha deu `only_unsupported_topics`; redação junto de interpretação foi sinalizada; a foto desfocada foi recusada.
+      - Nenhum trecho do material foi copiado.
+      - Custo de US$ 0,0005 a 0,0022 por foto, de 3,4 a 8,4 s por chamada.
+    - Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
 - [ ] **F1-07 `pipeline-geracao`** — worker · L · depende: F1-03, F1-04, F1-05, F1-06
   - Entrega: prompts `plan`, `generate`, `review` v1; orquestração das etapas; uma regeneração; `ai_call` por chamada; limite de custo por pedido
   - Pronto quando: kit válido em 10 casos; fixtures defeituosas disparam cada bloqueador
@@ -284,6 +293,7 @@ Marcar o item só quando entregue; anotar ao lado a data em que o gatilho dispar
 
 ## 10. Histórico de revisões
 
+- **1.5 (21/10/2026):** regressão com 35 casos em vez de 40 (PRD 1.5 §7.6, spec pedagógica 1.3): 30 imagens de caderno geradas por IA e 5 variações delas, sem foto real, decisão do humano. Mudaram o diagrama, o risco da extração manuscrita, a saída da F1, o "pronto quando" da F1-06 (sobre as imagens da regressão) e a entrega da F1-10. Pendências do humano atualizadas
 - **1.4 (19/10/2026):** F1-02 em andamento; a entrega da F1-03 passa a apontar o §14 da spec pedagógica, com os nomes de schema da spec (`photoExtractionSchema` no lugar de `extractionResultSchema`) e as funções de alocação, composição e revisão; a F1-06 passa a depender da F1-03, dona do schema e da junção da extração.
 - **1.3 (19/10/2026):** assuntos ainda não atendidos (PRD 1.3, seção 7.7): F1-02 define a lista com id e o reconhecimento; F1-06 sinaliza; F2-02 volta a `draft` sem assunto atendido; F2-03 recusa na confirmação.
 - **1.2 (19/10/2026):** revisão da F0 (`specs/cross/revisao-f0/`): F2-04 passa a citar `webhookEventId` no `charge.reconcile` e o cancelamento dos outros Pix no gateway; F2-06 passa a citar a regra de purge dentro dos 30 dias, os lotes até esvaziar e o expurgo de jobs `completed`.

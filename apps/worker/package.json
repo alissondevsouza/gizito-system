@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test --path-ignore-patterns '**/integration/**'",
     "test:integration": "bun test src/__tests__/integration",
-    "test:extract-live": "EXTRACT_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/pipeline/extract-live.test.ts"
+    "test:extract-live": "EXTRACT_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/pipeline/extract-live.test.ts",
+    "test:extract-cases-live": "EXTRACT_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/pipeline/extract-cases-live.test.ts"
   },
   "dependencies": {
     "@gizito/core": "workspace:*",
