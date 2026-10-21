@@ -11,6 +11,7 @@ import {
   KIT_PRICE_CENTS,
   KIT_RETENTION_MONTHS,
   LEGIBILITY_SCORE_MAP,
+  MAX_AI_COST_CENTS_PER_ORDER,
   MAX_BASE_TEXT_COUNT,
   MAX_CONTEXT_THEME_COUNT,
   MAX_EVIDENCE_LENGTH,
@@ -47,6 +48,7 @@ import {
   PUBLIC_TOKEN_BYTES,
   PUBLIC_TOKEN_LENGTH,
   RETENTION_PURGE_INTERVAL_HOURS,
+  REVIEW_OUTPUT_RETRY_COUNT,
   SHORT_CODE_ALPHABET,
   SHORT_CODE_LENGTH,
   STUDY_KIT_FORMAT_VERSION,
@@ -143,6 +145,8 @@ describe("constantes da spec pedagógica (§11)", () => {
       "7": { min: 180, max: 380 },
     });
     expect(MAX_REPAIR_ITEM_COUNT).toBe(8);
+    expect(REVIEW_OUTPUT_RETRY_COUNT).toBe(1);
+    expect(MAX_AI_COST_CENTS_PER_ORDER).toBe(200);
     expect(ACTIVITIES_PAGE_RANGE).toEqual({ min: 8, max: 14 });
     expect(ANSWER_KEY_PAGE_RANGE).toEqual({ min: 3, max: 6 });
     expect(STUDY_KIT_FORMAT_VERSION).toBe("kit-v1");

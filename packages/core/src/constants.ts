@@ -39,6 +39,8 @@ export const MIN_QUESTION_COUNT_PER_TOPIC_PER_BLOCK: Readonly<Record<TopicCount,
 
 export const MAX_REGENERATION_COUNT = 1;
 export const MAX_REPAIR_ITEM_COUNT = 8;
+export const REVIEW_OUTPUT_RETRY_COUNT = 1;
+export const MAX_AI_COST_CENTS_PER_ORDER = 200;
 
 export const OTHER_TOPIC_REF = "other";
 

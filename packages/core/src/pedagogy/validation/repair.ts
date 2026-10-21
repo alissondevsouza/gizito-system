@@ -8,7 +8,19 @@ import {
   validationIssueRuleMap,
 } from "#src/pedagogy/validation/issue.ts";
 
-export type RepairFailReasonCode = "other_topic_unfeasible" | "generation_blocked";
+export const generationFailReasonCodeList = [
+  "ai_output_invalid",
+  "generation_blocked",
+  "other_topic_unfeasible",
+  "ai_cost_exceeded",
+  "render_failed",
+] as const;
+export type GenerationFailReasonCode = (typeof generationFailReasonCodeList)[number];
+
+export type RepairFailReasonCode = Extract<
+  GenerationFailReasonCode,
+  "other_topic_unfeasible" | "generation_blocked"
+>;
 
 export type RepairItemId = KitItemId | TopicRef;
 

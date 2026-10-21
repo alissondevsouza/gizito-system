@@ -5,10 +5,22 @@ import {
 } from "#src/__tests__/__fixtures__/kit-content.ts";
 import { practiceQuestionIdList } from "#src/pedagogy/kit-item.ts";
 import { createValidationIssue } from "#src/pedagogy/validation/issue.ts";
-import { decideRepair } from "#src/pedagogy/validation/repair.ts";
+import { decideRepair, generationFailReasonCodeList } from "#src/pedagogy/validation/repair.ts";
 
 const math = buildMathFixture();
 const portuguese = buildPortugueseFixture();
+
+describe("generationFailReasonCodeList (jobs.md §4)", () => {
+  it("lista os fail_reason_code da geração, inclusive os do decideRepair", () => {
+    expect(generationFailReasonCodeList).toEqual([
+      "ai_output_invalid",
+      "generation_blocked",
+      "other_topic_unfeasible",
+      "ai_cost_exceeded",
+      "render_failed",
+    ]);
+  });
+});
 
 describe("decideRepair (spec pedagógica §8 e §10)", () => {
   it("sem bloqueador não regenera; aviso e render não contam", () => {

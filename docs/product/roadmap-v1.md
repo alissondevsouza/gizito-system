@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 6 | 0 | 5 |
+| F1 Prova técnica e pedagógica | 11 | 6 | 1 | 4 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -177,7 +177,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
       - Nenhum trecho do material foi copiado.
       - Custo de US$ 0,0005 a 0,0022 por foto, de 3,4 a 8,4 s por chamada.
     - Mesclada sem `bun run test:pedagogy`, que só existe na F1-10 (known-issues)
-- [ ] **F1-07 `pipeline-geracao`** — worker · L · depende: F1-03, F1-04, F1-05, F1-06
+- [ ] **F1-07 `pipeline-geracao` — em andamento** — worker · L · depende: F1-03, F1-04, F1-05, F1-06 · `specs/worker/pipeline-geracao/`
   - Entrega: prompts `plan`, `generate`, `review` v1; orquestração das etapas; uma regeneração; `ai_call` por chamada; limite de custo por pedido
   - Pronto quando: kit válido em 10 casos; fixtures defeituosas disparam cada bloqueador
 - [ ] **F1-08 `render-pdf`** — worker · M · depende: F1-03
