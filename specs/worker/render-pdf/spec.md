@@ -106,4 +106,4 @@ Etapa 8 do pipeline (spec pedagógica §1, §2 marcação, §7.2, §8.6): do `st
 | 2026-10-21 | Nota de IA nas duas capas: "Material complementar gerado com apoio de inteligência artificial. Não substitui o professor nem garante nota. Em caso de dúvida, consulte o material da escola ou o professor." | junta o texto do PRD §6 e o do design doc §9 |
 
 ## Status
-Feita. Revisão neutra aprovada na rodada 1, sem CRÍTICO; 4 ALERTAs e 3 sugestões corrigidos, 1 ALERTA e 2 sugestões contestados no `review.md`. Pendências do humano: linha `RENDER_CONCURRENCY=2` no `.env.example` (a permissão do projeto bloqueia o agente); push e merge. O humano abriu os PDFs no celular e no computador e os imprimiu, com ótima qualidade (pronto quando, 21/10/2026); o `[x]` da F1-08 no roadmap foi feito nesta branch.
+Feita e aprovada. Revisão neutra aprovada na rodada 1, sem CRÍTICO. O humano aprovou os PDFs (celular, computador e impressão), escolheu a capa curta do gabarito e aprovou os PDFs com o logo nas capas e no cabeçalho (21/10/2026). Pendências do humano: linha `RENDER_CONCURRENCY=2` no `.env.example` (a permissão do projeto bloqueia o agente), push e merge.
