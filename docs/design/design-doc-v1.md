@@ -1,7 +1,7 @@
-# Gizito — Guia de Design, Identidade Visual e Experiência (v1.6)
+# Gizito — Guia de Design, Identidade Visual e Experiência (v1.7)
 
 **Tipo:** complemento de UI/UX e branding ao `product-doc-v1.md`  
-**Data:** 14/10/2026 · revisão 1.6 em 20/10/2026 (ver seção 15)  
+**Data:** 14/10/2026 · revisão 1.7 em 21/10/2026 (ver seção 15)  
 **Status:** especificação proposta, pronta para orientar design e implementação  
 **Produto:** kit de reforço escolar personalizado, adquirido por Pix a cada necessidade  
 **Marca escolhida:** **Gizito**
@@ -105,7 +105,7 @@ As imagens em `docs/gizito-image/` são **explorações geradas por IA** que def
 |---|---|---|
 | `mascote-sem-fundo.png` | Pose acenando, fundo transparente | **Base canônica** do personagem: proporções, rosto, luvas, tênis azul-e-branco |
 | `mascote-aluno.png` | Com mochila azul, lousa com lettering de giz, janela com checklist | Referência de cena para a landing; mochila como acessório de “aluno” |
-| `mascote-professor.png` | Variante com óculos, gravata-borboleta, ponteiro e livro; miniaturas “joinha” e “abraçando livros”; lettering arredondado com estrela no “i” | Variante “professor” (opcional); **lettering de referência** para o logotipo; miniaturas para `success` |
+| `mascote-professor.png` | Variante com óculos, gravata-borboleta, ponteiro e livro; miniaturas “joinha” e “abraçando livros”; lettering arredondado com estrela no “i” | Variante “professor” (opcional); miniaturas para `success`. O lettering desta imagem foi a primeira referência do logotipo, substituída pelo logo aprovado (seção 4.4) |
 | `mascote-formando.png` | Capelo de formatura, livro, apontando para a lousa | Pose `point`; capelo reservado para comunicação de conclusão (P1) |
 | `mascote-livros.png` | Apontando para balão, carregando livros, miniaturas; lettering “bubble” | Pose `point` e `success`; carregando livros para ilustrações de seção |
 
@@ -118,7 +118,7 @@ As imagens em `docs/gizito-image/` são **explorações geradas por IA** que def
 - **Lousa de fundo:** pode aparecer na landing e na capa dos PDFs como cenário, sempre em `--color-board`, nunca atrás de formulários.
 - **Variação de óculos:** nas interfaces o Gizito aparece sem óculos; a variante professor pode ilustrar dicas pedagógicas e a capa do gabarito.
 
-**Formato dos assets de produção:** por serem ilustrações 2.5D geradas por IA, os assets do mascote são **PNG/WebP com fundo transparente**, exportados em 2–3 tamanhos (por exemplo 128, 256 e 512 px de altura) e otimizados. SVG fica reservado para logotipo, símbolo e favicon (seção 4.4). Cada pose deve ser gerada a partir da base canônica para manter consistência de rosto, proporção e cores; qualquer imagem nova passa por uma checagem rápida contra esta seção antes de entrar no repositório.
+**Formato dos assets de produção:** por serem ilustrações 2.5D geradas por IA, os assets do mascote são **PNG/WebP com fundo transparente**, exportados em 2–3 tamanhos (por exemplo 128, 256 e 512 px de altura) e otimizados. O logotipo segue o mesmo formato (seção 4.4). Cada pose deve ser gerada a partir da base canônica para manter consistência de rosto, proporção e cores; qualquer imagem nova passa por uma checagem rápida contra esta seção antes de entrar no repositório.
 
 ## 4. Linguagem visual: “neo-retrô escolar”
 
@@ -177,11 +177,14 @@ Preferir peso 600–800 para títulos; parágrafos regulares 400–500. Evitar l
 
 ### 4.4 Elementos de marca
 
-- **Logo principal:** lettering “Gizito” de leitura imediata + símbolo simplificado do personagem. **Referência de lettering:** a versão arredondada e encorpada de `mascote-professor.png`, com a **estrela no pingo do “i”** como elemento distintivo, em `--color-board` ou `--color-ink`.
+- **Logo principal (aprovado em 21/10/2026):** `docs/gizito-image/logo/logo-aprovada.png`, ilustração 2.5D gerada por IA. O Gizito espia por trás do lettering “Gizito”, com uma luva apoiada no “G”, a outra acenando e faíscas amarelas. As letras são brancas com textura de giz, sombra azul (`--color-gizito-blue`), contorno verde-escuro e pingos amarelos (`--color-sun`) nos dois “i”, com um sublinhado de giz. Substitui a referência anterior de lettering (estrela no pingo do “i”), recusada.
+- **Formato:** como o mascote (3.4), o logo é raster, PNG/WebP com fundo transparente; não há versão em SVG nem versão horizontal. O contorno verde-escuro mantém a leitura sobre branco, `--color-paper`, `--color-board` e em impressão preto e branco.
+- **Variações** (em `docs/gizito-image/logo/`, todas geradas da imagem aprovada; conferência visual em `variacoes.png`):
+  - logo completo: `gizito-logo.png` (aparado, resolução original), `gizito-logo-256.png`, `gizito-logo-512.png`, `gizito-logo-512.webp` e `gizito-logo-1024.webp`;
+  - avatar de perfil: `gizito-avatar-512.png`, o busto do Gizito sobre `--color-board`;
+  - compartilhamento de link: `og-image.png`, 1200×630, o logo sobre `--color-paper`;
+  - favicon: o rosto do Gizito sobre `--color-board`, em `favicon-16.png`, `favicon-32.png`, `favicon-48.png`, `favicon.ico` (16, 32 e 48), `apple-touch-icon.png` (180) e `icon-192.png`.
 - **Lettering de giz:** a versão manuscrita sobre lousa (como em `mascote-aluno.png` e `mascote-formando.png`) é **secundária**, para hero e capas, nunca em navegação ou botões.
-- **Versão horizontal:** símbolo à esquerda, palavra à direita.
-- **Versão reduzida:** cabeça/silhueta do giz sem detalhes pequenos.
-- **Favicon:** silhueta de giz sobre verde-quadro; testada em 16×16 e 32×32 px.
 - **Não depender de emoji** como substituto do mascote final. Não usar ™ ou ® até haver registro.
 
 ## 5. Comportamento do assistente (inspiração funcional no Clippy)
@@ -437,9 +440,9 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 **Identidade**
 
-- `logo-horizontal.svg`, `logo-stacked.svg`, `mark.svg`, `favicon.svg`.
+- Logo aprovado e variações em `docs/gizito-image/logo/` (seção 4.4): logo completo, avatar, `og-image.png` e favicons.
 - `brand-tokens.css` ou tokens equivalentes, guia de cores e tipografia.
-- Templates de OG/social (1200×630) e avatar de perfil.
+- Templates de OG/social além do `og-image.png` padrão, quando houver campanhas.
 
 **Mascote P0** (PNG/WebP com fundo transparente, 128/256/512 px de altura, gerados a partir de `mascote-sem-fundo.png`)
 
@@ -480,7 +483,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 ## 13. Prioridades de execução
 
-**Etapa 1 — Fundamentos (P0):** validar marca; criar logo (lettering de referência da seção 4.4), base canônica do Gizito, paleta e tipografia; definir tokens.
+**Etapa 1 — Fundamentos (P0):** validar marca; logo aprovado (seção 4.4), base canônica do Gizito, paleta e tipografia; definir tokens.
 
 **Etapa 2 — Fluxo principal (P0):** desenhar e implementar landing, upload, confirmação, Pix, processamento e entrega em mobile; preparar variantes desktop.
 
@@ -500,6 +503,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 ## 15. Histórico de revisões
 
+- **1.7 (21/10/2026):** logo aprovado pelo humano (4.4): `docs/gizito-image/logo/logo-aprovada.png`, com o Gizito espiando por trás do lettering, e as variações geradas dele (logo completo, avatar, `og-image.png` e favicons pelo rosto do Gizito). O logo passa a ser raster (PNG/WebP), como o mascote, sem SVG nem versão horizontal (3.4, 4.4, 11). A estrela no pingo do “i” e o símbolo desenhado em vetor foram recusados. Motivo: decisão do humano.
 - **1.6 (20/10/2026):** microcopy (5.2) para matéria legível de outra disciplina ou de outro ano, que antes caía no texto de foto ilegível, e para redação como assunto ainda não atendido, que não depende de imagem nem de fala; aviso correspondente em `rascunho` (6.8). Motivo: spec pedagógica §15, aprovada na F1-02.
 - **1.5 (19/10/2026):** assuntos ainda não atendidos na prévia (6.3): aparecem à parte, sem chip selecionável e sem entrar como “outro”; sem assunto atendido, o pedido volta a `rascunho` com aviso (6.8); microcopy das duas situações (5.2) e critério de aceite (12). Motivo: PRD 1.3, seção 7.7.
 - **1.4 (19/10/2026):** erro inesperado de página (7.2): texto objetivo com as saídas "tentar de novo" e "voltar ao início", sem detalhe técnico. Motivo: a raiz do web passa a ter `errorComponent` (revisão da F0); o texto exato fica em `apps/web/src/copy/`.
