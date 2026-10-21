@@ -43,8 +43,19 @@ export function blankMathMarkup(text: string): string {
   return text.replace(/\\\([\s\S]*?\\\)/g, (segment) => " ".repeat(segment.length));
 }
 
+export type MathMarkupPart = { readonly kind: "text" | "math"; readonly value: string };
+
+export function splitMathMarkup(text: string): readonly MathMarkupPart[] {
+  return text
+    .split(/\\\(([\s\S]*?)\\\)/)
+    .map((value, index): MathMarkupPart => ({ kind: index % 2 === 1 ? "math" : "text", value }))
+    .filter((part) => part.kind === "math" || part.value !== "");
+}
+
 export function listMathMarkupSegment(text: string): readonly string[] {
-  return [...text.matchAll(/\\\(([\s\S]*?)\\\)/g)].map((match) => match[1] ?? "");
+  return splitMathMarkup(text)
+    .filter((part) => part.kind === "math")
+    .map((part) => part.value);
 }
 
 function firstMatchOf(text: string, patternList: readonly RegExp[]): string | null {

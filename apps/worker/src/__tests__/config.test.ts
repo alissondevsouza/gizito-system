@@ -2,8 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 import {
   DEFAULT_GENERATE_CONCURRENCY,
+  DEFAULT_RENDER_CONCURRENCY,
   DEFAULT_WORKER_HEALTH_PORT,
   MAX_GENERATE_CONCURRENCY,
+  MAX_RENDER_CONCURRENCY,
   workerConfigSchema,
 } from "#src/config.ts";
 
@@ -18,6 +20,7 @@ describe("config do worker", () => {
     expect(workerConfigSchema.parse(validEnvironment)).toMatchObject({
       WORKER_HEALTH_PORT: DEFAULT_WORKER_HEALTH_PORT,
       GENERATE_CONCURRENCY: DEFAULT_GENERATE_CONCURRENCY,
+      RENDER_CONCURRENCY: DEFAULT_RENDER_CONCURRENCY,
       HOST: "127.0.0.1",
     });
     expect(
@@ -53,6 +56,20 @@ describe("config do worker", () => {
     for (const GENERATE_CONCURRENCY of ["0", "-1", "1.5", "muitos", "9"]) {
       expect(
         workerConfigSchema.safeParse({ ...validEnvironment, GENERATE_CONCURRENCY }).success,
+      ).toBe(false);
+    }
+  });
+
+  it("aceita RENDER_CONCURRENCY de 1 ao teto e recusa o resto (spec F1-08, RF-05)", () => {
+    expect(
+      workerConfigSchema.parse({
+        ...validEnvironment,
+        RENDER_CONCURRENCY: String(MAX_RENDER_CONCURRENCY),
+      }).RENDER_CONCURRENCY,
+    ).toBe(MAX_RENDER_CONCURRENCY);
+    for (const RENDER_CONCURRENCY of ["0", "1.5", "muitos", String(MAX_RENDER_CONCURRENCY + 1)]) {
+      expect(
+        workerConfigSchema.safeParse({ ...validEnvironment, RENDER_CONCURRENCY }).success,
       ).toBe(false);
     }
   });

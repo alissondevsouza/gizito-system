@@ -95,6 +95,8 @@ export const BASE_TEXT_WORD_RANGE_BY_GRADE: Readonly<Record<Grade, CountRange>> 
 };
 export const ACTIVITIES_PAGE_RANGE: CountRange = { min: 8, max: 14 };
 export const ANSWER_KEY_PAGE_RANGE: CountRange = { min: 3, max: 6 };
+export const RENDER_RETRY_COUNT = 1;
+export const BRAZIL_TIME_ZONE = "America/Sao_Paulo";
 
 export const STUDY_KIT_FORMAT_VERSION = "kit-v1";
 export const MAX_REVIEW_NOTE_LENGTH = 200;

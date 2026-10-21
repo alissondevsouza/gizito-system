@@ -10,6 +10,7 @@ import {
   isValidCpfDigitSequence,
   listMathMarkupSegment,
   normalizeSpacing,
+  splitMathMarkup,
 } from "#src/pedagogy/validation/patterns.ts";
 
 describe("figura (spec pedagógica §8.4, lista fechada)", () => {
@@ -193,6 +194,29 @@ it("listMathMarkupSegment devolve o conteúdo de cada trecho, para o KaTeX do wo
     "3 \\times 4",
   ]);
   expect(listMathMarkupSegment("sem marcação")).toEqual([]);
+});
+
+describe("splitMathMarkup (render da F1-08)", () => {
+  it("intercala texto e trecho de marcação, na ordem", () => {
+    expect(splitMathMarkup("a \\(\\frac{1}{2}\\) e \\(3\\)")).toEqual([
+      { kind: "text", value: "a " },
+      { kind: "math", value: "\\frac{1}{2}" },
+      { kind: "text", value: " e " },
+      { kind: "math", value: "3" },
+    ]);
+  });
+
+  it("deixa o texto sem marcação inteiro", () => {
+    expect(splitMathMarkup("R$ 12,50")).toEqual([{ kind: "text", value: "R$ 12,50" }]);
+  });
+
+  it("deixa o delimitador sem par como texto", () => {
+    expect(splitMathMarkup("a \\( b")).toEqual([{ kind: "text", value: "a \\( b" }]);
+  });
+
+  it("mantém o trecho vazio como marcação", () => {
+    expect(splitMathMarkup("\\(\\)")).toEqual([{ kind: "math", value: "" }]);
+  });
 });
 
 describe("falsos positivos achados na revisão neutra da F1-03", () => {

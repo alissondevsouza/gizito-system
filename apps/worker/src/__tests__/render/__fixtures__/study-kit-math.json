@@ -1,0 +1,1232 @@
+{
+  "subject": "math",
+  "formatVersion": "kit-v1",
+  "grade": "5",
+  "perceivedDifficulty": null,
+  "taxonomyVersion": "tax-v1",
+  "generationVersion": "extract-v1+plan-v1+generate-v1+review-v1",
+  "topicList": [
+    {
+      "topicRef": "ma5-equivalent-fractions",
+      "label": "Frações equivalentes"
+    },
+    {
+      "topicRef": "ma5-decimal-numbers",
+      "label": "Números decimais"
+    },
+    {
+      "topicRef": "ma5-perimeter-area",
+      "label": "Perímetro e área"
+    }
+  ],
+  "materialProfile": {
+    "exerciseFormatList": ["open_answer", "computation"],
+    "notationList": [
+      "fraction_stacked",
+      "decimal_comma",
+      "multiplication_x",
+      "division_obelus",
+      "division_bracket"
+    ],
+    "terminologyList": [
+      "frações equivalentes",
+      "números decimais",
+      "décimos",
+      "centésimos",
+      "perímetro",
+      "adição",
+      "subtração",
+      "multiplicação",
+      "divisão"
+    ],
+    "contextThemeList": ["figuras geométricas", "operações básicas"],
+    "apparentLevel": "at_grade",
+    "hasFigures": true,
+    "isHandwritten": true
+  },
+  "sourceWarningCodeList": [],
+  "reviewSectionList": [
+    {
+      "topicRef": "ma5-equivalent-fractions",
+      "title": "Frações equivalentes",
+      "paragraphList": [
+        "Frações equivalentes são frações diferentes que representam a mesma parte do todo. Para achar uma, multiplicamos o numerador e o denominador pelo mesmo número, que não pode ser zero. Exemplo: \\(\\frac{1}{2} = \\frac{1 \\times 3}{2 \\times 3} = \\frac{3}{6}\\).",
+        "Também podemos dividir o numerador e o denominador pelo mesmo número. Isso se chama simplificar. Exemplo: \\(\\frac{6}{8} = \\frac{6 \\div 2}{8 \\div 2} = \\frac{3}{4}\\).",
+        "Uma fração é irredutível quando só dá para dividir o numerador e o denominador por 1. Repita a divisão até chegar nela. Para saber se duas frações são equivalentes, leve as duas ao mesmo denominador e compare."
+      ],
+      "keyPointList": [
+        "Multiplique ou divida em cima e embaixo pelo mesmo número.",
+        "Frações equivalentes representam a mesma quantidade.",
+        "Fração irredutível não pode mais ser simplificada.",
+        "Para comparar frações, use o mesmo denominador."
+      ]
+    },
+    {
+      "topicRef": "ma5-decimal-numbers",
+      "title": "Números decimais",
+      "paragraphList": [
+        "No número decimal, a vírgula separa as unidades da parte menor que 1. Depois da vírgula vêm os décimos, os centésimos e os milésimos. Em 3,274 temos 3 unidades, 2 décimos, 7 centésimos e 4 milésimos.",
+        "Para decompor, escreva cada algarismo com o seu valor: \\(3,274 = 3 + 0,2 + 0,07 + 0,004\\). No dinheiro, os centavos são os centésimos: R$ 0,05 são 5 centésimos de real.",
+        "Para comparar decimais, olhe primeiro as unidades, depois os décimos, depois os centésimos. Cuidado: 0,5 é maior que 0,45, pois 5 décimos são 50 centésimos. Na reta numérica, 2,36 fica entre 2,3 e 2,4."
+      ],
+      "keyPointList": [
+        "Ordens depois da vírgula: décimos, centésimos e milésimos.",
+        "Compare da esquerda para a direita, ordem por ordem.",
+        "Mais algarismos não quer dizer número maior.",
+        "Centavos são centésimos do real."
+      ]
+    },
+    {
+      "topicRef": "ma5-perimeter-area",
+      "title": "Perímetro e área",
+      "paragraphList": [
+        "O perímetro é a medida do contorno de uma figura. Em um retângulo, somamos os quatro lados: \\(2 \\times (\\text{comprimento} + \\text{largura})\\). O resultado vem em unidade de comprimento, como cm ou m.",
+        "A área é o espaço dentro da figura. Em um retângulo, \\(\\text{área} = \\text{comprimento} \\times \\text{largura}\\). O resultado vem em unidade quadrada, como cm² ou m². Exemplo: um retângulo de 5 m por 3 m tem perímetro de 16 m e área de 15 m².",
+        "Retângulos diferentes podem ter o mesmo perímetro e áreas diferentes. Também podem ter a mesma área e perímetros diferentes. Por isso, calcule cada medida separadamente."
+      ],
+      "keyPointList": [
+        "Perímetro é a soma dos lados e usa m, cm e outras unidades de comprimento.",
+        "Área é comprimento vezes largura e usa m², cm² e outras unidades quadradas.",
+        "Mesmo perímetro não garante a mesma área.",
+        "Escreva sempre a unidade na resposta."
+      ]
+    }
+  ],
+  "baseTextList": [],
+  "mockSuggestedMinutes": 40,
+  "studyTip": "Estude um assunto por vez, resolva as contas no caderno e sempre confira a unidade ou a fração simplificada antes de responder.",
+  "qualityCheckList": [
+    {
+      "code": "non_computable_excess",
+      "severity": "warning",
+      "stage": "validate",
+      "itemId": null,
+      "note": null,
+      "excerpt": null
+    },
+    {
+      "code": "expression_number_not_in_statement",
+      "severity": "warning",
+      "stage": "validate",
+      "itemId": "p8",
+      "note": null,
+      "excerpt": "2"
+    },
+    {
+      "code": "expression_number_not_in_statement",
+      "severity": "warning",
+      "stage": "validate",
+      "itemId": "m3",
+      "note": null,
+      "excerpt": "2"
+    },
+    {
+      "code": "review_weak_distractor",
+      "severity": "warning",
+      "stage": "review",
+      "itemId": "m6",
+      "note": "A alternativa C (24 m) repete a resposta com outra unidade, o que a regra de Medidas proíbe.",
+      "excerpt": null
+    }
+  ],
+  "workedExampleList": [
+    {
+      "exampleId": "e1",
+      "title": "Simplificando uma fração",
+      "statement": "Simplifique \\(\\frac{24}{36}\\) até chegar à fração irredutível. Depois confira multiplicando.",
+      "table": null,
+      "stepList": [
+        "Veja se numerador e denominador têm um divisor em comum. Os dois são pares, então dividimos por 2: \\(\\frac{24 \\div 2}{36 \\div 2} = \\frac{12}{18}\\).",
+        "Ainda dá para simplificar. Os dois são divisíveis por 6: \\(\\frac{12 \\div 6}{18 \\div 6} = \\frac{2}{3}\\).",
+        "Os números 2 e 3 só são divisíveis por 1. Então \\(\\frac{2}{3}\\) é irredutível.",
+        "Conferência: \\(\\frac{2 \\times 12}{3 \\times 12} = \\frac{24}{36}\\). As frações são equivalentes."
+      ],
+      "commentary": "Divida sempre em cima e embaixo pelo mesmo número. Pare só quando não houver mais divisor comum além de 1.",
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "fraction",
+          "numerator": 2,
+          "denominator": 3,
+          "unit": null
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "24 ÷ 2 = 12 e 36 ÷ 2 = 18, então a fração fica 12/18.",
+          "12 ÷ 6 = 2 e 18 ÷ 6 = 3, então a fração fica 2/3.",
+          "2/3 é irredutível."
+        ],
+        "explanation": "Dividimos o numerador e o denominador pelo mesmo número até não sobrar divisor comum. A fração irredutível é 2/3, equivalente a 24/36.",
+        "evidenceQuote": null
+      },
+      "topicRef": "ma5-equivalent-fractions"
+    },
+    {
+      "exampleId": "e2",
+      "title": "Decompondo e localizando um decimal",
+      "statement": "Decomponha 5,36 em unidades, décimos e centésimos. Depois diga entre quais dois decimais com um décimo, 5,3 e 5,4 ou 5,4 e 5,5, ele fica na reta numérica.",
+      "table": null,
+      "stepList": [
+        "Leia o número: 5 unidades, 3 décimos e 6 centésimos.",
+        "Decomponha: \\(5,36 = 5 + 0,3 + 0,06\\).",
+        "Veja os décimos: 5,36 tem 3 décimos. Ele passou de 5,3 e ainda não chegou a 5,4.",
+        "Na reta numérica, 5,36 fica entre 5,3 e 5,4, mais perto de 5,4."
+      ],
+      "commentary": "Os décimos mostram o ponto de partida na reta. Os centésimos dizem quanto o número avança até o próximo décimo.",
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "5,36 = 5 + 0,3 + 0,06; fica entre 5,3 e 5,4",
+          "acceptedList": [
+            "5 unidades, 3 décimos e 6 centésimos; entre 5,3 e 5,4",
+            "5 + 0,3 + 0,06 e fica entre 5,3 e 5,4"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "5,36 = 5 unidades + 3 décimos + 6 centésimos.",
+          "5,36 = 5 + 0,3 + 0,06.",
+          "5,3 < 5,36 < 5,4, então fica entre 5,3 e 5,4."
+        ],
+        "explanation": "O algarismo 3 está na casa dos décimos, então o número começa em 5,3. Os 6 centésimos não completam mais 1 décimo, então ele fica antes de 5,4.",
+        "evidenceQuote": null
+      },
+      "topicRef": "ma5-decimal-numbers"
+    }
+  ],
+  "practiceQuestionList": [
+    {
+      "questionId": "p1",
+      "block": "practice",
+      "number": 1,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Completar fração equivalente multiplicando numerador e denominador pelo mesmo número",
+      "baseTextId": null,
+      "statement": "Qual número completa a igualdade \\(\\frac{3}{4} = \\frac{?}{12}\\)?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 7,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 11,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 9,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 36,
+            "unit": null,
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 9,
+          "unit": null,
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "3*12/4",
+        "solutionStepList": [
+          "Compare os denominadores: 4 × 3 = 12.",
+          "Multiplique o numerador pelo mesmo número: 3 × 3 = 9.",
+          "Então \\(\\frac{3}{4} = \\frac{9}{12}\\)."
+        ],
+        "explanation": "O denominador foi multiplicado por 3 (4 × 3 = 12), então o numerador também: 3 × 3 = 9. Quem escolhe 7 soma 4 em vez de multiplicar. Quem escolhe 11 soma 8 nos dois lados, e isso não mantém a mesma fração. Quem escolhe 36 multiplica 3 por 12.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p2",
+      "block": "practice",
+      "number": 2,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "easy",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Simplificar fração dividindo numerador e denominador pelo mesmo divisor",
+      "baseTextId": null,
+      "statement": "Simplifique a fração \\(\\frac{18}{24}\\) até a forma irredutível.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "fraction",
+          "numerator": 3,
+          "denominator": 4,
+          "unit": null
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "Divida 18 e 24 por 6: 18 ÷ 6 = 3 e 24 ÷ 6 = 4.",
+          "A fração fica 3/4, que não pode mais ser simplificada."
+        ],
+        "explanation": "O maior número que divide 18 e 24 é 6. Dividindo os dois por 6, chegamos a 3/4. Também vale dividir por 2 e depois por 3, chegando ao mesmo resultado.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p3",
+      "block": "practice",
+      "number": 3,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Identificar a fração equivalente que representa a parte de um todo numa situação do dia a dia",
+      "baseTextId": null,
+      "statement": "Caio tem 20 figurinhas e 8 delas são brilhantes. Qual fração, na forma mais simples, mostra a parte das figurinhas que são brilhantes?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "fraction",
+            "numerator": 2,
+            "denominator": 5,
+            "unit": null
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "fraction",
+            "numerator": 3,
+            "denominator": 5,
+            "unit": null
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "fraction",
+            "numerator": 2,
+            "denominator": 3,
+            "unit": null
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "fraction",
+            "numerator": 5,
+            "denominator": 2,
+            "unit": null
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "fraction",
+          "numerator": 2,
+          "denominator": 5,
+          "unit": null
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "A parte brilhante é 8 de 20, ou seja, 8/20.",
+          "Divida por 4: 8 ÷ 4 = 2 e 20 ÷ 4 = 5.",
+          "A fração simplificada é 2/5."
+        ],
+        "explanation": "8 de 20 é a fração 8/20, que simplificada dá 2/5. A alternativa 3/5 mostra as figurinhas que não são brilhantes (12 de 20). A alternativa 5/2 inverte numerador e denominador. A alternativa 2/3 compara 8 com 12 em vez de comparar com o total.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p4",
+      "block": "practice",
+      "number": 4,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Justificar se duas frações de uma situação são equivalentes, mostrando o cálculo",
+      "baseTextId": null,
+      "statement": "Rui comeu \\(\\frac{4}{6}\\) de uma barra de chocolate. Dani comeu \\(\\frac{3}{4}\\) de outra barra igual. Eles comeram a mesma quantidade? Responda e mostre o cálculo.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Não. 4/6 = 8/12 e 3/4 = 9/12, então Dani comeu mais.",
+          "acceptedList": [
+            "Não, porque 4/6 = 2/3 = 8/12 e 3/4 = 9/12, que são diferentes",
+            "Não são equivalentes: 8/12 é menor que 9/12",
+            "Não, Dani comeu um pouco mais que Rui"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "Leve as frações ao mesmo denominador, 12: 4/6 = 8/12 (multiplicando por 2).",
+          "3/4 = 9/12 (multiplicando por 3).",
+          "8/12 é diferente de 9/12, então não são equivalentes. Dani comeu mais."
+        ],
+        "explanation": "Para saber se as frações são equivalentes, usamos o mesmo denominador. Em doze avos, Rui comeu 8 e Dani comeu 9. Como 8 é diferente de 9, as frações não são equivalentes e Dani comeu um pouco mais.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p5",
+      "block": "practice",
+      "number": 5,
+      "topicRef": "ma5-decimal-numbers",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Ler e escrever decimal com décimos e centésimos usando a vírgula",
+      "baseTextId": null,
+      "statement": "Qual número se lê \"trinta e quatro centésimos\"?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 0.034,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 3.4,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 34,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 0.34,
+            "unit": null,
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "D",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 0.34,
+          "unit": null,
+          "tolerance": 0
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "Centésimos ocupam duas casas depois da vírgula.",
+          "Trinta e quatro centésimos são 34 em duas casas: 0,34."
+        ],
+        "explanation": "Centésimos ficam na segunda casa depois da vírgula, então 34 centésimos se escrevem 0,34. O número 0,034 é 34 milésimos. O número 3,4 tem 4 décimos. O número 34 é um inteiro, sem parte decimal.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p6",
+      "block": "practice",
+      "number": 6,
+      "topicRef": "ma5-decimal-numbers",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Decompor decimal em unidades, décimos, centésimos e milésimos",
+      "baseTextId": null,
+      "statement": "Decomponha o número 3,274 em unidades, décimos, centésimos e milésimos.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "3 unidades + 2 décimos + 7 centésimos + 4 milésimos",
+          "acceptedList": [
+            "3 + 0,2 + 0,07 + 0,004",
+            "3 unidades, 2 décimos, 7 centésimos e 4 milésimos"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "O 3 está antes da vírgula: 3 unidades.",
+          "Depois da vírgula: 2 décimos, 7 centésimos e 4 milésimos.",
+          "3,274 = 3 + 0,2 + 0,07 + 0,004."
+        ],
+        "explanation": "Cada algarismo vale pela casa em que está. O 3 vale 3 unidades. O 2 vale 2 décimos (0,2), o 7 vale 7 centésimos (0,07) e o 4 vale 4 milésimos (0,004).",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p7",
+      "block": "practice",
+      "number": 7,
+      "topicRef": "ma5-decimal-numbers",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Comparar e ordenar valores em reais com centésimos",
+      "baseTextId": null,
+      "statement": "Mateus quer pagar o menor preço. Observe a tabela e escolha o valor, em reais, que ele vai pagar.",
+      "table": {
+        "headerList": ["Produto", "Preço (R$)"],
+        "rowList": [
+          ["Régua", "6,45"],
+          ["Estojo", "6,50"],
+          ["Apontador", "6,05"],
+          ["Tesoura", "6,40"]
+        ]
+      },
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 6.45,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 6.05,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 6.5,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 6.4,
+            "unit": null,
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 6.05,
+          "unit": null,
+          "tolerance": 0
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "Todos têm 6 reais inteiros. Compare os décimos.",
+          "6,05 tem 0 décimo, 6,40 e 6,45 têm 4 décimos, 6,50 tem 5 décimos.",
+          "O menor é 6,05."
+        ],
+        "explanation": "Como as unidades são iguais, olhamos os décimos. O 6,05 tem 0 décimo e é o menor. Quem escolhe 6,40 ou 6,45 não percebe que eles têm 4 décimos. O 6,50 é o maior preço da tabela.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p8",
+      "block": "practice",
+      "number": 8,
+      "topicRef": "ma5-perimeter-area",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Calcular o perímetro de um retângulo com lados dados em texto",
+      "baseTextId": null,
+      "statement": "Um retângulo tem 9 cm de comprimento e 5 cm de largura. Qual é o perímetro desse retângulo?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 14,
+            "unit": "cm",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 45,
+            "unit": "cm",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 28,
+            "unit": "cm",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 23,
+            "unit": "cm",
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 28,
+          "unit": "cm",
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "2 * (9 cm + 5 cm)",
+        "solutionStepList": [
+          "O perímetro é a soma dos quatro lados: 9 + 5 + 9 + 5.",
+          "Ou: 2 × (9 + 5) = 2 × 14 = 28 cm."
+        ],
+        "explanation": "O perímetro soma os quatro lados: 9 + 5 + 9 + 5 = 28 cm. Quem marca 14 cm soma só dois lados. Quem marca 45 cm multiplica 9 × 5, que é a conta da área. Quem marca 23 cm esquece um lado.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p9",
+      "block": "practice",
+      "number": 9,
+      "topicRef": "ma5-perimeter-area",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Calcular a área de um retângulo e dar a resposta com unidade quadrada",
+      "baseTextId": null,
+      "statement": "A horta de uma escola é um retângulo com 7 m de comprimento e 5 m de largura. Qual é a área da horta?",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 35,
+          "unit": "m²",
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "7 m * 5 m",
+        "solutionStepList": [
+          "Área do retângulo = comprimento × largura.",
+          "7 × 5 = 35.",
+          "A unidade é quadrada: 35 m²."
+        ],
+        "explanation": "A área é o comprimento vezes a largura: 7 × 5 = 35. Como a medida é de superfície, a unidade é metro quadrado: 35 m². Não se escreve apenas m, que seria uma unidade de comprimento.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p10",
+      "block": "practice",
+      "number": 10,
+      "topicRef": "ma5-perimeter-area",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Comparar dois retângulos de mesmo perímetro e áreas diferentes a partir das medidas",
+      "baseTextId": null,
+      "statement": "Dois canteiros retangulares têm o mesmo perímetro, 20 m, mas formas diferentes. As medidas estão na tabela. Quantos metros quadrados a mais de área tem o canteiro Y em relação ao canteiro X?",
+      "table": {
+        "headerList": ["Canteiro", "Comprimento", "Largura"],
+        "rowList": [["X", "8 m", "2 m"], ["Y", "6 m", "4 m"]]
+      },
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 8,
+          "unit": "m²",
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "6 m * 4 m - 8 m * 2 m",
+        "solutionStepList": [
+          "Área de X: 8 × 2 = 16 m².",
+          "Área de Y: 6 × 4 = 24 m².",
+          "Diferença: 24 − 16 = 8 m²."
+        ],
+        "explanation": "Os dois têm perímetro de 20 m: 2 × (8 + 2) = 20 e 2 × (6 + 4) = 20. As áreas, porém, são 16 m² e 24 m². O canteiro Y tem 8 m² a mais. Mesmo perímetro não quer dizer mesma área.",
+        "evidenceQuote": null
+      }
+    }
+  ],
+  "mockQuestionList": [
+    {
+      "questionId": "m1",
+      "block": "mock",
+      "number": 1,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Encontrar o numerador que torna duas frações equivalentes",
+      "baseTextId": null,
+      "statement": "Qual número torna as frações equivalentes em \\(\\frac{5}{6} = \\frac{?}{18}\\)?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 17,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 15,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 12,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 90,
+            "unit": null,
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 15,
+          "unit": null,
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "5*18/6",
+        "solutionStepList": [
+          "6 × 3 = 18, então o denominador foi multiplicado por 3.",
+          "Multiplique o numerador por 3: 5 × 3 = 15.",
+          "\\(\\frac{5}{6} = \\frac{15}{18}\\)."
+        ],
+        "explanation": "Para ir de 6 a 18, multiplicamos por 3. Então multiplicamos 5 por 3 e obtemos 15. Quem marca 17 soma 12 nos dois números. Quem marca 12 subtrai 6 do denominador. Quem marca 90 multiplica 5 por 18.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m2",
+      "block": "mock",
+      "number": 2,
+      "topicRef": "ma5-decimal-numbers",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Escrever em algarismos um decimal dado por extenso",
+      "baseTextId": null,
+      "statement": "Como se escreve, com algarismos, \"sete inteiros e vinte e cinco centésimos\"?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 7.25,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 7.025,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 72.5,
+            "unit": null,
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 725,
+            "unit": null,
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 7.25,
+          "unit": null,
+          "tolerance": 0
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "Os 7 inteiros ficam antes da vírgula.",
+          "25 centésimos ocupam duas casas depois da vírgula: 25.",
+          "O número é 7,25."
+        ],
+        "explanation": "Sete inteiros ficam antes da vírgula e vinte e cinco centésimos ficam nas duas casas depois dela: 7,25. O número 7,025 tem 25 milésimos. O número 72,5 muda a posição da vírgula. O número 725 não tem parte decimal.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m3",
+      "block": "mock",
+      "number": 3,
+      "topicRef": "ma5-perimeter-area",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Calcular o perímetro de um terreno retangular com medidas em metros",
+      "baseTextId": null,
+      "statement": "Um terreno retangular mede 25 m de comprimento e 12 m de largura. Ele será cercado com um muro em todo o contorno. Quantos metros de muro serão necessários?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 37,
+            "unit": "m",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 300,
+            "unit": "m",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 49,
+            "unit": "m",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 74,
+            "unit": "m",
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "D",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 74,
+          "unit": "m",
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "2 * (25 m + 12 m)",
+        "solutionStepList": [
+          "O muro acompanha o contorno, que é o perímetro.",
+          "25 + 12 + 25 + 12 = 74 m."
+        ],
+        "explanation": "O muro cobre os quatro lados, então calculamos o perímetro: 2 × (25 + 12) = 74 m. Quem marca 37 m soma só dois lados. Quem marca 300 m calcula a área (25 × 12). Quem marca 49 m esquece um dos lados de 12 m.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m4",
+      "block": "mock",
+      "number": 4,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Reconhecer a fração equivalente que descreve uma parte de um grupo em um problema",
+      "baseTextId": null,
+      "statement": "Em uma turma há 24 alunos e 9 deles vêm de bicicleta para a escola. Qual fração, na forma mais simples, representa os alunos que vêm de bicicleta?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "fraction",
+            "numerator": 5,
+            "denominator": 8,
+            "unit": null
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "fraction",
+            "numerator": 8,
+            "denominator": 3,
+            "unit": null
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "fraction",
+            "numerator": 3,
+            "denominator": 8,
+            "unit": null
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "fraction",
+            "numerator": 3,
+            "denominator": 5,
+            "unit": null
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "fraction",
+          "numerator": 3,
+          "denominator": 8,
+          "unit": null
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "A fração é 9 de 24, ou seja, 9/24.",
+          "Divida por 3: 9 ÷ 3 = 3 e 24 ÷ 3 = 8.",
+          "A fração simplificada é 3/8."
+        ],
+        "explanation": "Os 9 alunos de bicicleta formam 9/24 da turma. Dividindo por 3, temos 3/8. A alternativa 5/8 representa os que não vêm de bicicleta (15 de 24). A alternativa 3/5 compara 9 com 15 em vez de comparar com o total. A alternativa 8/3 inverte a fração.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m5",
+      "block": "mock",
+      "number": 5,
+      "topicRef": "ma5-decimal-numbers",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Ordenar decimais de medidas ou preços e explicar a comparação feita",
+      "baseTextId": null,
+      "statement": "Três atletas fizeram saltos em distância: Lia saltou 1,45 m, Davi saltou 1,5 m e Rita saltou 1,405 m. Coloque as medidas em ordem, do menor para o maior, e explique como você comparou.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "1,405 m, 1,45 m, 1,5 m. Comparei os décimos e depois os centésimos: 1,5 tem 5 décimos e é o maior; 1,405 e 1,45 têm 4 décimos, mas 1,405 tem 0 centésimo e 1,45 tem 5.",
+          "acceptedList": [
+            "1,405; 1,45; 1,5",
+            "Rita, Lia, Davi, pois 1,405 < 1,45 < 1,5",
+            "1,405 < 1,45 < 1,5, comparando décimos e depois centésimos"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "As unidades são iguais (1). Compare os décimos: 1,5 tem 5 décimos; 1,45 e 1,405 têm 4.",
+          "Entre 1,45 e 1,405, compare os centésimos: 5 é maior que 0.",
+          "Ordem: 1,405 m < 1,45 m < 1,5 m."
+        ],
+        "explanation": "Comparamos ordem por ordem. Os décimos mostram que 1,5 é o maior. Entre 1,45 e 1,405, os centésimos decidem: 5 é maior que 0. A ordem é 1,405 m, 1,45 m e 1,5 m. Ter mais algarismos não faz o número ser maior.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m6",
+      "block": "mock",
+      "number": 6,
+      "topicRef": "ma5-perimeter-area",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Calcular a área de um retângulo e escolher a resposta com a unidade correta",
+      "baseTextId": null,
+      "statement": "Uma parede retangular tem 8 m de comprimento e 3 m de altura. Ela será pintada por inteiro. Qual é a área que será pintada?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "value": {
+            "kind": "number",
+            "value": 22,
+            "unit": "m",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "B",
+          "value": {
+            "kind": "number",
+            "value": 24,
+            "unit": "m²",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "C",
+          "value": {
+            "kind": "number",
+            "value": 24,
+            "unit": "m",
+            "tolerance": 0
+          }
+        },
+        {
+          "label": "D",
+          "value": {
+            "kind": "number",
+            "value": 11,
+            "unit": "m²",
+            "tolerance": 0
+          }
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 24,
+          "unit": "m²",
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "8 m * 3 m",
+        "solutionStepList": [
+          "Área = comprimento × altura = 8 × 3 = 24.",
+          "A unidade da área é quadrada: 24 m²."
+        ],
+        "explanation": "Para pintar a parede, calculamos a área: 8 × 3 = 24, em metros quadrados (m²). A resposta 24 m tem o número certo, mas a unidade de comprimento. A resposta 22 m é o perímetro. A resposta 11 m² vem de somar 8 + 3.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m7",
+      "block": "mock",
+      "number": 7,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Simplificar uma fração de uma situação e escrever a forma irredutível",
+      "baseTextId": null,
+      "statement": "Em um pacote há 36 balas, e 15 delas são de morango. Escreva, na forma irredutível, a fração que mostra a parte das balas de morango.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "fraction",
+          "numerator": 5,
+          "denominator": 12,
+          "unit": null
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "A fração é 15/36.",
+          "Divida por 3: 15 ÷ 3 = 5 e 36 ÷ 3 = 12.",
+          "5 e 12 só têm o 1 como divisor comum, então 5/12 é irredutível."
+        ],
+        "explanation": "15 de 36 balas formam a fração 15/36. O número 3 divide 15 e 36, então simplificamos para 5/12. Como 5 e 12 não têm divisor comum além de 1, a fração não pode mais ser simplificada.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m8",
+      "block": "mock",
+      "number": 8,
+      "topicRef": "ma5-decimal-numbers",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Localizar decimal entre dois consecutivos e decompô-lo em um problema com várias etapas",
+      "baseTextId": null,
+      "statement": "Dona Rosa pesou um queijo e a balança mostrou um número entre 3,4 kg e 3,5 kg. Nesse número, o algarismo dos centésimos é 8 e não há milésimos. Qual é a massa do queijo? Escreva também a decomposição desse número.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "3,48 kg; 3,48 = 3 + 0,4 + 0,08",
+          "acceptedList": [
+            "3,48 = 3 unidades + 4 décimos + 8 centésimos",
+            "3,48 kg, que é 3 + 0,4 + 0,08"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "Entre 3,4 e 3,5, o algarismo dos décimos é 4.",
+          "O algarismo dos centésimos é 8 e não há milésimos: o número é 3,48.",
+          "Decomposição: 3,48 = 3 + 0,4 + 0,08."
+        ],
+        "explanation": "Um número entre 3,4 e 3,5 começa com 3 unidades e 4 décimos. Colocando 8 centésimos, temos 3,48. Decompondo: 3 unidades, 4 décimos e 8 centésimos, ou seja, 3 + 0,4 + 0,08.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m9",
+      "block": "mock",
+      "number": 9,
+      "topicRef": "ma5-perimeter-area",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Descobrir um lado de retângulo pela área e calcular o perímetro em várias etapas",
+      "baseTextId": null,
+      "statement": "Um jardim retangular tem área de \\(48 \\text{ m}^{2}\\) e um dos lados mede 8 m. Quantos metros de cerca são necessários para contornar todo o jardim?",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "number",
+          "value": 28,
+          "unit": "m",
+          "tolerance": 0
+        },
+        "computable": true,
+        "calculationExpression": "2 * (8 m + 48 m^2 / 8 m)",
+        "solutionStepList": [
+          "Área = lado × outro lado, então o outro lado é 48 ÷ 8 = 6 m.",
+          "Perímetro = 8 + 6 + 8 + 6.",
+          "8 + 6 + 8 + 6 = 28 m."
+        ],
+        "explanation": "Primeiro achamos o outro lado: como 8 × 6 = 48, ele mede 6 m. A cerca contorna o jardim, então calculamos o perímetro: 2 × (8 + 6) = 28 m. A resposta é 28 m, e não 48, que é a área.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "m10",
+      "block": "mock",
+      "number": 10,
+      "topicRef": "ma5-equivalent-fractions",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Comparar frações de um mesmo todo usando equivalência e justificar a escolha",
+      "baseTextId": null,
+      "statement": "Ana, Bia e Caio beberam suco de garrafas iguais. Ana bebeu \\(\\frac{2}{3}\\) de uma garrafa, Bia bebeu \\(\\frac{5}{6}\\) e Caio bebeu \\(\\frac{3}{4}\\). Quem bebeu mais? Justifique usando frações equivalentes.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Bia. Em doze avos: 2/3 = 8/12, 5/6 = 10/12 e 3/4 = 9/12. Como 10/12 é a maior, Bia bebeu mais.",
+          "acceptedList": [
+            "Bia, pois 5/6 = 10/12, que é maior que 8/12 e 9/12",
+            "Bia bebeu mais, com 10/12 da garrafa"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "Use o denominador comum 12.",
+          "2/3 = 8/12, 5/6 = 10/12 e 3/4 = 9/12.",
+          "Compare: 8/12 < 9/12 < 10/12. Bia bebeu mais."
+        ],
+        "explanation": "Para comparar, deixamos as três frações com o mesmo denominador, 12. Ana bebeu 8/12, Caio 9/12 e Bia 10/12. Com o mesmo denominador, a maior fração é a de maior numerador. Por isso, Bia bebeu mais.",
+        "evidenceQuote": null
+      }
+    }
+  ]
+}

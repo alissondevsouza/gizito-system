@@ -1,0 +1,949 @@
+{
+  "subject": "portuguese",
+  "formatVersion": "kit-v1",
+  "grade": "7",
+  "perceivedDifficulty": null,
+  "taxonomyVersion": "tax-v1",
+  "generationVersion": "extract-v1+plan-v1+generate-v1+review-v1",
+  "topicList": [
+    {
+      "topicRef": "lp7-figures-of-speech",
+      "label": "Figuras de linguagem"
+    }
+  ],
+  "materialProfile": {
+    "exerciseFormatList": ["open_answer"],
+    "notationList": [],
+    "terminologyList": [
+      "figura de linguagem",
+      "comparação",
+      "metáfora",
+      "personificação",
+      "hipérbole"
+    ],
+    "contextThemeList": ["frases do cotidiano", "natureza", "sentimentos"],
+    "apparentLevel": "at_grade",
+    "hasFigures": false,
+    "isHandwritten": true
+  },
+  "sourceWarningCodeList": [],
+  "reviewSectionList": [
+    {
+      "topicRef": "lp7-figures-of-speech",
+      "title": "Figuras de linguagem",
+      "paragraphList": [
+        "Sentido literal é o sentido comum da palavra. Sentido figurado cria uma imagem diferente. As figuras de linguagem usam o sentido figurado para dar força, beleza ou humor ao texto. Exemplo: “Estou com o coração apertado” não quer dizer que o coração está espremido, e sim que a pessoa está triste.",
+        "A comparação liga duas coisas por um conectivo, como “como” ou “tal qual”: “Ela corre como o vento”. A metáfora faz a mesma ligação sem conectivo: “Ela é o vento”. A personificação dá ação ou sentimento de pessoa a algo que não é gente: “A porta gemeu quando abri”.",
+        "A hipérbole é o exagero: “Falei um milhão de vezes!”. A metonímia troca uma palavra por outra ligada a ela, por exemplo a parte pelo todo: “Faltam duas mãos para ajudar na limpeza” (mãos = pessoas). A antítese junta palavras de sentido oposto: “Na festa, ria o menino e chorava a menina”. A ironia diz o contrário do que se pensa, em geral para fazer humor ou criticar: “Que ótimo, choveu no meu passeio!”.",
+        "Para explicar uma figura de linguagem, siga três passos. Primeiro, copie o trecho do texto. Segundo, diga qual é a figura e como você percebeu: conectivo, exagero, ação de pessoa, palavras opostas. Terceiro, explique o efeito: o que a figura faz o leitor imaginar ou sentir."
+      ],
+      "keyPointList": [
+        "Comparação tem conectivo (como, tal qual); metáfora não tem.",
+        "Personificação: algo que não é pessoa age como pessoa.",
+        "Hipérbole é exagero; ironia diz o contrário do que se pensa.",
+        "Metonímia troca uma palavra por outra ligada a ela, como a parte pelo todo.",
+        "Antítese une ideias opostas. Sempre cite o trecho e explique o efeito."
+      ]
+    }
+  ],
+  "baseTextList": [
+    {
+      "baseTextId": "t1",
+      "title": "Tarde de chuva",
+      "paragraphList": [
+        "A tarde chegou cinzenta,\na janela está toda molhada.\nO céu é um lençol pesado\nsobre a casa e a calçada.",
+        "Os pingos descem em fila,\ncomo contas de um colar,\ne vão escorrendo no vidro\naté sumirem no ar.",
+        "A rua brilha como um espelho\ncheia de poças e de cores.\nDebaixo de cada teto há uma luz acesa,\ne as conversas vão baixinho.",
+        "Passam as horas bem devagar.\nNinguém sai para a calçada,\nsó o cachorro da vizinha\ndorme debaixo da escada.",
+        "O vento bateu no portão\ne pediu para entrar.\nEu disse: “Hoje não, amigo,\nvou ficar aqui, a olhar.”",
+        "Já esperei mil anos\npara essa chuva passar.\nOlho o relógio na parede\ne os ponteiros mal se mexem.",
+        "Meu irmão olha o quintal alagado\ne diz, de braços cruzados:\n“Que ótima tarde para o piquenique!”\nNós dois rimos, desanimados.",
+        "Ouço o barulho da chuva e o silêncio da casa.\nMeu coração é um quarto fechado\ncom uma janela entreaberta\npara a luz que vai chegar.",
+        "Quando a chuva for embora,\no céu será um quintal azul,\ne o sol, como uma moeda nova,\nvai brilhar no fim da rua."
+      ],
+      "block": "practice"
+    },
+    {
+      "baseTextId": "t2",
+      "title": "Espera no cais",
+      "paragraphList": [
+        "Todo fim de tarde eu desço ao cais\ne sento na ponta da madeira velha.\nAs ondas chegam à areia\ndevagar, sem fazer barulho.",
+        "O barco balança, tal qual uma folha solta,\npreso por uma corda grossa.\nOs pescadores já voltaram,\ne as redes secam no sol.",
+        "Lembro do riso dela na proa,\ndos cabelos soltos no vento,\ndo dia em que prometeu\nvoltar antes do inverno.",
+        "Ela partiu de manhã cedo,\neu fiquei no cais deserto.\nO sol subiu devagar\nsobre o barco já distante.",
+        "A saudade é uma maré alta no meu peito,\nsobe devagar,\ncobre as pedras da lembrança\ne não deixa nada seco.",
+        "Então o mar sentou-se ao meu lado\ne ficou me escutando.\nContei a ele cada detalhe da despedida,\nmas ele só me respondeu com espuma.",
+        "Ninguém na vila sabe quantas vezes\neu contei as luzes do farol.\nForam tantas que perdi a conta,\ne recomecei do primeiro.",
+        "Todos os dias eu volto\ne olho o horizonte com paciência.\nUma vela branca no fim da linha\nainda me faz levantar.",
+        "A noite desce, as luzes se acendem,\nos grilos começam a cantar.\nEu levanto, sacudo a areia\ne prometo voltar amanhã."
+      ],
+      "block": "mock"
+    },
+    {
+      "baseTextId": "t3",
+      "title": "A quarta-feira mais comprida",
+      "paragraphList": [
+        "Na minha casa, nenhuma manhã é tranquila. Hoje o despertador tocou às seis e meia e eu levantei com um sono de cem anos. Fui direto ao banheiro, mas meu pai estava lá dentro, cantando no chuveiro. Esperei uma eternidade, encostado na parede, ouvindo uma música que ele inventa na hora e que nunca tem fim.",
+        "Na cozinha, minha mãe fazia três coisas ao mesmo tempo: passava o café, procurava as chaves do carro e assinava o bilhete da escola. Com tantas bocas para alimentar, ela tinha preparado pão suficiente para um batalhão.",
+        "Foi quando minha irmã Lívia entrou correndo, tropeçou no tapete e derrubou a jarra de suco. O suco virou um oceano laranja no chão da cozinha, e o Bolinha, nosso cachorro, atravessou tudo de patas molhadas. Minha mãe respirou fundo, olhou para a poça e disse: “Parabéns, Lívia! Que equilíbrio admirável!” Lívia ficou vermelha e foi buscar o rodo.",
+        "Quando a noite chegou, a casa parecia ter passado por uma tempestade: sapatos no corredor, mochilas no sofá e um cheiro de pipoca queimada. Meu avô, sentado na poltrona, abriu o jornal, olhou em volta e comentou: “Que dia sossegado, hein?” Todo mundo riu, até minha mãe, que estava cansada demais para brigar.",
+        "Deitei na cama pensando que, na minha casa, o dia nunca é pequeno. Mas, se um dia for, acho que vou sentir saudade da confusão."
+      ],
+      "block": "mock"
+    }
+  ],
+  "mockSuggestedMinutes": 35,
+  "studyTip": "Ao ler um texto, sublinhe os trechos que usam sentido figurado e escreva ao lado o nome da figura e o efeito que ela causa.",
+  "qualityCheckList": [
+    {
+      "code": "review_weak_distractor",
+      "severity": "warning",
+      "stage": "review",
+      "itemId": "p10",
+      "note": "As alternativas B e C citam figuras ausentes e efeitos absurdos; são óbvias demais para uma questão desafiadora.",
+      "excerpt": null
+    }
+  ],
+  "workedExampleList": [
+    {
+      "exampleId": "e1",
+      "title": "Comparação ou metáfora?",
+      "statement": "Leia dois versos. Verso 1: “O riso da vovó é um sol dentro da cozinha.” Verso 2: “O riso da vovó brilha como um sol dentro da cozinha.” Qual verso tem comparação e qual tem metáfora? Justifique pela presença ou não do conectivo.",
+      "table": null,
+      "stepList": [
+        "Procure uma palavra que ligue as duas coisas comparadas: aqui, o riso e o sol.",
+        "No verso 2 aparece “como”. Esse conectivo mostra que há uma comparação.",
+        "No verso 1 não há conectivo: o riso “é” um sol. A ligação é direta, então é metáfora.",
+        "Nos dois casos, a ideia é a mesma: o riso da vovó ilumina e alegra a cozinha."
+      ],
+      "commentary": "Observe a palavra que liga as duas coisas. Com “como” ou “tal qual”, é comparação. Sem conectivo, é metáfora.",
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "O verso 2 é uma comparação, porque tem o conectivo “como”. O verso 1 é uma metáfora, porque liga o riso ao sol sem conectivo.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "A comparação usa um conectivo (“como”) para ligar riso e sol. A metáfora diz que o riso é um sol, sem conectivo. Nas duas, o riso fica com a luz e o calor do sol.",
+        "evidenceQuote": null
+      },
+      "topicRef": "lp7-figures-of-speech"
+    },
+    {
+      "exampleId": "e2",
+      "title": "Personificação e seu efeito",
+      "statement": "Leia o trecho: “A geladeira resmungou a noite toda e ninguém conseguiu dormir.” Que figura de linguagem aparece? Explique o efeito de sentido.",
+      "table": null,
+      "stepList": [
+        "Veja quem pratica a ação: a geladeira, que é um objeto.",
+        "Veja a ação: “resmungou”. Resmungar é algo que só as pessoas fazem.",
+        "Um objeto agindo como pessoa é personificação.",
+        "O efeito: o barulho da geladeira parece uma reclamação sem fim, o que deixa a cena incômoda e engraçada."
+      ],
+      "commentary": "Pergunte sempre: quem faz a ação é gente? Se não for e a ação for humana, é personificação.",
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "É personificação: a geladeira, um objeto, “resmungou”, ação de pessoa. O efeito é mostrar o barulho como uma reclamação incômoda, com um toque de humor.",
+          "acceptedList": [
+            "Personificação, porque a geladeira age como gente. Isso faz o barulho parecer chato e dá humor."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Resmungar é ação humana, mas quem resmunga é a geladeira. Por isso há personificação. Ela faz o leitor imaginar o barulho como se fosse uma queixa constante.",
+        "evidenceQuote": null
+      },
+      "topicRef": "lp7-figures-of-speech"
+    }
+  ],
+  "practiceQuestionList": [
+    {
+      "questionId": "p1",
+      "block": "practice",
+      "number": 1,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Identificar a comparação pelo conectivo (como, tal qual) em um verso do poema",
+      "baseTextId": "t1",
+      "statement": "Uma comparação liga duas coisas por um conectivo, como “como” ou “tal qual”. Qual trecho do poema “Tarde de chuva” traz uma comparação?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "O vento bateu no portão"
+        },
+        {
+          "label": "B",
+          "text": "O céu é um lençol pesado"
+        },
+        {
+          "label": "C",
+          "text": "Os pingos descem em fila, como contas de um colar"
+        },
+        {
+          "label": "D",
+          "text": "Já esperei mil anos"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Os pingos descem em fila, como contas de um colar",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "A palavra “como” liga os pingos às contas de um colar: é uma comparação. A alternativa B é metáfora, pois usa “é” e não tem conectivo. A alternativa A é personificação e a D é exagero.",
+        "evidenceQuote": "como contas de um colar"
+      }
+    },
+    {
+      "questionId": "p2",
+      "block": "practice",
+      "number": 2,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Reconhecer a metáfora em um trecho sem conectivo comparativo",
+      "baseTextId": "t1",
+      "statement": "A metáfora liga duas coisas sem usar conectivo comparativo. Qual trecho do poema “Tarde de chuva” traz uma metáfora?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "O céu é um lençol pesado"
+        },
+        {
+          "label": "B",
+          "text": "A rua brilha como um espelho"
+        },
+        {
+          "label": "C",
+          "text": "Já esperei mil anos"
+        },
+        {
+          "label": "D",
+          "text": "O vento bateu no portão"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "O céu é um lençol pesado",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "O céu é chamado de lençol pesado, sem “como” nem “tal qual”: é uma metáfora. A alternativa B tem “como”, então é comparação. A C é exagero (hipérbole) e a D é personificação.",
+        "evidenceQuote": "O céu é um lençol pesado"
+      }
+    },
+    {
+      "questionId": "p3",
+      "block": "practice",
+      "number": 3,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "easy",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Apontar o trecho em que um elemento da natureza age como pessoa (personificação)",
+      "baseTextId": "t1",
+      "statement": "Em um verso do poema “Tarde de chuva”, um elemento da natureza faz algo que só as pessoas fazem. Copie esse trecho e diga qual é o elemento da natureza.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "“O vento bateu no portão e pediu para entrar.” O elemento da natureza é o vento, que age como uma pessoa ao bater e pedir para entrar.",
+          "acceptedList": [
+            "O vento bateu no portão",
+            "e pediu para entrar",
+            "O vento pediu para entrar",
+            "O vento bateu no portão e pediu para entrar. É o vento."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Pedir para entrar é ação de pessoa, mas quem faz isso é o vento. Quando algo que não é gente age como gente, há personificação.",
+        "evidenceQuote": "O vento bateu no portão"
+      }
+    },
+    {
+      "questionId": "p4",
+      "block": "practice",
+      "number": 4,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Identificar a hipérbole em uma frase exagerada do dia a dia",
+      "baseTextId": "t1",
+      "statement": "Quando alguém diz “Estou morrendo de fome!” depois da aula, usa um exagero para dar mais força à ideia. Qual trecho do poema “Tarde de chuva” também usa um exagero?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Meu coração é um quarto fechado"
+        },
+        {
+          "label": "B",
+          "text": "O vento bateu no portão"
+        },
+        {
+          "label": "C",
+          "text": "A rua brilha como um espelho"
+        },
+        {
+          "label": "D",
+          "text": "Já esperei mil anos"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "D",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Já esperei mil anos",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Ninguém espera mil anos. O exagero mostra como a espera pareceu longa: é uma hipérbole. A alternativa A é metáfora, a B é personificação e a C é comparação.",
+        "evidenceQuote": "Já esperei mil anos"
+      }
+    },
+    {
+      "questionId": "p5",
+      "block": "practice",
+      "number": 5,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Explicar o sentido de uma metáfora do poema com as próprias palavras",
+      "baseTextId": "t1",
+      "statement": "Releia o verso “Meu coração é um quarto fechado”. Com suas palavras, explique o que essa metáfora mostra sobre o que o eu lírico sente.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Mostra que ele se sente fechado em si mesmo, triste e sozinho, como alguém trancado num quarto, sem abrir o coração para os outros.",
+          "acceptedList": [
+            "Ele está triste e isolado, como se estivesse trancado dentro de si.",
+            "O coração dele está fechado e escuro, sem vontade de se abrir.",
+            "Ele se sente sozinho e guardado, como um quarto com a porta fechada."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Um quarto fechado é um lugar sem ninguém entrando e sem muita luz. Ao chamar o coração assim, o eu lírico mostra que está recolhido, triste e sozinho. Os versos seguintes falam de uma janela entreaberta, sinal de que ainda há esperança.",
+        "evidenceQuote": "Meu coração é um quarto fechado"
+      }
+    },
+    {
+      "questionId": "p6",
+      "block": "practice",
+      "number": 6,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Distinguir comparação de metáfora entre dois versos do texto",
+      "baseTextId": "t1",
+      "statement": "Leia dois versos do poema. Verso 1: “A rua brilha como um espelho”. Verso 2: “Meu coração é um quarto fechado”. Qual alternativa classifica corretamente os dois versos?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Os dois versos são comparações."
+        },
+        {
+          "label": "B",
+          "text": "O verso 1 é comparação e o verso 2 é metáfora."
+        },
+        {
+          "label": "C",
+          "text": "O verso 1 é metáfora e o verso 2 é comparação."
+        },
+        {
+          "label": "D",
+          "text": "Os dois versos são metáforas."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "O verso 1 é comparação e o verso 2 é metáfora.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "No verso 1, a palavra “como” liga a rua ao espelho: é comparação. No verso 2, o coração é chamado de quarto fechado, sem conectivo: é metáfora. Quem troca as duas respostas esquece de procurar o conectivo.",
+        "evidenceQuote": "A rua brilha como um espelho"
+      }
+    },
+    {
+      "questionId": "p7",
+      "block": "practice",
+      "number": 7,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Reconhecer a metonímia (a parte pelo todo) em um trecho e explicar a troca",
+      "baseTextId": "t1",
+      "statement": "No verso “Debaixo de cada teto há uma luz acesa”, a palavra “teto” fala de uma parte para indicar o todo. Diga o que “teto” representa e explique essa troca.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "“Teto” representa a casa inteira (a moradia). É metonímia: o teto é só uma parte da casa, mas é usado para falar dela toda.",
+          "acceptedList": [
+            "Teto está no lugar de casa.",
+            "O teto representa a casa toda, parte pelo todo.",
+            "Teto = casa; é uma parte usada no lugar do todo.",
+            "Representa as casas da rua."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "O poeta quer dizer que há luz acesa dentro de cada casa. Em vez de “casa”, usa “teto”, uma parte dela. Trocar o todo por uma parte é metonímia.",
+        "evidenceQuote": "Debaixo de cada teto há uma luz acesa"
+      }
+    },
+    {
+      "questionId": "p8",
+      "block": "practice",
+      "number": 8,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Identificar a antítese pelos termos de sentido oposto em um verso",
+      "baseTextId": "t1",
+      "statement": "No verso “Ouço o barulho da chuva e o silêncio da casa” há uma antítese, que junta ideias de sentido oposto. Quais palavras do verso têm sentido oposto?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "chuva e casa"
+        },
+        {
+          "label": "B",
+          "text": "ouço e barulho"
+        },
+        {
+          "label": "C",
+          "text": "barulho e silêncio"
+        },
+        {
+          "label": "D",
+          "text": "chuva e silêncio"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "barulho e silêncio",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Barulho e silêncio são opostos: um é som, o outro é falta de som. Isso forma a antítese. Quem escolhe “chuva e silêncio” confunde o oposto da ideia com a palavra que está perto. Chuva e casa não são opostas, e ouço e barulho combinam entre si.",
+        "evidenceQuote": "Ouço o barulho da chuva e o silêncio da casa"
+      }
+    },
+    {
+      "questionId": "p9",
+      "block": "practice",
+      "number": 9,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Explicar a ironia em uma fala que diz o contrário do que se pensa",
+      "baseTextId": "t1",
+      "statement": "Leia a fala do irmão, que olha o quintal alagado: “Que ótima tarde para o piquenique!” Explique a ironia dessa fala, considerando o que está acontecendo.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Ele diz que a tarde é ótima para um piquenique, mas está chovendo e o quintal está alagado, então não dá para fazer piquenique. Ele diz o contrário do que pensa para mostrar desânimo com humor.",
+          "acceptedList": [
+            "Ele fala o contrário do que sente: a tarde é ruim para piquenique por causa da chuva.",
+            "É ironia porque o dia está chuvoso e ele elogia a tarde, mostrando decepção de forma engraçada.",
+            "Diz “ótima” mas quer dizer péssima, pois o quintal está alagado."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Com o quintal alagado, a tarde é péssima para um piquenique. O irmão diz “ótima” para dizer o contrário. Isso é ironia: mostra desânimo e faz graça, tanto que os dois riem no verso seguinte.",
+        "evidenceQuote": "Que ótima tarde para o piquenique!"
+      }
+    },
+    {
+      "questionId": "p10",
+      "block": "practice",
+      "number": 10,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "hard",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Escolher a interpretação correta do efeito de duas figuras combinadas na mesma estrofe",
+      "baseTextId": "t1",
+      "statement": "Releia a última estrofe: “Quando a chuva for embora, / o céu será um quintal azul, / e o sol, como uma moeda nova, / vai brilhar no fim da rua.” Qual alternativa explica as figuras de linguagem e o efeito delas?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Há metáfora (“quintal azul”) e comparação (“como uma moeda nova”); juntas, mostram um céu aberto e brilhante e passam ideia de alegria e esperança."
+        },
+        {
+          "label": "B",
+          "text": "Há hipérbole e ironia; juntas, mostram que o eu lírico está bravo com a chuva."
+        },
+        {
+          "label": "C",
+          "text": "Há personificação e antítese; juntas, mostram que o céu e o sol brigam entre si."
+        },
+        {
+          "label": "D",
+          "text": "Há metáfora e comparação; juntas, mostram que a tristeza vai continuar."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Há metáfora (“quintal azul”) e comparação (“como uma moeda nova”); juntas, mostram um céu aberto e brilhante e passam ideia de alegria e esperança.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "O céu é chamado de quintal azul (metáfora, sem conectivo) e o sol é comparado a uma moeda nova (“como”). As duas imagens são claras e brilhantes e mostram o fim da tristeza. A alternativa D acerta as figuras, mas erra o efeito. As alternativas B e C citam figuras que não estão na estrofe.",
+        "evidenceQuote": "o céu será um quintal azul"
+      }
+    }
+  ],
+  "mockQuestionList": [
+    {
+      "questionId": "m1",
+      "block": "mock",
+      "number": 1,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Identificar a comparação em um verso do poema",
+      "baseTextId": "t2",
+      "statement": "Qual trecho do poema “Espera no cais” traz uma comparação?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "A saudade é uma maré alta no meu peito"
+        },
+        {
+          "label": "B",
+          "text": "O barco balança, tal qual uma folha solta"
+        },
+        {
+          "label": "C",
+          "text": "Então o mar sentou-se ao meu lado"
+        },
+        {
+          "label": "D",
+          "text": "Os pescadores já voltaram"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "O barco balança, tal qual uma folha solta",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "As palavras “tal qual” ligam o barco à folha solta: é uma comparação. A alternativa A é metáfora, pois não tem conectivo. A C é personificação e a D apenas informa um fato.",
+        "evidenceQuote": "O barco balança, tal qual uma folha solta"
+      }
+    },
+    {
+      "questionId": "m2",
+      "block": "mock",
+      "number": 2,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Reconhecer a metáfora que descreve um sentimento no poema",
+      "baseTextId": "t2",
+      "statement": "Qual trecho do poema “Espera no cais” usa uma metáfora para falar de um sentimento?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "O barco balança, tal qual uma folha solta"
+        },
+        {
+          "label": "B",
+          "text": "Então o mar sentou-se ao meu lado"
+        },
+        {
+          "label": "C",
+          "text": "Eu levanto, sacudo a areia"
+        },
+        {
+          "label": "D",
+          "text": "A saudade é uma maré alta no meu peito"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "D",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "A saudade é uma maré alta no meu peito",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "A saudade, que é um sentimento, é chamada de maré alta, sem conectivo: é metáfora. Ela mostra a saudade crescendo e cobrindo tudo. A alternativa A é comparação, a B é personificação e a C é um fato.",
+        "evidenceQuote": "A saudade é uma maré alta no meu peito"
+      }
+    },
+    {
+      "questionId": "m3",
+      "block": "mock",
+      "number": 3,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "easy",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Citar o trecho com personificação e dizer qual ser ganha ação humana",
+      "baseTextId": "t2",
+      "statement": "No poema “Espera no cais”, um ser da natureza ganha ações humanas. Copie o trecho e diga qual ser ganha essas ações.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "“Então o mar sentou-se ao meu lado e ficou me escutando.” O mar ganha ações humanas: sentar e escutar.",
+          "acceptedList": [
+            "O mar sentou-se ao meu lado",
+            "O mar ficou me escutando",
+            "O mar sentou-se ao meu lado e ficou me escutando",
+            "O mar só me respondeu com espuma. É o mar."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Sentar e escutar são ações de pessoas, mas quem faz isso é o mar. Isso é personificação. O poeta mostra o mar como um companheiro para quem espera.",
+        "evidenceQuote": "o mar sentou-se ao meu lado"
+      }
+    },
+    {
+      "questionId": "m4",
+      "block": "mock",
+      "number": 4,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Explicar o efeito da hipérbole usada pelo narrador da crônica",
+      "baseTextId": "t3",
+      "statement": "Releia a frase do narrador da crônica: “Esperei uma eternidade, encostado na parede”. Qual é o efeito desse exagero?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Mostra que a espera pareceu muito longa e dá humor à cena."
+        },
+        {
+          "label": "B",
+          "text": "Informa o tempo exato que o narrador esperou."
+        },
+        {
+          "label": "C",
+          "text": "Compara a espera a outra coisa por meio da palavra “como”."
+        },
+        {
+          "label": "D",
+          "text": "Diz o contrário do que o narrador sente, para fazer ironia."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Mostra que a espera pareceu muito longa e dá humor à cena.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "“Uma eternidade” é uma hipérbole: ninguém espera para sempre. O exagero mostra a impaciência do narrador e faz o leitor sorrir. A alternativa B erra porque o tempo não é exato. A C erra porque não há “como”. A D erra porque o narrador não diz o contrário do que sente.",
+        "evidenceQuote": "Esperei uma eternidade, encostado na parede"
+      }
+    },
+    {
+      "questionId": "m5",
+      "block": "mock",
+      "number": 5,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Identificar a metonímia em um trecho da crônica e explicar o que representa",
+      "baseTextId": "t3",
+      "statement": "Releia o trecho da crônica: “Com tantas bocas para alimentar, ela tinha preparado pão suficiente para um batalhão.” A palavra “bocas” aparece no lugar de outra ideia. Diga o que ela representa e explique a troca.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "“Bocas” representa as pessoas da família. É metonímia: a boca é uma parte da pessoa, usada para falar dela toda.",
+          "acceptedList": [
+            "Bocas está no lugar de pessoas.",
+            "Representa as pessoas que vão comer, parte pelo todo.",
+            "Bocas = pessoas da casa; uma parte usada no lugar do todo.",
+            "Representa a família toda."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "A mãe precisa alimentar pessoas, e não só bocas. O texto usa a parte (a boca, que come) para falar da pessoa inteira. Essa troca da parte pelo todo é metonímia.",
+        "evidenceQuote": "Com tantas bocas para alimentar"
+      }
+    },
+    {
+      "questionId": "m6",
+      "block": "mock",
+      "number": 6,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Reconhecer a antítese em uma estrofe e o contraste que ela cria",
+      "baseTextId": "t2",
+      "statement": "Leia a estrofe do poema “Espera no cais”: “Ela partiu de manhã cedo, / eu fiquei no cais deserto. / O sol subiu devagar / sobre o barco já distante.” Qual alternativa mostra a antítese e o contraste que ela cria?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "“partiu” e “cedo”, que contrastam o dia e a noite."
+        },
+        {
+          "label": "B",
+          "text": "“sol” e “barco”, que contrastam o céu e o mar."
+        },
+        {
+          "label": "C",
+          "text": "“partiu” e “fiquei”, que contrastam quem vai embora e quem fica esperando."
+        },
+        {
+          "label": "D",
+          "text": "“fiquei” e “deserto”, que contrastam estar e não estar."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "“partiu” e “fiquei”, que contrastam quem vai embora e quem fica esperando.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Os versos “Ela partiu de manhã cedo, / eu fiquei no cais deserto” trazem duas ações de sentido oposto: partir e ficar. A antítese mostra duas situações: ela vai embora e ele fica esperando. Nas outras alternativas, as palavras não são opostas: “cedo” só diz a hora, “sol” e “barco” são coisas diferentes, e “deserto” só descreve o cais.",
+        "evidenceQuote": "Ela partiu de manhã cedo,\neu fiquei no cais deserto."
+      }
+    },
+    {
+      "questionId": "m7",
+      "block": "mock",
+      "number": 7,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Explicar o sentido irônico de uma fala do personagem na crônica",
+      "baseTextId": "t3",
+      "statement": "No fim do dia, o avô olha a casa bagunçada e comenta: “Que dia sossegado, hein?” Explique o sentido irônico dessa fala, considerando o que aconteceu na crônica.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "O dia foi tudo, menos sossegado: teve fila no banheiro, suco derramado e bagunça. O avô diz o contrário do que pensa para fazer humor sobre a confusão.",
+          "acceptedList": [
+            "Ele diz “sossegado”, mas o dia foi agitado e bagunçado. É ironia, para fazer graça da confusão.",
+            "O avô quer dizer que o dia foi muito agitado, usando a palavra contrária.",
+            "Falou sossegado querendo dizer bagunçado, pois a casa parecia ter passado por uma tempestade."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "A casa estava cheia de sapatos, mochilas e cheiro de pipoca queimada depois de um dia agitado. Chamar esse dia de sossegado é dizer o contrário do que se pensa. Isso é ironia, e por isso todo mundo riu.",
+        "evidenceQuote": "Que dia sossegado, hein?"
+      }
+    },
+    {
+      "questionId": "m8",
+      "block": "mock",
+      "number": 8,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "hard",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Diferenciar metáfora de personificação em dois versos apresentados",
+      "baseTextId": "t2",
+      "statement": "Leia dois versos do poema “Espera no cais”. Verso 1: “A saudade é uma maré alta no meu peito”. Verso 2: “Então o mar sentou-se ao meu lado”. Qual alternativa diferencia corretamente as figuras?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Os dois versos são metáforas, pois comparam coisas diferentes."
+        },
+        {
+          "label": "B",
+          "text": "O verso 1 é personificação, pois a saudade age como pessoa; o verso 2 é metáfora."
+        },
+        {
+          "label": "C",
+          "text": "Os dois versos são personificações, pois falam do mar."
+        },
+        {
+          "label": "D",
+          "text": "O verso 1 é metáfora, pois chama a saudade de maré; o verso 2 é personificação, pois o mar faz algo humano."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "D",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "O verso 1 é metáfora, pois chama a saudade de maré; o verso 2 é personificação, pois o mar faz algo humano.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "No verso 1, a saudade “é” uma maré: duas coisas ligadas sem conectivo, o que é metáfora. No verso 2, o mar se senta, ação de gente: personificação. A alternativa A chama de metáfora um verso em que o mar age como pessoa. A B troca as figuras. A C erra porque o verso 1 não dá ação humana a nada.",
+        "evidenceQuote": "A saudade é uma maré alta no meu peito"
+      }
+    },
+    {
+      "questionId": "m9",
+      "block": "mock",
+      "number": 9,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Reescrever um trecho figurado em sentido literal e explicar o efeito perdido",
+      "baseTextId": "t3",
+      "statement": "Releia a frase da crônica: “Hoje o despertador tocou às seis e meia e eu levantei com um sono de cem anos.” Reescreva só o trecho “levantei com um sono de cem anos” em sentido literal. Depois explique o que o texto perde com essa mudança.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Em sentido literal: “levantei com muito sono”. O texto perde o exagero engraçado, que mostrava com mais força o tamanho do sono.",
+          "acceptedList": [
+            "Acordei com muito sono. Perde-se a hipérbole e o humor.",
+            "Levantei muito sonolento. Perde a força da imagem e a graça do exagero.",
+            "Eu levantei com bastante sono. Perde o exagero que mostra quanto o narrador estava cansado."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Ninguém tem sono de cem anos: é hipérbole. Em sentido literal, a frase só informa que havia muito sono. Perde-se a imagem forte e o humor que fazem o leitor sentir o cansaço do narrador.",
+        "evidenceQuote": "levantei com um sono de cem anos"
+      }
+    },
+    {
+      "questionId": "m10",
+      "block": "mock",
+      "number": 10,
+      "topicRef": "lp7-figures-of-speech",
+      "difficulty": "hard",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Interpretar a intenção do autor ao combinar ironia e hipérbole em um parágrafo",
+      "baseTextId": "t3",
+      "statement": "Releia o parágrafo em que Lívia derruba o suco. Nele, o suco “virou um oceano laranja” e a mãe diz: “Parabéns, Lívia! Que equilíbrio admirável!” Qual é a intenção do autor ao combinar a hipérbole e a ironia?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Mostrar que o narrador está muito bravo e quer castigar a irmã."
+        },
+        {
+          "label": "B",
+          "text": "Criar humor: o exagero faz a bagunça parecer enorme e a ironia mostra a bronca da mãe sem gritos."
+        },
+        {
+          "label": "C",
+          "text": "Informar com exatidão quanto suco foi derramado e elogiar a irmã."
+        },
+        {
+          "label": "D",
+          "text": "Provar que a mãe admirou de verdade o equilíbrio da irmã."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Criar humor: o exagero faz a bagunça parecer enorme e a ironia mostra a bronca da mãe sem gritos.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "“Oceano laranja” exagera o tamanho da poça, o que é hipérbole. “Que equilíbrio admirável” diz o contrário do que a mãe pensa, pois Lívia tropeçou: é ironia. Juntas, as figuras dão humor e mostram a bronca de um jeito leve. Na alternativa D, quem lê ao pé da letra não percebe a ironia.",
+        "evidenceQuote": "Parabéns, Lívia! Que equilíbrio admirável!"
+      }
+    }
+  ]
+}

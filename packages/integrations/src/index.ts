@@ -4,6 +4,7 @@ export * from "#src/ai/output-schema.ts";
 export * from "#src/ai/pricing.ts";
 export * from "#src/ai/runtime-fetch.ts";
 export * from "#src/katex/markup.ts";
+export * from "#src/katex/stylesheet.ts";
 export * from "#src/log-error.ts";
 export * from "#src/logger.ts";
 export * from "#src/math/latex.ts";
