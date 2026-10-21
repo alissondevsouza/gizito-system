@@ -145,6 +145,15 @@ export const grade5PortugueseTopicList: readonly TopicDefinition[] = [
     validationRuleList: ["single_normative_answer", "text_evidence"],
   },
   {
+    topicId: "lp5-word-classes",
+    label: "Classes de palavras",
+    description:
+      "Reconhecer substantivo, artigo, adjetivo, verbo e advérbio na frase, com gênero e número (singular e plural).",
+    bnccSkillList: ["EF05LP26"],
+    prerequisiteList: ["lp4-nouns-adjectives"],
+    validationRuleList: ["single_normative_answer"],
+  },
+  {
     topicId: "lp5-verb-tenses",
     label: "Tempos verbais",
     description: "Presente, passado e futuro no modo indicativo.",

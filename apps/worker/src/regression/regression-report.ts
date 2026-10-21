@@ -87,8 +87,16 @@ export type GateCriterion = {
 
 export type Distribution = { readonly mean: number; readonly p50: number; readonly p95: number };
 
+export type RegressionAiSetting = {
+  readonly extractModel: string;
+  readonly extractEffort: string | null;
+  readonly generateModel: string;
+  readonly generateEffort: string | null;
+};
+
 export type RegressionReport = {
   readonly runId: string;
+  readonly aiSetting: RegressionAiSetting;
   readonly date: string;
   readonly generationVersion: string;
   readonly isComplete: boolean;
@@ -112,6 +120,7 @@ export type RegressionReport = {
 
 export type RegressionReportContext = {
   readonly runId: string;
+  readonly aiSetting: RegressionAiSetting;
   readonly startedAt: Date;
   readonly generationVersion: string;
   readonly isComplete: boolean;
@@ -415,6 +424,7 @@ export function buildRegressionReport(
   const attemptList = summaryList.flatMap((summary) => summary.attemptList);
   return {
     runId: context.runId,
+    aiSetting: context.aiSetting,
     date: dateFormat.format(context.startedAt),
     generationVersion: context.generationVersion,
     isComplete: context.isComplete,
@@ -476,6 +486,17 @@ const verdictLabelMap: Readonly<Record<GateVerdict, string>> = {
   fail: "falhou",
   not_evaluated: "não avaliado",
 };
+
+const DEFAULT_EFFORT_TEXT = "padrão do adaptador";
+
+function aiSettingText({
+  extractModel,
+  extractEffort,
+  generateModel,
+  generateEffort,
+}: RegressionAiSetting): string {
+  return `extração ${extractModel} (esforço ${extractEffort ?? DEFAULT_EFFORT_TEXT}) e geração ${generateModel} (esforço ${generateEffort ?? DEFAULT_EFFORT_TEXT})`;
+}
 
 function listText(valueList: readonly string[]): string {
   return valueList.length === 0 ? "—" : valueList.join(", ");
@@ -548,7 +569,7 @@ export function formatRegressionMarkdown(report: RegressionReport): string {
   const lineList = [
     `# Regressão pedagógica ${report.date} · ${report.generationVersion}`,
     "",
-    `Rodada ${report.runId} (${roundText}). Câmbio usado nos critérios de custo: ${report.usdBrlRate} reais por dólar. Só ids, códigos e números: o material, o pedido e o kit ficam na saída da rodada, fora do git.`,
+    `Rodada ${report.runId} (${roundText}). Modelos: ${aiSettingText(report.aiSetting)}. Câmbio usado nos critérios de custo: ${report.usdBrlRate} reais por dólar. Só ids, códigos e números: o material, o pedido e o kit ficam na saída da rodada, fora do git.`,
     "",
     "## Critérios do gate (spec pedagógica §13.2)",
     "",

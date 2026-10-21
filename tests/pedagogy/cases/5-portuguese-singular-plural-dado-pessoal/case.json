@@ -13,8 +13,8 @@
   "expectedPreview": {
     "outcome": "preview_ready",
     "failCode": null,
-    "requiredTopicIdList": ["lp5-nominal-agreement"],
-    "acceptableTopicIdList": ["lp5-spelling", "lp5-word-formation"],
+    "requiredTopicIdList": ["lp5-word-classes"],
+    "acceptableTopicIdList": ["lp5-nominal-agreement", "lp5-spelling", "lp5-word-formation"],
     "unsupportedTopicIdList": [],
     "requiredSourceWarningCodeList": ["personal_data_visible"]
   },

@@ -133,6 +133,16 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 ### M5 — Revisão neutra
 - [x] 5.1 `gizito-implement-verifier` e `review.md`
 
+### M6 — Correções da rodada 1 (decisões do humano de 21/10/2026)
+- [x] 6.1 `tax-v2` com `lp5-word-classes`, histórico da versão e `taxonomia.md` · Arquivos: `packages/core/src/pedagogy/taxonomy/{5-portuguese,index}.ts`, `packages/core/src/__tests__/__fixtures__/taxonomy-history.ts`, `docs/pedagogy/taxonomia.md` · Verificação: `bun run --cwd packages/core test`
+- [x] 6.2 `min` e `max` no avaliador e no LaTeX, com a lista de funções exportada · Arquivos: `packages/integrations/src/math/{expression,latex}.ts`, `packages/integrations/src/index.ts` · Verificação: `bun run --cwd packages/integrations test`
+- [x] 6.3 `generate` v2 e `review` v2, `prompts-v2.md` e teste contra o doc · Arquivos: `apps/worker/src/pipeline/prompts/{generate,review}/v2.ts`, `apps/worker/src/pipeline/generate.ts`, `docs/pedagogy/prompts-v2.md` · Verificação: `bun run --cwd apps/worker test`
+- [x] 6.4 Relatório com modelos e esforço da rodada · Arquivos: `apps/worker/src/regression/regression-report.ts`, script · Verificação: idem
+- [x] 6.5 Seis casos recalibrados: quatro de gramática do 5º ano e dois de fronteira · Arquivos: `tests/pedagogy/cases/*/case.json`
+- [x] 6.6 Spec pedagógica 1.5 e `known-issues.md`
+- [ ] 6.7 Rodada dos casos afetados com `AI_EFFORT_GENERATE=medium`: os 10 críticos, os outros 2 do 5º ano de Português e `7-math-potenciacao-raiz` · Verificação: `AI_EFFORT_GENERATE=medium bun run test:pedagogy --case ...`
+- [ ] 6.8 Revisão neutra, rodada 2, só das correções
+
 ## Decisões
 
 | Data | Decisão | Justificativa |
@@ -146,6 +156,16 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 | 2026-10-21 | As receitas das variações e os textos inventados ficam em `tests/pedagogy/photo-variations.json`, fora do `case.json` | O `case.json` segue o §12.2 sem campo novo. A receita da variação é dado de preparação, e a verificação `personal_data_copied` lê os textos dela |
 | 2026-10-21 | Revisão neutra, rodada 1: caso quebrado reprova nos critérios 2 e 3; `material_copied` volta, com as frases dos 10 casos da F1-06 em `tests/pedagogy/material-phrases.json`; a busca de dado pessoal casa cada palavra do nome e os 8 últimos dígitos do telefone; erro fora do `runPipeline` vira `crashed` sem derrubar a rodada; o `report.md` ganha custo e tempo por etapa e os avisos da 1ª tentativa | Achados da revisão (`review.md`) |
 | 2026-10-21 | `legibility_mismatch` reprova a foto esperada `good` que não ficou utilizável por qualquer motivo (ilegível, "não é material escolar" ou saída inválida), e não só a marcada `unreadable` | Para o responsável, as três dão a mesma tela de trocar a foto. A regra mais rígida é de propósito |
+| 2026-10-21 | O humano aprovou as cinco recomendações da rodada 1 (spec pedagógica 1.5 §15.10):
+- `tax-v2` com `lp5-word-classes`, com a revisão do professor pendente;
+- `generate` e `review` v2;
+- `min` e `max` no avaliador;
+- os dois casos de fronteira recalibrados;
+- o teste do esforço `medium` na geração;
+- a contagem de 12 imagens no §13.1.
+
+Pediu também para rodar de novo só o necessário | Decisões que o orquestrador não podia tomar: taxonomia, prompts, validador e texto da spec pedagógica |
+| 2026-10-21 | A rodada das correções cobre só os casos afetados: os 10 críticos, os outros 2 do 5º ano de Português (a lista de assuntos do ano mudou) e `7-math-potenciacao-raiz` (recalibrado). O esforço vem de `AI_EFFORT_GENERATE=medium` na linha de comando, que vence o `.env`; o `.env` não muda | Pedido do humano. A invariante 11 pede a rodada completa antes da `main`, e isso fica dito no handoff |
 | 2026-10-21 | Correções que mudem prompt, modelo, taxonomia, validador ou o texto da spec pedagógica param para o humano antes de entrar | `prompts-v1.md`, `tax-v1` e a spec pedagógica foram aprovados por ele. As dívidas do `known-issues.md` já dizem "decisão do humano" nesses pontos |
 
 ## Status

@@ -7,6 +7,7 @@ export * from "#src/katex/markup.ts";
 export * from "#src/katex/stylesheet.ts";
 export * from "#src/log-error.ts";
 export * from "#src/logger.ts";
+export { mathExpressionFunctionNameList } from "#src/math/expression.ts";
 export * from "#src/math/latex.ts";
 export * from "#src/math/mathjs-evaluator.ts";
 export { mathExpressionUnitSymbolList } from "#src/math/units.ts";

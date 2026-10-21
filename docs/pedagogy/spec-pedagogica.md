@@ -1,8 +1,8 @@
-# Spec pedagógica executável — v1.4
+# Spec pedagógica executável — v1.5
 
-> Contrato que as features F1-03 a F1-08 e F1-10 implementam, a partir do PRD 1.3 §6–7, do design doc 1.6 §5.2, §6.3 e §9 e de `docs/engineering/jobs.md` §2. Prompts v1 em [`prompts-v1.md`](prompts-v1.md); assuntos e assuntos ainda não atendidos em [`taxonomia.md`](taxonomia.md), gerado do core.
+> Contrato que as features F1-03 a F1-08 e F1-10 implementam, a partir do PRD 1.3 §6–7, do design doc 1.6 §5.2, §6.3 e §9 e de `docs/engineering/jobs.md` §2. Prompts em [`prompts-v1.md`](prompts-v1.md) (`extract` e `plan` v1) e [`prompts-v2.md`](prompts-v2.md) (`generate` e `review` v2); assuntos e assuntos ainda não atendidos em [`taxonomia.md`](taxonomia.md), gerado do core.
 >
-> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). A 1.1 registra as precisões da F1-03, aprovadas pelo humano em 20/10/2026 (§15.6). A 1.2 registra a equivalência do avaliador matemático da F1-04 (§8.2), aprovada pelo humano em 20/10/2026 (§15.7). A 1.3 troca as fotos reais da regressão por imagens geradas por IA e as variações delas (§12.1, §13.1, §13.2), decisão do humano em 21/10/2026 (§15.8). A 1.4 registra uma precisão da F1-07 no §10 (revisão completa depois do reparo por item que veio da validação), aprovada pelo humano em 21/10/2026 (§15.9). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
+> **Estado:** aprovada pelo humano em 20/10/2026, com os pontos do §15 (pronto da F1-02). A 1.1 registra as precisões da F1-03, aprovadas pelo humano em 20/10/2026 (§15.6). A 1.2 registra a equivalência do avaliador matemático da F1-04 (§8.2), aprovada pelo humano em 20/10/2026 (§15.7). A 1.3 troca as fotos reais da regressão por imagens geradas por IA e as variações delas (§12.1, §13.1, §13.2), decisão do humano em 21/10/2026 (§15.8). A 1.4 registra uma precisão da F1-07 no §10 (revisão completa depois do reparo por item que veio da validação), aprovada pelo humano em 21/10/2026 (§15.9). A 1.5 registra as correções da rodada 1 da regressão (F1-10): `tax-v2`, `generate` e `review` v2, `min` e `max` no avaliador, dois casos de fronteira recalibrados e a contagem das imagens (§8.2, §13.1), aprovadas pelo humano em 21/10/2026 (§15.10). Números marcados *nova* são constantes que a F1-03 cria no core com o valor proposto aqui; a regressão da F1-10 calibra e muda o valor no core, nunca no texto dos prompts. Decisões de arquitetura do pipeline: ADR-0010.
 
 Leia a seção que a sua feature toca (§14 diz qual).
 
@@ -244,7 +244,7 @@ Severidade decidida pelo código, nunca pelo modelo. **B** = bloqueador: a etapa
 | `fraction_not_simplified` | A | — | `fraction` do gabarito fora da forma irredutível (pode ser pedido do enunciado; a revisão julga) | §7.3 |
 | `unit_missing` | A | — | assunto com `measurement_unit` e resposta `number` sem unidade | §7.3 |
 
-**Equivalência no `MathEvaluator` (F1-04, mathjs).** `evaluate` aceita só número, parênteses, `+ - * / ^`, sinal, `mod`, `%` de porcentagem (`25%` = 0,25), conversão `to`, as funções `sqrt`, `abs`, `floor`, `ceil`, `round`, `gcd`, `lcm`, a constante `pi`, as unidades da tabela abaixo e variáveis de uma letra minúscula; letra que também é unidade (`m`, `l`, `g`, `t`, `s`, `h`) só é unidade em expressão com unidade (número colado, `2 m`; unidade de mais de uma letra; `to`), e fora disso é variável (`b*h`); expressão que não fecha como medida (`2t + 3`, 2 toneladas mais 3) é lida de novo com toda letra como variável; o resto (atribuição, função definida, texto, comparação, unidade de mais de uma letra junto de variável) é `unsupported`, e vírgula decimal é `parse_error`. `equals`:
+**Equivalência no `MathEvaluator` (F1-04, mathjs).** `evaluate` aceita só número, parênteses, `+ - * / ^`, sinal, `mod`, `%` de porcentagem (`25%` = 0,25), conversão `to`, as funções `sqrt`, `abs`, `floor`, `ceil`, `round`, `gcd`, `lcm`, `min`, `max`, a constante `pi`, as unidades da tabela abaixo e variáveis de uma letra minúscula; letra que também é unidade (`m`, `l`, `g`, `t`, `s`, `h`) só é unidade em expressão com unidade (número colado, `2 m`; unidade de mais de uma letra; `to`), e fora disso é variável (`b*h`); expressão que não fecha como medida (`2t + 3`, 2 toneladas mais 3) é lida de novo com toda letra como variável; o resto (atribuição, função definida, texto, comparação, unidade de mais de uma letra junto de variável) é `unsupported`, e vírgula decimal é `parse_error`. `equals`:
 
 - `number`, `fraction` e `expression` sem variável comparam o valor, com a maior das duas tolerâncias e uma folga relativa de 1e-9 para ponto flutuante: `1/2` = `0,5`; `0,333` ≠ `1/3` com tolerância 0;
 - unidades da tabela de mesma grandeza convertem (`2,5 m` = `250 cm`); grandezas diferentes não são iguais; unidade fora da tabela (`R$`, `%`, mês, ano, `pessoas`) só é igual à mesma unidade escrita igual; **o lado sem unidade é lido na unidade do outro** (`2.5 * 100` = `250 cm`), porque a expressão quase sempre é aritmética sem unidade. Unidade errada é pega quando a expressão tem unidade (`2.5 m to cm` ≠ `250 m`) e, quando não tem, pela revisão;
@@ -432,7 +432,7 @@ O que as 30 imagens cobrem, na contagem de 21/10/2026:
 - 5 de Matemática têm frações;
 - 2 têm enunciado ambíguo;
 - 1 tem só assunto não atendido, e 1 tem assunto não atendido junto de assuntos atendidos;
-- 7 estão cortadas ou com sombra;
+- 12 estão cortadas ou com sombra (10 recortes de 301 × 506 pixels, com a página vizinha aparecendo, e 2 com sombra forte);
 - 3 trazem conteúdo de outro ano.
 
 Os 2 casos com "outro" são casos existentes que recebem `otherTopicText` no `case.json`. Um caso pode somar tags.
@@ -510,8 +510,17 @@ Propostas desta spec que interpretam o PRD ou o design doc, aprovadas pelo human
 
 9. **Revisão depois do reparo por item que veio da validação (F1-07), aprovada pelo humano em 21/10/2026.** A revisão só roda com a validação sem bloqueador. Então, quando o reparo por item vem de um bloqueador da validação, o kit ainda não passou por revisão nenhuma, e a revisão depois do reparo é completa, com as 22 entradas (§10). A revisão só dos itens refeitos, juntada à anterior, fica para o reparo que veio da própria revisão. Sem isso, cerca de 20 itens sairiam sem a revisão por modelo que o PRD §7.4 exige.
 
+10. **Correções da rodada 1 da regressão (F1-10), aprovadas pelo humano em 21/10/2026.** A rodada 1 teve 10 bloqueadores críticos inesperados (`docs/pedagogy/regressao/2026-10-21-extract-v1+plan-v1+generate-v1+review-v1.md`).
+    - **Taxonomia:** a `tax-v2` cria `lp5-word-classes` (classes de palavras, com gênero e número). Na `tax-v1`, páginas legíveis do 5º ano com artigos, classes de palavras e singular/plural davam `no_topic_found`, e a tela mostrava o texto de foto ilegível. A revisão do assunto pelo professor fica pendente.
+    - **Prompts:** `generate` e `review` v2 (`prompts-v2.md`), voltados às causas dos 6 kits que falharam depois da única regeneração. O `generate` v2 confere outra resposta certa, pede explicação coerente, personagem só com o primeiro nome e sem nome de escola, e lista as funções do avaliador. O `review` v2 diz que o primeiro nome de personagem fictício não é dado pessoal.
+    - **Avaliador (§8.2):** aceita `min` e `max`, para problemas que comparam opções. O `generate` v1 tinha usado as duas, e o kit falhou.
+    - **Casos de fronteira:** `7-portuguese-carta-cortada` e `7-math-potenciacao-raiz` passam a aceitar o assunto vizinho do 7º ano que o modelo ofereceu com confiança média, em vez de esperar a recusa, com o motivo no `note`.
+    - **Esforço da geração:** a rodada seguinte testa `AI_EFFORT_GENERATE=medium` por causa do tempo p95 de 7 min 2 s; o valor do `.env` só muda se a qualidade se mantiver.
+    - **Contagem do §13.1:** 12 imagens cortadas ou com sombra, e não 7.
+
 ## 16. Histórico
 
+- **1.5 (21/10/2026):** correções da rodada 1 da regressão da F1-10: `tax-v2` com `lp5-word-classes`, `generate` e `review` v2 em `prompts-v2.md`, `min` e `max` no avaliador (§8.2), dois casos de fronteira recalibrados e 12 imagens cortadas ou com sombra no §13.1. Aprovadas pelo humano (§15.10).
 - **1.4 (21/10/2026):** precisão da F1-07 no §10: o reparo por item que veio de bloqueador da validação termina com revisão completa, porque a revisão só roda com a validação sem bloqueador e o kit ainda não foi revisado (PRD §7.4); a revisão só dos itens refeitos, juntada à anterior, vale quando o reparo veio da própria revisão. Aprovada pelo humano em 21/10/2026 (§15.9).
 - **1.3 (21/10/2026):** a regressão da v1 passa a ter 35 casos: 30 imagens de caderno geradas por IA e 5 variações delas (1 ilegível e 4 com dado pessoal inventado). Mudaram o §12.1, o §13.1, os critérios 1 e 2 do §13.2 (o 2 passa a 90% dos casos) e a linha da F1-10 no §14. A meta original de 40 fotos reais fica como referência. Decisão do humano (§15.8).
 

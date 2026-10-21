@@ -196,6 +196,12 @@ try {
   );
   const report = buildRegressionReport(resultList, {
     runId,
+    aiSetting: {
+      extractModel: AI_MODEL_EXTRACT,
+      extractEffort: AI_EFFORT_EXTRACT ?? null,
+      generateModel: AI_MODEL_GENERATE,
+      generateEffort: AI_EFFORT_GENERATE ?? null,
+    },
     startedAt,
     generationVersion: GENERATION_VERSION,
     isComplete: args.caseIdList === null,

@@ -13,12 +13,12 @@
   "expectedPreview": {
     "outcome": "preview_ready",
     "failCode": null,
-    "requiredTopicIdList": ["lp5-nominal-agreement"],
-    "acceptableTopicIdList": [],
+    "requiredTopicIdList": ["lp5-word-classes"],
+    "acceptableTopicIdList": ["lp5-nominal-agreement"],
     "unsupportedTopicIdList": [],
     "requiredSourceWarningCodeList": []
   },
   "confirmation": null,
   "expectedKitOutcome": "ready",
-  "note": "Artigos definidos e indefinidos não têm id no 5º ano da tax-v1; o mais próximo é a concordância nominal."
+  "note": "Artigos definidos e indefinidos: na tax-v2 entram em classes de palavras do 5º ano; concordância nominal é aceitável. Na rodada 1 (tax-v1), a página legível deu no_topic_found."
 }

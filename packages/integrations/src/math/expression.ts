@@ -30,7 +30,7 @@ const allowedOperatorSet: ReadonlySet<string> = new Set([
   "to",
 ]);
 
-const allowedFunctionSet: ReadonlySet<string> = new Set([
+export const mathExpressionFunctionNameList = [
   "sqrt",
   "abs",
   "floor",
@@ -39,7 +39,11 @@ const allowedFunctionSet: ReadonlySet<string> = new Set([
   "mod",
   "gcd",
   "lcm",
-]);
+  "min",
+  "max",
+] as const;
+
+const allowedFunctionSet: ReadonlySet<string> = new Set(mathExpressionFunctionNameList);
 
 const ALLOWED_CONSTANT = "pi";
 

@@ -11,14 +11,19 @@
   ],
   "tagList": ["handwritten", "bad_photo", "grade_mismatch"],
   "expectedPreview": {
-    "outcome": "analysis_failed",
-    "failCode": "no_topic_found",
+    "outcome": "preview_ready",
+    "failCode": null,
     "requiredTopicIdList": [],
-    "acceptableTopicIdList": [],
+    "acceptableTopicIdList": ["lp7-linguistic-variety", "lp7-reading-comprehension"],
     "unsupportedTopicIdList": [],
-    "requiredSourceWarningCodeList": ["grade_mismatch"]
+    "requiredSourceWarningCodeList": []
   },
-  "confirmation": null,
-  "expectedKitOutcome": "not_applicable",
-  "note": "Partes da carta são assunto do 4º ano na tax-v1: sem assunto do 7º ano, a prévia recusa com o texto de outro ano."
+  "confirmation": {
+    "topicIdList": ["lp7-linguistic-variety"],
+    "otherTopicText": null,
+    "perceivedDifficulty": null,
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Partes da carta são do 4º ano na tax-v1; a carta formal e informal leva a variedades linguísticas do 7º ano, que o modelo ofereceu com confiança média na rodada 1. Recalibrado com o humano em 21/10/2026."
 }

@@ -11,14 +11,23 @@
   ],
   "tagList": ["handwritten", "grade_mismatch"],
   "expectedPreview": {
-    "outcome": "analysis_failed",
-    "failCode": "no_topic_found",
+    "outcome": "preview_ready",
+    "failCode": null,
     "requiredTopicIdList": [],
-    "acceptableTopicIdList": [],
+    "acceptableTopicIdList": [
+      "ma7-integer-multiplication-division",
+      "ma7-algebraic-expressions",
+      "ma7-rational-operations"
+    ],
     "unsupportedTopicIdList": [],
-    "requiredSourceWarningCodeList": ["grade_mismatch"]
+    "requiredSourceWarningCodeList": []
   },
-  "confirmation": null,
-  "expectedKitOutcome": "not_applicable",
-  "note": "Potenciação é do 6º ano e raiz quadrada do 8º na tax-v1: sem assunto do 7º ano, a prévia recusa com o texto de outro ano."
+  "confirmation": {
+    "topicIdList": ["ma7-integer-multiplication-division"],
+    "otherTopicText": null,
+    "perceivedDifficulty": null,
+    "noteText": null
+  },
+  "expectedKitOutcome": "ready",
+  "note": "Potenciação é do 6º ano na tax-v1; potência é multiplicação repetida, e o modelo ofereceu multiplicação de inteiros com confiança média no ensaio da F1-10. Recalibrado com o humano em 21/10/2026."
 }

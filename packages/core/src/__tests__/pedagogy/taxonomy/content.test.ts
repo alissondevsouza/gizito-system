@@ -96,6 +96,7 @@ const requiredRuleBySlugPatternList: readonly {
       "predicate",
       "adverbs",
       "conjunctions",
+      "classes",
     ]),
   },
   { rule: "linguistic_variety_respect", pattern: slugSegmentPattern("lp", ["variety"]) },

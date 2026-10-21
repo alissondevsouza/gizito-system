@@ -65,7 +65,7 @@ describe("buildPipelineSummary e formatPipelineSummary (spec F1-09, RF-08)", () 
       failCode: null,
       grade: "5",
       subject: "math",
-      generationVersion: "extract-v1+plan-v1+generate-v1+review-v1",
+      generationVersion: "extract-v1+plan-v1+generate-v2+review-v2",
       hasOtherTopicText: true,
       hasNoteText: true,
       photoCount: 2,

@@ -13,7 +13,7 @@
   "expectedPreview": {
     "outcome": "preview_ready",
     "failCode": null,
-    "requiredTopicIdList": [],
+    "requiredTopicIdList": ["lp5-word-classes"],
     "acceptableTopicIdList": [
       "lp5-pronouns",
       "lp5-verb-tenses",
@@ -23,12 +23,7 @@
     "unsupportedTopicIdList": [],
     "requiredSourceWarningCodeList": []
   },
-  "confirmation": {
-    "topicIdList": ["lp5-pronouns"],
-    "otherTopicText": null,
-    "perceivedDifficulty": null,
-    "noteText": null
-  },
+  "confirmation": null,
   "expectedKitOutcome": "ready",
-  "note": "Classes de palavras não têm id no 5º ano da tax-v1; espera prévia com assunto vizinho e confirmação em pronomes."
+  "note": "Classes de palavras do 5º ano, assunto que entrou na tax-v2. Na rodada 1 (tax-v1), a página legível deu no_topic_found."
 }

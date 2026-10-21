@@ -43,14 +43,17 @@ describe("generateKit sem bloqueador (spec F1-07, RF-03)", () => {
       if (!result.ok) throw new Error(`falhou com ${result.error.code}`);
       const { studyKit, attemptList, aiCallList } = result.value;
       expect(studyKitSchema.safeParse(studyKit).success).toBe(true);
-      expect(studyKit).toEqual(withoutQualityCheck(fixture.studyKit));
-      expect(studyKit.generationVersion).toBe("extract-v1+plan-v1+generate-v1+review-v1");
+      expect(studyKit).toEqual({
+        ...withoutQualityCheck(fixture.studyKit),
+        generationVersion: GENERATION_VERSION,
+      });
+      expect(studyKit.generationVersion).toBe("extract-v1+plan-v1+generate-v2+review-v2");
       expect(GENERATION_VERSION).toBe(studyKit.generationVersion);
       expect(attemptList).toEqual([{ repair: "initial", issueList: [] }]);
       expect(aiCallList.map((call) => [call.stage, call.promptVersion, call.outcomeCode])).toEqual([
         ["plan", "plan-v1", "ok"],
-        ["generate", "generate-v1", "ok"],
-        ["review", "review-v1", "ok"],
+        ["generate", "generate-v2", "ok"],
+        ["review", "review-v2", "ok"],
       ]);
       expect(aiProvider.requestList.every((record) => record.request.imageList === undefined)).toBe(
         true,

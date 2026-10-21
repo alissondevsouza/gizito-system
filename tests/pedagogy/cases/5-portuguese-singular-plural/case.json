@@ -13,12 +13,12 @@
   "expectedPreview": {
     "outcome": "preview_ready",
     "failCode": null,
-    "requiredTopicIdList": ["lp5-nominal-agreement"],
-    "acceptableTopicIdList": ["lp5-spelling", "lp5-word-formation"],
+    "requiredTopicIdList": ["lp5-word-classes"],
+    "acceptableTopicIdList": ["lp5-nominal-agreement", "lp5-spelling", "lp5-word-formation"],
     "unsupportedTopicIdList": [],
     "requiredSourceWarningCodeList": []
   },
   "confirmation": null,
   "expectedKitOutcome": "ready",
-  "note": "Singular e plural não têm id no 5º ano da tax-v1; o mais próximo é a concordância nominal. Base de uma variação com dado pessoal."
+  "note": "Singular e plural: na tax-v2 entram em classes de palavras do 5º ano (número). Na rodada 1 (tax-v1), a página legível deu no_topic_found. Base de uma variação com dado pessoal."
 }

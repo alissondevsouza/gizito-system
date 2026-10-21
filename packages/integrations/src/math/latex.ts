@@ -27,6 +27,8 @@ type TexOption = {
 const functionNameTexMap: Readonly<Record<string, string>> = {
   gcd: "\\text{mdc}",
   lcm: "\\text{mmc}",
+  min: "\\min",
+  max: "\\max",
 };
 
 const FUNCTION_ARGUMENT_SEPARATOR = ";";

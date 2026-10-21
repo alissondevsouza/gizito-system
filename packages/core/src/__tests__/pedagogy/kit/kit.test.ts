@@ -263,7 +263,7 @@ describe("studyKitSchema (spec pedagógica §7.2)", () => {
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
       ]);
       expect(studyKit.formatVersion).toBe("kit-v1");
-      expect(studyKit.taxonomyVersion).toBe("tax-v1");
+      expect(studyKit.taxonomyVersion).toBe("tax-v2");
     }
   });
 

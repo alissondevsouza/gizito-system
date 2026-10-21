@@ -34,6 +34,8 @@ describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
     ["x - (y + 1)", " x-\\left( y+1\\right)"],
     ["gcd(12, 18)", "\\text{mdc}\\left(12;18\\right)"],
     ["lcm(4, 6)", "\\text{mmc}\\left(4;6\\right)"],
+    ["min(3, 4)", "\\min\\left(3;4\\right)"],
+    ["max(2.5, 3)", "\\max\\left(2,5;3\\right)"],
     ["round(2.5, 2)", "\\operatorname{round}\\left(2,5;2\\right)"],
     ["x - (-3x)", " x-\\left(-3 x\\right)"],
     ["a - (-2*b)", " a-\\left(-2 b\\right)"],
@@ -61,7 +63,7 @@ describe("mathExpressionToLatex (spec F1-04, RF-06)", () => {
 
   it.each<[string, MathEvaluationErrorCode]>([
     ["x = 1", "unsupported"],
-    ["min(1, 2)", "unsupported"],
+    ["log(8, 2)", "unsupported"],
     ["2 +", "parse_error"],
   ])("%j é %s", (expression, code) => {
     expect(mathExpressionToLatex(expression)).toEqual({

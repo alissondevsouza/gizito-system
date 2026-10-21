@@ -1,4 +1,4 @@
-# Taxonomia de assuntos — tax-v1
+# Taxonomia de assuntos — tax-v2
 
 > Gerado por `bun run taxonomy:doc` a partir de `packages/core/src/pedagogy/taxonomy/`. Não edite à mão: o teste do core falha se este arquivo divergir do código.
 
@@ -172,7 +172,7 @@ Ficam fora desta versão porque dependem de figura, imagem, fala ou correção d
 | `lp4-suffixes` | Palavras com sufixos | Escrita de palavras derivadas com -agem, -oso, -eza, -izar e -isar. | EF04LP08 | Ortografia | `single_normative_answer` |
 | `lp4-linguistic-variety` | Variedades linguísticas | Diferentes jeitos de falar pelo Brasil e respeito às variedades regionais e sociais. | EF35LP11 | — | `linguistic_variety_respect`, `text_evidence` |
 
-## Língua Portuguesa — 5º ano (23 assuntos)
+## Língua Portuguesa — 5º ano (24 assuntos)
 
 | Id | Nome | Descrição | BNCC | Pré-requisitos | Regras |
 |---|---|---|---|---|---|
@@ -193,6 +193,7 @@ Ficam fora desta versão porque dependem de figura, imagem, fala ou correção d
 | `lp5-spelling` | Ortografia | Regras contextuais e morfológicas e palavras de uso frequente com grafia irregular. | EF05LP01 | Ortografia (4º ano) | `single_normative_answer` |
 | `lp5-accentuation` | Acentuação | Acentuar corretamente palavras oxítonas, paroxítonas e proparoxítonas. | EF05LP03 | Acentuação (4º ano) | `single_normative_answer` |
 | `lp5-punctuation` | Pontuação e efeitos de sentido | Vírgula, ponto e vírgula e dois-pontos; efeitos de reticências, aspas e parênteses. | EF05LP04 | Pontuação (4º ano) | `single_normative_answer`, `text_evidence` |
+| `lp5-word-classes` | Classes de palavras | Reconhecer substantivo, artigo, adjetivo, verbo e advérbio na frase, com gênero e número (singular e plural). | EF05LP26 | Substantivo e adjetivo (4º ano) | `single_normative_answer` |
 | `lp5-verb-tenses` | Tempos verbais | Presente, passado e futuro no modo indicativo. | EF05LP05 | — | `single_normative_answer` |
 | `lp5-verb-agreement` | Concordância verbal | Flexionar o verbo de acordo com o sujeito, na escrita e na fala. | EF05LP06 | Concordância verbal (4º ano); Tempos verbais | `single_normative_answer` |
 | `lp5-nominal-agreement` | Concordância nominal | Concordância entre substantivo, artigo, adjetivo e numeral ao produzir textos. | EF05LP26 | Concordância nominal (4º ano) | `single_normative_answer` |

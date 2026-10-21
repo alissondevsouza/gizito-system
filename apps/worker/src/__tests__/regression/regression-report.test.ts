@@ -32,6 +32,12 @@ import {
 
 const context: RegressionReportContext = {
   runId: "rodada-teste",
+  aiSetting: {
+    extractModel: "claude-haiku-5-5",
+    extractEffort: null,
+    generateModel: "claude-sonnet-5-5",
+    generateEffort: "medium",
+  },
   startedAt: new Date("2026-10-22T01:30:00Z"),
   generationVersion: "extract-v1+plan-v1+generate-v1+review-v1",
   isComplete: true,
@@ -241,6 +247,9 @@ describe("relatório da regressão (spec F1-10, RF-06 e RF-07)", () => {
     );
     expect(markdown).toContain("### Outro");
     expect(markdown).toContain("### Custo e tempo por etapa");
+    expect(markdown).toContain(
+      "Modelos: extração claude-haiku-5-5 (esforço padrão do adaptador) e geração claude-sonnet-5-5 (esforço medium).",
+    );
     expect(markdown).toContain(
       "| Caso | Custo extração | Custo plano | Custo geração | Custo revisão |",
     );

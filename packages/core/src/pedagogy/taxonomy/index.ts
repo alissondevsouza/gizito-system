@@ -10,7 +10,7 @@ import { grade7PortugueseTopicList } from "#src/pedagogy/taxonomy/7-portuguese.t
 import { createTaxonomyLookup } from "#src/pedagogy/taxonomy/lookup.ts";
 import type { Topic, TopicDefinition } from "#src/pedagogy/taxonomy/schemas.ts";
 
-export const TAXONOMY_VERSION = "tax-v1";
+export const TAXONOMY_VERSION = "tax-v2";
 
 type TaxonomySection = {
   readonly grade: Grade;

@@ -50,19 +50,18 @@ import {
   buildGeneratePrompt,
   buildGenerateRepairPrompt,
   GENERATE_PROMPT_VERSION,
-} from "#src/pipeline/prompts/generate/v1.ts";
+} from "#src/pipeline/prompts/generate/v2.ts";
 import {
   buildPlanPrompt,
   PLAN_PROMPT_VERSION,
   type Prompt,
 } from "#src/pipeline/prompts/plan/v1.ts";
 import {
-  buildReviewPrompt,
   fullReviewScope,
-  REVIEW_PROMPT_VERSION,
   type ReviewScope,
   repairReviewScope,
 } from "#src/pipeline/prompts/review/v1.ts";
+import { buildReviewPrompt, REVIEW_PROMPT_VERSION } from "#src/pipeline/prompts/review/v2.ts";
 
 export const GENERATION_VERSION = [
   EXTRACT_PROMPT_VERSION,
