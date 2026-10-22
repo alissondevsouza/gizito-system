@@ -15,6 +15,7 @@
     "test": "bun test --path-ignore-patterns '**/integration/**'",
     "test:ai-live": "AI_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/ai/anthropic-live.test.ts",
     "test:integration": "bun test src/__tests__/integration",
+    "test:payment-live": "PAYMENT_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/payment/mercadopago-live.test.ts",
     "test:storage-live": "STORAGE_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/storage/r2-live.test.ts"
   },
   "dependencies": {

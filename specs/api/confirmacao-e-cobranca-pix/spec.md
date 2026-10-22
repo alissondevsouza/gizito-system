@@ -45,7 +45,7 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
   Regras:
   - o total de assuntos, `topicIdList.length` mais 1 se houver "outro", fica entre `MIN_TOPIC_COUNT` e `MAX_TOPIC_COUNT` (`countOrderTopics`);
   - `noteText` e `otherTopicText` passam por `sanitizeUntrustedText`, que troca caracteres de controle e de formato (`\p{Cc}`, `\p{Cf}`) por espaço, junta espaços em sequência, apara as pontas e normaliza para NFC. Depois valem os limites já existentes (`noteTextSchema`, `otherTopicTextSchema`);
-  - `noteText` que fica vazio depois do saneamento vira ausente.
+  - `noteText` e `otherTopicText` que ficam vazios depois do saneamento viram ausentes; `""` não dá erro.
 
   A decisão `checkConfirmedTopics({ topicIdList, otherTopicText }, grade, subject)` devolve `Result`:
   - erro `invalid_topic` quando um id não é selecionável no ano e na disciplina do pedido (`isSelectableTopic`: inexistente, de outro ano ou disciplina, ou `deprecated`);
@@ -56,17 +56,18 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
   - unit do saneamento: caractere de controle, bidi override e espaço de largura zero;
   - unit da decisão: id de outro ano, id inexistente e "outro" com palavra-chave de não atendido (por exemplo "malha quadriculada" em Matemática) recusados; o mesmo texto em Português aceito, se a palavra-chave for só de Matemática.
 
-- **RF-03 — visão `awaiting_payment` no core.** A variante `awaiting_payment` do `orderViewSchema` ganha três campos:
+- **RF-03 — visão `awaiting_payment` no core.** A variante `awaiting_payment` do `orderViewSchema` ganha estes campos:
   - `charge`: `{ amountCents, qrCode, qrCodeBase64 | null, ticketUrl | null, expireDatetime }` da cobrança mais recente do pedido;
   - `substate`: `deriveAwaitingPaymentSubstate(charge, now)`;
-  - `email`: mascarado por `maskEmail`, com a primeira letra do usuário, `***` e o domínio (`m***@example.com`).
+  - `email`: mascarado por `maskEmail`, com a primeira letra do usuário, `***` e o domínio (`m***@example.com`);
+  - `confirmedTopicList` (`topicId` e `label` da taxonomia, na ordem confirmada), `otherTopicText` (ou nulo) e `kitPreview`. É o "resumo do kit sempre visível" do design doc §6.4, também para quem abre o link do e-mail `order_link` em outro aparelho.
 
-  `awaitingPaymentViewOf(chargeList, email, now)` escolhe a cobrança mais recente por `insertDatetime`, com desempate por `chargeId`. Os demais estados depois da prévia continuam com os campos base; `paid` e os seguintes são das F2-04 a F2-11. · Aceite:
+  `awaitingPaymentViewOf({ chargeList, email, topicIdList, otherTopicText }, now)` escolhe a cobrança mais recente por `insertDatetime`, com desempate por `chargeId`. Os demais estados depois da prévia continuam com os campos base; `paid` e os seguintes são das F2-04 a F2-11. · Aceite:
   - unit com uma e com duas cobranças: a mais recente vence, `pending` vencida dá `charge_expired`, `expired` dá `charge_expired` e ativa dá `null`;
   - unit do `maskEmail` com usuário de uma letra;
   - o schema recusa e-mail sem máscara.
 
-- **RF-04 — códigos de erro.** O `apiErrorCodeList` ganha `unsupported_topic` (422), para o web mostrar o texto da seção 5.2 do design doc. Id inválido usa o `400 validation_error` que já existe; é erro do cliente ou taxonomia antiga. · Aceite: unit do enum; integração (RF-08).
+- **RF-04 — códigos de erro.** O `apiErrorCodeList` ganha `unsupported_topic` (422). O corpo leva `unsupportedTopicList` (`unsupportedTopicId`, `label`, `reason`, o mesmo `unsupportedTopicViewSchema` da prévia), campo opcional do `apiErrorSchema`. O `error` sai composto pela api com o texto da seção 5.2 do design doc para o primeiro assunto: "Ainda não consigo preparar {assunto}, porque depende de imagem ou de fala." (`figure`, `orality`) ou "…, porque é produção de texto que precisa de correção." (`open_writing`). Id inválido usa o `400 validation_error` que já existe; é erro do cliente ou taxonomia antiga. · Aceite: unit do enum e do schema; integração (RF-08) com o corpo completo.
 
 - **RF-05 — `FakePaymentGateway` em `integrations/src/fakes/`.** Implementa a interface inteira, de forma determinística e sem rede:
   - `createCharge` é idempotente por `chargeId`: o mesmo `chargeId` com a mesma entrada devolve a mesma cobrança, e com entrada diferente lança `gateway_rejected`, como o 409 `idempotency_key_already_used`;
@@ -76,7 +77,12 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
   - `refund` marca `refunded` e devolve `fake-refund-{chargeId}`;
   - `parseWebhook` aceita o formato próprio do fake (header `x-fake-signature` e corpo `{ gatewayOrderId, action }`), e `buildFakeWebhookRequest` monta esse formato para a F2-04 e para o E2E.
 
-  Controles: `failNextCreate(code)` e `failCreateAfter(count, code)`, `markPaid(chargeId, paidDatetime)`, `markExpired(chargeId)`, `createdChargeList` e `createCallCount`.
+  Controles:
+  - `failNextCreate(code)`, `failCreateAfter(count, code)` e `failNextStatus(code)`;
+  - `markPaid(chargeId, paidDatetime)` e `markExpired(chargeId)`;
+  - `createdChargeList` e `createCallCount`;
+  - `pauseCreate()`: segura os `createCharge` seguintes até `release()`, com `waitForPendingCount(n)`. Serve para a corrida dos RF-08 e RF-09 ser determinística;
+  - `createFakePaymentGateway({ withQrImage: false })`: devolve `qrCodeBase64: null`, como o sandbox, para o E2E da F2-09.
 
   · Aceite: a suíte de contrato `describePaymentGatewayContract` (RF-06) roda no fake; unit dos controles.
 
@@ -108,37 +114,41 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
     | `status` da order | `ChargeStatus` |
     |---|---|
     | `created`, `processing`, `action_required` | `pending` |
-    | `processed` (`accredited` ou `partially_refunded`) e `charged_back` | `paid` |
+    | `processed` (`accredited` ou `partially_refunded`) e `charged_back` com `status_detail` `in_process` ou `settled` | `paid` |
     | `canceled`, `failed` | `expired` |
-    | `refunded` | `refunded` |
+    | `refunded` e `charged_back` com `status_detail` `reimbursed` (dinheiro devolvido ao pagador) | `refunded` |
     | outro valor | `gateway_response_invalid` |
 
     Devolve `amountCents` (de `total_amount`, sem float), `externalReference`, `gatewayPaymentId` (`payments[0].id`) e `paidDatetime` (`last_updated_date` quando `paid`, senão nulo).
   - `refund`: `POST /v1/orders/{gatewayOrderId}/refund` sem corpo (reembolso total), com `X-Idempotency-Key` = `refund-{chargeId}`. Devolve o `id` do último item de `transactions.refunds`.
   - `parseWebhook`:
     1. `type` da query diferente de `order` → `unsupported_event`;
-    2. falta `data.id` → `malformed`;
+    2. falta `data.id` na query (o `data.id_url` da doc; o do corpo não é usado) → `malformed`;
     3. confere `x-signature`: separa `ts` e `v1` e monta o manifest `id:{data.id em minúsculas};request-id:{x-request-id};ts:{ts};`, omitindo o par cujo valor falta. Calcula o HMAC-SHA256 em hexa com o segredo e compara em tempo constante. Assinatura ausente, sem `v1` ou diferente → `invalid_signature`;
     4. corpo sem JSON válido ou sem `action` → `malformed`;
-    5. válido: `externalId` = `{data.id}:{action}`, `gatewayOrderId` = `data.id` como veio e `gatewayPaymentId` nulo. Do corpo, nada além do `action` é usado.
+    5. válido: `externalId` = `{data.id}:{action}`, `gatewayOrderId` = `data.id` como veio e `gatewayPaymentId` nulo. Do corpo, nada além do `action` é usado. O `action` não entra no HMAC: quem forja só o corpo muda o `externalId` e, no máximo, dispara uma reconciliação a mais daquela order, que consulta o gateway. A F2-04 herda essa nota.
   - Erros e retentativa:
     - timeout por chamada de `requestTimeoutMs` (padrão 10 s);
-    - `gateway_unavailable` tem 1 retentativa depois de `retryDelayMs` (padrão 500 ms), só em `createCharge` (protegida pela chave de idempotência), `getChargeStatus` e `refund` (também com chave);
+    - `gateway_unavailable` por rede, timeout ou 5xx tem 1 retentativa depois de `retryDelayMs` (padrão 500 ms), só em `createCharge` (protegida pela chave de idempotência), `getChargeStatus` e `refund` (também com chave). O 429 não é retentado, porque a doc manda esperar o `Retry-After`, e o comprador não deve esperar segundos numa requisição;
     - `parseWebhook` não faz IO;
     - o `cause` do erro leva só o status HTTP e o `code` do erro do Mercado Pago, nunca o corpo (que ecoa o e-mail).
 
   · Aceite:
-  - unit com `fetch` injetado e respostas gravadas e sanitizadas em `__fixtures__/mercadopago/` (formato da doc oficial, ids e e-mail fictícios). Cobre o corpo e os headers exatos da criação, `qr_code_base64` vazio, cada linha da tabela de status, status desconhecido, 401 → `gateway_rejected` sem retentativa, 409 → `gateway_rejected`, 429 e 500 → retentativa e depois `gateway_unavailable`, 500 seguido de 200 → sucesso com a mesma chave nas duas tentativas, timeout, rede, JSON fora do schema e `cause` sem o e-mail;
+  - unit com `fetch` injetado e respostas gravadas e sanitizadas em `__fixtures__/mercadopago/` (formato da doc oficial, ids e e-mail fictícios). Cobre o corpo e os headers exatos da criação, `qr_code_base64` vazio, cada linha da tabela de status, status desconhecido, 401 → `gateway_rejected` sem retentativa, 409 → `gateway_rejected`, 429 → `gateway_unavailable` sem retentativa, 500 → retentativa e depois `gateway_unavailable`, 500 seguido de 200 → sucesso com a mesma chave nas duas tentativas, timeout, rede, JSON fora do schema e `cause` sem o e-mail;
   - `parseWebhook` com assinatura calculada com segredo de teste: válida, `data.id` em maiúsculas assinado em minúsculas, sem `x-request-id` (par omitido), adulterada, sem `v1`, `type` diferente de `order` e corpo inválido.
 
 - **RF-07 — banco.** A migration `0005_confirmacao_e_cobranca_pix` torna `charge.qr_code_base64` nulo, o que não é destrutivo. Não entra índice de "uma ativa por pedido", porque a atividade depende do relógio. A garantia é o `FOR UPDATE` no pedido em toda inserção de cobrança (RF-08 e RF-09). · Aceite: o teste de migration aplica a 0005 do zero; o `core-alignment` confirma a coluna nula.
 
-- **RF-08 — `POST /orders/:token/confirm`.** O corpo é JSON validado por `confirmOrderInputSchema`; fora do schema dá `400 validation_error`. Passos, nesta ordem:
+- **RF-08 — `POST /orders/:token/confirm`.** O corpo é JSON validado por `confirmOrderInputSchema`; fora do schema dá `400 validation_error`.
+
+  Trava por pedido no processo: um `Set` de `orderId` com cobrança em criação, compartilhado por `confirm` e `charges`. O segundo pedido concorrente do mesmo pedido recebe 409 (`invalid_state` no `confirm`, `charge_active` no `charges`) antes de chamar o gateway, e o pedido sai do `Set` no `finally`. Isso limita a uma as orders órfãs por pedido e por processo. Com mais de uma instância da api, o limite vale por instância (linha LOW no `known-issues.md`; o MVP roda uma).
+
+  Passos, nesta ordem:
   1. token inexistente ou mal formado → `404 order_not_found`;
   2. status diferente de `preview_ready` → `409 invalid_state`, sem chamar o gateway. Isso inclui `confirm` repetido com o pedido já em `awaiting_payment`; o web relê o `GET` e vai à rota do estado (design doc §6.8);
   3. `checkConfirmedTopics`: `invalid_topic` → `400 validation_error`; `unsupported_topic` → `422 unsupported_topic`;
   4. gera `chargeId` (UUID v4) e `expireDatetime = chargeExpireDatetime(now)`, e chama `createCharge` com `amountCents = KIT_PRICE_CENTS` e `payerEmail`. `PaymentGatewayError` → `503 service_unavailable`, sem nada gravado;
-  5. numa transação: trava o pedido (`FOR UPDATE`). Se ele não estiver mais em `preview_ready` (corrida), devolve `409 invalid_state`, e a cobrança criada fica órfã no gateway e expira sozinha em 30 minutos (log `warn` com `orderId`, `chargeId` e o código). Se estiver, `transitionOrder(status, "confirm")`, grava `email`, `topic_id_list`, `other_topic_text`, `note_text`, `perceived_difficulty` e o status, insere a `charge` (`gateway` = `gateway.name`, ids, `qr_code`, `qr_code_base64`, `ticket_url`, `amount_cents`, `expire_datetime`, `status = pending`) e enfileira `order.notify { kind: "order_link" }` (`jobs.md` §1; o handler é da F2-07);
+  5. numa transação: trava o pedido (`FOR UPDATE`). Se ele não estiver mais em `preview_ready` (corrida entre instâncias, ou uma troca de fotos durante a chamada), devolve `409 invalid_state`, e a cobrança criada fica órfã no gateway e expira sozinha em 30 minutos. Qualquer falha depois do `createCharge` (corrida, erro de banco, falha no job) loga `warn` "cobrança órfã" com `orderId`, `chargeId`, `gatewayOrderId` e o código. Se estiver, `transitionOrder(status, "confirm")`, grava `email`, `topic_id_list`, `other_topic_text`, `note_text`, `perceived_difficulty` e o status, insere a `charge` (`gateway` = `gateway.name`, ids, `qr_code`, `qr_code_base64`, `ticket_url`, `amount_cents`, `expire_datetime`, `status = pending`) e enfileira `order.notify { kind: "order_link" }` (`jobs.md` §1; o handler é da F2-07);
   6. responde `200` com o corpo do `GET` (`awaiting_payment`) e `Cache-Control: no-store`.
 
   · Aceite (integração, Postgres real):
@@ -148,16 +158,20 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
   - "outro" não atendido → 422 sem chamar o gateway;
   - 4 assuntos e `acceptedTerms: false` → 400;
   - falha do gateway → 503 sem gravar nada;
-  - dois `confirm` concorrentes → um 200 e um 409, uma `charge` só e o `warn` da órfã;
+  - dois `confirm` concorrentes → um 200 e um 409 sem segunda chamada ao gateway (trava do processo);
+  - corrida sob o lock, com o fake parado em `pauseCreate()` e o pedido mudado no banco antes do `release()` → 409, nenhuma `charge` e o `warn` da órfã;
   - falha forçada no insert do job → 500, pedido em `preview_ready`, sem `charge`;
-  - `noteText` com caractere de controle gravado saneado.
+  - `noteText` com caractere de controle gravado saneado;
+  - 422 com o `unsupportedTopicList` e o texto composto.
 
 - **RF-09 — `POST /orders/:token/charges` ("Gerar novo Pix").** Sem corpo. Passos:
   1. token → `404 order_not_found`;
   2. status diferente de `awaiting_payment` → `409 invalid_state`, o que inclui `paid` e os seguintes: nunca há cobrança nova para pedido pago;
   3. já existe cobrança ativa (`isChargeActive`) → `409 charge_active`, sem chamar o gateway;
   4. `createCharge` com `chargeId` novo e o e-mail gravado no pedido. Erro → 503;
-  5. numa transação: trava o pedido e relê status e cobranças sob o lock. Mudou o status → 409 `invalid_state`; apareceu uma ativa → 409 `charge_active`. Nos dois casos, `warn` da órfã. Se nada mudou, insere a cobrança nova.
+  5. numa transação: trava o pedido e relê status e cobranças sob o lock. Mudou o status → 409 `invalid_state`; apareceu uma ativa → 409 `charge_active`. Nos dois casos, e em qualquer outra falha depois do `createCharge`, `warn` da órfã. Se nada mudou, insere a cobrança nova.
+
+  Usa a mesma trava por pedido do RF-08.
 
   A cobrança vencida continua `pending` no banco, porque quem a marca `expired` é a reconciliação da F2-04, depois de consultar o gateway. Marcar aqui, sem consultar, tiraria da varredura um Pix pago no último segundo com webhook perdido (`payments.md`, "pagamento confirmado após expiração").
 
@@ -166,7 +180,8 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
   · Aceite (integração):
   - cobrança ativa → 409 `charge_active` sem chamar o gateway;
   - vencida pelo relógio → 201, cobrança nova ativa, a antiga ainda `pending`, o mesmo pedido, nenhum pedido novo, e o `GET` mostra a nova com `substate` nulo;
-  - duas renovações concorrentes → uma 201 e uma 409, e uma só cobrança ativa;
+  - duas renovações concorrentes → uma 201 e uma 409 `charge_active` sem segunda chamada ao gateway, e uma só cobrança ativa;
+  - pagamento confirmado durante a chamada (fake parado e pedido levado a `paid` antes do `release()`) → 409 `invalid_state`, nenhuma cobrança nova e o `warn` da órfã;
   - pedido `paid` → 409 `invalid_state` sem chamar o gateway;
   - `preview_ready` → 409;
   - falha do gateway → 503 sem gravar.
@@ -182,8 +197,9 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
 
   · Aceite: unit do config (falta de cada chave com `mercadopago`, `asaas` recusado, `fake` aceito em dev e recusado em produção); boot do app de teste com o fake.
 
-- **RF-12 — teste real no sandbox (pendente do humano).** Comando: `bun run --cwd packages/integrations test:payment-live` (`PAYMENT_LIVE_TEST=1`, `.env` da raiz).
+- **RF-12 — teste real no sandbox (pendente do humano).** Comando: `bun run --cwd packages/integrations test:payment-live` (`PAYMENT_LIVE_TEST=1`, `.env` da raiz). Lê `MERCADOPAGO_TEST_ACCESS_TOKEN`, variável própria do teste, e nunca a `MERCADOPAGO_ACCESS_TOKEN` da api: as duas credenciais começam com `APP_USR`, e o nome separado evita apontar o teste para produção (`payments.md`). Sem a variável, pula.
   - Roda a suíte de contrato contra o sandbox: cria a cobrança, confere `qrCode`, `gatewayOrderId`, `getChargeStatus` `pending` com `amountCents = KIT_PRICE_CENTS` e `externalReference`, e repete o `createCharge` com o mesmo `chargeId`, que deve devolver a mesma order (idempotência).
+  - Cria uma segunda cobrança para o mesmo `orderId` (renovação) e confere que é outra order, também `pending`.
   - Imprime o `gatewayOrderId`.
   - Com `MERCADOPAGO_LIVE_EXPIRED_ORDER_ID` (o id impresso numa rodada de mais de 30 minutos antes), confere que aquela order está `expired`.
 
@@ -197,7 +213,8 @@ Roadmap F2-03. Pronto quando, no sandbox, a cobrança é criada, expira em 30 mi
 - Telas de confirmação e de pagamento, o QR a partir de `qr_code` quando `qrCodeBase64` é nulo, `PIX_RECIPIENT_DISPLAY_NAME` e a contagem regressiva: F2-09.
 - Reembolso pelo admin e auditoria do motivo: F2-11. O adaptador já sabe reembolsar.
 - `AsaasGateway`.
-- Rate limit de `confirm` e `charges`: os dois exigem um pedido que já passou pelo rate limit da prévia, e `charges` só cria cobrança com a anterior vencida. O pior caso é uma rajada concorrente gerar algumas orders órfãs, que expiram em 30 minutos.
+- Rate limit de `confirm` e `charges`: os dois exigem um pedido que já passou pelo rate limit da prévia, e `charges` só cria cobrança com a anterior vencida. A trava por pedido no processo (RF-08) limita a rajada concorrente a uma order órfã por pedido e por instância.
+- O CLI do pipeline (`apps/worker/src/cli/pipeline-input.ts`) continua com as próprias mensagens por opção. A revisão da spec sugeriu trocá-lo por `checkConfirmedTopics`, mas ele é ferramenta de dev, e a troca mudaria as mensagens do CLI sem ganho para o comprador.
 
 ## Plano
 
@@ -241,26 +258,26 @@ Unit no core e no integrations, e integração na api com Postgres real e o fake
 ## Tasks
 
 ### M1 — core
-- [ ] 1.1 `PaymentGatewayError`, `qrCodeBase64` nulo e `refund(reference)` · Arquivos: `interfaces/payment-gateway.ts`, `charge/schemas.ts`, `__tests__/interfaces/contracts.test.ts` e `__tests__/charge/schemas.test.ts` · Verificação: `bun test` no core
-- [ ] 1.2 `sanitizeUntrustedText`, `confirmOrderInputSchema` e `checkConfirmedTopics` · Arquivos: `text/sanitize.ts`, `order/confirm.ts` e os testes · Verificação: `bun test`
-- [ ] 1.3 `maskEmail`, `awaitingPaymentViewOf` e a variante `awaiting_payment` do `orderViewSchema`; `unsupported_topic` no `apiErrorCodeList` · Verificação: `bun test`
-- [ ] 1.4 `mercadoPagoEnvironmentSchema` e `checkPaymentGatewayEnvironment` · Verificação: `bun test`, typecheck do monorepo
+- [x] 1.1 `PaymentGatewayError`, `qrCodeBase64` nulo e `refund(reference)` · Arquivos: `interfaces/payment-gateway.ts`, `charge/schemas.ts`, `__tests__/interfaces/contracts.test.ts` e `__tests__/charge/schemas.test.ts` · Verificação: `bun test` no core e `bun run typecheck` do monorepo
+- [x] 1.2 `sanitizeUntrustedText`, `confirmOrderInputSchema` e `checkConfirmedTopics` · Arquivos: `text/sanitize.ts`, `order/confirm.ts` e os testes · Verificação: `bun test`
+- [x] 1.3 `maskEmail`, `awaitingPaymentViewOf` e a variante `awaiting_payment` do `orderViewSchema`; `unsupported_topic` e `unsupportedTopicList` no erro · Verificação: `bun test` e `bun run typecheck` do monorepo
+- [x] 1.4 `mercadoPagoEnvironmentSchema` e `checkPaymentGatewayEnvironment` · Verificação: `bun test`, typecheck do monorepo
 
 ### M2 — db
-- [ ] 2.1 `qr_code_base64` nulo, migration 0005 e testes de migration e alinhamento · Verificação: `bun run test:integration` no db
+- [x] 2.1 `qr_code_base64` nulo, migration 0005 e testes de migration e alinhamento · Verificação: `bun run test:integration` no db
 
 ### M3 — integrations
-- [ ] 3.1 `describePaymentGatewayContract` e `FakePaymentGateway` com os controles · Verificação: `bun test` no integrations
-- [ ] 3.2 `MercadoPagoGateway` (`createCharge`, `getChargeStatus`, `refund`, erros e retentativa) com fixtures gravadas · Verificação: `bun test`
-- [ ] 3.3 `parseWebhook` com HMAC · Verificação: `bun test`
-- [ ] 3.4 `mercadopago-live.test.ts` e script `test:payment-live` (pula sem `PAYMENT_LIVE_TEST`) · Verificação: `bun run test:payment-live` sem a variável pula
+- [x] 3.1 `describePaymentGatewayContract` e `FakePaymentGateway` com os controles · Verificação: `bun test` no integrations
+- [x] 3.2 `MercadoPagoGateway` (`createCharge`, `getChargeStatus`, `refund`, erros e retentativa) com fixtures gravadas · Verificação: `bun test`
+- [x] 3.3 `parseWebhook` com HMAC · Verificação: `bun test`
+- [x] 3.4 `mercadopago-live.test.ts` e script `test:payment-live` (pula sem `PAYMENT_LIVE_TEST`) · Verificação: `bun run test:payment-live` sem a variável pula
 
 ### M4 — api
 - [ ] 4.1 config e montagem do gateway (`config.ts`, `index.ts`, `app.ts`, fixture) · Verificação: `bun test` na api
 - [ ] 4.2 `GET` em `awaiting_payment` (RF-10) · Verificação: `bun run test:integration` na api
 - [ ] 4.3 `POST /orders/:token/confirm` (RF-08, RF-13) · Verificação: integração
 - [ ] 4.4 `POST /orders/:token/charges` (RF-09, RF-13) · Verificação: integração
-- [ ] 4.5 API no ar com `PAYMENT_GATEWAY=fake`: `curl` de `confirm` e de `charges` contra o banco de dev, com o pedido levado a `preview_ready` pelo worker com a IA real ou por análise gravada de teste · Verificação: respostas e linhas no banco; dados apagados depois
+- [ ] 4.5 API no ar com `PAYMENT_GATEWAY=fake`: `curl` de `confirm` e de `charges` contra o banco de dev, com o pedido levado a `preview_ready` pelo worker com a IA real ou por análise gravada de teste. Para o `charges` chegar ao 201, o `expire_datetime` da cobrança é recuado no banco de dev (o fake não tem relógio próprio) · Verificação: respostas e linhas no banco; dados apagados depois
 
 ### M5 — docs e fechamento
 - [ ] 5.1 `api.md`, `data-model.md`, `payments.md`, `known-issues.md` e roadmap
@@ -276,9 +293,10 @@ Unit no core e no integrations, e integração na api com Postgres real e o fake
 | 2026-10-22 | Renovação não marca a vencida `expired` | a reconciliação (F2-04) consulta o gateway antes; marcar sem consultar perderia Pix pago no limite |
 | 2026-10-22 | O aceite não é gravado em coluna própria | o `data-model.md` não o prevê, e o `insert_datetime` da primeira cobrança marca o momento da confirmação; revisitar na F2-12 se os termos ganharem versão |
 | 2026-10-22 | `MERCADOPAGO_WEBHOOK_SECRET` exigido com `mercadopago` já na F2-03 | o adaptador depende dele; falhar no boot é melhor que falhar no primeiro webhook |
+| 2026-10-22 | Revisão da spec (rodada 1, aprovada com 6 alertas): visão do pagamento com assuntos e kit; corpo do 422; barreira no fake; trava por pedido no processo; teste real com `MERCADOPAGO_TEST_ACCESS_TOKEN` e segunda cobrança; 429 sem retentativa; `charged_back` pelo `status_detail`; `warn` da órfã em qualquer falha | alertas e sugestões aceitos; a sugestão do CLI do pipeline ficou fora (ver Fora de escopo) |
 
 ## Status
-Spec escrita em 22/10/2026. Próximo passo: revisão da spec pelo `gizito-spec-verifier`.
+Spec escrita e aprovada na rodada 1 da revisão em 22/10/2026, com os alertas incorporados. M1, M2 e M3 feitos, com o M1 ajustado aos alertas. Próximo passo: M4 (api).
 
 Pendências para o humano:
 - credencial de teste do Mercado Pago (`MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET`) no `.env`, para rodar o RF-12;

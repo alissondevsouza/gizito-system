@@ -7,6 +7,7 @@ import {
   KIT_PRICE_CENTS,
   MAX_PHOTO_COUNT,
   MAX_TOPIC_CANDIDATE_COUNT,
+  MAX_TOPIC_COUNT,
   MOCK_QUESTION_COUNT,
   PRACTICE_QUESTION_COUNT,
   WORKED_EXAMPLE_COUNT,
@@ -20,7 +21,12 @@ import {
 import { analysisFailCodeSchema, type OrderAnalysis } from "#src/order/analysis.ts";
 import { maskEmail, maskedEmailSchema } from "#src/order/email.ts";
 import { photoIndexSchema } from "#src/order/photo.ts";
-import { publicTokenSchema, shortCodeSchema } from "#src/order/schemas.ts";
+import {
+  otherTopicTextSchema,
+  publicTokenSchema,
+  shortCodeSchema,
+  type TopicId,
+} from "#src/order/schemas.ts";
 import type { MergedExtraction } from "#src/pedagogy/extraction/merge.ts";
 import {
   exerciseFormatSchema,
@@ -195,10 +201,19 @@ export const chargeViewSchema = z.object({
 });
 export type ChargeView = z.infer<typeof chargeViewSchema>;
 
+export const confirmedTopicViewSchema = z.object({
+  topicId: taxonomyTopicIdSchema,
+  label: z.string().min(1),
+});
+export type ConfirmedTopicView = z.infer<typeof confirmedTopicViewSchema>;
+
 export const awaitingPaymentViewSchema = z.object({
   charge: chargeViewSchema,
   substate: awaitingPaymentSubstateSchema.nullable(),
   email: maskedEmailSchema,
+  confirmedTopicList: z.array(confirmedTopicViewSchema).max(MAX_TOPIC_COUNT),
+  otherTopicText: otherTopicTextSchema.nullable(),
+  kitPreview: kitPreviewSchema,
 });
 export type AwaitingPaymentView = z.infer<typeof awaitingPaymentViewSchema>;
 
@@ -226,9 +241,15 @@ export function latestChargeOf<C extends ViewedCharge>(chargeList: readonly C[])
   );
 }
 
+export type AwaitingPaymentSource = {
+  readonly chargeList: readonly ViewedCharge[];
+  readonly email: string;
+  readonly topicIdList: readonly TopicId[];
+  readonly otherTopicText: string | null;
+};
+
 export function awaitingPaymentViewOf(
-  chargeList: readonly ViewedCharge[],
-  email: string,
+  { chargeList, email, topicIdList, otherTopicText }: AwaitingPaymentSource,
   now: Date,
 ): AwaitingPaymentView | null {
   const charge = latestChargeOf(chargeList);
@@ -243,6 +264,12 @@ export function awaitingPaymentViewOf(
     },
     substate: deriveAwaitingPaymentSubstate(charge, now),
     email: maskEmail(email),
+    confirmedTopicList: topicIdList.flatMap((topicId) => {
+      const topic = findTopic(topicId);
+      return topic === undefined ? [] : [{ topicId, label: topic.label }];
+    }),
+    otherTopicText,
+    kitPreview,
   };
 }
 

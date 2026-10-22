@@ -33,4 +33,20 @@ describe("erros da api (api.md §1)", () => {
       false,
     );
   });
+
+  it("422 de assunto não atendido leva a lista com rótulo e motivo", () => {
+    const body = {
+      error: "Ainda não consigo preparar Simetria desenhada em malha.",
+      code: "unsupported_topic",
+      unsupportedTopicList: [
+        {
+          unsupportedTopicId: "ma-grid-symmetry",
+          label: "Simetria desenhada em malha",
+          reason: "figure",
+        },
+      ],
+    };
+    expect(apiErrorSchema.safeParse(body).success).toBe(true);
+    expect(apiErrorSchema.safeParse({ ...body, unsupportedTopicList: [] }).success).toBe(false);
+  });
 });

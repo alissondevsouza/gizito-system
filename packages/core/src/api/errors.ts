@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { photoIndexSchema } from "#src/order/photo.ts";
+import { unsupportedTopicViewSchema } from "#src/order/view.ts";
 
 export const apiErrorCodeList = [
   "invalid_token",
@@ -28,5 +29,6 @@ export const apiErrorSchema = z.object({
   error: z.string().min(1),
   code: apiErrorCodeSchema,
   photoIndex: photoIndexSchema.optional(),
+  unsupportedTopicList: z.array(unsupportedTopicViewSchema).min(1).optional(),
 });
 export type ApiError = z.infer<typeof apiErrorSchema>;

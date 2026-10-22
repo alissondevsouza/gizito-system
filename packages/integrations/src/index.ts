@@ -12,6 +12,8 @@ export { mathExpressionFunctionNameList } from "#src/math/expression.ts";
 export * from "#src/math/latex.ts";
 export * from "#src/math/mathjs-evaluator.ts";
 export { mathExpressionUnitSymbolList } from "#src/math/units.ts";
+export * from "#src/mercadopago/amount.ts";
+export * from "#src/mercadopago/mercadopago-gateway.ts";
 export * from "#src/photo/content-hash.ts";
 export * from "#src/photo/normalize.ts";
 export * from "#src/r2/r2-object-storage.ts";

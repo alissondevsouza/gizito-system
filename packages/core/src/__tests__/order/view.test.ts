@@ -10,6 +10,7 @@ import { MAX_PHOTO_COUNT } from "#src/constants.ts";
 import { orderStatusList } from "#src/enums.ts";
 import { type OrderAnalysis, unavailableOrderAnalysis } from "#src/order/analysis.ts";
 import {
+  type AwaitingPaymentSource,
   analysisFailureViewOf,
   awaitingPaymentViewOf,
   createOrderResponseSchema,
@@ -24,6 +25,7 @@ import {
   previewViewOf,
 } from "#src/order/view.ts";
 import type { MergedExtraction } from "#src/pedagogy/extraction/merge.ts";
+import { findTopic } from "#src/pedagogy/taxonomy/index.ts";
 
 const baseView = {
   publicToken: PUBLIC_TOKEN,
@@ -164,13 +166,14 @@ describe("orderViewSchema (api.md §3)", () => {
   });
 
   it("awaiting_payment exige a cobrança, o sub-estado e o e-mail mascarado", () => {
-    const awaiting = awaitingPaymentViewOf([buildCharge()], "mae@example.com", CHARGE_START);
+    const awaiting = awaitingPaymentViewOf(awaitingSource(), CHARGE_START);
     const view = { ...baseView, status: "awaiting_payment", ...awaiting };
     expect(orderViewSchema.safeParse(view).success).toBe(true);
     expect(orderViewSchema.safeParse({ ...baseView, status: "awaiting_payment" }).success).toBe(
       false,
     );
     expect(orderViewSchema.safeParse({ ...view, email: "mae@example.com" }).success).toBe(false);
+    expect(orderViewSchema.safeParse({ ...view, kitPreview: undefined }).success).toBe(false);
     expect(
       orderViewSchema.safeParse({ ...view, charge: { ...view.charge, qrCodeBase64: null } })
         .success,
@@ -277,9 +280,25 @@ const CHARGE_START = new Date("2026-10-15T12:00:00.000Z");
 const FIRST_EXPIRE = new Date("2026-10-15T12:30:00.000Z");
 const SECOND_CHARGE_ID = "77777777-7777-4777-8777-777777777777";
 
+function topicLabel(topicId: string): string {
+  const topic = findTopic(topicId);
+  if (topic === undefined) throw new Error(`assunto ${topicId} fora da taxonomia`);
+  return topic.label;
+}
+
+function awaitingSource(overrides: Partial<AwaitingPaymentSource> = {}): AwaitingPaymentSource {
+  return {
+    chargeList: [buildCharge()],
+    email: "mae@example.com",
+    topicIdList: ["ma5-fractions", "ma5-decimal-numbers"],
+    otherTopicText: "porcentagem",
+    ...overrides,
+  };
+}
+
 describe("awaitingPaymentViewOf (api.md §3)", () => {
-  it("mostra a cobrança ativa sem sub-estado e o e-mail mascarado", () => {
-    expect(awaitingPaymentViewOf([buildCharge()], "mae@example.com", CHARGE_START)).toEqual({
+  it("mostra a cobrança ativa sem sub-estado, o e-mail mascarado e o resumo do kit", () => {
+    expect(awaitingPaymentViewOf(awaitingSource(), CHARGE_START)).toEqual({
       charge: {
         amountCents: 2990,
         qrCode: "00020126580014br.gov.bcb.pix",
@@ -289,20 +308,24 @@ describe("awaitingPaymentViewOf (api.md §3)", () => {
       },
       substate: null,
       email: "m***@example.com",
+      confirmedTopicList: [
+        { topicId: "ma5-fractions", label: topicLabel("ma5-fractions") },
+        { topicId: "ma5-decimal-numbers", label: topicLabel("ma5-decimal-numbers") },
+      ],
+      otherTopicText: "porcentagem",
+      kitPreview,
     });
   });
 
   it("pending vencida e expired dão charge_expired", () => {
     const afterExpire = new Date(FIRST_EXPIRE.getTime() + 1);
-    expect(awaitingPaymentViewOf([buildCharge()], "m@x.com", FIRST_EXPIRE)?.substate).toBe(
-      "charge_expired",
-    );
-    expect(awaitingPaymentViewOf([buildCharge()], "m@x.com", afterExpire)?.substate).toBe(
-      "charge_expired",
-    );
+    expect(awaitingPaymentViewOf(awaitingSource(), FIRST_EXPIRE)?.substate).toBe("charge_expired");
+    expect(awaitingPaymentViewOf(awaitingSource(), afterExpire)?.substate).toBe("charge_expired");
     expect(
-      awaitingPaymentViewOf([buildCharge({ status: "expired" })], "m@x.com", CHARGE_START)
-        ?.substate,
+      awaitingPaymentViewOf(
+        awaitingSource({ chargeList: [buildCharge({ status: "expired" })] }),
+        CHARGE_START,
+      )?.substate,
     ).toBe("charge_expired");
   });
 
@@ -319,7 +342,7 @@ describe("awaitingPaymentViewOf (api.md §3)", () => {
       [expired, renewed],
       [renewed, expired],
     ]) {
-      const view = awaitingPaymentViewOf(chargeList, "m@x.com", afterExpire);
+      const view = awaitingPaymentViewOf(awaitingSource({ chargeList }), afterExpire);
       expect(view?.charge.qrCode).toBe("renovado");
       expect(view?.substate).toBeNull();
     }
@@ -328,7 +351,10 @@ describe("awaitingPaymentViewOf (api.md §3)", () => {
     expect(latestChargeOf([expired, tied])?.qrCode).toBe("empate");
   });
 
-  it("sem cobrança devolve nulo", () => {
-    expect(awaitingPaymentViewOf([], "m@x.com", CHARGE_START)).toBeNull();
+  it("sem cobrança devolve nulo; só outro, sem ids, dá lista vazia", () => {
+    expect(awaitingPaymentViewOf(awaitingSource({ chargeList: [] }), CHARGE_START)).toBeNull();
+    const onlyOther = awaitingPaymentViewOf(awaitingSource({ topicIdList: [] }), CHARGE_START);
+    expect(onlyOther?.confirmedTopicList).toEqual([]);
+    expect(onlyOther?.otherTopicText).toBe("porcentagem");
   });
 });
