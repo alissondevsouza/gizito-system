@@ -20,16 +20,8 @@
     }
   ],
   "materialProfile": {
-    "exerciseFormatList": [
-      "open_answer",
-      "computation"
-    ],
-    "notationList": [
-      "fraction_stacked",
-      "decimal_comma",
-      "multiplication_x",
-      "division_bracket"
-    ],
+    "exerciseFormatList": ["open_answer", "computation"],
+    "notationList": ["fraction_stacked", "decimal_comma", "multiplication_x", "division_bracket"],
     "terminologyList": [
       "frações equivalentes",
       "números decimais",
@@ -43,9 +35,7 @@
     "hasFigures": true,
     "isHandwritten": true
   },
-  "sourceWarningCodeList": [
-    "figure_dependent_content"
-  ],
+  "sourceWarningCodeList": ["figure_dependent_content"],
   "reviewSectionList": [
     {
       "topicRef": "ma5-decimal-numbers",
@@ -174,16 +164,11 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "3 + 0,4 + 0,07 + 0,002; fica entre 3,4 e 3,5",
-          "acceptedList": [
-            "3 + 0,4 + 0,07 + 0,002 e entre 3,4 e 3,5"
-          ]
+          "acceptedList": ["3 + 0,4 + 0,07 + 0,002 e entre 3,4 e 3,5"]
         },
         "computable": false,
         "calculationExpression": null,
-        "solutionStepList": [
-          "3,472 = 3 + 0,4 + 0,07 + 0,002",
-          "3,4 < 3,472 < 3,5"
-        ],
+        "solutionStepList": ["3,472 = 3 + 0,4 + 0,07 + 0,002", "3,4 < 3,472 < 3,5"],
         "explanation": "A decomposição soma o valor de cada algarismo: 3 + 0,4 + 0,07 + 0,002. Como o número tem 4 décimos e sobra só 0,072, que é menos que um décimo, ele fica entre 3,4 e 3,5.",
         "evidenceQuote": null
       },
@@ -706,23 +691,8 @@
       "baseTextId": null,
       "statement": "Ana e Bia têm canteiros retangulares com as medidas da tabela. Calcule o perímetro e a área dos dois canteiros e diga qual deles tem a maior área.",
       "table": {
-        "headerList": [
-          "Canteiro",
-          "Comprimento",
-          "Largura"
-        ],
-        "rowList": [
-          [
-            "Ana",
-            "6 m",
-            "4 m"
-          ],
-          [
-            "Bia",
-            "8 m",
-            "2 m"
-          ]
-        ]
+        "headerList": ["Canteiro", "Comprimento", "Largura"],
+        "rowList": [["Ana", "6 m", "4 m"], ["Bia", "8 m", "2 m"]]
       },
       "optionList": null,
       "answer": {
@@ -966,28 +936,8 @@
       "baseTextId": null,
       "statement": "Quatro crianças fizeram salto em distância. As marcas estão na tabela. Qual alternativa mostra as marcas em ordem crescente, do menor para o maior salto?",
       "table": {
-        "headerList": [
-          "Criança",
-          "Salto (m)"
-        ],
-        "rowList": [
-          [
-            "Ana",
-            "1,45"
-          ],
-          [
-            "Davi",
-            "1,5"
-          ],
-          [
-            "Lia",
-            "1,09"
-          ],
-          [
-            "Caio",
-            "1,54"
-          ]
-        ]
+        "headerList": ["Criança", "Salto (m)"],
+        "rowList": [["Ana", "1,45"], ["Davi", "1,5"], ["Lia", "1,09"], ["Caio", "1,54"]]
       },
       "optionList": [
         {

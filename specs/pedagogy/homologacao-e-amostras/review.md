@@ -51,3 +51,6 @@ Todos os achados foram aceitos e corrigidos:
 - Sorteio: a spec e o documento da auditoria dizem que as amostras se somam aos 8 sorteados e que os casos dessas imagens continuam candidatos. Não refiz o sorteio. A intenção era não repetir a mesma imagem na auditoria, e o hash não caiu nesses casos, então nada muda no resultado.
 - Planilha: a instrução 5 manda duplicar a linha inteira com “Inserir células copiadas”, sem colar por cima. A lista, as fórmulas de classe e código e as contagens do Resumo vão até a linha 400. Testado com uma linha a mais no fim: entrou na contagem, com 0 erros nas 864 fórmulas. Mesmo sorteio, e o zip foi refeito. A task 5.1 confere todos os `itemId` de cada kit antes de resumir.
 - Documento da auditoria: registra a diferença de texto do `generate` v2 antes e depois do `708b1b9` e a ressalva do Kit 08.
+
+### Depois da revisão
+- O `bun run lint` informado ao verifier foi rodado antes do M2. Os dois `study_kit.json` de `docs/pedagogy/amostras/`, copiados da saída do `pipeline`, não passavam no formatador do Biome. Achei isso ao fechar o gate da F1 e formatei os dois arquivos; o conteúdo JSON não mudou. Depois disso, o lint ficou limpo.

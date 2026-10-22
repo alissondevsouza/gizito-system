@@ -12,10 +12,7 @@
     }
   ],
   "materialProfile": {
-    "exerciseFormatList": [
-      "matching",
-      "fill_in_blank"
-    ],
+    "exerciseFormatList": ["matching", "fill_in_blank"],
     "notationList": [],
     "terminologyList": [
       "classes de palavras",
@@ -27,10 +24,7 @@
       "artigo",
       "preposição"
     ],
-    "contextThemeList": [
-      "rotina escolar",
-      "objetos do dia a dia"
-    ],
+    "contextThemeList": ["rotina escolar", "objetos do dia a dia"],
     "apparentLevel": "at_grade",
     "hasFigures": false,
     "isHandwritten": true
@@ -210,11 +204,7 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "1) A; 2) Os; 3) As; 4) O",
-          "acceptedList": [
-            "A, Os, As, O",
-            "a, os, as, o",
-            "1) a; 2) os; 3) as; 4) o"
-          ]
+          "acceptedList": ["A, Os, As, O", "a, os, as, o", "1) a; 2) os; 3) as; 4) o"]
         },
         "computable": false,
         "calculationExpression": null,
@@ -279,28 +269,8 @@
       "baseTextId": null,
       "statement": "Escreva a classe de cada palavra da tabela: substantivo, adjetivo ou verbo.",
       "table": {
-        "headerList": [
-          "Número",
-          "Palavra"
-        ],
-        "rowList": [
-          [
-            "1",
-            "mesa"
-          ],
-          [
-            "2",
-            "escreve"
-          ],
-          [
-            "3",
-            "redonda"
-          ],
-          [
-            "4",
-            "apagador"
-          ]
-        ]
+        "headerList": ["Número", "Palavra"],
+        "rowList": [["1", "mesa"], ["2", "escreve"], ["3", "redonda"], ["4", "apagador"]]
       },
       "optionList": null,
       "answer": {
@@ -381,9 +351,7 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "As canetas azuis caíram.",
-          "acceptedList": [
-            "As canetas azuis caíram"
-          ]
+          "acceptedList": ["As canetas azuis caíram"]
         },
         "computable": false,
         "calculationExpression": null,
@@ -448,27 +416,12 @@
       "baseTextId": null,
       "statement": "Leia a frase: 'Os alunos desenharam ontem um mapa pequeno.' Complete a tabela com a classe de cada palavra: artigo, substantivo, adjetivo, verbo ou advérbio.",
       "table": {
-        "headerList": [
-          "Palavra",
-          "Classe"
-        ],
+        "headerList": ["Palavra", "Classe"],
         "rowList": [
-          [
-            "Os",
-            "______"
-          ],
-          [
-            "desenharam",
-            "______"
-          ],
-          [
-            "ontem",
-            "______"
-          ],
-          [
-            "pequeno",
-            "______"
-          ]
+          ["Os", "______"],
+          ["desenharam", "______"],
+          ["ontem", "______"],
+          ["pequeno", "______"]
         ]
       },
       "optionList": null,
@@ -477,9 +430,7 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "Os: artigo; desenharam: verbo; ontem: advérbio; pequeno: adjetivo",
-          "acceptedList": [
-            "artigo, verbo, advérbio, adjetivo"
-          ]
+          "acceptedList": ["artigo, verbo, advérbio, adjetivo"]
         },
         "computable": false,
         "calculationExpression": null,
@@ -649,9 +600,7 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "Os",
-          "acceptedList": [
-            "os"
-          ]
+          "acceptedList": ["os"]
         },
         "computable": false,
         "calculationExpression": null,
@@ -678,9 +627,7 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "coloridas",
-          "acceptedList": [
-            "Coloridas"
-          ]
+          "acceptedList": ["Coloridas"]
         },
         "computable": false,
         "calculationExpression": null,
@@ -827,9 +774,7 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "os lápis novos",
-          "acceptedList": [
-            "Os lápis novos"
-          ]
+          "acceptedList": ["Os lápis novos"]
         },
         "computable": false,
         "calculationExpression": null,
@@ -900,9 +845,7 @@
         "expectedAnswer": {
           "kind": "text",
           "value": "O professor Hélio, animado, sorriu e abriu a caixa.",
-          "acceptedList": [
-            "O professor Hélio, animado, sorriu e abriu a caixa"
-          ]
+          "acceptedList": ["O professor Hélio, animado, sorriu e abriu a caixa"]
         },
         "computable": false,
         "calculationExpression": null,
