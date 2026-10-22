@@ -24,6 +24,7 @@ export const markOrderPaidInputSchema = z.object({
   orderId: guidSchema,
   chargeId: guidSchema,
   gatewayPaymentId: z.string().min(1),
+  amountCents: z.int().positive(),
   paidDatetime: z.date(),
   webhookEventId: guidSchema.optional(),
 });

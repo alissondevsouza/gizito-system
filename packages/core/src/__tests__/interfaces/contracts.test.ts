@@ -49,6 +49,7 @@ const PHOTO_ID = "66666666-6666-4666-8666-666666666666";
 describe("contratos das interfaces: um fake mínimo compila e devolve tipos validáveis", () => {
   it("PaymentGateway", async () => {
     const charge = buildCharge();
+    const canceledList: string[] = [];
     const gateway: PaymentGateway = {
       name: "fake",
       createCharge: async (input) => ({
@@ -67,6 +68,9 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
         paidDatetime: null,
       }),
       refund: async () => ({ refundId: "ref-1" }),
+      cancelCharge: async (reference) => {
+        canceledList.push(reference.gatewayOrderId);
+      },
       parseWebhook: async (request) =>
         request.headerMap["x-signature"]
           ? { valid: true, externalId: "evt-1", gatewayOrderId: "gw-1", gatewayPaymentId: null }
@@ -113,6 +117,12 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
     ).toEqual({
       refundId: "ref-1",
     });
+    await gateway.cancelCharge({
+      chargeId: CHARGE_ID,
+      gatewayOrderId: "gw-2",
+      gatewayPaymentId: null,
+    });
+    expect(canceledList).toEqual(["gw-2"]);
   });
 
   it("PaymentGateway: qrCodeBase64 pode faltar, mas nunca vem vazio", () => {

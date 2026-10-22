@@ -1,4 +1,6 @@
 export * from "#src/api/errors.ts";
+export * from "#src/api/webhooks.ts";
+export * from "#src/charge/reconcile.ts";
 export * from "#src/charge/rules.ts";
 export * from "#src/charge/schemas.ts";
 export * from "#src/common.ts";

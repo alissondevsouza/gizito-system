@@ -45,6 +45,7 @@ describe("markOrderPaidInputSchema", () => {
     orderId: ORDER_ID,
     chargeId: CHARGE_ID,
     gatewayPaymentId: "pay-1",
+    amountCents: 2990,
     paidDatetime: new Date("2026-10-15T12:10:00.000Z"),
   };
 
@@ -63,6 +64,11 @@ describe("markOrderPaidInputSchema", () => {
       false,
     );
     expect(markOrderPaidInputSchema.safeParse({ ...input, orderId: "1" }).success).toBe(false);
+    expect(markOrderPaidInputSchema.safeParse({ ...input, amountCents: undefined }).success).toBe(
+      false,
+    );
+    expect(markOrderPaidInputSchema.safeParse({ ...input, amountCents: 0 }).success).toBe(false);
+    expect(markOrderPaidInputSchema.safeParse({ ...input, amountCents: 29.9 }).success).toBe(false);
     expect(markOrderPaidInputSchema.safeParse({ ...input, webhookEventId: "x" }).success).toBe(
       false,
     );

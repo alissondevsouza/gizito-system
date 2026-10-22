@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { buildCharge, FIXED_NOW } from "#src/__tests__/__fixtures__/entities.ts";
 import {
+  ChargeAmountMismatchError,
   ChargePaymentMismatchError,
   chargeExpireDatetime,
   decidePaymentConfirmation,
@@ -52,18 +53,28 @@ describe("regras de cobrança (PRD §9.1)", () => {
 
 describe("decidePaymentConfirmation (PRD §5, state-machine.md §4)", () => {
   const pendingWithPaymentId = buildCharge({ gatewayPaymentId: "pay-1" });
+  const payment = (gatewayPaymentId: string, amountCents = 2990) => ({
+    gatewayPaymentId,
+    amountCents,
+  });
 
   it("pedido aguardando pagamento e cobrança pendente ou expirada: marca pago", () => {
-    expect(decidePaymentConfirmation("awaiting_payment", pendingWithPaymentId, "pay-1")).toEqual({
+    expect(
+      decidePaymentConfirmation("awaiting_payment", pendingWithPaymentId, payment("pay-1")),
+    ).toEqual({
       ok: true,
       value: { kind: "paid", nextOrderStatus: "paid" },
     });
-    expect(decidePaymentConfirmation("awaiting_payment", buildCharge(), "pay-1")).toEqual({
+    expect(decidePaymentConfirmation("awaiting_payment", buildCharge(), payment("pay-1"))).toEqual({
       ok: true,
       value: { kind: "paid", nextOrderStatus: "paid" },
     });
     expect(
-      decidePaymentConfirmation("awaiting_payment", buildCharge({ status: "expired" }), "pay-1"),
+      decidePaymentConfirmation(
+        "awaiting_payment",
+        buildCharge({ status: "expired" }),
+        payment("pay-1"),
+      ),
     ).toEqual({ ok: true, value: { kind: "paid", nextOrderStatus: "paid" } });
   });
 
@@ -73,7 +84,7 @@ describe("decidePaymentConfirmation (PRD §5, state-machine.md §4)", () => {
         decidePaymentConfirmation(
           "paid",
           buildCharge({ status, gatewayPaymentId: "pay-1" }),
-          "pay-1",
+          payment("pay-1"),
         ),
       ).toEqual({ ok: true, value: { kind: "already_paid" } });
     }
@@ -82,7 +93,7 @@ describe("decidePaymentConfirmation (PRD §5, state-machine.md §4)", () => {
   it("outra cobrança paga com o pedido já pago ou posterior: pagamento duplicado", () => {
     for (const status of postPaymentOrderStatusList) {
       expect(
-        decidePaymentConfirmation(status, buildCharge({ status: "expired" }), "pay-2"),
+        decidePaymentConfirmation(status, buildCharge({ status: "expired" }), payment("pay-2")),
       ).toEqual({ ok: true, value: { kind: "duplicate_payment" } });
     }
   });
@@ -92,7 +103,7 @@ describe("decidePaymentConfirmation (PRD §5, state-machine.md §4)", () => {
       const result = decidePaymentConfirmation(
         "awaiting_payment",
         buildCharge({ status, gatewayPaymentId: "pay-1" }),
-        "pay-2",
+        payment("pay-2"),
       );
       expect(result.ok).toBe(false);
       if (result.ok) continue;
@@ -102,13 +113,36 @@ describe("decidePaymentConfirmation (PRD §5, state-machine.md §4)", () => {
     }
   });
 
+  it("valor pago diferente do da cobrança: erro antes de qualquer decisão, mesmo já paga (spec F2-04, RF-04)", () => {
+    for (const status of ["pending", "paid", "expired"] as const) {
+      const result = decidePaymentConfirmation(
+        "awaiting_payment",
+        buildCharge({ status, gatewayPaymentId: "pay-1", amountCents: 2990 }),
+        payment("pay-1", 2000),
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) continue;
+      expect(result.error).toBeInstanceOf(ChargeAmountMismatchError);
+      expect(result.error.code).toBe("charge_amount_mismatch");
+      expect(result.error.message).toContain("2990");
+      expect(result.error.message).toContain("2000");
+    }
+    expect(
+      decidePaymentConfirmation(
+        "paid",
+        buildCharge({ gatewayPaymentId: "pay-1" }),
+        payment("pay-2", 1),
+      ).ok,
+    ).toBe(false);
+  });
+
   it("pedido antes de awaiting_payment: transição inválida", () => {
     const prePaymentList = orderStatusList.filter(
       (status) => status !== "awaiting_payment" && !postPaymentOrderStatusList.includes(status),
     );
     expect(prePaymentList).toEqual(["draft", "analyzing", "preview_ready"]);
     for (const status of prePaymentList) {
-      const result = decidePaymentConfirmation(status, pendingWithPaymentId, "pay-1");
+      const result = decidePaymentConfirmation(status, pendingWithPaymentId, payment("pay-1"));
       expect(result.ok).toBe(false);
       if (result.ok) continue;
       expect(result.error).toBeInstanceOf(InvalidTransitionError);

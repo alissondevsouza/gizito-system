@@ -20,15 +20,21 @@ export const orderNotifyJobPayloadSchema = z.object({
   kind: notificationKindSchema,
 });
 
+const chargeReconcileOrderBoundFieldList = ["chargeId", "webhookEventId"] as const;
+
 export const chargeReconcileJobPayloadSchema = z
   .object({
     name: z.literal("charge.reconcile"),
     orderId: guidSchema.optional(),
+    chargeId: guidSchema.optional(),
     webhookEventId: guidSchema.optional(),
   })
-  .refine((payload) => payload.webhookEventId === undefined || payload.orderId !== undefined, {
-    message: "webhookEventId requires orderId",
-    path: ["webhookEventId"],
+  .superRefine((payload, context) => {
+    if (payload.orderId !== undefined) return;
+    for (const field of chargeReconcileOrderBoundFieldList) {
+      if (payload[field] === undefined) continue;
+      context.addIssue({ code: "custom", path: [field], message: `${field} requires orderId` });
+    }
   });
 
 export const retentionPurgeJobPayloadSchema = z.object({

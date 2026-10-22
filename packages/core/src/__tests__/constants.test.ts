@@ -6,6 +6,10 @@ import {
   ANSWER_KEY_PAGE_RANGE,
   BASE_TEXT_WORD_RANGE_BY_GRADE,
   BRAZIL_TIME_ZONE,
+  CHARGE_RECONCILE_AFTER_EXPIRY_MINUTES,
+  CHARGE_RECONCILE_BATCH_SIZE,
+  CHARGE_RECONCILE_INTERVAL_MINUTES,
+  CHARGE_RECONCILE_MIN_AGE_MINUTES,
   CHARGE_TTL_MINUTES,
   DEVICE_ID_BYTES,
   DEVICE_ID_LENGTH,
@@ -43,6 +47,8 @@ import {
   MAX_TERMINOLOGY_COUNT,
   MAX_TOPIC_CANDIDATE_COUNT,
   MAX_TOPIC_COUNT,
+  MAX_WEBHOOK_ACTION_LENGTH,
+  MAX_WEBHOOK_BODY_BYTES,
   MIN_CONTEXTUALIZED_MATH_MOCK_COUNT,
   MIN_MOCK_BASE_TEXT_COUNT,
   MIN_MOCK_SUGGESTED_MINUTES,
@@ -72,6 +78,7 @@ import {
   SIGNED_URL_TTL_SECONDS,
   STUDY_KIT_FORMAT_VERSION,
   UNIT_CONVERSION_FACTOR_LIST,
+  WEBHOOK_RATE_LIMIT_PER_MINUTE,
   WORKED_EXAMPLE_COUNT,
 } from "#src/constants.ts";
 import { gradeList } from "#src/enums.ts";
@@ -120,6 +127,16 @@ describe("constantes de negócio (PRD §5, §6 e §7)", () => {
     expect(KIT_RETENTION_MONTHS).toBe(12);
     expect(RETENTION_PURGE_INTERVAL_HOURS).toBe(24);
     expect(JOB_FAILED_METRIC_WINDOW_HOURS).toBe(24);
+  });
+
+  it("reconciliação e webhook do PRD §9.1 e das regras de pagamento (spec F2-04)", () => {
+    expect(CHARGE_RECONCILE_INTERVAL_MINUTES).toBe(2);
+    expect(CHARGE_RECONCILE_MIN_AGE_MINUTES).toBe(1);
+    expect(CHARGE_RECONCILE_BATCH_SIZE).toBeGreaterThanOrEqual(10);
+    expect(CHARGE_RECONCILE_AFTER_EXPIRY_MINUTES).toBeGreaterThan(2);
+    expect(MAX_WEBHOOK_BODY_BYTES).toBe(64 * 1024);
+    expect(MAX_WEBHOOK_ACTION_LENGTH).toBe(64);
+    expect(WEBHOOK_RATE_LIMIT_PER_MINUTE).toBeGreaterThanOrEqual(60);
   });
 
   it("fotos, miniaturas, URL assinada e rate limit da F2-01", () => {

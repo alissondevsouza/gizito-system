@@ -95,5 +95,6 @@ export interface PaymentGateway {
   createCharge(input: CreateChargeInput): Promise<CreatedCharge>;
   getChargeStatus(reference: ChargeReference): Promise<ChargeStatusResult>;
   refund(reference: ChargeReference): Promise<RefundResult>;
+  cancelCharge(reference: ChargeReference): Promise<void>;
   parseWebhook(request: WebhookRequest): Promise<ParsedWebhook>;
 }

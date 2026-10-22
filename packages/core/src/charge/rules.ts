@@ -42,19 +42,47 @@ export class ChargePaymentMismatchError extends Error {
   }
 }
 
+export class ChargeAmountMismatchError extends Error {
+  readonly code = "charge_amount_mismatch";
+
+  constructor(
+    readonly chargeId: string,
+    readonly expectedAmountCents: number,
+    readonly paidAmountCents: number,
+  ) {
+    super(
+      `Charge ${chargeId} expects ${expectedAmountCents} cents but the gateway reports ${paidAmountCents}`,
+    );
+    this.name = "ChargeAmountMismatchError";
+  }
+}
+
 export type PaymentConfirmationDecision =
   | { kind: "paid"; nextOrderStatus: OrderStatus }
   | { kind: "already_paid" }
   | { kind: "duplicate_payment" };
 
+export type ConfirmedPayment = {
+  readonly gatewayPaymentId: string;
+  readonly amountCents: number;
+};
+
+export type PaymentConfirmationError =
+  | ChargePaymentMismatchError
+  | ChargeAmountMismatchError
+  | InvalidTransitionError;
+
 export function decidePaymentConfirmation(
   orderStatus: OrderStatus,
-  charge: Pick<Charge, "chargeId" | "status" | "gatewayPaymentId">,
-  gatewayPaymentId: string,
-): Result<PaymentConfirmationDecision, ChargePaymentMismatchError | InvalidTransitionError> {
+  charge: Pick<Charge, "chargeId" | "status" | "gatewayPaymentId" | "amountCents">,
+  { gatewayPaymentId, amountCents }: ConfirmedPayment,
+): Result<PaymentConfirmationDecision, PaymentConfirmationError> {
   const boundToOtherPayment =
     charge.gatewayPaymentId !== null && charge.gatewayPaymentId !== gatewayPaymentId;
   if (boundToOtherPayment) return err(new ChargePaymentMismatchError(charge.chargeId));
+  if (charge.amountCents !== amountCents) {
+    return err(new ChargeAmountMismatchError(charge.chargeId, charge.amountCents, amountCents));
+  }
   if (charge.status === "paid" || charge.status === "refunded") return ok({ kind: "already_paid" });
   if (isPostPaymentOrderStatus(orderStatus)) return ok({ kind: "duplicate_payment" });
   const transition = transitionOrder(orderStatus, "payment_confirmed");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ORDER_ID, WEBHOOK_EVENT_ID } from "#src/__tests__/__fixtures__/entities.ts";
+import { CHARGE_ID, ORDER_ID, WEBHOOK_EVENT_ID } from "#src/__tests__/__fixtures__/entities.ts";
 import { jobNameList } from "#src/enums.ts";
 import { jobPayloadSchema, jobPayloadSchemaByName } from "#src/jobs/schemas.ts";
 
@@ -82,6 +82,29 @@ describe("jobPayloadSchema", () => {
     });
     expect(withoutOrder.success).toBe(false);
     expect(withoutOrder.error?.issues[0]?.path).toEqual(["webhookEventId"]);
+  });
+
+  it("charge.reconcile do webhook leva chargeId, sempre junto com orderId (spec F2-04, RF-01)", () => {
+    const payload = {
+      name: "charge.reconcile",
+      orderId: ORDER_ID,
+      chargeId: CHARGE_ID,
+      webhookEventId: WEBHOOK_EVENT_ID,
+    };
+    expect(jobPayloadSchema.safeParse(payload)).toMatchObject({ success: true, data: payload });
+    const withoutOrder = jobPayloadSchema.safeParse({
+      name: "charge.reconcile",
+      chargeId: CHARGE_ID,
+      webhookEventId: WEBHOOK_EVENT_ID,
+    });
+    expect(withoutOrder.success).toBe(false);
+    expect(withoutOrder.error?.issues.map((issue) => issue.path[0]).sort()).toEqual([
+      "chargeId",
+      "webhookEventId",
+    ]);
+    expect(jobPayloadSchema.safeParse({ name: "charge.reconcile", chargeId: "1" }).success).toBe(
+      false,
+    );
   });
 
   it("campo extra é descartado, nunca propagado", () => {
