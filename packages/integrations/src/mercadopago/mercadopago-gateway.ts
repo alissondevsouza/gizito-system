@@ -71,6 +71,10 @@ function gatewayError(
   return new PaymentGatewayError(code, { cause });
 }
 
+function responseCause(response: Response): GatewayFailureCause {
+  return { status: response.status, providerCode: null };
+}
+
 function readHeader(headerMap: Readonly<Record<string, string>>, name: string): string | null {
   const entry = Object.entries(headerMap).find(([key]) => key.toLowerCase() === name);
   return entry === undefined || entry[1] === "" ? null : entry[1];
@@ -129,15 +133,21 @@ export function createMercadoPagoGateway({
       });
     }
     const invalid = err({
-      error: gatewayError("gateway_response_invalid", {
-        status: response.status,
-        providerCode: null,
-      }),
+      error: gatewayError("gateway_response_invalid", responseCause(response)),
       isRetryable: false,
     });
+    let text: string;
+    try {
+      text = await response.text();
+    } catch {
+      return err({
+        error: gatewayError("gateway_unavailable", responseCause(response)),
+        isRetryable: true,
+      });
+    }
     let body: unknown;
     try {
-      body = await response.json();
+      body = JSON.parse(text);
     } catch {
       return invalid;
     }

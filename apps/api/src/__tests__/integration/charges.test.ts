@@ -242,6 +242,22 @@ describe("POST /orders/:token/confirm (spec F2-03, RF-08)", () => {
     });
     expect(gateway.createCallCount).toBe(1);
     expect(gateway.createdChargeList[0]?.gatewayOrderId).toBe(`fake-order-${chargeRow.chargeId}`);
+    expect(gateway.createChargeInputList).toEqual([
+      {
+        chargeId: chargeRow.chargeId,
+        orderId: created.orderId,
+        amountCents: KIT_PRICE_CENTS,
+        payerEmail: "mae.da.ana@example.com",
+        expireDatetime: new Date(START.getTime() + CHARGE_TTL_MINUTES * MILLISECONDS_PER_MINUTE),
+      },
+    ]);
+    expect(
+      await gateway.getChargeStatus({
+        chargeId: chargeRow.chargeId,
+        gatewayOrderId: chargeRow.gatewayOrderId ?? "",
+        gatewayPaymentId: chargeRow.gatewayPaymentId,
+      }),
+    ).toMatchObject({ amountCents: KIT_PRICE_CENTS, externalReference: created.orderId });
     const jobList = await jobRowList(created.orderId);
     expect(jobList.map((row) => row.payload)).toEqual([
       { name: "order.notify", orderId: created.orderId, kind: "order_link" },
@@ -431,6 +447,7 @@ describe("POST /orders/:token/charges (spec F2-03, RF-09)", () => {
 
     const response = await postCharges(app, created.publicToken);
     expect(response.status).toBe(201);
+    expect(response.headers.get("cache-control")).toBe("no-store");
     const view = orderViewSchema.parse(await response.json());
     const chargeList = await chargeRowList(created.orderId);
     expect(chargeList.map((row) => row.status)).toEqual(["pending", "pending"]);
@@ -446,6 +463,15 @@ describe("POST /orders/:token/charges (spec F2-03, RF-09)", () => {
       },
     });
     expect(gateway.createCallCount).toBe(2);
+    expect(gateway.createChargeInputList[1]).toEqual({
+      chargeId: renewed?.chargeId ?? "",
+      orderId: created.orderId,
+      amountCents: KIT_PRICE_CENTS,
+      payerEmail: "mae.da.ana@example.com",
+      expireDatetime: new Date(
+        AFTER_EXPIRE.getTime() + CHARGE_TTL_MINUTES * MILLISECONDS_PER_MINUTE,
+      ),
+    });
     expect(await testDatabase.db.select().from(order)).toHaveLength(1);
     expect((await orderRow(created.orderId)).status).toBe("awaiting_payment");
     expect(await jobRowList(created.orderId)).toHaveLength(1);
@@ -558,7 +584,7 @@ describe("GET /orders/:token em awaiting_payment (spec F2-03, RF-10)", () => {
 });
 
 describe("logs da cobrança sem dado pessoal (spec F2-03, RF-13)", () => {
-  it("confirm, renovação, órfã e 503 não logam e-mail, QR, token nem observação", async () => {
+  it("confirm, renovação, 503 e órfã não logam e-mail, QR, token nem observação", async () => {
     const { app, gateway, setTime, lineList } = setup();
     const created = await confirmedOrder(app);
     setTime(AFTER_EXPIRE);
@@ -566,15 +592,29 @@ describe("logs da cobrança sem dado pessoal (spec F2-03, RF-13)", () => {
     const failing = await insertOrder();
     gateway.failNextCreate();
     await postConfirm(app, failing.publicToken);
+    const orphaned = await insertOrder();
+    const gate = gateway.pauseCreate();
+    const pending = postConfirm(app, orphaned.publicToken);
+    await gate.waitForPendingCount(1);
+    await testDatabase.db
+      .update(order)
+      .set({ status: "draft", analysis: null })
+      .where(eq(order.orderId, orphaned.orderId));
+    gate.release();
+    await expectApiError(await pending, 409, "invalid_state");
     const [chargeRow] = await chargeRowList(created.orderId);
+    const orphanCharge = gateway.createdChargeList.at(-1);
     const logText = lineList.join("\n");
+    expect(logText).toContain(ORPHAN_CHARGE_LOG_MESSAGE);
     for (const secret of [
       PAYER_EMAIL,
       "mae.da.ana",
       created.publicToken,
       failing.publicToken,
+      orphaned.publicToken,
       NOTE_TEXT,
       chargeRow?.qrCode ?? "sem-qr",
+      orphanCharge?.qrCode ?? "sem-qr-da-orfa",
       FAKE_QR_CODE_BASE64,
     ]) {
       expect(logText).not.toContain(secret);

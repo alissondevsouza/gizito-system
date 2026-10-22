@@ -57,6 +57,7 @@ export type FakePaymentGatewayOptions = {
 
 export type FakePaymentGateway = PaymentGateway & {
   readonly createdChargeList: readonly CreatedCharge[];
+  readonly createChargeInputList: readonly CreateChargeInput[];
   readonly createCallCount: number;
   readonly failNextCreate: (code?: PaymentGatewayErrorCode) => void;
   readonly failCreateAfter: (successCount: number, code?: PaymentGatewayErrorCode) => void;
@@ -102,6 +103,7 @@ export function createFakePaymentGateway({
   const chargeById = new Map<string, FakeCharge>();
   const chargeIdByGatewayOrderId = new Map<string, string>();
   const createdChargeList: CreatedCharge[] = [];
+  const createChargeInputList: CreateChargeInput[] = [];
   let createCallCount = 0;
   let createFailure: CreateFailure | null = null;
   let statusFailure: PaymentGatewayErrorCode | null = null;
@@ -133,6 +135,7 @@ export function createFakePaymentGateway({
   return {
     name: "fake",
     createdChargeList,
+    createChargeInputList,
     get createCallCount() {
       return createCallCount;
     },
@@ -167,6 +170,7 @@ export function createFakePaymentGateway({
     async createCharge(rawInput) {
       createCallCount += 1;
       const input = createChargeInputSchema.parse(rawInput);
+      createChargeInputList.push(input);
       await activeCreateGate?.enter();
       const failureCode = takeCreateFailure();
       if (failureCode !== null) throw new PaymentGatewayError(failureCode);

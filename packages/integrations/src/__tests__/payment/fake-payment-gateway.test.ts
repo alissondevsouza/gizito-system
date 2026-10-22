@@ -60,6 +60,7 @@ describe("FakePaymentGateway (spec F2-03, RF-05)", () => {
       expireDatetime: input.expireDatetime,
     });
     expect(gateway.createdChargeList).toEqual([created]);
+    expect(gateway.createChargeInputList).toEqual([input]);
     expect(gateway.createCallCount).toBe(1);
   });
 

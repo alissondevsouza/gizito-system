@@ -299,5 +299,8 @@ Unit no core e no integrations, e integração na api com Postgres real e o fake
 Spec escrita e aprovada na rodada 1 da revisão em 22/10/2026, com os alertas incorporados. Todas as tasks feitas em 22/10/2026; a API foi vista no ar com o fake (`confirm` 422, 400, 200 e 409; `charges` 409 e 201; log sem dado pessoal), e os dados do teste foram apagados do banco de dev e do MinIO. A migration 0005 ficou aplicada no banco de dev. Próximo passo: revisão neutra do código.
 
 Pendências para o humano:
-- credencial de teste do Mercado Pago (`MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET`) no `.env`, para rodar o RF-12;
-- perguntar se o `.env.example` deve ganhar as duas chaves; o agente não lê o arquivo.
+- credencial de teste do Mercado Pago no `.env` como `MERCADOPAGO_TEST_ACCESS_TOKEN` (o `test:payment-live` não lê a `MERCADOPAGO_ACCESS_TOKEN` da api) e a rodada do RF-12; 30 minutos depois, a segunda rodada com `MERCADOPAGO_LIVE_EXPIRED_ORDER_ID=<id impresso>` na linha de comando;
+- `.env.example`: a revisão do código viu que `MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET` já estão lá e que falta `MERCADOPAGO_TEST_ACCESS_TOKEN`; o agente não lê nem edita o arquivo.
+
+Herança para a F2-04: o `action` do corpo não entra no HMAC (RF-06) e o `ts` do `x-signature` não é conferido contra uma janela de tolerância; a deduplicação por `webhook_event` e a consulta ao gateway tiram o efeito de um replay, mas a F2-04 decide se acrescenta a janela.
+Herança para a F2-09: o `gateway_rejected` (4xx definitivo do Mercado Pago, como e-mail do pagador recusado) sai como `503 service_unavailable` "tente de novo"; a tela pode precisar de outra mensagem, que leve a conferir o e-mail.

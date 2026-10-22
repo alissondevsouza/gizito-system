@@ -51,7 +51,11 @@ type RecordedRequest = {
   readonly body: string | null;
 };
 
-type ScriptedReply = { readonly status: number; readonly body: unknown } | "network" | "timeout";
+type ScriptedReply =
+  | { readonly status: number; readonly body: unknown }
+  | "network"
+  | "timeout"
+  | "body_cut";
 
 function jsonReply(status: number, body: unknown): ScriptedReply {
   return { status, body };
@@ -71,6 +75,12 @@ function scriptedFetch(replyList: readonly ScriptedReply[]) {
     if (reply === undefined) throw new Error("resposta não roteirizada");
     if (reply === "network") throw new TypeError("fetch failed");
     if (reply === "timeout") throw new DOMException("The operation timed out.", "TimeoutError");
+    if (reply === "body_cut") {
+      const stream = new ReadableStream({
+        start: (controller) => controller.error(new TypeError("conexão cortada")),
+      });
+      return new Response(stream, { status: 201 });
+    }
     const text = typeof reply.body === "string" ? reply.body : JSON.stringify(reply.body);
     return new Response(text, {
       status: reply.status,
@@ -180,6 +190,18 @@ describe("createCharge na Orders API (spec F2-03, RF-06)", () => {
     expect(requestList[0]?.body).toBe(requestList[1]?.body ?? "");
   });
 
+  it("corpo cortado na leitura retenta com a mesma chave, porque a order pode ter sido criada", async () => {
+    const { gateway, requestList } = gatewayWith([
+      "body_cut",
+      jsonReply(201, createdOrderResponse({ externalReference: ORDER_ID })),
+    ]);
+    expect((await gateway.createCharge(input)).gatewayOrderId).toBe(GATEWAY_ORDER_ID);
+    expect(requestList.map((request) => request.headers.get("x-idempotency-key"))).toEqual([
+      CHARGE_ID,
+      CHARGE_ID,
+    ]);
+  });
+
   it.each<[string, ScriptedReply[], PaymentGatewayErrorCode, number]>([
     ["401", [jsonReply(401, errorResponse("unauthorized"))], "gateway_rejected", 1],
     [
@@ -197,6 +219,7 @@ describe("createCharge na Orders API (spec F2-03, RF-06)", () => {
     ],
     ["rede duas vezes", ["network", "network"], "gateway_unavailable", 2],
     ["timeout duas vezes", ["timeout", "timeout"], "gateway_unavailable", 2],
+    ["corpo cortado duas vezes", ["body_cut", "body_cut"], "gateway_unavailable", 2],
     ["JSON quebrado", [jsonReply(201, "{")], "gateway_response_invalid", 1],
     [
       "resposta sem qr_code",

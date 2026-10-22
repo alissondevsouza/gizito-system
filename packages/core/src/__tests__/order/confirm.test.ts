@@ -134,7 +134,11 @@ describe("checkConfirmedTopics", () => {
       error: { code: "unsupported_topic", unsupportedTopicIdList: ["ma-grid-scaling"] },
     });
     expect(
-      checkConfirmedTopics({ topicIdList: [], otherTopicText: "fluxograma" }, "5", "portuguese"),
+      checkConfirmedTopics(
+        { topicIdList: [], otherTopicText: "Ampliação na MALHA quadriculada" },
+        "5",
+        "portuguese",
+      ),
     ).toEqual({ ok: true, value: undefined });
     expect(
       checkConfirmedTopics(
