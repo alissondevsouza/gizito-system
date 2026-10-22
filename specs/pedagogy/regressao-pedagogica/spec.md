@@ -2,7 +2,7 @@
 feature: regressao-pedagogica
 module: pedagogy
 size: M
-status: in_progress
+status: done
 branch: feat/pedagogy/regressao-pedagogica
 updated: 2026-10-21
 ---
@@ -164,16 +164,14 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 | 2026-10-21 | A rodada das correções cobre só os casos afetados: os 10 críticos, os outros 2 do 5º ano de Português (a lista de assuntos do ano mudou) e `7-math-potenciacao-raiz` (recalibrado). O esforço vem de `AI_EFFORT_GENERATE=medium` na linha de comando, que vence o `.env`; o `.env` não muda | Pedido do humano. A invariante 11 pede a rodada completa antes da `main`, e isso fica dito no handoff |
 | 2026-10-21 | Depois da rodada 3, o humano decidiu: parágrafo de texto-base de 1 a 800 caracteres, porque a carta tem saudação e assinatura curtas; casos de fronteira que aceitam as duas respostas (`acceptableRefusalList`, com os avisos da recusa); e rodada completa antes da `main`. O esforço `medium` volta ao valor atual pelo JSON inválido nos reparos | O diagnóstico, que valida fora do adaptador e imprime só os caminhos do Zod, achou o parágrafo curto. A oscilação se repetiu nas rodadas 2 e 3 |
 | 2026-10-21 | Revisão neutra, rodada 2: a recusa aceita volta a exigir `grade_mismatch` (CRÍTICO); `min` com minutos passa no avaliador, com o símbolo de unidade renomeado no AST para não colidir com a função `min` (ALERTA); `acceptableRefusalList` sem obrigatório, sem repetir e sem `photos_unreadable` com foto `good`; frases do material só de caso existente; a sobreposição de `lp5-word-classes` com `lp5-nominal-agreement` (`EF05LP26`, gênero e número) vai para a revisão do professor | Achados da revisão (`review.md`) |
+| 2026-10-21 | O humano fechou a F1-10 com os 2 críticos residuais registrados como dívida HIGH, para medir a taxa real no piloto | Sem defeito fixo: os dois kits falharam depois da única regeneração, e o diagnóstico repetido gerou o kit da carta |
 | 2026-10-21 | Correções que mudem prompt, modelo, taxonomia, validador ou o texto da spec pedagógica param para o humano antes de entrar | `prompts-v1.md`, `tax-v1` e a spec pedagógica foram aprovados por ele. As dívidas do `known-issues.md` já dizem "decisão do humano" nesses pontos |
 
 ## Status
 
-21/10/2026:
-- M1 a M6 feitos.
-- A rodada final juntada teve 2 bloqueadores críticos inesperados (`review.md`): kits que falharam depois da única regeneração, sem defeito fixo.
-
-O pronto da F1-10 pede zero. Fechar a F1-10 com os 2 críticos registrados, ou mudar a regeneração (PRD §7.4), é decisão do humano.
+Concluída em 21/10/2026, com M1 a M6 feitos. A rodada final juntada teve 2 bloqueadores críticos inesperados (`review.md`). O humano decidiu fechar a F1-10 com eles registrados como dívida HIGH (`known-issues.md`).
 
 Pendências do humano:
-- revisão do assunto `lp5-word-classes` pelo professor;
+- conferir as correções da revisão neutra rodada 2, que ficaram sem verifier pelo teto de 2 rodadas;
+- revisão de `lp5-word-classes` pelo professor (F1-11);
 - push e merge.

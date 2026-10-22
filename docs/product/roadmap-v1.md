@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 9 | 0 | 2 |
+| F1 Prova técnica e pedagógica | 11 | 10 | 0 | 1 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -141,7 +141,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 9 de 11 concluídas
+**Estado:** em andamento · 10 de 11 concluídas
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -208,15 +208,17 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
       - Você abriu e aprovou os PDFs dos dois kits (21/10/2026).
     - Revisão neutra aprovada na rodada 1, com os 4 alertas e 4 das 5 sugestões corrigidos. A quinta é uma observação para a F1-10 e a F2-09: a confirmação padrão do kit de Matemática deixou de fora o perímetro, que era o 5º candidato.
     - Não toca prompt, modelo, taxonomia nem validador (sem `bun run test:pedagogy`)
-- [ ] **F1-10 `regressao-pedagogica`** — pedagogy, tests · M · depende: F1-09
+- [x] **F1-10 `regressao-pedagogica`** — pedagogy, tests · M · depende: F1-09 · 21/10/2026 · `708b1b9` · `specs/pedagogy/regressao-pedagogica/`
   - Entrega: formato de caso, runner `bun run test:pedagogy`, relatório por caso; 35 casos rodados (30 imagens geradas por IA e 5 variações delas, spec pedagógica §13.1); defeitos corrigidos viram casos
   - Pronto quando: zero bloqueador crítico inesperado; relatório gravado em `docs/pedagogy/`
-  - Em andamento em 21/10/2026, na branch `feat/pedagogy/regressao-pedagogica`.
+  - Concluída em: 21/10/2026.
     - Entregou o runner `bun run test:pedagogy`, os 35 `case.json`, as 5 variações e o relatório com os critérios do gate (`specs/pedagogy/regressao-pedagogica/`).
     - A rodada 1 (`docs/pedagogy/regressao/2026-10-21-extract-v1+plan-v1+generate-v1+review-v1.md`) teve 10 bloqueadores críticos inesperados.
     - Com as decisões do humano, entraram `tax-v2` com `lp5-word-classes`, `generate` e `review` v2, `min` e `max` no avaliador, parágrafo curto no texto-base e casos de fronteira com duas respostas (spec pedagógica 1.5 §15.10).
-    - A rodada final juntada (`docs/pedagogy/regressao/2026-10-21-extract-v1+plan-v1+generate-v2+review-v2.md`) teve 2 críticos: kits que falharam depois da única regeneração, sem defeito fixo. Também mediu extração em 35 de 35, foto ilegível e dado pessoal em 5 de 5, US$ 0,41 por kit e geração p95 de 5 min 34 s.
-    - Aguarda o humano decidir como fechar e revisar o `lp5-word-classes` com o professor.
+    - A rodada final juntada (`docs/pedagogy/regressao/2026-10-21-extract-v1+plan-v1+generate-v2+review-v2.md`) teve 2 bloqueadores críticos, kits que falharam depois da única regeneração sem defeito fixo. Também mediu extração em 35 de 35, foto ilegível e dado pessoal em 5 de 5, US$ 0,41 por kit e geração p95 de 5 min 34 s.
+    - Você decidiu fechar a F1-10 com os 2 críticos registrados como dívida HIGH (`known-issues.md`), com a taxa real medida no piloto (21/10/2026).
+    - Revisão neutra reprovada nas rodadas 1 e 2, com os achados corrigidos. O teto de 2 rodadas foi atingido, e as correções da rodada 2 ficam para a sua conferência (`review.md`).
+    - A revisão de `lp5-word-classes` pelo professor fica para a F1-11.
 - [ ] **F1-11 `homologacao-e-amostras`** — pedagogy · P · depende: F1-10
   - Entrega: revisão de amostra por professor; 2 kits de amostra (Matemática e Português) marcados como amostra; custo por prévia e por kit, e tempo, registrados no PRD seção 3
   - Pronto quando: critério de lançamento do PRD 7.6 atendido

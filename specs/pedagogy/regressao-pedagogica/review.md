@@ -1,7 +1,7 @@
 ---
 feature: regressao-pedagogica
 module: pedagogy
-round: 1
+round: 2
 verdict: REPROVADO
 updated: 2026-10-21
 ---
@@ -191,3 +191,8 @@ Os 2 críticos restantes não são defeitos fixos. Os dois kits falharam depois 
 `7-math-potenciacao-raiz` recusou sem `grade_mismatch`, e isso conta como `source_warning_missed`, aviso que não entra no gate.
 
 Ressalva: 4 casos da junção foram rodados de novo depois de falharem. 3 deles falharam por um defeito que foi corrigido; o quarto, `6-portuguese-tempos-verbais`, não. A taxa de falha de kit é de 2 em 32 na junção; sem a junção, foi de 4 em 30 na `rodada-final` e de 2 em 6 no complemento.
+
+## Fechamento
+
+Em 21/10/2026, o humano decidiu fechar a F1-10 com os 2 críticos da rodada final juntada registrados como dívida HIGH (`known-issues.md`), para medir a taxa real no piloto. A revisão neutra ficou reprovada nas duas rodadas permitidas, com todos os achados corrigidos. As correções da rodada 2 ficam para a conferência do humano.
+
