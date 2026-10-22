@@ -211,4 +211,4 @@ Roadmap F2-02. O tamanho subiu de M para L porque a entrega cruza core, db, inte
   - definir com o humano o texto de `analysis_unavailable`, que falta no design doc §5.2 e §6.8;
   - em `draft`, `analysisFailure: null` quer dizer "carregando".
 - **Para a F2-13:** o alerta de falha do provedor de IA precisa ler `ai_call.outcome_code` e o log `error` "análise indisponível", porque esse job termina `completed` (ADR-0013).
-- **Pendências do humano:** nenhuma para o merge. O `.env.example` não ganhou chave nova: o worker passa a exigir `AI_*` e `R2_*`, que já existem para o CLI e para a api.
+- **Pendências do humano:** conferir se o `.env.example` deixa claro que o worker passa a exigir `AI_API_KEY`, `AI_MODEL_EXTRACT`, `AI_MODEL_GENERATE` e `R2_*` (o agente não lê o arquivo). Os modelos precisam ter preço na tabela do adaptador, senão o worker recusa a configuração.
