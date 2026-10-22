@@ -2,7 +2,7 @@
 feature: pedidos-e-upload
 module: api
 size: L
-status: in_progress
+status: done
 branch: feat/api/pedidos-e-upload
 updated: 2026-10-22
 ---
@@ -366,7 +366,7 @@ Um corpo enviado em chunks sem `Content-Length` e acima do teto do servidor rece
 | 2026-10-22 | **D-04 (humano, 22/10/2026):** o PRD §6 pede "desafio leve apenas ao exceder"; a F2-01 responde 429 `challenge_required`, e o desafio (Turnstile) entra na F2-09 | revisão da spec (CRÍTICO): divergência do PRD levada ao humano |
 
 ## Status
-- **Fase:** implementada (M1 a M5), na revisão neutra do diff.
+- **Fase:** concluída na branch. A revisão neutra reprovou a rodada 1 (2 CRÍTICOs de teste e 3 ALERTAs, todos corrigidos em `fbf24f4`) e aprovou a rodada 2. Falta o merge do humano.
 - **Feito:**
   - spec revisada (rodada 1 reprovada com 1 CRÍTICO e 10 ALERTAs, todos tratados; o CRÍTICO resolvido por D-04 com o humano);
   - suíte verde: lint, typecheck, unit, integração e build;

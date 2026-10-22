@@ -5,7 +5,7 @@ import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { status } from "elysia";
 import { z } from "zod";
 import { buildAppDependencies, WEB_PUBLIC_URL } from "#src/__tests__/__fixtures__/app.ts";
-import { createApp, UNMATCHED_ROUTE } from "#src/app.ts";
+import { createApp, createBackgroundRunner, UNMATCHED_ROUTE } from "#src/app.ts";
 
 const unreachableDatabase = createDatabase({
   databaseUrl: "postgres://gizito:gizito@127.0.0.1:1/gizito",
@@ -193,5 +193,18 @@ describe("limite do corpo e CORS com credenciais (F2-01)", () => {
     const response = await app.handle(request("/health", { headers: { origin: WEB_PUBLIC_URL } }));
     expect(response.headers.get("access-control-allow-origin")).toBe(WEB_PUBLIC_URL);
     expect(response.headers.get("access-control-allow-credentials")).toBe("true");
+  });
+});
+
+describe("tarefa em segundo plano (F2-01)", () => {
+  it("o executor padrão loga só o nome do erro quando a tarefa rejeita", async () => {
+    const { logger, readEntryList, waitForEntryList } = createMemoryLogger();
+    createBackgroundRunner(logger)(async () => {
+      throw new TypeError("detalhe com dado do pedido");
+    });
+    await waitForEntryList((entryList) => entryList.some((entry) => entry.level === 50));
+    const entry = readEntryList().find((logEntry) => logEntry.level === 50);
+    expect(entry).toMatchObject({ msg: "tarefa em segundo plano falhou", errorName: "TypeError" });
+    expect(JSON.stringify(entry)).not.toContain("detalhe");
   });
 });

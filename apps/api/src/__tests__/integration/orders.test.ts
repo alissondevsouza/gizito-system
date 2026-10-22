@@ -646,6 +646,50 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
     });
   });
 
+  it("falha ao gravar delete_datetime depois da remoção só vira warn, e a troca continua gravada", async () => {
+    const { app, dependencies, settleBackgroundTasks, readEntryList } = setup();
+    const created = await createdOrder(app, 1);
+    const [first] = await currentPhotoRowList(created.orderId);
+    const response = await putPhotos(
+      app,
+      created.publicToken,
+      replaceForm([[first?.orderPhotoId ?? "", photoFile(await syntheticJpeg(96), "nova.jpg")]]),
+    );
+    expect(response.status).toBe(200);
+    await testDatabase.db.execute(
+      sql.raw(`CREATE FUNCTION fail_photo_delete_mark() RETURNS trigger LANGUAGE plpgsql AS $$
+        BEGIN RAISE EXCEPTION 'falha forçada no delete_datetime'; END $$`),
+    );
+    await testDatabase.db.execute(
+      sql.raw(`CREATE TRIGGER fail_photo_delete_mark BEFORE UPDATE ON order_photo FOR EACH ROW
+        WHEN (NEW.delete_datetime IS NOT NULL) EXECUTE FUNCTION fail_photo_delete_mark()`),
+    );
+    try {
+      await settleBackgroundTasks();
+    } finally {
+      await testDatabase.db.execute(sql.raw("DROP TRIGGER fail_photo_delete_mark ON order_photo"));
+      await testDatabase.db.execute(sql.raw("DROP FUNCTION fail_photo_delete_mark()"));
+    }
+    const [replaced] = await testDatabase.db
+      .select()
+      .from(orderPhoto)
+      .where(eq(orderPhoto.orderPhotoId, first?.orderPhotoId ?? ""));
+    expect(replaced?.replacedDatetime).toBeInstanceOf(Date);
+    expect(replaced?.deleteDatetime).toBeNull();
+    expect(
+      dependencies.storage.objectMap.has(
+        photoStorageKey(created.orderId, first?.orderPhotoId ?? ""),
+      ),
+    ).toBe(false);
+    expect(
+      readEntryList().find((entry) => entry.msg === "marcação da foto removida falhou"),
+    ).toMatchObject({
+      orderId: created.orderId,
+      orderPhotoId: first?.orderPhotoId,
+      errorCode: "photo_delete_mark_failed",
+    });
+  });
+
   it("falha no insert do job desfaz a troca inteira e remove os objetos novos", async () => {
     const { app, dependencies } = setup();
     const created = await createdOrder(app, 1);

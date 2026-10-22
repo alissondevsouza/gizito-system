@@ -242,7 +242,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 - [ ] **F2-01 `pedidos-e-upload`** **em andamento** — api, integrations · L · depende: F0-07, F0-05
   - Entrega: `POST /orders` (fotos, EXIF removido, redução, hash, R2 privado), `GET /orders/:token`, "Trocar foto" (`PUT /orders/:token/photos`), token e código curto, rate limit da prévia; `ObjectStorage` R2 e fake
   - Pronto quando: fotos sintéticas (JPEG com EXIF e orientação, PNG, HEIC recusado) testadas; 404 neutro; rate limit em integração; adaptador R2 contra o MinIO local. O teste em aparelho foi para a F2-09 e o teste contra o R2 real vai para antes da F2-13 (decisões do humano em 21/10/2026)
-  - Feito até agora: implementada na branch `feat/api/pedidos-e-upload` (spec em `specs/api/pedidos-e-upload/`), com revisão neutra; falta o merge do humano
+  - Feito até agora: implementada na branch `feat/api/pedidos-e-upload` (spec e revisão em `specs/api/pedidos-e-upload/`), aprovada na 2ª rodada da revisão neutra em 22/10/2026; falta o merge do humano
 - [ ] **F2-02 `job-analise`** — worker · M · depende: F2-01, F1-06
   - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida
   - Pronto quando: transições e avisos testados; reexecução idempotente

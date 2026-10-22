@@ -33,6 +33,14 @@ export type AppDependencies = {
 
 const defaultRandomBytes = (length: number) => new Uint8Array(randomBytes(length));
 
+export function createBackgroundRunner(logger: Logger) {
+  return (task: () => Promise<void>): void => {
+    task().catch((error: unknown) => {
+      logger.error({ errorName: errorNameOf(error) }, "tarefa em segundo plano falhou");
+    });
+  };
+}
+
 function exceedsUploadLimit(request: Request): boolean {
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   return Number.isFinite(contentLength) && contentLength > MAX_ORDER_UPLOAD_BYTES;
@@ -58,11 +66,7 @@ export function createApp({
   webPublicUrl,
   now = () => new Date(),
   randomBytes: drawRandomBytes = defaultRandomBytes,
-  runInBackground = (task) => {
-    task().catch((error: unknown) => {
-      logger.error({ errorName: errorNameOf(error) }, "tarefa em segundo plano falhou");
-    });
-  },
+  runInBackground = createBackgroundRunner(logger),
   ...orderDependencies
 }: AppDependencies) {
   const requestStartMap = new WeakMap<Request, number>();

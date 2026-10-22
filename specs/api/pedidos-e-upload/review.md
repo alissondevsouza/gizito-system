@@ -1,8 +1,8 @@
 ---
 feature: pedidos-e-upload
 module: api
-round: 1
-verdict: REPROVADO
+round: 2
+verdict: APROVADO
 updated: 2026-10-22
 ---
 
@@ -97,3 +97,41 @@ Depois da correção, todos limpos:
 - `bun run lint`, `typecheck` e `build`;
 - `bun run test`: core 777, db 105, integrations 409 (16 pulados), api 40, worker 340 (15 pulados);
 - `bun run test:integration`: api 33, db 136, worker 37, integrations 5.
+
+## Rodada 2
+
+Revalidação só dos pontos corrigidos em `fbf24f4`, por um verifier novo, com o `review.md` da rodada 1.
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun test src/__tests__/integration` em `apps/api` (verifier) | 33 pass, 0 fail |
+| `bun test src/__tests__/photo src/__tests__/concurrency` em `packages/integrations` (verifier) | 11 pass, 0 fail |
+| Mutações numa cópia do repositório (verifier) | M1 sem a duplicata sob o lock → falha o teste da duplicata concorrente; M2 e M3 sem o enqueue na transação do PUT e do POST → falham os dois testes de atomicidade; M4 com `await` no lugar de `runInBackground` → falha o teste da troca em `preview_ready`; M5 sem a checagem de pares → falha o teste dos 6 pares; M6 sem o log "troca de fotos recusada" → falha o teste de logs; M7 sem `semaphore.run` → falha o teste do semáforo; com o código restaurado, tudo passa |
+| `bun run lint`, `typecheck`, `test`, `test:integration`, `build` (orquestrador, depois das sugestões da rodada 2) | limpos; api 41 unit e 34 de integração |
+
+### Navegador
+Não aplicável.
+
+### Critérios de aceite
+| RF | Atendido | Evidência (teste ou arquivo) |
+|---|---|---|
+| RF-01 | sim | `normalize.test.ts` ("cada normalização roda dentro de uma vaga do semáforo…"), mutação M7 |
+| RF-02 | sim | `orders.test.ts` ("falha no insert do job não deixa pedido nem foto…"), mutação M3 |
+| RF-05 | sim | `orders.test.ts` (troca em `preview_ready` sem bloquear, 6 pares, duplicata sob o lock, atomicidade da troca), mutações M1, M2, M4 e M5 |
+| RF-10 | sim | `orders.test.ts` (logs com `orderId` na falha), mutação M6 |
+
+### Achados
+- [SUGESTÃO] `apps/api/src/services/orders.ts:471`: nenhum teste exercitava o `catch` do `UPDATE` do `delete_datetime`.
+- [SUGESTÃO] `apps/api/src/app.ts:61`: o executor padrão de `runInBackground` não rodava em teste.
+
+### Regressão pedagógica
+Não aplicável.
+
+### Resposta do orquestrador
+As duas sugestões foram feitas:
+- **Teste do `catch`:** "falha ao gravar delete_datetime depois da remoção só vira warn, e a troca continua gravada". Um trigger em `order_photo` falha o `UPDATE` com `delete_datetime`. O teste confere o `warn` `photo_delete_mark_failed` com `orderId` e `orderPhotoId`, o `delete_datetime` nulo e o objeto removido do storage.
+- **Executor padrão:** saiu para `createBackgroundRunner(logger)`, com um teste unit em que a tarefa rejeita e o log leva só o nome do erro.
+
+O log do executor continua sem `orderId`, porque a tarefa da troca nunca rejeita: as falhas dela são logadas dentro dela, com o pedido.
+
