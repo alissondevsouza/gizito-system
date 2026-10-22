@@ -62,9 +62,13 @@ describe("charge", () => {
   it("rejeita gateway_payment_id repetido, mesmo entre pedidos diferentes", async () => {
     const firstOrderId = await insertOrderId();
     const secondOrderId = await insertOrderId();
-    await testDatabase.db
-      .insert(charge)
-      .values(buildChargeInsert(firstOrderId, { gatewayPaymentId: "pay-123", status: "paid" }));
+    await testDatabase.db.insert(charge).values(
+      buildChargeInsert(firstOrderId, {
+        gatewayPaymentId: "pay-123",
+        status: "paid",
+        paidDatetime: new Date("2026-10-22T12:05:00.000Z"),
+      }),
+    );
     await expectSqlState(
       testDatabase.db
         .insert(charge)
@@ -99,6 +103,48 @@ describe("charge", () => {
       testDatabase.db.insert(charge).values(buildChargeInsert(orderId, { amountCents: -1 })),
       SQL_STATE.checkViolation,
     );
+  });
+
+  it("paga ou reembolsada exige paid_datetime e gateway_payment_id; reembolsada exige refund_id e refund_datetime (spec F2-04, RF-06)", async () => {
+    const orderId = await insertOrderId();
+    const paidDatetime = new Date("2026-10-22T12:05:00.000Z");
+    await expectSqlState(
+      testDatabase.db
+        .insert(charge)
+        .values(buildChargeInsert(orderId, { status: "paid", gatewayPaymentId: "pay-a" })),
+      SQL_STATE.checkViolation,
+    );
+    await expectSqlState(
+      testDatabase.db
+        .insert(charge)
+        .values(buildChargeInsert(orderId, { status: "paid", paidDatetime })),
+      SQL_STATE.checkViolation,
+    );
+    await testDatabase.db
+      .insert(charge)
+      .values(
+        buildChargeInsert(orderId, { status: "paid", gatewayPaymentId: "pay-b", paidDatetime }),
+      );
+    await expectSqlState(
+      testDatabase.db.insert(charge).values(
+        buildChargeInsert(orderId, {
+          status: "refunded",
+          gatewayPaymentId: "pay-c",
+          paidDatetime,
+        }),
+      ),
+      SQL_STATE.checkViolation,
+    );
+    await testDatabase.db.insert(charge).values(
+      buildChargeInsert(orderId, {
+        status: "refunded",
+        gatewayPaymentId: "pay-d",
+        paidDatetime,
+        refundId: "ref-d",
+        refundDatetime: paidDatetime,
+      }),
+    );
+    await testDatabase.db.insert(charge).values(buildChargeInsert(orderId, { status: "expired" }));
   });
 
   it("rejeita cobrança de pedido inexistente", async () => {

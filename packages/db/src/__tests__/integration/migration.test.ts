@@ -74,7 +74,7 @@ describe("migration do zero", () => {
     const declaredNameList = tableList.flatMap((table) =>
       getTableConfig(table).indexes.map((index) => index.config.name ?? ""),
     );
-    expect(declaredNameList).toHaveLength(30);
+    expect(declaredNameList).toHaveLength(31);
     for (const name of declaredNameList) {
       expect(indexMap.has(name)).toBe(true);
     }

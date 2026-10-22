@@ -34,6 +34,15 @@ export const charge = pgTable(
       .on(table.gateway, table.gatewayOrderId)
       .where(sql`${table.gatewayOrderId} IS NOT NULL`),
     index("charge_status_expire_datetime_idx").on(table.status, table.expireDatetime),
+    index("charge_status_insert_datetime_idx").on(table.status, table.insertDatetime),
     check("charge_amount_cents_check", sql`${table.amountCents} > 0`),
+    check(
+      "charge_paid_fields_check",
+      sql`${table.status} NOT IN ('paid', 'refunded') OR (${table.paidDatetime} IS NOT NULL AND ${table.gatewayPaymentId} IS NOT NULL)`,
+    ),
+    check(
+      "charge_refunded_fields_check",
+      sql`${table.status} <> 'refunded' OR (${table.refundId} IS NOT NULL AND ${table.refundDatetime} IS NOT NULL)`,
+    ),
   ],
 );

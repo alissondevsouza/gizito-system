@@ -1,14 +1,14 @@
 import {
+  CHARGE_RECONCILE_AFTER_EXPIRY_MINUTES,
   type Charge,
-  type ChargePaymentMismatchError,
   decidePaymentConfirmation,
   err,
-  type InvalidTransitionError,
   type MarkOrderPaidInput,
   markOrderPaidInputSchema,
   type OrderStatus,
   ok,
   type PaymentConfirmationDecision,
+  type PaymentConfirmationError,
   type Result,
 } from "@gizito/core";
 import { and, eq, ne } from "drizzle-orm";
@@ -22,8 +22,18 @@ import {
 import { enqueueJob } from "#src/queue/enqueue.ts";
 import { charge, order, supportTicket, webhookEvent } from "#src/schema/index.ts";
 
+const MILLISECONDS_PER_MINUTE = 60_000;
+
+export type ExpiredCharge = Pick<Charge, "chargeId" | "gatewayOrderId" | "gatewayPaymentId">;
+
+export function expiredChargeReconcileDatetime(expireDatetime: Date): Date {
+  return new Date(
+    expireDatetime.getTime() + CHARGE_RECONCILE_AFTER_EXPIRY_MINUTES * MILLISECONDS_PER_MINUTE,
+  );
+}
+
 export type MarkOrderPaidOutcome =
-  | { outcome: "paid"; generateJobId: string }
+  | { outcome: "paid"; generateJobId: string; expiredChargeList: ExpiredCharge[] }
   | { outcome: "already_paid" }
   | { outcome: "duplicate_payment"; supportTicketId: string };
 
@@ -32,8 +42,7 @@ export type MarkOrderPaidError =
   | ChargeNotFoundError
   | GatewayPaymentInUseError
   | WebhookEventNotFoundError
-  | ChargePaymentMismatchError
-  | InvalidTransitionError;
+  | PaymentConfirmationError;
 
 export type MarkOrderPaidOptions = {
   now?: Date;
@@ -41,7 +50,7 @@ export type MarkOrderPaidOptions = {
 
 type LockedPaymentTarget = {
   orderStatus: OrderStatus;
-  lockedCharge: Pick<Charge, "chargeId" | "status" | "gatewayPaymentId">;
+  lockedCharge: Pick<Charge, "chargeId" | "status" | "gatewayPaymentId" | "amountCents">;
 };
 
 async function lockPaymentTarget(
@@ -59,6 +68,7 @@ async function lockPaymentTarget(
       chargeId: charge.chargeId,
       status: charge.status,
       gatewayPaymentId: charge.gatewayPaymentId,
+      amountCents: charge.amountCents,
     })
     .from(charge)
     .where(and(eq(charge.chargeId, chargeId), eq(charge.orderId, orderId)))
@@ -102,7 +112,7 @@ async function confirmPayment(
     .set({ status: nextOrderStatus, paidDatetime: input.paidDatetime })
     .where(eq(order.orderId, input.orderId));
   await markChargePaid(tx, input);
-  await tx
+  const expiredChargeList = await tx
     .update(charge)
     .set({ status: "expired" })
     .where(
@@ -111,9 +121,30 @@ async function confirmPayment(
         ne(charge.chargeId, input.chargeId),
         eq(charge.status, "pending"),
       ),
+    )
+    .returning({
+      chargeId: charge.chargeId,
+      gatewayOrderId: charge.gatewayOrderId,
+      gatewayPaymentId: charge.gatewayPaymentId,
+      expireDatetime: charge.expireDatetime,
+    });
+  for (const expired of expiredChargeList) {
+    await enqueueJob(
+      tx,
+      { name: "charge.reconcile", orderId: input.orderId, chargeId: expired.chargeId },
+      { runAfterDatetime: expiredChargeReconcileDatetime(expired.expireDatetime) },
     );
+  }
   const generateJob = await enqueueJob(tx, { name: "order.generate", orderId: input.orderId });
-  return { outcome: "paid", generateJobId: generateJob.jobId };
+  return {
+    outcome: "paid",
+    generateJobId: generateJob.jobId,
+    expiredChargeList: expiredChargeList.map(({ chargeId, gatewayOrderId, gatewayPaymentId }) => ({
+      chargeId,
+      gatewayOrderId,
+      gatewayPaymentId,
+    })),
+  };
 }
 
 async function recordDuplicatePayment(
@@ -159,11 +190,10 @@ export async function markOrderPaidAndEnqueue(
   const target = await lockPaymentTarget(tx, parsedInput);
   if (!target.ok) return target;
   const { orderStatus, lockedCharge } = target.value;
-  const decision = decidePaymentConfirmation(
-    orderStatus,
-    lockedCharge,
-    parsedInput.gatewayPaymentId,
-  );
+  const decision = decidePaymentConfirmation(orderStatus, lockedCharge, {
+    gatewayPaymentId: parsedInput.gatewayPaymentId,
+    amountCents: parsedInput.amountCents,
+  });
   if (!decision.ok) return decision;
   const outcome = await applyPaymentDecision(tx, parsedInput, orderStatus, decision.value);
   if (parsedInput.webhookEventId !== undefined) {

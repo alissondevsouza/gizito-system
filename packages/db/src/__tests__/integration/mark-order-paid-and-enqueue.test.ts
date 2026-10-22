@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import {
+  ChargeAmountMismatchError,
   ChargePaymentMismatchError,
   InvalidTransitionError,
+  KIT_PRICE_CENTS,
   type MarkOrderPaidInput,
   type OrderStatus,
 } from "@gizito/core";
@@ -15,6 +17,7 @@ import {
 import { createDatabase } from "#src/client.ts";
 import {
   ChargeNotFoundError,
+  expiredChargeReconcileDatetime,
   GatewayPaymentInUseError,
   markOrderPaidAndEnqueue,
   OrderNotFoundError,
@@ -116,6 +119,7 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
       orderId: pendingOrder.orderId,
       chargeId: pendingCharge.chargeId,
       gatewayPaymentId: "pay-1",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
       webhookEventId: event.webhookEventId,
     });
@@ -129,11 +133,37 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
     expect(reloadedCharge).toMatchObject({
       status: "paid",
       gatewayPaymentId: "pay-1",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     });
     expect((await loadCharge(otherPending.chargeId))?.status).toBe("expired");
     expect((await loadCharge(alreadyExpired.chargeId))?.status).toBe("expired");
     expect((await loadCharge(otherOrderCharge.chargeId))?.status).toBe("pending");
+    expect(result.value.expiredChargeList).toEqual([
+      {
+        chargeId: otherPending.chargeId,
+        gatewayOrderId: otherPending.gatewayOrderId,
+        gatewayPaymentId: otherPending.gatewayPaymentId,
+      },
+    ]);
+    const reconcileJobList = await testDatabase.db
+      .select({ payload: job.payload, runAfterDatetime: job.runAfterDatetime, status: job.status })
+      .from(job)
+      .where(eq(job.name, "charge.reconcile"));
+    expect(reconcileJobList).toEqual([
+      {
+        payload: {
+          name: "charge.reconcile",
+          orderId: pendingOrder.orderId,
+          chargeId: otherPending.chargeId,
+        },
+        runAfterDatetime: expiredChargeReconcileDatetime(otherPending.expireDatetime),
+        status: "pending",
+      },
+    ]);
+    expect(reconcileJobList[0]?.runAfterDatetime.getTime()).toBeGreaterThan(
+      otherPending.expireDatetime.getTime() + 2 * 60_000,
+    );
     const [generateJob] = await testDatabase.db
       .select()
       .from(job)
@@ -159,6 +189,7 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
       orderId: pendingOrder.orderId,
       chargeId: pendingCharge.chargeId,
       gatewayPaymentId: "pay-1",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     };
     await markPaid(input);
@@ -181,9 +212,14 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
       orderId: pendingOrder.orderId,
       chargeId: pendingCharge.chargeId,
       gatewayPaymentId: "pay-9",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     });
     expect(result.ok && result.value.outcome).toBe("paid");
+    expect(result.ok && result.value.outcome === "paid" && result.value.expiredChargeList).toEqual(
+      [],
+    );
+    expect(await testDatabase.db.$count(job, eq(job.name, "charge.reconcile"))).toBe(0);
     expect((await loadCharge(pendingCharge.chargeId))?.gatewayPaymentId).toBe("pay-9");
   });
 
@@ -198,6 +234,7 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
       orderId: pendingOrder.orderId,
       chargeId: expiredCharge.chargeId,
       gatewayPaymentId: "pay-old",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     });
     expect(result.ok && result.value.outcome).toBe("paid");
@@ -217,6 +254,7 @@ describe("markOrderPaidAndEnqueue: confirmação", () => {
         orderId: pendingOrder.orderId,
         chargeId: pendingCharge.chargeId,
         gatewayPaymentId: "pay-1",
+        amountCents: KIT_PRICE_CENTS,
         paidDatetime: PAID_DATETIME,
       };
       const resultList = await Promise.all(
@@ -245,8 +283,16 @@ describe("markOrderPaidAndEnqueue: pagamento duplicado", () => {
     try {
       const resultList = await Promise.all(
         [
-          { chargeId: oldCharge.chargeId, gatewayPaymentId: "pay-old" },
-          { chargeId: newCharge.chargeId, gatewayPaymentId: "pay-new" },
+          {
+            chargeId: oldCharge.chargeId,
+            gatewayPaymentId: "pay-old",
+            amountCents: KIT_PRICE_CENTS,
+          },
+          {
+            chargeId: newCharge.chargeId,
+            gatewayPaymentId: "pay-new",
+            amountCents: KIT_PRICE_CENTS,
+          },
         ].map((payment) =>
           concurrentHandle.db.transaction((tx) =>
             markOrderPaidAndEnqueue(tx, {
@@ -278,6 +324,7 @@ describe("markOrderPaidAndEnqueue: pagamento duplicado", () => {
       orderId: pendingOrder.orderId,
       chargeId: pendingCharge.chargeId,
       gatewayPaymentId: "pay-1",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     });
     const event = await insertWebhookEvent("evt-duplicate");
@@ -285,6 +332,7 @@ describe("markOrderPaidAndEnqueue: pagamento duplicado", () => {
       orderId: pendingOrder.orderId,
       chargeId: secondCharge.chargeId,
       gatewayPaymentId: "pay-2",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
       webhookEventId: event.webhookEventId,
     };
@@ -328,6 +376,7 @@ describe("markOrderPaidAndEnqueue: pagamento duplicado", () => {
         orderId: paidOrder.orderId,
         chargeId: lateCharge.chargeId,
         gatewayPaymentId: `pay-${status}`,
+        amountCents: KIT_PRICE_CENTS,
         paidDatetime: PAID_DATETIME,
       });
       expect(result.ok && result.value.outcome).toBe("duplicate_payment");
@@ -352,6 +401,7 @@ describe("markOrderPaidAndEnqueue: erros, sem escrita", () => {
       orderId: draftOrder.orderId,
       chargeId: pendingCharge.chargeId,
       gatewayPaymentId: "pay-1",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     });
     expect(result.ok).toBe(false);
@@ -368,6 +418,7 @@ describe("markOrderPaidAndEnqueue: erros, sem escrita", () => {
       orderId: pendingOrder.orderId,
       chargeId: pendingCharge.chargeId,
       gatewayPaymentId: "pay-1",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     };
     const caseList = [
@@ -390,6 +441,7 @@ describe("markOrderPaidAndEnqueue: erros, sem escrita", () => {
       orderId: pendingOrder.orderId,
       chargeId: pendingCharge.chargeId,
       gatewayPaymentId: "pay-other",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     });
     expect(result.ok).toBe(false);
@@ -398,15 +450,35 @@ describe("markOrderPaidAndEnqueue: erros, sem escrita", () => {
     await expectNothingWritten(pendingOrder.orderId, pendingCharge.chargeId, "awaiting_payment");
   });
 
+  it("valor pago diferente do da cobrança devolve ChargeAmountMismatchError (spec F2-04, RF-04)", async () => {
+    const { pendingOrder, pendingCharge } = await awaitingPaymentFixture();
+    const result = await markPaid({
+      orderId: pendingOrder.orderId,
+      chargeId: pendingCharge.chargeId,
+      gatewayPaymentId: "pay-1",
+      amountCents: KIT_PRICE_CENTS - 1,
+      paidDatetime: PAID_DATETIME,
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toBeInstanceOf(ChargeAmountMismatchError);
+    await expectNothingWritten(pendingOrder.orderId, pendingCharge.chargeId, "awaiting_payment");
+  });
+
   it("pagamento já ligado a outra cobrança devolve GatewayPaymentInUseError", async () => {
     const { pendingOrder, pendingCharge } = await awaitingPaymentFixture();
     const otherOrder = await insertOrder("paid");
-    await insertCharge(otherOrder.orderId, { status: "paid", gatewayPaymentId: "pay-taken" });
+    await insertCharge(otherOrder.orderId, {
+      status: "paid",
+      gatewayPaymentId: "pay-taken",
+      paidDatetime: PAID_DATETIME,
+    });
     const freeCharge = await insertCharge(pendingOrder.orderId);
     const result = await markPaid({
       orderId: pendingOrder.orderId,
       chargeId: freeCharge.chargeId,
       gatewayPaymentId: "pay-taken",
+      amountCents: KIT_PRICE_CENTS,
       paidDatetime: PAID_DATETIME,
     });
     expect(result.ok).toBe(false);
@@ -423,6 +495,7 @@ describe("markOrderPaidAndEnqueue: erros, sem escrita", () => {
         orderId: "not-a-guid",
         chargeId: pendingCharge.chargeId,
         gatewayPaymentId: "pay-1",
+        amountCents: KIT_PRICE_CENTS,
         paidDatetime: PAID_DATETIME,
       }),
     ).rejects.toBeInstanceOf(ZodError);
@@ -437,6 +510,7 @@ describe("markOrderPaidAndEnqueue: erros, sem escrita", () => {
           orderId: pendingOrder.orderId,
           chargeId: pendingCharge.chargeId,
           gatewayPaymentId: "pay-1",
+          amountCents: KIT_PRICE_CENTS,
           paidDatetime: PAID_DATETIME,
         });
         expect(result.ok).toBe(true);

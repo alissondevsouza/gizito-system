@@ -1,0 +1,3 @@
+CREATE INDEX "charge_status_insert_datetime_idx" ON "charge" USING btree ("status","insert_datetime");--> statement-breakpoint
+ALTER TABLE "charge" ADD CONSTRAINT "charge_paid_fields_check" CHECK ("charge"."status" NOT IN ('paid', 'refunded') OR ("charge"."paid_datetime" IS NOT NULL AND "charge"."gateway_payment_id" IS NOT NULL));--> statement-breakpoint
+ALTER TABLE "charge" ADD CONSTRAINT "charge_refunded_fields_check" CHECK ("charge"."status" <> 'refunded' OR ("charge"."refund_id" IS NOT NULL AND "charge"."refund_datetime" IS NOT NULL));

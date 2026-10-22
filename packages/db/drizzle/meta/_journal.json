@@ -43,6 +43,13 @@
       "when": 1792681556472,
       "tag": "0005_confirmacao_e_cobranca_pix",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792701063587,
+      "tag": "0006_webhook_e_reconciliacao",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { buildOrderInsert, expectSqlState, SQL_STATE } from "#src/__tests__/integration/helpers.ts";
 import { notification, order, supportTicket, webhookEvent } from "#src/schema/index.ts";
 import { createTestDatabase, type TestDatabase } from "#src/test-helpers/index.ts";
+import { markWebhookEventProcessed, recordWebhookEvent } from "#src/webhook/events.ts";
 
 let testDatabase: TestDatabase;
 
@@ -36,6 +37,49 @@ describe("webhook_event", () => {
       .where(and(eq(webhookEvent.source, "whatsapp"), eq(webhookEvent.externalId, "evt-1")));
     expect(row?.receivedDatetime).toBeInstanceOf(Date);
     expect(row?.processedDatetime).toBeNull();
+  });
+
+  it("recordWebhookEvent grava uma vez e devolve nulo no repetido; o processado grava desfecho (spec F2-04, RF-06)", async () => {
+    const now = new Date("2026-10-22T12:00:00.000Z");
+    const first = await recordWebhookEvent(testDatabase.db, {
+      source: "mercadopago",
+      externalId: "ord-9:order.processed",
+    });
+    expect(first?.webhookEventId).toBeString();
+    expect(
+      await recordWebhookEvent(testDatabase.db, {
+        source: "mercadopago",
+        externalId: "ord-9:order.processed",
+      }),
+    ).toBeNull();
+    const processed = await recordWebhookEvent(testDatabase.db, {
+      source: "mercadopago",
+      externalId: "ord-unknown:order.processed",
+      processed: { outcomeCode: "charge_not_found", now },
+    });
+    const [processedRow] = await testDatabase.db
+      .select()
+      .from(webhookEvent)
+      .where(eq(webhookEvent.webhookEventId, processed?.webhookEventId ?? ""));
+    expect(processedRow).toMatchObject({ processedDatetime: now, outcomeCode: "charge_not_found" });
+
+    expect(
+      await markWebhookEventProcessed(testDatabase.db, first?.webhookEventId ?? "", {
+        outcomeCode: "pending",
+        now,
+      }),
+    ).toBe(true);
+    const [firstRow] = await testDatabase.db
+      .select()
+      .from(webhookEvent)
+      .where(eq(webhookEvent.webhookEventId, first?.webhookEventId ?? ""));
+    expect(firstRow).toMatchObject({ processedDatetime: now, outcomeCode: "pending" });
+    expect(
+      await markWebhookEventProcessed(testDatabase.db, crypto.randomUUID(), {
+        outcomeCode: "pending",
+        now,
+      }),
+    ).toBe(false);
   });
 });
 
