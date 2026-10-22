@@ -18,17 +18,19 @@ import {
   perceivedDifficultySchema,
   subjectSchema,
 } from "#src/enums.ts";
+import { photoIndexSchema } from "#src/order/photo.ts";
 import { isConfirmedOrderStatus } from "#src/order/state-machine.ts";
+import { storageKeySchema } from "#src/storage/keys.ts";
 
-const PUBLIC_TOKEN_CANONICAL_LAST_CHAR_CLASS = "[AEIMQUYcgkosw048]";
+const BASE64URL_32_BYTE_LAST_CHAR_CLASS = "[AEIMQUYcgkosw048]";
 
-export const publicTokenSchema = z
-  .string()
-  .regex(
-    new RegExp(
-      `^[A-Za-z0-9_-]{${PUBLIC_TOKEN_LENGTH - 1}}${PUBLIC_TOKEN_CANONICAL_LAST_CHAR_CLASS}$`,
-    ),
-  );
+export function base64Url32ByteSchema(length: number) {
+  return z
+    .string()
+    .regex(new RegExp(`^[A-Za-z0-9_-]{${length - 1}}${BASE64URL_32_BYTE_LAST_CHAR_CLASS}$`));
+}
+
+export const publicTokenSchema = base64Url32ByteSchema(PUBLIC_TOKEN_LENGTH);
 export type PublicToken = z.infer<typeof publicTokenSchema>;
 
 export const shortCodeSchema = z
@@ -112,11 +114,13 @@ export const contentHashSchema = z.string().regex(/^[a-f0-9]{64}$/);
 export const orderPhotoSchema = timestampFieldsSchema.extend({
   orderPhotoId: guidSchema,
   orderId: guidSchema,
-  storageKey: z.string().min(1),
+  photoIndex: photoIndexSchema,
+  storageKey: storageKeySchema,
   contentHash: contentHashSchema,
   width: z.int().positive(),
   height: z.int().positive(),
   legibilityScore: z.number().min(0).max(1).nullable(),
+  replacedDatetime: z.date().nullable(),
   deleteDatetime: z.date().nullable(),
 });
 export type OrderPhoto = z.infer<typeof orderPhotoSchema>;

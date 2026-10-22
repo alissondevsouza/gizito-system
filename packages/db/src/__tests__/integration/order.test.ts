@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { orderPhotoSchema, orderSchema } from "@gizito/core";
+import { MAX_PHOTO_COUNT, orderPhotoSchema, orderSchema } from "@gizito/core";
 import { eq, sql } from "drizzle-orm";
 import {
   buildOrderInsert,
@@ -10,7 +10,8 @@ import {
   randomShortCode,
   SQL_STATE,
 } from "#src/__tests__/integration/helpers.ts";
-import { order, orderPhoto } from "#src/schema/index.ts";
+import { isUniqueViolation } from "#src/postgres-error.ts";
+import { order, orderPhoto, previewRequest } from "#src/schema/index.ts";
 import { createTestDatabase, type TestDatabase } from "#src/test-helpers/index.ts";
 
 let testDatabase: TestDatabase;
@@ -157,7 +158,10 @@ describe("order_photo", () => {
     const row = await insertOrder();
     await testDatabase.db
       .insert(orderPhoto)
-      .values([buildOrderPhotoInsert(row.orderId), buildOrderPhotoInsert(row.orderId)]);
+      .values([
+        buildOrderPhotoInsert(row.orderId),
+        buildOrderPhotoInsert(row.orderId, { photoIndex: 1 }),
+      ]);
     const loaded = await testDatabase.db.query.order.findFirst({
       where: eq(order.orderId, row.orderId),
       with: { photoList: true, chargeList: true },
@@ -181,12 +185,36 @@ describe("order_photo", () => {
     ["height zero", { height: 0 }],
     ["legibility_score abaixo de 0", { legibilityScore: -0.1 }],
     ["legibility_score acima de 1", { legibilityScore: 1.5 }],
+    ["photo_index negativo", { photoIndex: -1 }],
+    ["photo_index igual a MAX_PHOTO_COUNT", { photoIndex: MAX_PHOTO_COUNT }],
   ] as const)("rejeita %s", async (_, overrides) => {
     const row = await insertOrder();
     await expectSqlState(
       testDatabase.db.insert(orderPhoto).values(buildOrderPhotoInsert(row.orderId, overrides)),
       SQL_STATE.checkViolation,
     );
+  });
+
+  it("um índice por foto atual: a foto trocada libera o índice para a nova", async () => {
+    const row = await insertOrder();
+    const [replaced] = await testDatabase.db
+      .insert(orderPhoto)
+      .values(buildOrderPhotoInsert(row.orderId))
+      .returning();
+    let caught: unknown;
+    try {
+      await testDatabase.db.insert(orderPhoto).values(buildOrderPhotoInsert(row.orderId));
+    } catch (error) {
+      caught = error;
+    }
+    expect(isUniqueViolation(caught, "order_photo_order_id_photo_index_idx")).toBe(true);
+    expect(isUniqueViolation(caught, "order_short_code_idx")).toBe(false);
+    await testDatabase.db
+      .update(orderPhoto)
+      .set({ replacedDatetime: FIXED_DATETIME })
+      .where(eq(orderPhoto.orderPhotoId, replaced?.orderPhotoId ?? ""));
+    await testDatabase.db.insert(orderPhoto).values(buildOrderPhotoInsert(row.orderId));
+    expect(await testDatabase.db.$count(orderPhoto, eq(orderPhoto.orderId, row.orderId))).toBe(2);
   });
 
   it("aceita legibility_score dentro de 0–1", async () => {
@@ -196,5 +224,36 @@ describe("order_photo", () => {
       .values(buildOrderPhotoInsert(row.orderId, { legibilityScore: 0.75 }))
       .returning();
     expect(photo?.legibilityScore).toBeCloseTo(0.75);
+  });
+});
+
+describe("preview_request", () => {
+  const hash = (char: string) => char.repeat(64);
+
+  it("guarda só hashes de 64 hex e mantém update_datetime pelo trigger", async () => {
+    const [row] = await testDatabase.db
+      .insert(previewRequest)
+      .values({ clientIpHash: hash("a"), deviceHash: hash("b") })
+      .returning();
+    expect(row?.insertDatetime).toBeInstanceOf(Date);
+    const [updated] = await testDatabase.db
+      .update(previewRequest)
+      .set({ deviceHash: hash("c") })
+      .where(eq(previewRequest.previewRequestId, row?.previewRequestId ?? ""))
+      .returning();
+    expect(updated?.updateDatetime.getTime()).toBeGreaterThanOrEqual(
+      row?.updateDatetime.getTime() ?? Number.POSITIVE_INFINITY,
+    );
+  });
+
+  it.each([
+    ["IP em claro", { clientIpHash: "203.0.113.7", deviceHash: "b".repeat(64) }],
+    ["cookie em claro", { clientIpHash: "a".repeat(64), deviceHash: "x".repeat(43) }],
+    ["hash em maiúsculas", { clientIpHash: "A".repeat(64), deviceHash: "b".repeat(64) }],
+  ] as const)("rejeita %s", async (_, values) => {
+    await expectSqlState(
+      testDatabase.db.insert(previewRequest).values(values),
+      SQL_STATE.checkViolation,
+    );
   });
 });

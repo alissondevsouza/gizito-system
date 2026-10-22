@@ -4,12 +4,21 @@ import {
   aiEnvironmentSchema,
   aiModelSettingSchema,
   checkProductionEnvironment,
+  checkStorageProductionEnvironment,
+  checkTrustedProxyProductionEnvironment,
+  clientHashEnvironmentSchema,
+  INSECURE_STORAGE_IN_PRODUCTION_MESSAGE,
   isLogLevelAllowed,
   isPaymentGatewayAllowed,
+  isStorageEndpointAllowed,
+  isTrustedProxyHopCountAllowed,
+  MISSING_PROXY_HOP_IN_PRODUCTION_MESSAGE,
   nodeEnvList,
   paymentEnvironmentSchema,
   portSchema,
   sharedEnvironmentSchema,
+  storageEnvironmentSchema,
+  trustedProxyEnvironmentSchema,
 } from "#src/config/schemas.ts";
 
 const validEnvironment = {
@@ -143,5 +152,105 @@ describe("ambiente da IA (F1-05)", () => {
   it("configuração de modelo por etapa aceita esforço opcional", () => {
     expect(aiModelSettingSchema.parse({ model: "modelo" })).toEqual({ model: "modelo" });
     expect(aiModelSettingSchema.safeParse({ model: "", effort: "low" }).success).toBe(false);
+  });
+});
+
+const validStorageEnvironment = {
+  R2_ENDPOINT: "https://conta.r2.cloudflarestorage.com",
+  R2_BUCKET: "gizito",
+  R2_ACCESS_KEY_ID: "chave",
+  R2_SECRET_ACCESS_KEY: "segredo",
+} as const;
+
+describe("ambiente do storage (F2-01)", () => {
+  it("aplica a região auto do R2 por default", () => {
+    expect(storageEnvironmentSchema.parse(validStorageEnvironment).R2_REGION).toBe("auto");
+  });
+
+  it("nomeia cada chave obrigatória ausente", () => {
+    const result = storageEnvironmentSchema.safeParse({});
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual([
+      "R2_ENDPOINT",
+      "R2_BUCKET",
+      "R2_ACCESS_KEY_ID",
+      "R2_SECRET_ACCESS_KEY",
+    ]);
+  });
+
+  it("recusa bucket com maiúscula ou barra", () => {
+    for (const bucket of ["Gizito", "gizito/fotos", "g"]) {
+      expect(
+        storageEnvironmentSchema.safeParse({ ...validStorageEnvironment, R2_BUCKET: bucket })
+          .success,
+      ).toBe(false);
+    }
+  });
+
+  it("http só fora de produção", () => {
+    const local = { NODE_ENV: "development", R2_ENDPOINT: "http://127.0.0.1:9000" } as const;
+    expect(isStorageEndpointAllowed(local)).toBe(true);
+    expect(isStorageEndpointAllowed({ ...local, NODE_ENV: "production" })).toBe(false);
+    expect(
+      isStorageEndpointAllowed({
+        NODE_ENV: "production",
+        R2_ENDPOINT: validStorageEnvironment.R2_ENDPOINT,
+      }),
+    ).toBe(true);
+    const issueList: { code: "custom"; path: string[]; message: string }[] = [];
+    checkStorageProductionEnvironment(
+      { ...local, NODE_ENV: "production" },
+      { addIssue: (issue) => issueList.push(issue) },
+    );
+    expect(issueList).toEqual([
+      { code: "custom", path: ["R2_ENDPOINT"], message: INSECURE_STORAGE_IN_PRODUCTION_MESSAGE },
+    ]);
+  });
+});
+
+describe("segredo do hash de cliente e proxy confiável", () => {
+  it("CLIENT_HASH_SECRET tem ao menos 32 caracteres", () => {
+    expect(
+      clientHashEnvironmentSchema.safeParse({ CLIENT_HASH_SECRET: "x".repeat(31) }).success,
+    ).toBe(false);
+    expect(
+      clientHashEnvironmentSchema.safeParse({ CLIENT_HASH_SECRET: "x".repeat(32) }).success,
+    ).toBe(true);
+  });
+
+  it("TRUSTED_PROXY_HOP_COUNT é 0 por default e vai até 2", () => {
+    expect(trustedProxyEnvironmentSchema.parse({}).TRUSTED_PROXY_HOP_COUNT).toBe(0);
+    expect(trustedProxyEnvironmentSchema.parse({ TRUSTED_PROXY_HOP_COUNT: "1" })).toEqual({
+      TRUSTED_PROXY_HOP_COUNT: 1,
+    });
+    for (const value of ["3", "-1", "1.5", "um"]) {
+      expect(
+        trustedProxyEnvironmentSchema.safeParse({ TRUSTED_PROXY_HOP_COUNT: value }).success,
+      ).toBe(false);
+    }
+  });
+});
+
+describe("hop do proxy em produção (F2-01)", () => {
+  it("produção exige ao menos um proxy confiável; desenvolvimento aceita 0", () => {
+    expect(
+      isTrustedProxyHopCountAllowed({ NODE_ENV: "development", TRUSTED_PROXY_HOP_COUNT: 0 }),
+    ).toBe(true);
+    expect(
+      isTrustedProxyHopCountAllowed({ NODE_ENV: "production", TRUSTED_PROXY_HOP_COUNT: 1 }),
+    ).toBe(true);
+    const issueList: { code: "custom"; path: string[]; message: string }[] = [];
+    checkTrustedProxyProductionEnvironment(
+      { NODE_ENV: "production", TRUSTED_PROXY_HOP_COUNT: 0 },
+      { addIssue: (issue) => issueList.push(issue) },
+    );
+    expect(issueList).toEqual([
+      {
+        code: "custom",
+        path: ["TRUSTED_PROXY_HOP_COUNT"],
+        message: MISSING_PROXY_HOP_IN_PRODUCTION_MESSAGE,
+      },
+    ]);
   });
 });

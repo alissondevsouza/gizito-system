@@ -7,19 +7,25 @@ const kitFileNameMap: Readonly<Record<KitFileKind, string>> = {
   answer_key: "answer-key.pdf",
 };
 
-const GUID_PATTERN = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+const PHOTO_THUMBNAIL_SUFFIX = "-thumbnail";
+
+const LOWERCASE_GUID_PATTERN = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
 export const storageKeySchema = z
   .string()
   .regex(
     new RegExp(
-      `^orders/${GUID_PATTERN}/(photos/${GUID_PATTERN}\\.jpg|kits/${GUID_PATTERN}/(activities|answer-key)\\.pdf)$`,
+      `^(photos/${LOWERCASE_GUID_PATTERN}/${LOWERCASE_GUID_PATTERN}(${PHOTO_THUMBNAIL_SUFFIX})?\\.jpg|orders/${LOWERCASE_GUID_PATTERN}/kits/${LOWERCASE_GUID_PATTERN}/(activities|answer-key)\\.pdf)$`,
     ),
   );
 export type StorageKey = z.infer<typeof storageKeySchema>;
 
 export function photoStorageKey(orderId: Guid, orderPhotoId: Guid): StorageKey {
-  return `orders/${orderId.toLowerCase()}/photos/${orderPhotoId.toLowerCase()}.jpg`;
+  return `photos/${orderId.toLowerCase()}/${orderPhotoId.toLowerCase()}.jpg`;
+}
+
+export function photoThumbnailStorageKey(orderId: Guid, orderPhotoId: Guid): StorageKey {
+  return `photos/${orderId.toLowerCase()}/${orderPhotoId.toLowerCase()}${PHOTO_THUMBNAIL_SUFFIX}.jpg`;
 }
 
 export function kitStorageKey(orderId: Guid, kitId: Guid, kind: KitFileKind): StorageKey {

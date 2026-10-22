@@ -6,6 +6,7 @@ import {
   ORDER_ID,
   SHORT_CODE,
 } from "#src/__tests__/__fixtures__/entities.ts";
+import { MAX_SIGNED_URL_TTL_SECONDS, SIGNED_URL_TTL_SECONDS } from "#src/constants.ts";
 import {
   type AiCallResult,
   type AiProvider,
@@ -23,7 +24,13 @@ import {
   recipientHashSchema,
   sendResultSchema,
 } from "#src/interfaces/notification-channel.ts";
-import { type ObjectStorage, putObjectInputSchema } from "#src/interfaces/object-storage.ts";
+import {
+  type ObjectStorage,
+  ObjectStorageError,
+  objectStorageErrorCodeList,
+  putObjectInputSchema,
+  signedUrlTtlSecondsSchema,
+} from "#src/interfaces/object-storage.ts";
 import {
   chargeStatusResultSchema,
   createChargeInputSchema,
@@ -255,6 +262,22 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
     expect(putObjectInputSchema.safeParse({ ...input, contentType: "text/html" }).success).toBe(
       false,
     );
+    expect(putObjectInputSchema.safeParse({ ...input, key: "photos/x/y.jpg" }).success).toBe(false);
+  });
+
+  it("ObjectStorage limita o TTL da URL assinada e falha com código estável", () => {
+    expect(signedUrlTtlSecondsSchema.safeParse(SIGNED_URL_TTL_SECONDS).success).toBe(true);
+    expect(signedUrlTtlSecondsSchema.safeParse(MAX_SIGNED_URL_TTL_SECONDS).success).toBe(true);
+    for (const ttl of [0, -1, 1.5, MAX_SIGNED_URL_TTL_SECONDS + 1]) {
+      expect(signedUrlTtlSecondsSchema.safeParse(ttl).success).toBe(false);
+    }
+    const cause = new Error("detalhe do fornecedor");
+    const error = new ObjectStorageError("storage_unavailable", { cause });
+    expect(error.name).toBe("ObjectStorageError");
+    expect(error.code).toBe("storage_unavailable");
+    expect(error.cause).toBe(cause);
+    expect(error.message).not.toContain("detalhe");
+    expect(objectStorageErrorCodeList).toEqual(["storage_unavailable", "storage_rejected"]);
   });
 
   it("MathEvaluator devolve Result com ExpectedAnswer ou erro tipado", () => {

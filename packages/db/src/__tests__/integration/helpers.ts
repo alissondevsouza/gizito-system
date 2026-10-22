@@ -48,7 +48,8 @@ export function buildOrderPhotoInsert(
 ): typeof orderPhoto.$inferInsert {
   return {
     orderId,
-    storageKey: `orders/${orderId}/photos/${crypto.randomUUID()}.jpg`,
+    photoIndex: 0,
+    storageKey: `photos/${orderId}/${crypto.randomUUID()}.jpg`,
     contentHash: randomBytes(32).toString("hex"),
     width: 1600,
     height: 1200,

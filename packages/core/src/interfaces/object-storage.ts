@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { storageKeySchema } from "#src/storage/keys.ts";
+import { MAX_SIGNED_URL_TTL_SECONDS } from "#src/constants.ts";
+import { type StorageKey, storageKeySchema } from "#src/storage/keys.ts";
 
 export const storedContentTypeList = ["image/jpeg", "application/pdf"] as const;
 export const storedContentTypeSchema = z.enum(storedContentTypeList);
@@ -12,8 +13,24 @@ export const putObjectInputSchema = z.object({
 });
 export type PutObjectInput = z.infer<typeof putObjectInputSchema>;
 
+export const signedUrlTtlSecondsSchema = z.int().min(1).max(MAX_SIGNED_URL_TTL_SECONDS);
+
+export const objectStorageErrorCodeList = ["storage_unavailable", "storage_rejected"] as const;
+export const objectStorageErrorCodeSchema = z.enum(objectStorageErrorCodeList);
+export type ObjectStorageErrorCode = z.infer<typeof objectStorageErrorCodeSchema>;
+
+export class ObjectStorageError extends Error {
+  constructor(
+    readonly code: ObjectStorageErrorCode,
+    options?: { cause?: unknown },
+  ) {
+    super(`Object storage failed with ${code}`, options);
+    this.name = "ObjectStorageError";
+  }
+}
+
 export interface ObjectStorage {
   putPrivate(input: PutObjectInput): Promise<void>;
-  getSignedUrl(key: string, ttlSeconds: number): Promise<string>;
-  delete(key: string): Promise<void>;
+  getSignedUrl(key: StorageKey, ttlSeconds: number): Promise<string>;
+  delete(key: StorageKey): Promise<void>;
 }

@@ -74,7 +74,7 @@ describe("migration do zero", () => {
     const declaredNameList = tableList.flatMap((table) =>
       getTableConfig(table).indexes.map((index) => index.config.name ?? ""),
     );
-    expect(declaredNameList).toHaveLength(24);
+    expect(declaredNameList).toHaveLength(28);
     for (const name of declaredNameList) {
       expect(indexMap.has(name)).toBe(true);
     }
@@ -83,6 +83,10 @@ describe("migration do zero", () => {
       "WHERE (gateway_payment_id IS NOT NULL)",
     );
     expect(indexMap.get("order_public_token_idx")).toContain("UNIQUE");
+    expect(indexMap.get("order_photo_order_id_photo_index_idx")).toContain("UNIQUE");
+    expect(indexMap.get("order_photo_order_id_photo_index_idx")).toContain(
+      "WHERE (replaced_datetime IS NULL)",
+    );
     expect(indexMap.get("job_name_singleton_key_idx")).toContain("UNIQUE");
     expect(indexMap.get("job_name_singleton_key_idx")).toContain("singleton_key IS NOT NULL");
     expect(indexMap.get("job_pending_name_run_after_datetime_idx")).toContain(

@@ -1,13 +1,26 @@
-import type { Difficulty, Grade, Legibility, PerceivedDifficulty } from "#src/enums.ts";
+import type {
+  Difficulty,
+  Grade,
+  Legibility,
+  PerceivedDifficulty,
+  PreviewRateLimitKey,
+} from "#src/enums.ts";
 
 export const KIT_PRICE_CENTS = 2990;
 
 export const MIN_PHOTO_COUNT = 1;
 export const MAX_PHOTO_COUNT = 5;
 export const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+export const MAX_PHOTO_INPUT_PIXELS = 70_000_000;
+export const ORDER_UPLOAD_OVERHEAD_BYTES = 1024 * 1024;
+export const MAX_ORDER_UPLOAD_BYTES =
+  MAX_PHOTO_COUNT * MAX_PHOTO_BYTES + ORDER_UPLOAD_OVERHEAD_BYTES;
 
 export const AI_IMAGE_MAX_SIDE_PX = 1600;
 export const AI_IMAGE_JPEG_QUALITY = 80;
+export const PHOTO_THUMBNAIL_MAX_SIDE_PX = 400;
+export const PHOTO_THUMBNAIL_JPEG_QUALITY = 70;
+export const PHOTO_NORMALIZE_CONCURRENCY = 2;
 
 export const MIN_TOPIC_COUNT = 1;
 export const MAX_TOPIC_COUNT = 3;
@@ -122,6 +135,9 @@ export const PHOTO_RETENTION_DAYS = 30;
 export const KIT_RETENTION_MONTHS = 12;
 export const RETENTION_PURGE_INTERVAL_HOURS = 24;
 
+export const SIGNED_URL_TTL_SECONDS = 10 * 60;
+export const MAX_SIGNED_URL_TTL_SECONDS = 60 * 60;
+
 export const MAX_NOTE_LENGTH = 300;
 export const MIN_OTHER_TOPIC_LENGTH = 2;
 export const MAX_OTHER_TOPIC_LENGTH = 80;
@@ -132,6 +148,23 @@ export const PUBLIC_TOKEN_LENGTH = 43;
 export const SHORT_CODE_PREFIX = "GZ-";
 export const SHORT_CODE_LENGTH = 6;
 export const SHORT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+export const ORDER_CODE_ATTEMPT_COUNT = 3;
+
+export const DEVICE_ID_BYTES = 32;
+export const DEVICE_ID_LENGTH = 43;
+export const DEVICE_COOKIE_MAX_AGE_DAYS = 365;
+
+export const PREVIEW_RATE_LIMIT_PER_HOUR: Readonly<Record<PreviewRateLimitKey, number>> = {
+  device: 6,
+  ip: 30,
+};
+export const PREVIEW_RATE_LIMIT_PER_DAY: Readonly<Record<PreviewRateLimitKey, number>> = {
+  device: 20,
+  ip: 100,
+};
+export const PREVIEW_REQUEST_RETENTION_HOURS = 24;
+
+export const MAX_TRUSTED_PROXY_HOP_COUNT = 2;
 
 export const MAX_WHATSAPP_INBOUND_TEXT_LENGTH = 1000;
 export const WHATSAPP_HELP_REPLY_WINDOW_HOURS = 24;

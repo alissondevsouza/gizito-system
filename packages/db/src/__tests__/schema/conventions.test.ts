@@ -24,6 +24,7 @@ const expectedIndexMap: Record<string, { name: string; unique: boolean; partial?
   ],
   order_photo: [
     { name: "order_photo_order_id_idx", unique: false },
+    { name: "order_photo_order_id_photo_index_idx", unique: true, partial: true },
     { name: "order_photo_content_hash_idx", unique: false },
     { name: "order_photo_delete_datetime_insert_datetime_idx", unique: false },
   ],
@@ -53,14 +54,19 @@ const expectedIndexMap: Record<string, { name: string; unique: boolean; partial?
     { name: "job_failed_finish_datetime_idx", unique: false, partial: true },
     { name: "job_name_singleton_key_idx", unique: true, partial: true },
   ],
+  preview_request: [
+    { name: "preview_request_client_ip_hash_insert_datetime_idx", unique: false },
+    { name: "preview_request_device_hash_insert_datetime_idx", unique: false },
+    { name: "preview_request_insert_datetime_idx", unique: false },
+  ],
 };
 
 describe("convenções do schema", () => {
-  it("tableList contém exatamente as nove tabelas exportadas", () => {
+  it("tableList contém exatamente as dez tabelas exportadas", () => {
     const exportedNameList = exportedTableEntryList.map(([, table]) => getTableName(table)).sort();
     const listedNameList: string[] = tableList.map((table) => getTableName(table)).sort();
     expect(listedNameList).toEqual(exportedNameList);
-    expect(tableList).toHaveLength(9);
+    expect(tableList).toHaveLength(10);
   });
 
   it("export Drizzle é o camelCase singular do nome da tabela", () => {

@@ -64,6 +64,10 @@ export const questionBlockList = ["practice", "mock"] as const;
 export const questionBlockSchema = z.enum(questionBlockList);
 export type QuestionBlock = z.infer<typeof questionBlockSchema>;
 
+export const previewRateLimitKeyList = ["device", "ip"] as const;
+export const previewRateLimitKeySchema = z.enum(previewRateLimitKeyList);
+export type PreviewRateLimitKey = z.infer<typeof previewRateLimitKeySchema>;
+
 export const jobNameList = [
   "order.analyze",
   "order.generate",
