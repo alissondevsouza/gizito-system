@@ -40,7 +40,7 @@ A F1-11 fica pronta quando o professor devolver a auditoria sem erro crítico (c
 ## Plano
 
 - Marca de amostra: `isSample` em `KitRenderRequest` (opcional, padrão `false`) e em `KitTemplateContext` (obrigatório). Um helper `sampleMarkHtml` em `common.ts` vale para as duas capas, e um helper de rótulo do rodapé vale para os dois arquivos. Não há marca-d'água, para economizar impressão (design doc §9). Arquivos: `render-kit.ts`, `templates/kit-v1/{common,activities,answer-key,styles}.ts`, `scripts/render-kit.ts` e `__tests__/render/templates.test.ts`.
-- Entradas das amostras: `5-matematica-fracoes-decimais-e-perimetro.png` (frações, decimais e perímetro, que mostram o KaTeX) e `5-portugues-classes-de-palavras.png` (`lp5-word-classes`, aprovado pelo professor). As duas imagens estão em tamanho cheio e não fazem parte do sorteio.
+- Entradas das amostras: `5-matematica-fracoes-decimais-e-perimetro.png` (frações, decimais e perímetro, que mostram o KaTeX) e `5-portugues-classes-de-palavras.png` (`lp5-word-classes`, aprovado pelo professor). As duas imagens estão em tamanho cheio. Os kits de amostra se somam aos 8 sorteados, e os casos de regressão dessas imagens (`5-math-fracoes-decimais-perimetro` e `5-portuguese-classes-de-palavras`) continuam candidatos no sorteio.
 - Sorteio determinístico: em cada célula, a lista dos `ready` em ordem alfabética do id; o índice sorteado é `uint32(sha256("f1-11|<ano>-<disciplina>")[0..4]) mod n`. Qualquer pessoa reproduz o resultado com os mesmos dados.
 - Planilha: abas “Instruções”, “Revisão” e “Rubrica”. Na aba “Revisão”, a coluna “Defeito” é uma lista suspensa em português, e a classe e o código saem por fórmula a partir da aba “Rubrica”. Os rótulos “Onde” seguem o PDF: “Revisão: título”, “Texto: título”, “Exemplo n”, “Fixação n” e “Simulado n”.
 - Risco: o 7º ano de Português pode falhar de novo na rerodada (2 de 2 falharam na rodada final). Se nenhum kit sair `ready`, o ponto é escalado ao humano, sem forçar a geração. Foi o que aconteceu (Decisões).
@@ -64,7 +64,7 @@ A F1-11 fica pronta quando o professor devolver a auditoria sem erro crítico (c
 - [x] 4.1 PRD §3 e histórico 1.6
 
 ### M5 — Resultado da auditoria (depende do professor)
-- [ ] 5.1 Resumo da planilha devolvida e, se houver crítico, a correção e o caso novo
+- [ ] 5.1 Resumo da planilha devolvida e, se houver crítico, a correção e o caso novo. Antes de resumir, conferir que cada kit devolvido tem todos os `itemId` do seu `study_kit.json`
 - [ ] 5.2 F1-11 marcada no roadmap
 
 ## Decisões

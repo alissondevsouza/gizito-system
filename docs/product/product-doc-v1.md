@@ -41,10 +41,10 @@ O Gizito permite que um adulto responsável transforme **fotos da matéria escol
 | Upload → prévia válida | Prévias com assuntos confirmáveis / uploads concluídos | Medir; principal vazamento esperado (foto ruim) |
 | Prévia válida → e-mail informado | Pedidos com e-mail e aceite / prévias válidas | Medir |
 | Conversão prévia → Pix pago | Compras pagas / prévias válidas | Medir, sem estabelecer meta fictícia antes do piloto |
-| Custo por prévia | IA de extração + armazenamento, incluindo prévias que não convertem | Custo-alvo de até R$ 0,10 por prévia. Na Fase 1 (regressão de 21/10/2026, 35 casos), a IA custou em média US$ 0,0011 por prévia (p95 US$ 0,0019), cerca de R$ 0,01 a R$ 6 por dólar. O armazenamento é desprezível |
+| Custo por prévia | IA de extração + armazenamento, incluindo prévias que não convertem | Custo-alvo de até R$ 0,10 por prévia. Na Fase 1 (regressão de 21/10/2026, 35 casos), a IA custou em média US$ 0,0011 por prévia (p95 US$ 0,0019), cerca de R$ 0,01 (câmbio de R$ 6 por dólar). O armazenamento é desprezível |
 | Custo variável por kit | IA (extração, geração, revisão, regeneração) + gateway + arquivos | Monitorar por pedido; referência orçamentária, não SLA: IA até 10% do preço (R$ 2,99) em média. Na Fase 1, a IA custou em média US$ 0,41 por kit (p95 US$ 0,63), cerca de R$ 2,44; somado ao Pix (0,99%, cerca de R$ 0,30, seção 9.1), dá cerca de R$ 2,74 |
 | Sucesso de geração | Kits entregues sem intervenção / compras pagas | ≥ 95% no piloto, com recuperação de falhas |
-| Tempo de geração | Da confirmação do Pix aos dois PDFs prontos | Alvo: 95% em até 5 min. Na Fase 1, do plano aos dois PDFs, sem fila nem Pix: p50 de 3 min 21 s e p95 de 5 min 34 s, acima do alvo nos kits regenerados. É medido de novo no piloto, e a ação está em `docs/engineering/known-issues.md` |
+| Tempo de geração | Da confirmação do Pix aos dois PDFs prontos | Alvo: 95% em até 5 min. Na Fase 1, do plano aos dois PDFs, sem fila nem Pix: p50 de 3 min 21 s e p95 de 5 min 34 s, acima do alvo. Passaram de 5 min 4 dos 30 kits prontos, todos de Português e 2 deles com regeneração. É medido de novo no piloto, e a ação está em `docs/engineering/known-issues.md` |
 | Erro pedagógico grave | Resposta/gabarito incorreto ou conteúdo fora do nível | Zero nos casos auditados antes do lançamento; bloquear casos identificados em produção |
 | Recompra 30/60 dias | Compradores com 2ª compra / compradores elegíveis | Medir após implantação |
 | Reembolso/suporte | Pedidos reembolsados ou que exigem atendimento | Monitorar por motivo |

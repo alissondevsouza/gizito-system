@@ -29,7 +29,13 @@ O professor vê só o rótulo, com o ano e a disciplina. O id do caso fica só a
 | Kit 09 | 5º | Matemática | amostra de Matemática | amostra | — | — | ma5-decimal-numbers, ma5-equivalent-fractions, ma5-perimeter-area | 26 |
 | Kit 10 | 5º | Português | amostra de Português | amostra | — | — | lp5-word-classes | 25 |
 
-Os 10 kits têm `extract-v1+plan-v1+generate-v2+review-v2` e `tax-v2`. A planilha tem 252 linhas.
+Os kits de amostra se somam aos 8 sorteados. Os casos de regressão das mesmas imagens (`5-math-fracoes-decimais-perimetro` e `5-portuguese-classes-de-palavras`) continuam candidatos nas células do 5º ano, e o sorteio não caiu neles.
+
+Os 10 kits têm `extract-v1+plan-v1+generate-v2+review-v2` e `tax-v2`. A planilha tem 252 linhas. O texto do `generate` v2 não é o mesmo em todos:
+- os Kits 01 a 08 vêm de rodadas que começaram antes do `708b1b9` (21/10/2026, 17:37);
+- os Kits 09 e 10 vêm de depois do `708b1b9`.
+
+Esse commit mudou o pedido de formato da resposta (JSON sem bloco de código) sem subir a versão do prompt. Para analisar um crítico, é preciso considerar o texto exato. O Kit 08 saiu com `AI_EFFORT_GENERATE=medium`; zero crítico nele não valida a configuração de produção dessa célula.
 
 ## Kits de amostra
 
