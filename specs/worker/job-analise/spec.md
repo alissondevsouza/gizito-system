@@ -172,8 +172,8 @@ Roadmap F2-02. O tamanho subiu de M para L porque a entrega cruza core, db, inte
 - [x] 2.4 `completeWithin` no `workJob` com integração · Arquivos: `packages/db/src/queue/work.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
 
 ### M3 — worker
-- [ ] 3.1 Config com IA e storage, boot e `buildJobHandlerMap` · Arquivos: `apps/worker/src/{config.ts,index.ts,jobs/index.ts}`, testes · Verificação: `bun run --cwd apps/worker test`
-- [ ] 3.2 Handler `order.analyze`, adaptador do cache e `onExhausted`, com integração · Arquivos: `apps/worker/src/jobs/order-analyze.ts`, testes · Verificação: `bun run --cwd apps/worker test`, `bun run --cwd apps/worker test:integration`
+- [x] 3.1 Config com IA e storage, boot e `buildJobHandlerMap` · Arquivos: `apps/worker/src/{config.ts,index.ts,jobs/index.ts}`, testes · Verificação: `bun run --cwd apps/worker test`
+- [x] 3.2 Handler `order.analyze`, adaptador do cache e `onExhausted`, com integração · Arquivos: `apps/worker/src/jobs/order-analyze.ts`, testes · Verificação: `bun run --cwd apps/worker test`, `bun run --cwd apps/worker test:integration`
 
 ### M4 — api
 - [ ] 4.1 Troca limpa a análise e as notas em `draft` e `preview_ready` · Arquivos: `apps/api/src/services/orders.ts`, testes · Verificação: `bun run --cwd apps/api test:integration`

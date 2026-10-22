@@ -72,7 +72,7 @@ export function createR2ObjectStorage({
     throw failureOf(response);
   }
 
-  async function readBody(response: Response): Promise<Uint8Array> {
+  async function readBody(response: Response): Promise<Uint8Array<ArrayBuffer>> {
     try {
       return new Uint8Array(await response.arrayBuffer());
     } catch (cause) {

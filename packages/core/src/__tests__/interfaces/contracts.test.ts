@@ -238,7 +238,7 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
   );
 
   it("ObjectStorage", async () => {
-    const store = new Map<string, Uint8Array>();
+    const store = new Map<string, Uint8Array<ArrayBuffer>>();
     const storage: ObjectStorage = {
       putPrivate: async (input) => {
         store.set(input.key, input.body);

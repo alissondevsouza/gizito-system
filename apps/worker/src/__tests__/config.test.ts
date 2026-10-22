@@ -13,6 +13,20 @@ const validEnvironment = {
   NODE_ENV: "test",
   DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito",
   PAYMENT_GATEWAY: "fake",
+  AI_API_KEY: "chave-de-teste",
+  AI_MODEL_EXTRACT: "claude-haiku-5-5",
+  AI_MODEL_GENERATE: "claude-sonnet-5-5",
+  R2_ENDPOINT: "http://127.0.0.1:9000",
+  R2_BUCKET: "gizito",
+  R2_ACCESS_KEY_ID: "gizito",
+  R2_SECRET_ACCESS_KEY: "segredo-de-teste",
+};
+
+const productionEnvironment = {
+  ...validEnvironment,
+  NODE_ENV: "production",
+  PAYMENT_GATEWAY: "mercadopago",
+  R2_ENDPOINT: "https://conta.r2.cloudflarestorage.com",
 };
 
 describe("config do worker", () => {
@@ -75,12 +89,7 @@ describe("config do worker", () => {
   });
 
   it("recusa LOG_LEVEL=debug em produção, nomeando o campo", () => {
-    const result = workerConfigSchema.safeParse({
-      ...validEnvironment,
-      NODE_ENV: "production",
-      PAYMENT_GATEWAY: "mercadopago",
-      LOG_LEVEL: "debug",
-    });
+    const result = workerConfigSchema.safeParse({ ...productionEnvironment, LOG_LEVEL: "debug" });
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["LOG_LEVEL"]);
@@ -95,16 +104,52 @@ describe("config do worker", () => {
   });
 
   it("recusa PAYMENT_GATEWAY=fake em produção, nomeando o campo", () => {
-    const result = workerConfigSchema.safeParse({ ...validEnvironment, NODE_ENV: "production" });
+    const result = workerConfigSchema.safeParse({
+      ...productionEnvironment,
+      PAYMENT_GATEWAY: "fake",
+    });
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(z.prettifyError(result.error)).toContain("PAYMENT_GATEWAY");
-    expect(
-      workerConfigSchema.safeParse({
-        ...validEnvironment,
-        NODE_ENV: "production",
-        PAYMENT_GATEWAY: "mercadopago",
-      }).success,
-    ).toBe(true);
+    expect(workerConfigSchema.safeParse(productionEnvironment).success).toBe(true);
+  });
+
+  it("exige as chaves de IA e do storage, nomeando cada uma (spec F2-02, RF-11)", () => {
+    const requiredKeyList = [
+      "AI_API_KEY",
+      "AI_MODEL_EXTRACT",
+      "AI_MODEL_GENERATE",
+      "R2_ENDPOINT",
+      "R2_BUCKET",
+      "R2_ACCESS_KEY_ID",
+      "R2_SECRET_ACCESS_KEY",
+    ] as const;
+    for (const key of requiredKeyList) {
+      const { [key]: _omitted, ...withoutKey } = validEnvironment;
+      const result = workerConfigSchema.safeParse(withoutKey);
+      expect(result.success).toBe(false);
+      if (result.success) continue;
+      expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual([key]);
+    }
+  });
+
+  it("recusa modelo de IA sem preço no adaptador, nomeando o campo", () => {
+    const result = workerConfigSchema.safeParse({
+      ...validEnvironment,
+      AI_MODEL_GENERATE: "modelo-inventado",
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["AI_MODEL_GENERATE"]);
+  });
+
+  it("recusa R2_ENDPOINT sem https em produção, nomeando o campo", () => {
+    const result = workerConfigSchema.safeParse({
+      ...productionEnvironment,
+      R2_ENDPOINT: "http://127.0.0.1:9000",
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["R2_ENDPOINT"]);
   });
 });

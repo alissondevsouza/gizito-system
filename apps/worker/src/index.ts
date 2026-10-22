@@ -1,17 +1,16 @@
 import { hostname } from "node:os";
 import { createDatabase } from "@gizito/db";
-import { createLogger } from "@gizito/integrations";
+import { createAnthropicProvider, createLogger, createR2ObjectStorage } from "@gizito/integrations";
 import { z } from "zod";
 import { workerConfigSchema } from "#src/config.ts";
 import { readWorkerHealth } from "#src/health.ts";
 import { startHealthServer } from "#src/health-server.ts";
-import { jobHandlerMap } from "#src/jobs/index.ts";
+import { buildJobHandlerMap, handledJobNameList } from "#src/jobs/index.ts";
 import { startJobRunner } from "#src/runner/job-runner.ts";
 import {
   buildExhaustedJobDispatcher,
   buildJobLaneList,
   countWorkerConnections,
-  listHandledJobNames,
 } from "#src/runner/lanes.ts";
 import { startScheduler } from "#src/scheduler.ts";
 
@@ -27,13 +26,32 @@ if (!parsedConfig.success) {
 const config = parsedConfig.data;
 const logger = createLogger({ service: "worker", level: config.LOG_LEVEL });
 const workerId = `${hostname()}-${process.pid}`;
-const handledNameList = listHandledJobNames(jobHandlerMap);
-const laneList = buildJobLaneList(handledNameList, {
+const aiProvider = createAnthropicProvider({
+  apiKey: config.AI_API_KEY,
+  extract: { model: config.AI_MODEL_EXTRACT, effort: config.AI_EFFORT_EXTRACT },
+  generate: { model: config.AI_MODEL_GENERATE, effort: config.AI_EFFORT_GENERATE },
+});
+const storage = createR2ObjectStorage({
+  endpoint: config.R2_ENDPOINT,
+  bucket: config.R2_BUCKET,
+  region: config.R2_REGION,
+  accessKeyId: config.R2_ACCESS_KEY_ID,
+  secretAccessKey: config.R2_SECRET_ACCESS_KEY,
+});
+const laneList = buildJobLaneList(handledJobNameList, {
   generateConcurrency: config.GENERATE_CONCURRENCY,
 });
 const database = createDatabase({
   databaseUrl: config.DATABASE_URL,
   maxConnections: countWorkerConnections(laneList),
+});
+const jobHandlerMap = buildJobHandlerMap({
+  db: database.db,
+  aiProvider,
+  storage,
+  extractModel: config.AI_MODEL_EXTRACT,
+  logger,
+  now: () => new Date(),
 });
 
 const healthServer = startHealthServer({
@@ -51,7 +69,7 @@ const runner = startJobRunner({
 const scheduler = startScheduler({
   db: database.db,
   logger,
-  handledNameList,
+  handledNameList: handledJobNameList,
   onExhausted: buildExhaustedJobDispatcher(jobHandlerMap),
 });
 logger.info(

@@ -35,7 +35,7 @@ export class ObjectStorageError extends Error {
 
 export interface ObjectStorage {
   putPrivate(input: PutObjectInput): Promise<void>;
-  get(key: StorageKey): Promise<Uint8Array>;
+  get(key: StorageKey): Promise<Uint8Array<ArrayBuffer>>;
   getSignedUrl(key: StorageKey, ttlSeconds: number): Promise<string>;
   delete(key: StorageKey): Promise<void>;
 }
