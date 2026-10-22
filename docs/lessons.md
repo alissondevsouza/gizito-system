@@ -6,6 +6,14 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-22] Upload de fotos: multipart do Elysia, `aws4fetch` no S3, fixtures que viram a mesma foto — F2-01
+
+- No Elysia 1.4 com schema Zod, o campo de arquivo repetido chega como `File` quando vem um só e como `File[]` quando vêm dois ou mais (vale também para campo de texto repetido). O schema precisa aceitar os dois e normalizar para lista (`z.union([item, z.array(item)]).transform(...)`), senão o envio de uma foto falha na validação.
+- O `aws4fetch` assina `UNSIGNED-PAYLOAD` por padrão quando o serviço é `s3`. Para o R2 conferir a integridade do upload, passar `x-amz-content-sha256` com o SHA-256 do corpo antes do `sign`: ele usa o cabeçalho que já vem na requisição.
+- Fixture de foto gerada com cores quase iguais (canal vermelho 1, 2 e 3) sai idêntica depois da normalização em JPEG 80, e o teste cai em `photo_duplicate`. As fixtures precisam de cores bem distantes entre si.
+- O tipo `Blob` do `@types/bun` sem a lib DOM não declara `slice`. Ler os bytes uma vez (`arrayBuffer`) e conferir o cabeçalho com `subarray`. O arquivo do multipart já está em memória mesmo.
+- O MinIO parou de publicar a imagem da edição comunitária; o `pgsty/minio` segue publicando. Criar o bucket dentro do healthcheck (`MC_HOST_local` no ambiente e `mc mb --ignore-existing`) funciona com `docker compose up --wait`, o que um contêiner que cria o bucket e sai não garante. O MinIO aceita a região `auto` do R2 sem configuração.
+
 ## [2026-10-21] Regressão pedagógica: unidade do mathjs encobre função, JSON em bloco Markdown, oscilação na fronteira — F1-10
 
 - No `evaluate` do mathjs, a unidade posta no escopo pelo símbolo encobre a função de mesmo nome. Com `min` (minuto) no escopo, `min(45 min, 50 min)` chamava a unidade e dava `unsupported`. Renomear no AST os símbolos de unidade (`unit:min`) antes do `evaluate` separa os dois. Ao liberar uma função nova no avaliador, testar com as unidades da tabela que têm o mesmo nome.

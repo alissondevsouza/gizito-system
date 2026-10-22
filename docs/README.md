@@ -40,6 +40,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [0009](engineering/adr/0009-lease-renovado-e-compensacao.md) | Lease curto renovado, teto por execução e compensação atômica do job esgotado | aceito | 2026-10-19 |
 | [0010](engineering/adr/0010-pipeline-pedagogico-deterministico.md) | Pipeline pedagógico com regras no core, fotos só na extração e regeneração por reparo | aceito | 2026-10-19 |
 | [0011](engineering/adr/0011-anthropic-como-provedor-de-ia.md) | Anthropic como provedor de IA na F1, com adaptador por `Result`, saída estruturada e custo em centavos de dólar | aceito | 2026-10-20 |
+| [0012](engineering/adr/0012-storage-r2-com-aws4fetch-e-minio-local.md) | Storage R2 com `aws4fetch`, MinIO local no dev e na CI, fotos no prefixo `photos/` | aceito | 2026-10-22 |
 
 > Para criar um novo ADR: copie `engineering/adr/_template.md` → `engineering/adr/NNNN-titulo.md` e adicione a linha aqui.
 

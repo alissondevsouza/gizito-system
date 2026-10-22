@@ -1,6 +1,6 @@
 # Jobs e fila (`apps/worker`)
 
-**Versão:** 1.4 · **Data:** 2026-10-19 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md`; `docs/pedagogy/spec-pedagogica.md` (contratos e códigos do pipeline) · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
+**Versão:** 1.6 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md`; `docs/pedagogy/spec-pedagogica.md` (contratos e códigos do pipeline) · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
 
 O worker é um processo Bun que consome a fila no Postgres. Cada job tem um handler em `src/jobs/{nome}.ts`, payload validado por `jobPayloadSchema` ao enfileirar e ao consumir, e é **idempotente**: checa o estado do pedido antes de agir e reexecução não duplica kit, cobrança, e-mail nem mensagem.
 
@@ -8,7 +8,7 @@ O worker é um processo Bun que consome a fila no Postgres. Cada job tem um hand
 
 | Job | Payload | Quem enfileira | Transições | Concorrência |
 |---|---|---|---|---|
-| `order.analyze` | `{ orderId }` | api, `POST /orders` (mesma transação do `draft`) | `draft → analyzing → preview_ready` ou `→ draft` com avisos por foto | própria, 2 |
+| `order.analyze` | `{ orderId }` | api, `POST /orders` (mesma transação do `draft`) e `PUT /orders/:token/photos` (mesma transação da troca); singleton por `orderId`, então a troca com análise pendente não cria outro | `draft → analyzing → preview_ready` ou `→ draft` com avisos por foto | própria, 2 |
 | `order.generate` | `{ orderId }` | `markOrderPaidAndEnqueue` (webhook ou reconciliação); admin `reprocess` | `paid → processing → ready` (via `publishKit`) ou `→ failed` | `GENERATE_CONCURRENCY` (default 2) |
 | `order.notify` | `{ orderId, kind }` | `publishKit` (`kit_ready`), `order.generate` ao falhar (`kit_failed`), `confirm` (`order_link`), `whatsapp.inbound` | nenhuma | padrão |
 | `charge.reconcile` | `{ orderId?, webhookEventId? }` (`webhookEventId` só junto com `orderId`) | webhook do Mercado Pago (com `orderId` e `webhookEventId`, na transação do `webhook_event`); agendador a cada 2 minutos (sem nenhum dos dois) | `awaiting_payment → paid` por `markOrderPaidAndEnqueue`, após consultar o gateway, repassando o `webhookEventId`; cobrança vencida → `expired` | 2 |
@@ -121,3 +121,4 @@ flowchart TD
 - **1.3 (2026-10-19):** revisão da F0 e ADR-0009: lease de 2 min renovado a cada 30 s, teto de 15 min por execução, sinal para o handler, liberação sem gastar tentativa no desligamento, código de erro inválido sem travar o job, compensação atômica por `onExhausted`, manutenção a cada 30 s; `charge.reconcile` com `webhookEventId` e 2 vagas; `order.analyze` em raia própria.
 - **1.4 (2026-10-19):** F1-02 e ADR-0010: alocação das vagas no core antes do `plan`, `validateKitPlan`, composição do kit, revisão com severidade pelo código, regeneração por reparo (plano, kit ou itens), nova chamada de revisão sem gastar a regeneração e `fail_reason_code` `other_topic_unfeasible`.
 - **1.5 (2026-10-21):** F1-07: registro de cada chamada pelo `onAiCall`, teto conferido antes da chamada com o custo já gasto, `ai_aborted` no sinal, regeneração por execução e revisão completa depois do reparo por item vindo da validação.
+- **1.6 (2026-10-22):** F2-01: `order.analyze` enfileirado também pela troca de fotos e singleton por `orderId`.

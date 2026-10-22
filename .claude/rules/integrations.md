@@ -22,7 +22,7 @@ Implementações concretas das interfaces do `core`: `PaymentGateway` (Mercado P
 - Mercado Pago: regras em `payments.md`.
 - Evolution API: regras em `whatsapp.md`.
 - Resend: template de e-mail por tipo (`kit_ready`, `kit_failed`, `order_link`), remetente e domínio autenticados (SPF/DKIM/DMARC); link do pedido no corpo, PDFs nunca anexados.
-- R2: bucket privado; keys `orders/{orderId}/photos/{photoId}.jpg`, `orders/{orderId}/kits/{kitId}/activities.pdf` e `answer-key.pdf`; URLs assinadas com TTL configurável (default 10 minutos).
+- R2: bucket privado; keys `photos/{orderId}/{photoId}.jpg` e `photos/{orderId}/{photoId}-thumbnail.jpg` (prefixo com ciclo de vida de 30 dias), `orders/{orderId}/kits/{kitId}/activities.pdf` e `answer-key.pdf`; `storageKeySchema` só aceita GUID em minúsculas; URLs assinadas com `SIGNED_URL_TTL_SECONDS` (10 minutos) do core, até `MAX_SIGNED_URL_TTL_SECONDS`. Adaptador com `aws4fetch` (ADR-0012); no dev e na CI, o MinIO do compose; `test:storage-live` contra o R2 real.
 - IA: dois modelos configuráveis (`AI_MODEL_EXTRACT`, `AI_MODEL_GENERATE`); saída sempre em JSON validado; `usage` com tokens e custo em centavos; `promptVersion` ecoado.
 
 ## Testes

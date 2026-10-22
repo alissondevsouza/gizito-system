@@ -13,7 +13,8 @@ paths:
 - Logs estruturados (Pino, JSON) com `orderId`, rota, duração, código de erro. NUNCA conteúdo de foto, texto extraído, observação, código Pix, token, telefone completo ou mensagem de WhatsApp.
 
 ## Superfície pública (PRD seções 5 e 6, design doc 6.8)
-- `POST /orders`: cria `draft` com ano, disciplina e fotos (multipart ou presigned + confirm). Valida formato/tamanho, remove EXIF, reduz resolução, gera miniaturas, calcula hash. Enfileira `order.analyze`. Devolve `publicToken` e `shortCode`. **Rate limit por IP + cookie de dispositivo** (`PREVIEW_RATE_LIMIT_PER_HOUR`, `PREVIEW_RATE_LIMIT_PER_DAY`).
+- `POST /orders`: cria `draft` com ano, disciplina e fotos (multipart). Valida formato/tamanho, remove EXIF, reduz resolução, gera miniaturas, calcula hash. Enfileira `order.analyze`. Devolve `publicToken` e `shortCode`. **Rate limit por IP + cookie de dispositivo** (`PREVIEW_RATE_LIMIT_PER_HOUR`, `PREVIEW_RATE_LIMIT_PER_DAY`), com `429 challenge_required` ao passar; IP e cookie só em HMAC.
+- `PUT /orders/:token/photos`: "Trocar foto" em lote (`orderPhotoId` e `photos` em pares), em `draft` ou `preview_ready` (`photos_changed`); conta no rate limit da prévia.
 - `GET /orders/:token`: estado e dados da etapa atual (assuntos candidatos, perfil, cobrança ativa, links). É o endpoint que o web usa para decidir a rota.
 - `POST /orders/:token/confirm`: assuntos (1–3 ids da taxonomia ou `other`), opcionais, e-mail e aceite. Transição `preview_ready → awaiting_payment` + criação da cobrança via `PaymentGateway`.
 - `POST /orders/:token/charges`: nova cobrança quando a anterior expirou (`charge_expired`). Nunca cria cobrança para pedido `paid` ou posterior.

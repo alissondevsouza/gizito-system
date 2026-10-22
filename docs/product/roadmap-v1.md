@@ -3,7 +3,7 @@
 **Status:** em execução  
 **Fase atual:** F2 — Fluxo comercial  
 **Data:** 14/10/2026  
-**Estado atualizado em:** 21/10/2026  
+**Estado atualizado em:** 22/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
 **Como usar:** cada feature vira uma spec em `specs/{modulo}/{slug}/` executada pelo fluxo `gizito-spec-driven`; as fases só avançam quando o critério de saída é atendido  
 **Como marcar:** `[x]` concluída, com data e commit ou spec ao lado · `[ ]` com **em andamento** no título quando iniciada, com o sub-item "Feito até agora" · `[ ]` sem marca é pendente. Ao concluir uma feature, marcar o item e trocar "Feito até agora" por "Concluída em". Ao fechar uma fase, marcar o gate, atualizar a coluna Estado da seção 2, o bloco "Estado atual" abaixo e a tabela de estado de `docs/README.md`
@@ -24,7 +24,7 @@ Resumo por fase:
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
 | F1 Prova técnica e pedagógica | 11 | 11 | 0 | 0 |
-| F2 Fluxo comercial | 14 | 0 | 0 | 14 |
+| F2 Fluxo comercial | 14 | 0 | 1 | 13 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
 
@@ -98,7 +98,7 @@ flowchart LR
 |---|---|---|---|---|---|
 | F0 Fundação | Repositório pronto para construir | monorepo, infra local, core e db com máquina de estados e fila, docs técnicos | lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos | 1 a 2 semanas | concluída |
 | F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 35 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | concluída |
-| F2 Fluxo comercial | Compra ponta a ponta em produção | API, worker, web, WhatsApp, admin, legal, deploy | checklist da seção 10 do PRD completa; compra real feita por você e entregue num celular real | 4 a 6 semanas | pendente |
+| F2 Fluxo comercial | Compra ponta a ponta em produção | API, worker, web, WhatsApp, admin, legal, deploy | checklist da seção 10 do PRD completa; compra real feita por você e entregue num celular real | 4 a 6 semanas | em andamento |
 | F3 Piloto pago | Validar H1 a H4 com dinheiro real | 10 a 20 responsáveis, auditoria semanal, métricas | memo de decisão com evidência das hipóteses | 3 a 4 semanas de calendário | pendente |
 | F4 Pós-validação | Crescer só com gatilho | 8º e 9º ano, preço, WhatsApp oficial, novas matérias | por gatilho, item a item | aberto | pendente |
 
@@ -237,11 +237,12 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 5. Fase 2 — Fluxo comercial
 
-**Estado:** pendente · 0 de 14 concluídas
+**Estado:** em andamento · 0 de 14 concluídas
 
-- [ ] **F2-01 `pedidos-e-upload`** — api, integrations · L · depende: F0-07, F0-05
-  - Entrega: `POST /orders` (fotos, EXIF removido, redução, hash, R2 privado), `GET /orders/:token`, token e código curto, rate limit da prévia; `ObjectStorage` R2 e fake
-  - Pronto quando: upload de Android e iPhone (HEIC) testado em aparelho; 404 neutro; rate limit em integração
+- [ ] **F2-01 `pedidos-e-upload`** **em andamento** — api, integrations · L · depende: F0-07, F0-05
+  - Entrega: `POST /orders` (fotos, EXIF removido, redução, hash, R2 privado), `GET /orders/:token`, "Trocar foto" (`PUT /orders/:token/photos`), token e código curto, rate limit da prévia; `ObjectStorage` R2 e fake
+  - Pronto quando: fotos sintéticas (JPEG com EXIF e orientação, PNG, HEIC recusado) testadas; 404 neutro; rate limit em integração; adaptador R2 contra o MinIO local. O teste em aparelho foi para a F2-09 e o teste contra o R2 real vai para antes da F2-13 (decisões do humano em 21/10/2026)
+  - Feito até agora: implementada na branch `feat/api/pedidos-e-upload` (spec em `specs/api/pedidos-e-upload/`), com revisão neutra; falta o merge do humano
 - [ ] **F2-02 `job-analise`** — worker · M · depende: F2-01, F1-06
   - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida
   - Pronto quando: transições e avisos testados; reexecução idempotente
@@ -265,7 +266,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Pronto quando: página de componentes; contraste AA validado; `prefers-reduced-motion`
 - [ ] **F2-09 `fluxo-web-de-compra`** — web · L · depende: F2-08, F2-01 a F2-06
   - Entrega: landing com kit de amostra, `/criar`, `/pedido/:token/assuntos`, `/pagamento`, `/preparando`, `/kit`, `/erro`, `/ajuda`; `order-route` pela tabela 6.8
-  - Pronto quando: E2E Playwright com adaptadores falsos; utilizável a 360 px; navegação por teclado
+  - Pronto quando: E2E Playwright com adaptadores falsos; utilizável a 360 px; navegação por teclado; upload de Android e iPhone (HEIC) testado em aparelho, vindo da F2-01 (decisão do humano em 21/10/2026); desafio leve (Cloudflare Turnstile, com fake) no `429 challenge_required` da prévia, vindo da F2-01 (PRD §6, decisão do humano em 22/10/2026)
 - [ ] **F2-10 `receber-no-whatsapp`** — api, worker, web, integrations · L · depende: F2-07, F0-02
   - Entrega: adaptador Evolution e fake; `POST /webhooks/whatsapp`; `whatsapp.inbound`; envio de link e PDFs; `WhatsAppOptIn`; `WHATSAPP_ENABLED`
   - Pronto quando: todos os casos da rule `whatsapp.md`; flag desligada não muda nada; teste com número real

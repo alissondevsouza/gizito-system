@@ -1,6 +1,6 @@
 # Modelo de dados
 
-**Versão:** 1.4 · **Data:** 2026-10-20 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
+**Versão:** 1.5 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
 
 PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolamento é por pedido, e toda leitura pública passa pelo `public_token`.
 
@@ -31,6 +31,13 @@ erDiagram
   order ||--o{ support_ticket : "reportes"
   kit o|--o| kit : "superseded_by_kit_id"
 
+  preview_request {
+    uuid preview_request_id PK
+    text client_ip_hash "HMAC do IP normalizado"
+    text device_hash "HMAC do cookie do dispositivo"
+    timestamptz insert_datetime
+    timestamptz update_datetime
+  }
   order {
     uuid order_id PK
     text public_token UK "43 chars base64url"
@@ -55,12 +62,14 @@ erDiagram
   order_photo {
     uuid order_photo_id PK
     uuid order_id FK
-    text storage_key
+    int photo_index "0–4, ordem do envio"
+    text storage_key "photos/{orderId}/{orderPhotoId}.jpg"
     text content_hash "sha256 da imagem normalizada"
     int width
     int height
     real legibility_score "0–1"
-    timestamptz delete_datetime "retenção de 30 dias"
+    timestamptz replaced_datetime "Trocar foto"
+    timestamptz delete_datetime "retenção de 30 dias ou troca"
     timestamptz insert_datetime
     timestamptz update_datetime
   }
@@ -172,7 +181,8 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 | `order` | `(status, update_datetime)` | reconciliação, retenção, admin |
 | `order` | `email` | busca no admin |
 | `order` | `whatsapp_phone` (parcial, não nulo) | SAIR/PARAR e vínculo repetido |
-| `order_photo` | `order_id`; `(delete_datetime, insert_datetime)`; `content_hash` | listagem; purge; cache de extração por hash (F1-02) |
+| `order_photo` | `order_id`; unique parcial `(order_id, photo_index)` com `replaced_datetime` nulo; `(delete_datetime, insert_datetime)`; `content_hash` | listagem; uma foto atual por índice; purge; cache de extração por hash (F1-02) |
+| `preview_request` | `(client_ip_hash, insert_datetime)`; `(device_hash, insert_datetime)`; `insert_datetime` | contagem do rate limit da prévia por janela; remoção das linhas com mais de 24 h |
 | `charge` | `order_id`; unique `gateway_payment_id` (parcial, não nulo); unique `(gateway, gateway_order_id)` (parcial, não nulo); `(status, expire_datetime)` | idempotência do pagamento; localizar a cobrança pelo webhook; reconciliação |
 | `kit` | `order_id`; `(delete_datetime, published_datetime)` | download; purge |
 | `ai_call` | `order_id` | custo por pedido |
@@ -184,7 +194,8 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 ## 4. O que cada tabela não guarda
 
 - `order`: nome da criança, escola, turma, CPF. `whatsapp_phone` só com `whatsapp_consent_datetime`.
-- `order_photo`: a imagem (fica no R2, privada); EXIF já removido antes do upload.
+- `order_photo`: a imagem (fica no R2, privada, com a miniatura em `photos/{orderId}/{orderPhotoId}-thumbnail.jpg`); EXIF já removido antes do upload. As fotos atuais do pedido são as que têm `replaced_datetime` e `delete_datetime` nulos.
+- `preview_request`: IP e cookie em claro. Só HMAC-SHA256 com `CLIENT_HASH_SECRET`, e a linha sai com mais de 24 h, apagada no próprio insert da reserva.
 - `ai_call`: prompt, resposta, texto extraído. Só números e códigos.
 - `webhook_event`: corpo bruto. Só identificação e resultado.
 - `charge`: o `qr_code` existe na tabela (o web precisa exibi-lo) mas nunca vai para log.
@@ -192,7 +203,8 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 
 ## 5. Retenção e soft delete
 
-- Fotos: `retention.purge` apaga do storage após `PHOTO_RETENTION_DAYS` (30) e grava `delete_datetime`; a linha fica.
+- Fotos: `retention.purge` apaga do storage a foto e a miniatura após `PHOTO_RETENTION_DAYS` (30) e grava `delete_datetime`; a linha fica. Foto trocada ("Trocar foto") sai do storage logo depois do commit e ganha `delete_datetime`; se a remoção falhar, fica com `delete_datetime` nulo e a purga a apaga pelos 30 dias. A regra de ciclo de vida de 30 dias no prefixo `photos/` do bucket (F2-13, ADR-0012) é a rede de segurança para objeto órfão sem linha.
+- Rate limit: `preview_request` guarda 24 h (`PREVIEW_REQUEST_RETENTION_HOURS`).
 - PDFs e `study_kit`: após `KIT_RETENTION_MONTHS` (12), apaga do storage, grava `delete_datetime` e limpa `study_kit`; `ai_call` permanece para métricas.
 - Remoção a pedido do titular: admin apaga `email`, `whatsapp_phone`, fotos e PDFs, mantendo o pedido como registro contábil anonimizado.
 - As funções de prazo (`photoDeleteDeadline`, `kitDeleteDeadline`) estão no core e recebem o relógio por parâmetro.
@@ -212,3 +224,4 @@ Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `l
 - **1.2 (2026-10-15):** F0-06 acrescenta a tabela `job` (diagrama, índices, o que não guarda), a convenção da coluna `jsonb` própria e as assinaturas reais de `markOrderPaidAndEnqueue` e `publishKit` em §6.
 - **1.3 (2026-10-19):** revisão da F0 (migration `0002_revisao_f0`): índices parciais da `job`; unique de `(gateway, gateway_order_id)`; índices de `whatsapp_phone` e `content_hash`; check de `topic_id_list` contando o "outro"; `notification` com `recipient_hash`, `order_id` nulo só na ajuda e unique por destinatário; timeouts do pool em §6.
 - **1.4 (2026-10-20):** F1-05: `ai_call.cost_cents` em centavos de dólar e `input_token_count` com os tokens de cache (§1, ADR-0011).
+- **1.5 (2026-10-22):** F2-01 (migration `0003_pedidos_e_upload`): `order_photo.photo_index` com unique parcial por foto não trocada, `order_photo.replaced_datetime`, tabela `preview_request` com HMAC de IP e dispositivo, fotos no prefixo `photos/` (ADR-0012), miniatura junto da foto na retenção.

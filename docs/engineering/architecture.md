@@ -1,6 +1,6 @@
 # Arquitetura técnica
 
-**Versão:** 1.0 · **Data:** 2026-10-15 · **Fonte de produto:** PRD §8–9 (`docs/product/product-doc-v1.md`), design doc §6 (`docs/design/design-doc-v1.md`) · **Decisões:** ADR-0002 a ADR-0007
+**Versão:** 1.1 · **Data:** 2026-10-22 · **Fonte de produto:** PRD §8–9 (`docs/product/product-doc-v1.md`), design doc §6 (`docs/design/design-doc-v1.md`) · **Decisões:** ADR-0002 a ADR-0007
 
 Este documento descreve como o Gizito é dividido em processos e pacotes, por onde os dados passam e quais fronteiras não podem ser cruzadas. Regras de detalhe por área estão em `.claude/rules/`; invariantes no `CLAUDE.md`.
 
@@ -119,7 +119,7 @@ handler (HTTP ou job) → service → Drizzle (packages/db)
 ## 4. Dados e armazenamento
 
 - PostgreSQL 16 guarda pedidos, fotos (metadados), cobranças, kits, chamadas de IA, eventos de webhook, notificações, tickets e **a fila de jobs** (ADR-0003). Modelo em `data-model.md`.
-- Cloudflare R2, bucket privado, guarda fotos (30 dias) e PDFs (12 meses); keys `orders/{orderId}/photos/{photoId}.jpg` e `orders/{orderId}/kits/{kitId}/{activities,answer-key}.pdf`.
+- Cloudflare R2, bucket privado, guarda fotos (30 dias) e PDFs (12 meses); keys `photos/{orderId}/{photoId}.jpg`, `photos/{orderId}/{photoId}-thumbnail.jpg` e `orders/{orderId}/kits/{kitId}/{activities,answer-key}.pdf`. O prefixo `photos/` recebe a regra de ciclo de vida de 30 dias (ADR-0012). Adaptador com `aws4fetch`; no dev e na CI, MinIO do compose.
 - Redis existe só para a Evolution API. Nenhuma app lê Redis.
 - Nada de conteúdo pessoal em logs: `orderId`, etapa, duração, custo e códigos de erro são o vocabulário dos logs (invariante 9).
 
@@ -127,7 +127,7 @@ handler (HTTP ou job) → service → Drizzle (packages/db)
 
 | Ambiente | Como sobe | Observações |
 |---|---|---|
-| Local | `docker compose up -d` (Postgres 5433, Redis 6379, Evolution 8080, só em `127.0.0.1`) + `bun run dev` | `.env` a partir de `.env.example`; `PAYMENT_GATEWAY=fake`, `WHATSAPP_ENABLED=false` por padrão |
+| Local | `docker compose up -d` (Postgres 5433, Redis 6379, MinIO 9000 com o console em 9001 e o bucket `gizito`, Evolution 8080, só em `127.0.0.1`) + `bun run dev` | `.env` a partir de `.env.example`; `PAYMENT_GATEWAY=fake`, `WHATSAPP_ENABLED=false` por padrão |
 | Testes | unit sem Docker (`bun run test`); integração com Postgres real via `@gizito/db/test-helpers` (`bun run test:integration`); regressão pedagógica com chave de IA (`bun run test:pedagogy`), fora do CI | `mock.module` do Bun é process-wide, por isso scripts separados |
 | Produção (F2-13) | um VPS, Compose com web, api, worker, postgres, redis, evolution e proxy TLS; só 80/443 públicos; migrations no deploy; `pg_dump` diário para R2 | Evolution e Postgres nunca expostos; alertas de fila parada, WhatsApp desconectado e taxa de `failed` |
 
@@ -148,3 +148,4 @@ handler (HTTP ou job) → service → Drizzle (packages/db)
 ## Histórico
 
 - **1.0 (2026-10-15):** versão inicial (F0-03), derivada do PRD §9, do design doc §6 e das decisões de F0-01, F0-02 e F0-04.
+- **1.1 (2026-10-22):** F2-01 e ADR-0012: fotos no prefixo `photos/` com miniatura, adaptador R2 com `aws4fetch`, MinIO no ambiente local.

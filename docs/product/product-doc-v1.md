@@ -1,7 +1,7 @@
-# PRD — Gizito | MVP v1.6
+# PRD — Gizito | MVP v1.7
 
 **Status:** especificação proposta para implementação  
-**Data:** 14/10/2026 · revisão 1.6 em 21/10/2026 (ver seção 13)  
+**Data:** 14/10/2026 · revisão 1.7 em 22/10/2026 (ver seção 13)  
 **Produto:** gerador de kits personalizados para preparação de provas escolares  
 **Modelo de receita:** pagamento único por kit via Pix  
 **Nome:** **Gizito**
@@ -139,7 +139,7 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 - Reduzir as imagens no cliente e no servidor (lado maior ≈ 1600 px, JPEG com qualidade ≈ 80) antes de enviar à IA.
 - Usar o modelo multimodal de **menor custo** na extração; o modelo forte fica para geração e revisão.
 - Cache por hash da imagem normalizada: reenviar a mesma foto não paga nova extração.
-- Rate limit por IP e identificador de dispositivo (por exemplo, 5 prévias/hora e 15/dia); desafio leve apenas ao exceder.
+- Rate limit por IP e identificador de dispositivo: por aparelho, 6 prévias por hora e 20 por dia; por IP, 30 por hora e 100 por dia, com folga para o CGNAT das operadoras móveis. Trocar fotos conta como prévia. Desafio leve apenas ao exceder.
 - Custo-alvo por prévia na seção 3, acompanhado no painel.
 - **Qualidade:** a prévia precisa convencer. Mostrar assuntos com nome claro, o perfil do material entendido (sem inventar trechos), a composição exata do kit, o preço e o link para o kit de amostra.
 
@@ -363,6 +363,7 @@ Detalhamento em features, dependências, pendências do humano e critérios de p
 
 ## 13. Histórico de revisões
 
+- **1.7 (22/10/2026):** limites do rate limit da prévia (6), que substituem o exemplo de 5 por hora e 15 por dia: por aparelho, 6 por hora e 20 por dia; por IP, 30 por hora e 100 por dia; trocar fotos conta como prévia. O desafio leve ao exceder entra com a tela de envio (roadmap F2-09); até lá, passar do limite recusa o envio. Decisões do humano na F2-01 (21 e 22/10/2026).
 - **1.6 (21/10/2026):** custo e tempo medidos na Fase 1 (3). Custo-alvo da prévia de até R$ 0,10, com US$ 0,0011 medido. Referência do kit: IA até 10% do preço, com US$ 0,41 medido. Tempo de geração com p95 de 5 min 34 s, acima do alvo de 5 min. Fonte: rodada final da regressão de 21/10/2026, 35 casos, a R$ 6 por dólar; F1-11.
 - **1.5 (21/10/2026):** homologação da v1 com 35 casos em vez de 40 (7.6, 10, 11, 12.1): 30 imagens de caderno geradas por IA e 5 variações delas, sem foto real; a extração em caderno real passa a ser medida em produção. Motivo: não há como conseguir fotos reais antes do lançamento, e o humano prioriza lançar rápido, com o risco assumido. Decisão do humano em 21/10/2026.
 - **1.4 (20/10/2026):** provedor de IA decidido para a Fase 1: Anthropic, com Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão, e Gemini ou GPT como alternativa se o custo por kit passar da meta (12.1, antes em aberto em 12.2). Decisão do humano na F1-05.

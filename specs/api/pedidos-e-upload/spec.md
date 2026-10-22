@@ -339,12 +339,12 @@ Um corpo enviado em chunks sem `Content-Length` e acima do teto do servidor rece
 - [x] 4.6 Teste de logs (RF-10) e 503 do storage. · Verificação: `bun run --cwd apps/api test` e `test:integration`.
 
 ### M5 — docs e verificação
-- [ ] 5.1 Atualizar os docs da lista de Arquivos, com o roadmap da F2-01 e da F2-09 (aparelho, HEIC e desafio) e o PRD 1.7. Mudanças no `known-issues.md`:
+- [x] 5.1 Atualizar os docs da lista de Arquivos, com o roadmap da F2-01 e da F2-09 (aparelho, HEIC e desafio) e o PRD 1.7. Mudanças no `known-issues.md`:
   - os dois LOW da F2-01 vão para Resolvidos;
   - entra o LOW "adaptador R2 sem teste contra o R2 real", com a condição "`test:storage-live` verde antes da F2-13";
   - entra o LOW "objeto órfão até a regra de ciclo de vida de `photos/`", com a condição F2-13.
-- [ ] 5.2 `bun run lint`, `typecheck`, `test`, `test:integration` e `build`.
-- [ ] 5.3 API no ar com o MinIO (skill `run`): `curl` nas três rotas, miniatura baixada, ausência de EXIF no objeto gravado, 429, 404 neutro e 413.
+- [x] 5.2 `bun run lint`, `typecheck`, `test`, `test:integration` e `build`.
+- [x] 5.3 API no ar com o MinIO (skill `run`): `curl` nas três rotas, miniatura baixada, ausência de EXIF no objeto gravado, 429, 404 neutro e 413.
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -366,14 +366,19 @@ Um corpo enviado em chunks sem `Content-Length` e acima do teto do servidor rece
 | 2026-10-22 | **D-04 (humano, 22/10/2026):** o PRD §6 pede "desafio leve apenas ao exceder"; a F2-01 responde 429 `challenge_required`, e o desafio (Turnstile) entra na F2-09 | revisão da spec (CRÍTICO): divergência do PRD levada ao humano |
 
 ## Status
-- **Fase:** spec revisada (rodada 1, reprovada com 1 CRÍTICO e 10 ALERTAs, todos tratados nesta versão). M1 1.1–1.4 e M2 feitos.
-- **Próximo passo:** 1.5, depois o M3.
+- **Fase:** implementada (M1 a M5), na revisão neutra do diff.
+- **Feito:**
+  - spec revisada (rodada 1 reprovada com 1 CRÍTICO e 10 ALERTAs, todos tratados; o CRÍTICO resolvido por D-04 com o humano);
+  - suíte verde: lint, typecheck, unit, integração e build;
+  - verificação no ar com a API, o Postgres e o MinIO (resultados no `review.md`).
 - **Para a F2-02:**
   - ler as fotos atuais (por `photo_index`) depois de travar o pedido e aplicar `start_analysis`, na mesma transação;
   - em `photos_changed`, limpar o que gravar da prévia;
   - concluir o job na mesma transação de `analysis_failed → draft`, ou reenfileirar se as fotos mudaram enquanto o job ainda estava ativo: uma troca nesse intervalo vê o singleton ainda `active` e não enfileira nada.
 - **Para a F2-06:** apagar também a miniatura de cada foto.
-- **Para a F2-09:** desafio Turnstile no `challenge_required`, teste em aparelho e uso de `credentials: "include"`.
+- **Para a F2-09:** desafio Turnstile no `challenge_required`, teste em aparelho e `credentials: "include"`.
 - **Para a F2-12:** a política de privacidade cita o cookie de dispositivo e o HMAC do IP guardado por 24 h.
 - **Para a F2-13:** regra de ciclo de vida de 30 dias no prefixo `photos/`, `TRUSTED_PROXY_HOP_COUNT` do proxy e `test:storage-live` verde.
-- **Pendências do humano:** chaves novas no `.env.example` e no `.env` (lista no handoff); bucket R2 para o `test:storage-live`.
+- **Pendências do humano:**
+  - chaves novas no `.env.example` e no `.env` (lista no handoff);
+  - bucket R2 para o `test:storage-live`.
