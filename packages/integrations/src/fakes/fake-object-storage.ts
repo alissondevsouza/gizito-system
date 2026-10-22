@@ -22,6 +22,7 @@ export type FakeObjectStorage = ObjectStorage & {
   readonly failNextPut: (code?: ObjectStorageErrorCode) => void;
   readonly failPutAfter: (successCount: number, code?: ObjectStorageErrorCode) => void;
   readonly failNextDelete: (code?: ObjectStorageErrorCode) => void;
+  readonly failNextGet: (code?: ObjectStorageErrorCode) => void;
 };
 
 export function createFakeObjectStorage(): FakeObjectStorage {
@@ -29,6 +30,7 @@ export function createFakeObjectStorage(): FakeObjectStorage {
   const deletedKeyList: StorageKey[] = [];
   let putFailure: { remainingSuccessCount: number; code: ObjectStorageErrorCode } | null = null;
   let deleteFailure: ObjectStorageErrorCode | null = null;
+  let getFailure: ObjectStorageErrorCode | null = null;
 
   return {
     objectMap,
@@ -42,6 +44,9 @@ export function createFakeObjectStorage(): FakeObjectStorage {
     failNextDelete(code = "storage_unavailable") {
       deleteFailure = code;
     },
+    failNextGet(code = "storage_unavailable") {
+      getFailure = code;
+    },
     async putPrivate(input) {
       const { key, body, contentType } = putObjectInputSchema.parse(input);
       if (putFailure !== null) {
@@ -53,6 +58,17 @@ export function createFakeObjectStorage(): FakeObjectStorage {
         putFailure.remainingSuccessCount -= 1;
       }
       objectMap.set(key, { body: body.slice(), contentType });
+    },
+    async get(key) {
+      const validKey = storageKeySchema.parse(key);
+      if (getFailure !== null) {
+        const code = getFailure;
+        getFailure = null;
+        throw new ObjectStorageError(code);
+      }
+      const stored = objectMap.get(validKey);
+      if (stored === undefined) throw new ObjectStorageError("storage_not_found");
+      return stored.body.slice();
     },
     async getSignedUrl(key, ttlSeconds) {
       const validKey = storageKeySchema.parse(key);

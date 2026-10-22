@@ -84,6 +84,7 @@ export const orderSchema = timestampFieldsSchema
     noteText: noteTextSchema.nullable(),
     perceivedDifficulty: perceivedDifficultySchema.nullable(),
     materialProfile: z.unknown().nullable(),
+    analysis: z.unknown().nullable(),
     whatsappPhone: phoneSchema.nullable(),
     whatsappConsentDatetime: z.date().nullable(),
     paidDatetime: z.date().nullable(),

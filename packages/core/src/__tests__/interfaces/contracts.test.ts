@@ -243,6 +243,11 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
       putPrivate: async (input) => {
         store.set(input.key, input.body);
       },
+      get: async (key) => {
+        const body = store.get(key);
+        if (body === undefined) throw new ObjectStorageError("storage_not_found");
+        return body;
+      },
       getSignedUrl: async (key, ttlSeconds) => `https://storage.example/${key}?ttl=${ttlSeconds}`,
       delete: async (key) => {
         store.delete(key);
@@ -256,6 +261,7 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
     });
     await storage.putPrivate(input);
     expect(store.has(key)).toBe(true);
+    expect(await storage.get(key)).toEqual(input.body);
     expect(await storage.getSignedUrl(key, 600)).toContain("ttl=600");
     await storage.delete(key);
     expect(store.has(key)).toBe(false);
@@ -277,7 +283,11 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
     expect(error.code).toBe("storage_unavailable");
     expect(error.cause).toBe(cause);
     expect(error.message).not.toContain("detalhe");
-    expect(objectStorageErrorCodeList).toEqual(["storage_unavailable", "storage_rejected"]);
+    expect(objectStorageErrorCodeList).toEqual([
+      "storage_unavailable",
+      "storage_rejected",
+      "storage_not_found",
+    ]);
   });
 
   it("MathEvaluator devolve Result com ExpectedAnswer ou erro tipado", () => {

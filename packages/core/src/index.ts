@@ -14,6 +14,7 @@ export * from "#src/interfaces/payment-gateway.ts";
 export * from "#src/jobs/rules.ts";
 export * from "#src/jobs/schemas.ts";
 export * from "#src/kit/schemas.ts";
+export * from "#src/order/analysis.ts";
 export * from "#src/order/codes.ts";
 export * from "#src/order/photo.ts";
 export * from "#src/order/schemas.ts";

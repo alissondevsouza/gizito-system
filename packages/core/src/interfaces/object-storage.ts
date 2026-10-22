@@ -15,7 +15,11 @@ export type PutObjectInput = z.infer<typeof putObjectInputSchema>;
 
 export const signedUrlTtlSecondsSchema = z.int().min(1).max(MAX_SIGNED_URL_TTL_SECONDS);
 
-export const objectStorageErrorCodeList = ["storage_unavailable", "storage_rejected"] as const;
+export const objectStorageErrorCodeList = [
+  "storage_unavailable",
+  "storage_rejected",
+  "storage_not_found",
+] as const;
 export const objectStorageErrorCodeSchema = z.enum(objectStorageErrorCodeList);
 export type ObjectStorageErrorCode = z.infer<typeof objectStorageErrorCodeSchema>;
 
@@ -31,6 +35,7 @@ export class ObjectStorageError extends Error {
 
 export interface ObjectStorage {
   putPrivate(input: PutObjectInput): Promise<void>;
+  get(key: StorageKey): Promise<Uint8Array>;
   getSignedUrl(key: StorageKey, ttlSeconds: number): Promise<string>;
   delete(key: StorageKey): Promise<void>;
 }

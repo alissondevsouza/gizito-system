@@ -80,6 +80,51 @@ describe("createR2ObjectStorage (spec F2-01, RF-07)", () => {
     }
   });
 
+  it("get assina GET path-style e devolve o corpo", async () => {
+    const { storage, requestList } = createStorage(() => new Response(body, { status: 200 }));
+    expect(await storage.get(key)).toEqual(body);
+    const [request] = requestList;
+    expect(request?.method).toBe("GET");
+    expect(request?.url).toBe(`${ENDPOINT}/${BUCKET}/${key}`);
+    expect(request?.headerMap.authorization).toMatch(/^AWS4-HMAC-SHA256 /);
+    expect(request?.signal).not.toBeNull();
+  });
+
+  it.each([
+    [404, "storage_not_found"],
+    [403, "storage_rejected"],
+    [429, "storage_unavailable"],
+    [500, "storage_unavailable"],
+  ] as const)("get com %i vira %s, sem retry", async (status, code) => {
+    const { storage, requestList } = createStorage(
+      () => new Response("<Error><Code>X</Code></Error>", { status }),
+    );
+    const failed = storage.get(key);
+    expect(failed).rejects.toBeInstanceOf(ObjectStorageError);
+    expect(failed).rejects.toMatchObject({ code });
+    await failed.catch(() => undefined);
+    expect(requestList).toHaveLength(1);
+  });
+
+  it("get com erro de rede ou corpo interrompido vira storage_unavailable", async () => {
+    const network = createStorage(() => {
+      throw new TypeError("fetch failed");
+    });
+    expect(network.storage.get(key)).rejects.toMatchObject({ code: "storage_unavailable" });
+    const broken = createStorage(
+      () =>
+        new Response(
+          new ReadableStream({
+            pull(controller) {
+              controller.error(new Error("conexão caiu"));
+            },
+          }),
+          { status: 200 },
+        ),
+    );
+    expect(broken.storage.get(key)).rejects.toMatchObject({ code: "storage_unavailable" });
+  });
+
   it.each([
     [403, "storage_rejected"],
     [400, "storage_rejected"],

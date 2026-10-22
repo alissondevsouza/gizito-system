@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   type ObjectStorage,
+  ObjectStorageError,
   photoStorageKey,
   photoThumbnailStorageKey,
   type StorageKey,
@@ -44,6 +45,23 @@ export function describeObjectStorageContract(
         expect(stored?.body).toEqual(body);
         expect(stored?.contentType).toBe("image/jpeg");
         await storage.delete(key);
+      },
+      testTimeoutMs,
+    );
+
+    it(
+      "get devolve os bytes gravados e objeto ausente vira storage_not_found",
+      async () => {
+        const { storage } = createDriver();
+        const key = randomPhotoKey();
+        const body = new Uint8Array([0xff, 0xd8, 0xff, 4, 5, 6]);
+        await storage.putPrivate({ key, body, contentType: "image/jpeg" });
+        expect(await storage.get(key)).toEqual(body);
+        await storage.delete(key);
+        const missing = storage.get(key);
+        expect(missing).rejects.toBeInstanceOf(ObjectStorageError);
+        expect(missing).rejects.toMatchObject({ code: "storage_not_found" });
+        await missing.catch(() => undefined);
       },
       testTimeoutMs,
     );
@@ -97,6 +115,7 @@ export function describeObjectStorageContract(
       ).rejects.toThrow();
       expect(storage.getSignedUrl(forgedKey, 600)).rejects.toThrow();
       expect(storage.delete(forgedKey)).rejects.toThrow();
+      expect(storage.get(forgedKey)).rejects.toThrow();
       expect(storage.getSignedUrl(randomPhotoKey(), 0)).rejects.toThrow();
       expect(storage.getSignedUrl(randomPhotoKey(), 24 * 60 * 60)).rejects.toThrow();
     });

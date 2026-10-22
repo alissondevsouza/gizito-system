@@ -60,12 +60,24 @@ export function createR2ObjectStorage({
     }
   }
 
+  function failureOf(response: Response): ObjectStorageError {
+    return new ObjectStorageError(errorCodeOfStatus(response.status), {
+      cause: { status: response.status },
+    });
+  }
+
   async function expectSuccess(response: Response, isAcceptable: (status: number) => boolean) {
     await response.arrayBuffer().catch(() => undefined);
     if (response.ok || isAcceptable(response.status)) return;
-    throw new ObjectStorageError(errorCodeOfStatus(response.status), {
-      cause: { status: response.status },
-    });
+    throw failureOf(response);
+  }
+
+  async function readBody(response: Response): Promise<Uint8Array> {
+    try {
+      return new Uint8Array(await response.arrayBuffer());
+    } catch (cause) {
+      throw new ObjectStorageError("storage_unavailable", { cause });
+    }
   }
 
   return {
@@ -77,6 +89,14 @@ export function createR2ObjectStorage({
         headers: { "content-type": contentType, "x-amz-content-sha256": computeContentHash(body) },
       });
       await expectSuccess(await send(request), () => false);
+    },
+    async get(key) {
+      const response = await send(await client.sign(objectUrl(key), { method: "GET" }));
+      if (response.ok) return readBody(response);
+      await response.arrayBuffer().catch(() => undefined);
+      throw response.status === HTTP_NOT_FOUND
+        ? new ObjectStorageError("storage_not_found")
+        : failureOf(response);
     },
     async getSignedUrl(key, ttlSeconds) {
       const url = new URL(objectUrl(key));

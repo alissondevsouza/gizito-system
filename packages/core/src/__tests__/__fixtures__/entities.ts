@@ -25,6 +25,7 @@ export function buildOrder(overrides: Partial<Order> = {}): Order {
     noteText: null,
     perceivedDifficulty: null,
     materialProfile: null,
+    analysis: null,
     whatsappPhone: null,
     whatsappConsentDatetime: null,
     paidDatetime: null,

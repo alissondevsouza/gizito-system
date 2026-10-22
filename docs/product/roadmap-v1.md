@@ -1,4 +1,4 @@
-# Gizito — Roadmap de Implementação v1.5
+# Gizito — Roadmap de Implementação v1.6
 
 **Status:** em execução  
 **Fase atual:** F2 — Fluxo comercial  
@@ -24,7 +24,7 @@ Resumo por fase:
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
 | F1 Prova técnica e pedagógica | 11 | 11 | 0 | 0 |
-| F2 Fluxo comercial | 14 | 0 | 1 | 13 |
+| F2 Fluxo comercial | 14 | 1 | 1 | 12 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
 
@@ -237,15 +237,16 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 5. Fase 2 — Fluxo comercial
 
-**Estado:** em andamento · 0 de 14 concluídas
+**Estado:** em andamento · 1 de 14 concluídas
 
-- [ ] **F2-01 `pedidos-e-upload`** **em andamento** — api, integrations · L · depende: F0-07, F0-05
+- [x] **F2-01 `pedidos-e-upload`** — api, integrations · L · depende: F0-07, F0-05
   - Entrega: `POST /orders` (fotos, EXIF removido, redução, hash, R2 privado), `GET /orders/:token`, "Trocar foto" (`PUT /orders/:token/photos`), token e código curto, rate limit da prévia; `ObjectStorage` R2 e fake
   - Pronto quando: fotos sintéticas (JPEG com EXIF e orientação, PNG, HEIC recusado) testadas; 404 neutro; rate limit em integração; adaptador R2 contra o MinIO local. O teste em aparelho foi para a F2-09 e o teste contra o R2 real vai para antes da F2-13 (decisões do humano em 21/10/2026)
-  - Feito até agora: implementada na branch `feat/api/pedidos-e-upload` (spec e revisão em `specs/api/pedidos-e-upload/`), aprovada na 2ª rodada da revisão neutra em 22/10/2026; falta o merge do humano
-- [ ] **F2-02 `job-analise`** — worker · M · depende: F2-01, F1-06
-  - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida
+  - Concluída em 22/10/2026 (spec e revisão em `specs/api/pedidos-e-upload/`), aprovada na 2ª rodada da revisão neutra e mesclada na `main` (`8cad304`)
+- [ ] **F2-02 `job-analise`** **em andamento** — worker, db, api, core, integrations · L · depende: F2-01, F1-06
+  - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida; cache da extração e resultado no banco; prévia no `GET /orders/:token` (`api.md` §3); `ObjectStorage.get`
   - Pronto quando: transições e avisos testados; reexecução idempotente
+  - Feito até agora: spec em `specs/worker/job-analise/` (tamanho revisto de M para L em 22/10/2026: cruza cinco workspaces e decide onde cache e resultado ficam no banco)
 - [ ] **F2-03 `confirmacao-e-cobranca-pix`** — api, integrations · L · depende: F2-02
   - Entrega: `POST /orders/:token/confirm` (recusa assunto ainda não atendido, também como “outro”); `MercadoPagoGateway` (createCharge via Orders API, getChargeStatus, parseWebhook, refund) e fake; renovação de cobrança expirada
   - Pronto quando: no sandbox: cobrança criada, expira em 30 min, renova sem duplicar pedido
@@ -256,7 +257,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `order.generate`: pipeline, render, `publishKit`; `failed` com `outcome_code`; limite de custo
   - Pronto quando: `ready` só com dois PDFs no storage; reexecução idempotente
 - [ ] **F2-06 `downloads-e-retencao`** — api, worker · P · depende: F2-05
-  - Entrega: `GET /orders/:token/downloads/:kind` com URL assinada curta; `retention.purge` com `isPhotoDueForPurge`, lotes até esvaziar e expurgo de jobs `completed` antigos
+  - Entrega: `GET /orders/:token/downloads/:kind` com URL assinada curta; `retention.purge` com `isPhotoDueForPurge`, lotes até esvaziar, expurgo de jobs `completed` antigos e do cache da extração vencido (`purgeExpiredExtractionCache`, F2-02); `order.analysis` limpa junto com as fotos e `material_profile` junto com as fotos nos pedidos que não chegaram a `awaiting_payment` (regra no `data-model.md`, F2-02)
   - Pronto quando: URL expira; purge respeita 30 dias e 12 meses com relógio injetado; nenhuma foto passa de 30 dias
 - [ ] **F2-07 `notificacao-email`** — worker, integrations · P · depende: F2-05
   - Entrega: adaptador Resend e fake; templates `kit_ready`, `kit_failed`; `order.notify`
@@ -266,7 +267,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Pronto quando: página de componentes; contraste AA validado; `prefers-reduced-motion`
 - [ ] **F2-09 `fluxo-web-de-compra`** — web · L · depende: F2-08, F2-01 a F2-06
   - Entrega: landing com kit de amostra, `/criar`, `/pedido/:token/assuntos`, `/pagamento`, `/preparando`, `/kit`, `/erro`, `/ajuda`; `order-route` pela tabela 6.8
-  - Pronto quando: E2E Playwright com adaptadores falsos; utilizável a 360 px; navegação por teclado; upload de Android e iPhone (HEIC) testado em aparelho, vindo da F2-01 (decisão do humano em 21/10/2026); desafio leve (Cloudflare Turnstile, com fake) no `429 challenge_required` da prévia, vindo da F2-01 (PRD §6, decisão do humano em 22/10/2026)
+  - Pronto quando: E2E Playwright com adaptadores falsos; utilizável a 360 px; navegação por teclado; upload de Android e iPhone (HEIC) testado em aparelho, vindo da F2-01 (decisão do humano em 21/10/2026); desafio leve (Cloudflare Turnstile, com fake) no `429 challenge_required` da prévia, vindo da F2-01 (PRD §6, decisão do humano em 22/10/2026); texto da tela para `analysis_unavailable` (análise indisponível depois das retentativas), que falta no design doc §5.2 e §6.8, definido com o humano (F2-02)
 - [ ] **F2-10 `receber-no-whatsapp`** — api, worker, web, integrations · L · depende: F2-07, F0-02
   - Entrega: adaptador Evolution e fake; `POST /webhooks/whatsapp`; `whatsapp.inbound`; envio de link e PDFs; `WhatsAppOptIn`; `WHATSAPP_ENABLED`
   - Pronto quando: todos os casos da rule `whatsapp.md`; flag desligada não muda nada; teste com número real
@@ -334,6 +335,7 @@ Marcar o item só quando entregue; anotar ao lado a data em que o gatilho dispar
 
 ## 10. Histórico de revisões
 
+- **1.6 (22/10/2026):** F2-02 passa de M a L e cobre também db, api, core e integrations: cache da extração e resultado no banco, prévia no `GET /orders/:token` e `ObjectStorage.get`. A F2-06 passa a agendar a purga do cache da extração vencido.
 - **1.5 (21/10/2026):** regressão com 35 casos em vez de 40 (PRD 1.5 §7.6, spec pedagógica 1.3): 30 imagens de caderno geradas por IA e 5 variações delas, sem foto real, decisão do humano. Mudaram o diagrama, o risco da extração manuscrita, a saída da F1, o "pronto quando" da F1-06 (sobre as imagens da regressão) e a entrega da F1-10. Pendências do humano atualizadas
 - **1.4 (19/10/2026):** F1-02 em andamento; a entrega da F1-03 passa a apontar o §14 da spec pedagógica, com os nomes de schema da spec (`photoExtractionSchema` no lugar de `extractionResultSchema`) e as funções de alocação, composição e revisão; a F1-06 passa a depender da F1-03, dona do schema e da junção da extração.
 - **1.3 (19/10/2026):** assuntos ainda não atendidos (PRD 1.3, seção 7.7): F1-02 define a lista com id e o reconhecimento; F1-06 sinaliza; F2-02 volta a `draft` sem assunto atendido; F2-03 recusa na confirmação.

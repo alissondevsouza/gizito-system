@@ -39,6 +39,15 @@ describe("createFakeObjectStorage: falhas controláveis", () => {
     expect(storage.objectMap.size).toBe(2);
   });
 
+  it("failNextGet falha só a próxima leitura, com o código pedido", async () => {
+    const storage = createFakeObjectStorage();
+    const storedKey = key();
+    await storage.putPrivate({ key: storedKey, body, contentType: "image/jpeg" });
+    storage.failNextGet("storage_rejected");
+    expect(storage.get(storedKey)).rejects.toMatchObject({ code: "storage_rejected" });
+    expect(await storage.get(storedKey)).toEqual(body);
+  });
+
   it("failNextDelete mantém o objeto e registra só os deletes feitos", async () => {
     const storage = createFakeObjectStorage();
     const storedKey = key();
