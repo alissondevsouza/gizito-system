@@ -277,11 +277,11 @@ Unit no core e no integrations, e integração na api com Postgres real e o fake
 - [x] 4.2 `GET` em `awaiting_payment` (RF-10) · Verificação: `bun run test:integration` na api
 - [x] 4.3 `POST /orders/:token/confirm` (RF-08, RF-13) · Verificação: integração
 - [x] 4.4 `POST /orders/:token/charges` (RF-09, RF-13) · Verificação: integração
-- [ ] 4.5 API no ar com `PAYMENT_GATEWAY=fake`: `curl` de `confirm` e de `charges` contra o banco de dev, com o pedido levado a `preview_ready` pelo worker com a IA real ou por análise gravada de teste. Para o `charges` chegar ao 201, o `expire_datetime` da cobrança é recuado no banco de dev (o fake não tem relógio próprio) · Verificação: respostas e linhas no banco; dados apagados depois
+- [x] 4.5 API no ar com `PAYMENT_GATEWAY=fake`: `curl` de `confirm` e de `charges` contra o banco de dev, com o pedido levado a `preview_ready` pelo worker com a IA real ou por análise gravada de teste. Para o `charges` chegar ao 201, o `expire_datetime` da cobrança é recuado no banco de dev (o fake não tem relógio próprio) · Verificação: respostas e linhas no banco; dados apagados depois
 
 ### M5 — docs e fechamento
-- [ ] 5.1 `api.md`, `data-model.md`, `payments.md`, `known-issues.md` e roadmap
-- [ ] 5.2 lint, typecheck e a suíte inteira (`bun run lint`, `bun run typecheck`, `bun run test` e `test:integration` em db, integrations e api)
+- [x] 5.1 `api.md`, `data-model.md`, `payments.md`, `known-issues.md` e roadmap
+- [x] 5.2 lint, typecheck e a suíte inteira (`bun run lint`, `bun run typecheck`, `bun run test` e `test:integration` em db, integrations e api)
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -296,7 +296,7 @@ Unit no core e no integrations, e integração na api com Postgres real e o fake
 | 2026-10-22 | Revisão da spec (rodada 1, aprovada com 6 alertas): visão do pagamento com assuntos e kit; corpo do 422; barreira no fake; trava por pedido no processo; teste real com `MERCADOPAGO_TEST_ACCESS_TOKEN` e segunda cobrança; 429 sem retentativa; `charged_back` pelo `status_detail`; `warn` da órfã em qualquer falha | alertas e sugestões aceitos; a sugestão do CLI do pipeline ficou fora (ver Fora de escopo) |
 
 ## Status
-Spec escrita e aprovada na rodada 1 da revisão em 22/10/2026, com os alertas incorporados. M1 a M4.4 feitos. Próximo passo: 4.5 (API no ar) e M5 (docs).
+Spec escrita e aprovada na rodada 1 da revisão em 22/10/2026, com os alertas incorporados. Todas as tasks feitas em 22/10/2026; a API foi vista no ar com o fake (`confirm` 422, 400, 200 e 409; `charges` 409 e 201; log sem dado pessoal), e os dados do teste foram apagados do banco de dev e do MinIO. A migration 0005 ficou aplicada no banco de dev. Próximo passo: revisão neutra do código.
 
 Pendências para o humano:
 - credencial de teste do Mercado Pago (`MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET`) no `.env`, para rodar o RF-12;

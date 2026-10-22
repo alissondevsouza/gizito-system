@@ -24,7 +24,7 @@ Resumo por fase:
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
 | F1 Prova técnica e pedagógica | 11 | 11 | 0 | 0 |
-| F2 Fluxo comercial | 14 | 1 | 1 | 12 |
+| F2 Fluxo comercial | 14 | 2 | 1 | 11 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
 
@@ -237,19 +237,20 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 5. Fase 2 — Fluxo comercial
 
-**Estado:** em andamento · 1 de 14 concluídas
+**Estado:** em andamento · 2 de 14 concluídas
 
 - [x] **F2-01 `pedidos-e-upload`** — api, integrations · L · depende: F0-07, F0-05
   - Entrega: `POST /orders` (fotos, EXIF removido, redução, hash, R2 privado), `GET /orders/:token`, "Trocar foto" (`PUT /orders/:token/photos`), token e código curto, rate limit da prévia; `ObjectStorage` R2 e fake
   - Pronto quando: fotos sintéticas (JPEG com EXIF e orientação, PNG, HEIC recusado) testadas; 404 neutro; rate limit em integração; adaptador R2 contra o MinIO local. O teste em aparelho foi para a F2-09 e o teste contra o R2 real vai para antes da F2-13 (decisões do humano em 21/10/2026)
   - Concluída em 22/10/2026 (spec e revisão em `specs/api/pedidos-e-upload/`), aprovada na 2ª rodada da revisão neutra e mesclada na `main` (`8cad304`)
-- [ ] **F2-02 `job-analise`** **em andamento** — worker, db, api, core, integrations · L · depende: F2-01, F1-06
+- [x] **F2-02 `job-analise`** — worker, db, api, core, integrations · L · depende: F2-01, F1-06
   - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida; cache da extração e resultado no banco; prévia no `GET /orders/:token` (`api.md` §3); `ObjectStorage.get`
   - Pronto quando: transições e avisos testados; reexecução idempotente
-  - Feito até agora: implementada na branch `feat/worker/job-analise` (spec e revisão em `specs/worker/job-analise/`; tamanho revisto de M para L em 22/10/2026), aprovada na 2ª rodada da revisão neutra em 22/10/2026 e vista funcionando com a IA real; falta o merge do humano
-- [ ] **F2-03 `confirmacao-e-cobranca-pix`** — api, integrations · L · depende: F2-02
+  - Concluída em 22/10/2026 (spec e revisão em `specs/worker/job-analise/`; tamanho revisto de M para L), aprovada na 2ª rodada da revisão neutra, vista funcionando com a IA real e mesclada na `main` (`c0680b7`)
+- [ ] **F2-03 `confirmacao-e-cobranca-pix`** **em andamento** — api, integrations · L · depende: F2-02
   - Entrega: `POST /orders/:token/confirm` (recusa assunto ainda não atendido, também como “outro”); `MercadoPagoGateway` (createCharge via Orders API, getChargeStatus, parseWebhook, refund) e fake; renovação de cobrança expirada
   - Pronto quando: no sandbox: cobrança criada, expira em 30 min, renova sem duplicar pedido
+  - Feito até agora: implementada na branch `feat/api/confirmacao-e-cobranca-pix` (spec em `specs/api/confirmacao-e-cobranca-pix/`), com fake, respostas gravadas da Orders API e a API vista no ar com o fake. O teste no sandbox (`test:payment-live`) fica com o humano, que ainda não tem a credencial de teste (22/10/2026)
 - [ ] **F2-04 `webhook-e-reconciliacao`** — api, worker · M · depende: F2-03
   - Entrega: `POST /webhooks/mercadopago` com assinatura, `webhook_event`, GET do recurso, `markOrderPaidAndEnqueue`; job `charge.reconcile` (o webhook passa `webhookEventId` no payload; ao marcar pago, cancelar no gateway os outros Pix ainda pendentes do pedido, depois do commit)
   - Pronto quando: webhook duplicado é no-op; pagamento sem webhook é detectado pela reconciliação

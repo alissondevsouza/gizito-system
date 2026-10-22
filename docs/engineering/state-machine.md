@@ -1,6 +1,6 @@
 # Máquina de estados do pedido
 
-**Versão:** 1.2 · **Data:** 2026-10-22 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
+**Versão:** 1.3 · **Data:** 2026-10-22 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
 
 O estado do pedido só muda pela função `transitionOrder(status, event)` do core, chamada por um service **dentro de uma transação** (invariante 1). A máquina é dado (`orderTransitionList`), não código: toda transição válida está na tabela abaixo e toda combinação fora dela devolve `InvalidTransitionError` sem lançar.
 
@@ -48,7 +48,7 @@ Estados terminais: só `refunded`. Estados em que o WhatsApp pode ser vinculado 
 
 ## 3. Sub-estado `charge_expired`
 
-Não é um status do pedido. Com o pedido em `awaiting_payment`, o sub-estado deriva da cobrança ativa: `deriveAwaitingPaymentSubstate(charge, now)` devolve `charge_expired` quando a cobrança está `expired` ou é `pending` com `expire_datetime <= now`. "Gerar novo Pix" (`POST /orders/:token/charges`) cria outra cobrança no mesmo pedido; o status continua `awaiting_payment`. Um pedido tem no máximo uma cobrança ativa.
+Não é um status do pedido. Com o pedido em `awaiting_payment`, o sub-estado deriva da cobrança ativa: `deriveAwaitingPaymentSubstate(charge, now)` devolve `charge_expired` quando a cobrança está `expired` ou é `pending` com `expire_datetime <= now`. "Gerar novo Pix" (`POST /orders/:token/charges`) cria outra cobrança no mesmo pedido; o status continua `awaiting_payment`. Um pedido tem no máximo uma cobrança ativa, garantida pela trava do pedido na inserção (F2-03). A cobrança vencida continua `pending` no banco até a reconciliação consultar o gateway e marcá-la `expired` (F2-04): marcá-la sem consultar tiraria da varredura um Pix pago no último segundo com o webhook perdido.
 
 ## 4. Casos obrigatórios (PRD §5)
 
@@ -75,6 +75,7 @@ O web decide a rota canônica a partir do status devolvido por `GET /orders/:tok
 
 ## Histórico
 
+- **1.3 (2026-10-22):** F2-03: a renovação do Pix não marca a vencida `expired`; a trava do pedido garante uma cobrança ativa. Sem transição nova.
 - **1.2 (2026-10-22):** F2-02: análise pendente (`order.analysis` nula), `analysis_unavailable`, reexecução do `order.analyze` e conclusão do job na transação da transição (ADR-0013). Sem transição nova.
 - **1.1 (2026-10-19):** `preview_ready → draft` por `photos_changed` ("Trocar foto") e `paid → failed` por `generation_failed` (esgotamento antes de gerar), decididos pelo humano na revisão da F0 (`specs/cross/revisao-f0/`); `confirmedOrderStatusList` (alcançáveis de `awaiting_payment`) exige ao menos um assunto.
 - **1.0 (2026-10-15):** versão inicial (F0-03), espelhando o código de F0-04.

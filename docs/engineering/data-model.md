@@ -1,6 +1,6 @@
 # Modelo de dados
 
-**Versão:** 1.6 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
+**Versão:** 1.7 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
 
 PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolamento é por pedido, e toda leitura pública passa pelo `public_token`.
 
@@ -92,7 +92,7 @@ erDiagram
     int amount_cents "2990"
     charge_status status
     text qr_code "nunca em log"
-    text qr_code_base64
+    text qr_code_base64 "nulo: o sandbox não devolve"
     text ticket_url
     timestamptz expire_datetime "criação + 30 min"
     timestamptz paid_datetime
@@ -231,6 +231,7 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `lock_timeout` de 10 s, `idle_in_transaction_session_timeout` de 60 s e `connectionTimeout` de 5 s; o `migrate.ts` desliga só o `statement_timeout`. `pingDatabase` e `getQueueMetrics` têm teto de 2 s (`DatabaseTimeoutError`). Uma transação parada segurando `FOR UPDATE` no pedido é derrubada pelo banco em vez de travar as escritas daquele pedido.
 
 - `markOrderPaidAndEnqueue(tx, { orderId, chargeId, gatewayPaymentId, paidDatetime, webhookEventId? }, { now? })`: trava `order`, `charge` e o `webhook_event` informado com `FOR UPDATE`; a decisão é `decidePaymentConfirmation` do core. `paid`: grava o status de destino da máquina e `paid_datetime`, marca a cobrança `paid` com o `gateway_payment_id`, expira as demais cobranças `pending` do pedido e enfileira `order.generate`. Cobrança já `paid` ou `refunded` com o mesmo pagamento: no-op (`already_paid`). Outra cobrança paga com o pedido já `paid` ou posterior: marca a cobrança `paid`, abre `support_ticket` `duplicate_payment` e não muda o estado. Com `webhookEventId`, grava `processed_datetime` e `outcome_code` (`paid`, `already_paid`, `duplicate_payment`). Erros (`OrderNotFoundError`, `ChargeNotFoundError`, `WebhookEventNotFoundError`, `GatewayPaymentInUseError` quando o pagamento já está em outra cobrança, `ChargePaymentMismatchError`, `InvalidTransitionError`) voltam como `Result` antes de qualquer escrita; só uma corrida em que outra transação grave o mesmo `gateway_payment_id` entre a checagem e a escrita cai no unique e lança, com rollback.
+- Inserção de cobrança (F2-03, `apps/api/src/services/charges.ts`): o `confirm` e o "Gerar novo Pix" travam o pedido com `FOR UPDATE`, releem o status (e, na renovação, as cobranças) e só então inserem a `charge`; o `confirm` grava também a transição `confirm`, os assuntos, o e-mail e o job `order.notify` `order_link`. Não há índice de "uma ativa por pedido", porque a atividade depende do relógio (`isChargeActive`); a trava do pedido é a garantia. A cobrança vencida continua `pending` até a reconciliação consultar o gateway (F2-04).
 - `startOrderAnalysis(tx, orderId)` (F2-02): trava o pedido e aplica `decideAnalysisStart` do core. `start` aplica `start_analysis`; `resume` (`analyzing`) não muda o estado; nos dois, devolve ano, disciplina e as fotos atuais por `photo_index` (`orderPhotoId`, `storageKey`, `insertDatetime`), lidas na mesma transação. `skip` devolve o status sem escrita.
 - `finishOrderAnalysis(tx, { orderId, analysis })` (F2-02): a análise passa em `orderAnalysisSchema`; trava o pedido; `transitionOrder` pelo evento da análise (`analysis_succeeded` ou `analysis_failed`), que exige `analyzing`; confere se as fotos atuais são as analisadas, na mesma ordem (`AnalysisPhotoSetChangedError`); grava `status`, `analysis`, `material_profile` (só em `preview_ready`) e o `legibility_score` de cada foto analisada. Os erros voltam como `Result` antes de qualquer escrita. O handler chama `completeWithin` antes, na mesma transação (ADR-0013).
 - `recordAiCallList(executor, orderId, list)`: uma linha de `ai_call` por chamada.
@@ -247,3 +248,4 @@ Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `l
 - **1.4 (2026-10-20):** F1-05: `ai_call.cost_cents` em centavos de dólar e `input_token_count` com os tokens de cache (§1, ADR-0011).
 - **1.6 (2026-10-22):** F2-02 (migration `0004_job_analise`): tabela `extraction_cache`, coluna `order.analysis` com o check por status, retenção da análise e do cache, `startOrderAnalysis`, `finishOrderAnalysis`, `recordAiCallList` e as funções do cache.
 - **1.5 (2026-10-22):** F2-01 (migration `0003_pedidos_e_upload`): `order_photo.photo_index` com unique parcial por foto não trocada, `order_photo.replaced_datetime`, tabela `preview_request` com HMAC de IP e dispositivo, fotos no prefixo `photos/` (ADR-0012), miniatura junto da foto na retenção.
+- **1.7 (2026-10-22):** F2-03 (migration `0005_confirmacao_e_cobranca_pix`): `charge.qr_code_base64` nulo, porque o sandbox do Mercado Pago devolve vazio; inserção de cobrança com o pedido travado em §6.
