@@ -1,0 +1,959 @@
+{
+  "subject": "portuguese",
+  "formatVersion": "kit-v1",
+  "grade": "5",
+  "perceivedDifficulty": null,
+  "taxonomyVersion": "tax-v2",
+  "generationVersion": "extract-v1+plan-v1+generate-v2+review-v2",
+  "topicList": [
+    {
+      "topicRef": "lp5-word-classes",
+      "label": "Classes de palavras"
+    }
+  ],
+  "materialProfile": {
+    "exerciseFormatList": [
+      "matching",
+      "fill_in_blank"
+    ],
+    "notationList": [],
+    "terminologyList": [
+      "classes de palavras",
+      "substantivo",
+      "adjetivo",
+      "verbo",
+      "advérbio",
+      "pronome",
+      "artigo",
+      "preposição"
+    ],
+    "contextThemeList": [
+      "rotina escolar",
+      "objetos do dia a dia"
+    ],
+    "apparentLevel": "at_grade",
+    "hasFigures": false,
+    "isHandwritten": true
+  },
+  "sourceWarningCodeList": [],
+  "reviewSectionList": [
+    {
+      "topicRef": "lp5-word-classes",
+      "title": "Classes de palavras",
+      "paragraphList": [
+        "As palavras de uma frase se dividem em classes. Cada classe tem um trabalho. Substantivo dá nome a seres, objetos, lugares e sentimentos: 'caderno', 'escola', 'alegria'. Adjetivo caracteriza o substantivo e concorda com ele em gênero e número: 'caderno novo', 'canetas novas'.",
+        "Artigo vem antes do substantivo e mostra o gênero e o número dele. Os artigos são o, a, os, as, um, uma, uns e umas. Exemplo: 'as mochilas'. Verbo indica ação ou estado: 'escrever', 'copiam', 'está'. Advérbio geralmente acompanha o verbo e indica uma circunstância, como tempo (ontem, cedo), modo (devagar, lentamente) ou lugar (aqui, dentro).",
+        "Gênero é masculino ou feminino: 'o aluno', 'a aluna'. Número é singular ou plural: 'o aluno', 'os alunos'. Quando mudamos o substantivo, o artigo e o adjetivo mudam junto: 'o aluno atento' vira 'as alunas atentas'. O verbo também muda para o plural: 'chegou' vira 'chegaram'.",
+        "Para classificar uma palavra, veja o que ela faz na frase. Em 'O azul é bonito', a palavra 'azul' dá nome a uma cor e vem depois do artigo, então é substantivo. Em 'a caixa azul', ela caracteriza a caixa, então é adjetivo."
+      ],
+      "keyPointList": [
+        "Substantivo dá nome; adjetivo caracteriza o substantivo; artigo acompanha o substantivo.",
+        "Verbo indica ação ou estado; advérbio indica tempo, modo ou lugar.",
+        "Artigo, substantivo e adjetivo concordam em gênero e número.",
+        "Ao passar para o plural, o verbo também muda.",
+        "A classe de uma palavra depende do que ela faz na frase."
+      ]
+    }
+  ],
+  "baseTextList": [
+    {
+      "baseTextId": "t1",
+      "title": "Uma surpresa na sala",
+      "paragraphList": [
+        "Na segunda-feira, Marina chegou cedo à escola. A sala estava silenciosa. Sobre a mesa da professora havia uma caixa azul, fechada com uma fita amarela.",
+        "Os alunos entraram devagar e olharam a caixa com curiosidade. Pedro tocou a fita com cuidado. Ninguém sabia o que havia lá dentro.",
+        "A professora Helena sorriu e abriu a caixa. Dentro dela, havia lápis novos, canetas coloridas e um grande globo brilhante. — Esse material é um presente para a nossa turma — disse ela.",
+        "Marina pegou o globo com as duas mãos. Ela girou a esfera lentamente e procurou o Brasil. Depois, a turma desenhou um mapa no caderno. Todos trabalharam felizes até o sinal do recreio.",
+        "No fim da aula, Pedro guardou o lápis novo na mochila. Marina sorriu para o colega e disse: — Hoje foi um dia diferente! A sala ficou mais alegre com aquela caixa azul."
+      ],
+      "block": "mock"
+    }
+  ],
+  "mockSuggestedMinutes": 40,
+  "studyTip": "Ao ler uma frase, ache primeiro o verbo e o substantivo. Depois veja quem acompanha cada um deles.",
+  "qualityCheckList": [
+    {
+      "code": "review_unclear_wording",
+      "severity": "warning",
+      "stage": "review",
+      "itemId": "m4",
+      "note": "'Na frase do texto' não diz qual frase. O texto tem várias frases com verbos; a criança só deduz pelas alternativas.",
+      "excerpt": null
+    },
+    {
+      "code": "review_unclear_wording",
+      "severity": "warning",
+      "stage": "review",
+      "itemId": "m6",
+      "note": "'No trecho do texto' não indica qual trecho. O texto tem outros advérbios, como 'devagar' e 'cedo'.",
+      "excerpt": null
+    }
+  ],
+  "workedExampleList": [
+    {
+      "exampleId": "e1",
+      "title": "Classificando cada palavra",
+      "statement": "Classifique cada palavra da frase em artigo, substantivo, adjetivo, verbo ou advérbio: 'Os alunos novos chegaram cedo.'",
+      "table": null,
+      "stepList": [
+        "Procure o verbo, que indica a ação: 'chegaram' mostra o que os alunos fizeram.",
+        "Procure o substantivo, que dá nome aos seres: 'alunos'.",
+        "Veja a palavra que vem antes do substantivo e mostra gênero e número: 'Os' é artigo (masculino, plural).",
+        "Veja a palavra que caracteriza 'alunos': 'novos' é adjetivo.",
+        "Veja a palavra que indica quando os alunos chegaram: 'cedo' é advérbio de tempo."
+      ],
+      "commentary": "Comece pelo verbo e pelo substantivo. Depois, veja quem acompanha o substantivo (artigo e adjetivo) e quem acompanha o verbo (advérbio).",
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Os: artigo; alunos: substantivo; novos: adjetivo; chegaram: verbo; cedo: advérbio",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Os' é artigo, 'alunos' é substantivo, 'novos' é adjetivo, 'chegaram' é verbo e 'cedo' é advérbio de tempo. Cada palavra foi classificada pelo trabalho que faz na frase.",
+        "evidenceQuote": null
+      },
+      "topicRef": "lp5-word-classes"
+    },
+    {
+      "exampleId": "e2",
+      "title": "Feminino plural com concordância",
+      "statement": "Passe a frase para o feminino plural: 'O aluno cansado chegou à escola.'",
+      "table": null,
+      "stepList": [
+        "Separe as palavras: 'O' é artigo, 'aluno' é substantivo, 'cansado' é adjetivo e 'chegou' é verbo.",
+        "Passe para o feminino: 'o' vira 'a', 'aluno' vira 'aluna' e 'cansado' vira 'cansada'.",
+        "Passe para o plural: 'a' vira 'as', 'aluna' vira 'alunas' e 'cansada' vira 'cansadas'.",
+        "Passe o verbo para o plural, para concordar com 'as alunas': 'chegou' vira 'chegaram'.",
+        "Junte tudo: 'As alunas cansadas chegaram à escola.'"
+      ],
+      "commentary": "Primeiro mude o gênero, depois o número. Artigo, substantivo e adjetivo mudam juntos, e o verbo acompanha o plural.",
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "As alunas cansadas chegaram à escola.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "O artigo, o substantivo e o adjetivo foram para o feminino plural: 'As alunas cansadas'. O verbo 'chegou' passou para 'chegaram' para concordar com o plural.",
+        "evidenceQuote": null
+      },
+      "topicRef": "lp5-word-classes"
+    }
+  ],
+  "practiceQuestionList": [
+    {
+      "questionId": "p1",
+      "block": "practice",
+      "number": 1,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Identificar o substantivo em uma frase curta sobre objetos do dia a dia",
+      "baseTextId": null,
+      "statement": "Leia a frase: 'A régua é nova.' Qual palavra dessa frase é um substantivo?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "A"
+        },
+        {
+          "label": "B",
+          "text": "régua"
+        },
+        {
+          "label": "C",
+          "text": "é"
+        },
+        {
+          "label": "D",
+          "text": "nova"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "régua",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Régua' dá nome a um objeto, por isso é substantivo. 'A' é artigo, 'é' é verbo e 'nova' é adjetivo, pois diz como a régua é. Quem marca 'nova' confunde o substantivo com a palavra que o caracteriza.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p2",
+      "block": "practice",
+      "number": 2,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "easy",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Completar lacunas com o artigo adequado ao gênero e ao número do substantivo",
+      "baseTextId": null,
+      "statement": "Complete cada frase com o, a, os ou as, de acordo com o substantivo.\n1) ______ mochila é azul.\n2) ______ cadernos estão na mesa.\n3) ______ canetas secaram.\n4) ______ lápis está apontado.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "1) A; 2) Os; 3) As; 4) O",
+          "acceptedList": [
+            "A, Os, As, O",
+            "a, os, as, o",
+            "1) a; 2) os; 3) as; 4) o"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "O artigo concorda com o substantivo. 'Mochila' é feminino singular: 'A'. 'Cadernos' é masculino plural: 'Os'. 'Canetas' é feminino plural: 'As'. 'Lápis' é masculino singular: 'O'.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p3",
+      "block": "practice",
+      "number": 3,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Reconhecer o adjetivo que caracteriza um objeto da mochila",
+      "baseTextId": null,
+      "statement": "Na mochila de Luana, tem um estojo vermelho. Qual palavra caracteriza o estojo, dizendo como ele é?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "mochila"
+        },
+        {
+          "label": "B",
+          "text": "tem"
+        },
+        {
+          "label": "C",
+          "text": "estojo"
+        },
+        {
+          "label": "D",
+          "text": "vermelho"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "D",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "vermelho",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Vermelho' diz como o estojo é, então é adjetivo. 'Estojo' e 'mochila' são substantivos, que dão nome aos objetos. Quem marca 'estojo' confunde o nome do objeto com a palavra que o caracteriza. 'Tem' é verbo.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p4",
+      "block": "practice",
+      "number": 4,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "easy",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Ligar palavras soltas à sua classe: substantivo, adjetivo ou verbo",
+      "baseTextId": null,
+      "statement": "Escreva a classe de cada palavra da tabela: substantivo, adjetivo ou verbo.",
+      "table": {
+        "headerList": [
+          "Número",
+          "Palavra"
+        ],
+        "rowList": [
+          [
+            "1",
+            "mesa"
+          ],
+          [
+            "2",
+            "escreve"
+          ],
+          [
+            "3",
+            "redonda"
+          ],
+          [
+            "4",
+            "apagador"
+          ]
+        ]
+      },
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "1 substantivo; 2 verbo; 3 adjetivo; 4 substantivo",
+          "acceptedList": [
+            "mesa: substantivo; escreve: verbo; redonda: adjetivo; apagador: substantivo"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Mesa' e 'apagador' dão nome a objetos: são substantivos. 'Escreve' indica uma ação: é verbo. 'Redonda' caracteriza um substantivo, como em 'mesa redonda': é adjetivo.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p5",
+      "block": "practice",
+      "number": 5,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Localizar o verbo em uma frase com vários termos sobre a rotina escolar",
+      "baseTextId": null,
+      "statement": "Leia a frase: 'Os alunos copiam a lição do quadro verde.' Qual palavra é o verbo, ou seja, indica a ação?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "copiam"
+        },
+        {
+          "label": "B",
+          "text": "lição"
+        },
+        {
+          "label": "C",
+          "text": "quadro"
+        },
+        {
+          "label": "D",
+          "text": "verde"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "copiam",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Copiam' mostra o que os alunos fazem, então é o verbo. 'Lição' e 'quadro' são substantivos, pois dão nome a coisas. 'Verde' é adjetivo, pois caracteriza o quadro.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p6",
+      "block": "practice",
+      "number": 6,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Passar para o plural artigo, substantivo e adjetivo de uma frase",
+      "baseTextId": null,
+      "statement": "Reescreva a frase no plural. Mude o artigo, o substantivo, o adjetivo e o verbo: 'A caneta azul caiu.'",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "As canetas azuis caíram.",
+          "acceptedList": [
+            "As canetas azuis caíram"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "O artigo 'A' vira 'As', o substantivo 'caneta' vira 'canetas' e o adjetivo 'azul' vira 'azuis'. O verbo 'caiu' vira 'caíram' para concordar com o plural.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p7",
+      "block": "practice",
+      "number": 7,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": true,
+      "skillFocus": "Reconhecer o advérbio que indica tempo ou modo em uma situação do dia a dia",
+      "baseTextId": null,
+      "statement": "Rafael escreveu o nome lentamente na lousa. Qual palavra é um advérbio e indica o modo como Rafael escreveu?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Rafael"
+        },
+        {
+          "label": "B",
+          "text": "escreveu"
+        },
+        {
+          "label": "C",
+          "text": "lentamente"
+        },
+        {
+          "label": "D",
+          "text": "lousa"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "lentamente",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Lentamente' diz de que modo Rafael escreveu, então é advérbio de modo. 'Escreveu' é o verbo, a ação. 'Rafael' e 'lousa' são substantivos. Quem marca 'escreveu' confunde a ação com a circunstância dela.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p8",
+      "block": "practice",
+      "number": 8,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Classificar as palavras destacadas de uma frase completando a classe de cada uma",
+      "baseTextId": null,
+      "statement": "Leia a frase: 'Os alunos desenharam ontem um mapa pequeno.' Complete a tabela com a classe de cada palavra: artigo, substantivo, adjetivo, verbo ou advérbio.",
+      "table": {
+        "headerList": [
+          "Palavra",
+          "Classe"
+        ],
+        "rowList": [
+          [
+            "Os",
+            "______"
+          ],
+          [
+            "desenharam",
+            "______"
+          ],
+          [
+            "ontem",
+            "______"
+          ],
+          [
+            "pequeno",
+            "______"
+          ]
+        ]
+      },
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Os: artigo; desenharam: verbo; ontem: advérbio; pequeno: adjetivo",
+          "acceptedList": [
+            "artigo, verbo, advérbio, adjetivo"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Os' vem antes de 'alunos' e mostra gênero e número: artigo. 'Desenharam' indica ação: verbo. 'Ontem' indica o tempo: advérbio. 'Pequeno' caracteriza 'mapa': adjetivo.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p9",
+      "block": "practice",
+      "number": 9,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "hard",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Escolher a frase em que artigo, substantivo e adjetivo concordam em gênero e número",
+      "baseTextId": null,
+      "statement": "Qual frase está com artigo, substantivo e adjetivo concordando em gênero e número?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Os cadernos novas ficaram na mesa."
+        },
+        {
+          "label": "B",
+          "text": "As mochilas pesadas ficaram na sala."
+        },
+        {
+          "label": "C",
+          "text": "A lápis amarelo ficou na mesa."
+        },
+        {
+          "label": "D",
+          "text": "Uns borrachas macio ficaram na mesa."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "As mochilas pesadas ficaram na sala.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Em 'As mochilas pesadas', as três palavras estão no feminino plural. Em A, 'novas' é feminino, mas 'cadernos' é masculino. Em C, 'A' é feminino e 'lápis' é masculino. Em D, 'Uns' é masculino, 'borrachas' é feminino e 'macio' está no singular.",
+        "evidenceQuote": null
+      }
+    },
+    {
+      "questionId": "p10",
+      "block": "practice",
+      "number": 10,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": true,
+      "skillFocus": "Reescrever uma frase no feminino plural e indicar quais classes de palavras mudaram",
+      "baseTextId": null,
+      "statement": "Na escola, a professora escreveu esta frase no quadro: 'O menino atento guardou o caderno.' Reescreva a frase para falar de várias meninas. Use a palavra 'meninas' e mantenha 'o caderno' igual. Depois, escreva quais classes de palavras mudaram: artigo, substantivo, adjetivo ou verbo.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "As meninas atentas guardaram o caderno. Mudaram: artigo, substantivo, adjetivo e verbo.",
+          "acceptedList": [
+            "As meninas atentas guardaram o caderno. Mudaram o artigo, o substantivo, o adjetivo e o verbo.",
+            "As meninas atentas guardaram o caderno. Artigo, substantivo, adjetivo e verbo.",
+            "As meninas atentas guardaram o caderno. Mudaram: o artigo, o substantivo, o adjetivo e o verbo.",
+            "As meninas atentas guardaram o caderno. Mudaram o verbo, o artigo, o substantivo e o adjetivo."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [
+          "O artigo 'O' vira 'As', o substantivo 'menino' vira 'meninas' e o adjetivo 'atento' vira 'atentas'.",
+          "O verbo 'guardou' vira 'guardaram', para concordar com 'as meninas'.",
+          "A frase fica: 'As meninas atentas guardaram o caderno.'"
+        ],
+        "explanation": "'O menino atento' passa para o feminino plural: 'As meninas atentas'. Então o artigo, o substantivo e o adjetivo mudam. O verbo 'guardou' vira 'guardaram' para concordar com o plural. As quatro classes mudaram: artigo, substantivo, adjetivo e verbo. A expressão 'o caderno' fica igual, como o enunciado pede.",
+        "evidenceQuote": null
+      }
+    }
+  ],
+  "mockQuestionList": [
+    {
+      "questionId": "m1",
+      "block": "mock",
+      "number": 1,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Identificar no texto um substantivo que nomeia um objeto ou lugar",
+      "baseTextId": "t1",
+      "statement": "Leia o trecho do texto. Qual palavra é um substantivo que nomeia um lugar?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "cedo"
+        },
+        {
+          "label": "B",
+          "text": "chegou"
+        },
+        {
+          "label": "C",
+          "text": "escola"
+        },
+        {
+          "label": "D",
+          "text": "Na"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "escola",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Escola' dá nome a um lugar, por isso é substantivo. 'Cedo' é advérbio de tempo e 'chegou' é verbo. 'Na' junta uma preposição com um artigo e não dá nome a nada.",
+        "evidenceQuote": "Na segunda-feira, Marina chegou cedo à escola."
+      }
+    },
+    {
+      "questionId": "m2",
+      "block": "mock",
+      "number": 2,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "easy",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Reconhecer o artigo que acompanha um substantivo em um trecho do texto",
+      "baseTextId": "t1",
+      "statement": "Releia: 'Os alunos entraram devagar e olharam a caixa com curiosidade.' Qual palavra é o artigo que acompanha o substantivo 'alunos'?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Os"
+        },
+        {
+          "label": "B",
+          "text": "alunos"
+        },
+        {
+          "label": "C",
+          "text": "a"
+        },
+        {
+          "label": "D",
+          "text": "com"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Os",
+          "acceptedList": [
+            "os"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Os' vem antes de 'alunos' e mostra que o substantivo é masculino e plural, então é o artigo. O 'a' também é artigo, mas acompanha 'caixa', não 'alunos'. 'Alunos' é o substantivo e 'com' é preposição.",
+        "evidenceQuote": "Os alunos entraram devagar e olharam a caixa com curiosidade."
+      }
+    },
+    {
+      "questionId": "m3",
+      "block": "mock",
+      "number": 3,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "easy",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Retirar do texto o adjetivo que caracteriza um personagem ou objeto",
+      "baseTextId": "t1",
+      "statement": "Releia o trecho: 'canetas coloridas'. Copie a palavra desse trecho que é um adjetivo e caracteriza as canetas.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "coloridas",
+          "acceptedList": [
+            "Coloridas"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Coloridas' diz como as canetas são e concorda com elas no feminino plural, então é adjetivo. 'Canetas' é o substantivo, pois dá nome ao objeto.",
+        "evidenceQuote": "havia lápis novos, canetas coloridas"
+      }
+    },
+    {
+      "questionId": "m4",
+      "block": "mock",
+      "number": 4,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Localizar o verbo que indica a ação principal de uma frase do texto",
+      "baseTextId": "t1",
+      "statement": "Na frase do texto, qual palavra é o verbo que indica a ação principal?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "globo"
+        },
+        {
+          "label": "B",
+          "text": "mãos"
+        },
+        {
+          "label": "C",
+          "text": "duas"
+        },
+        {
+          "label": "D",
+          "text": "pegou"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "D",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "pegou",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Pegou' mostra o que Marina fez, então é o verbo. 'Globo' e 'mãos' são substantivos, pois dão nome a coisas. 'Duas' diz a quantidade de mãos e não indica ação.",
+        "evidenceQuote": "Marina pegou o globo com as duas mãos."
+      }
+    },
+    {
+      "questionId": "m5",
+      "block": "mock",
+      "number": 5,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Classificar uma palavra destacada do texto e justificar a escolha em uma frase",
+      "baseTextId": "t1",
+      "statement": "Releia: 'Depois, a turma desenhou um mapa no caderno.' Diga a classe da palavra 'mapa' e explique em uma frase por que ela pertence a essa classe.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Substantivo, porque dá nome a um objeto.",
+          "acceptedList": [
+            "Substantivo, pois nomeia um objeto.",
+            "É substantivo porque dá nome a uma coisa.",
+            "Substantivo, porque nomeia um objeto e vem depois do artigo 'um'.",
+            "Substantivo, pois dá nome a algo que a turma desenhou."
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Mapa' dá nome a um objeto, por isso é substantivo. Também vem depois do artigo 'um', que acompanha substantivos. Não é verbo, pois não indica ação, e não é adjetivo, pois não caracteriza outra palavra.",
+        "evidenceQuote": "a turma desenhou um mapa no caderno"
+      }
+    },
+    {
+      "questionId": "m6",
+      "block": "mock",
+      "number": 6,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Reconhecer o advérbio e a circunstância que ele expressa em um trecho",
+      "baseTextId": "t1",
+      "statement": "No trecho do texto, qual alternativa indica corretamente o advérbio e a circunstância que ele expressa?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "girou, que indica ação"
+        },
+        {
+          "label": "B",
+          "text": "lentamente, que indica modo"
+        },
+        {
+          "label": "C",
+          "text": "lentamente, que indica tempo"
+        },
+        {
+          "label": "D",
+          "text": "Brasil, que indica lugar"
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "B",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "lentamente, que indica modo",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Lentamente' diz de que modo Marina girou a esfera, então é advérbio de modo. 'Girou' é verbo, não advérbio. 'Brasil' é substantivo, pois dá nome a um lugar. A alternativa do tempo erra porque 'lentamente' não diz quando a ação aconteceu.",
+        "evidenceQuote": "Ela girou a esfera lentamente e procurou o Brasil."
+      }
+    },
+    {
+      "questionId": "m7",
+      "block": "mock",
+      "number": 7,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "medium",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Reescrever um trecho do texto no plural, ajustando artigo, substantivo e adjetivo",
+      "baseTextId": "t1",
+      "statement": "No texto, Pedro guardou 'o lápis novo' na mochila. Reescreva 'o lápis novo' no plural, ajustando o artigo, o substantivo e o adjetivo.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "os lápis novos",
+          "acceptedList": [
+            "Os lápis novos"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "O artigo 'o' vira 'os' e o adjetivo 'novo' vira 'novos'. O substantivo 'lápis' termina em s e já tem a mesma forma no singular e no plural, por isso não muda.",
+        "evidenceQuote": "o lápis novo"
+      }
+    },
+    {
+      "questionId": "m8",
+      "block": "mock",
+      "number": 8,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "hard",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Identificar a alternativa com concordância correta de gênero e número a partir do texto",
+      "baseTextId": "t1",
+      "statement": "Qual frase sobre o que havia na caixa tem a concordância correta entre substantivo e adjetivo?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Havia lápis novos e canetas coloridas."
+        },
+        {
+          "label": "B",
+          "text": "Havia lápis novos e canetas colorida."
+        },
+        {
+          "label": "C",
+          "text": "Havia lápis nova e canetas coloridas."
+        },
+        {
+          "label": "D",
+          "text": "Havia lápis novos e caneta coloridas."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "A",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Havia lápis novos e canetas coloridas.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "'Lápis novos' está no masculino plural e 'canetas coloridas' está no feminino plural. Em B, 'colorida' está no singular. Em C, 'nova' é feminino, mas 'lápis' é masculino. Em D, 'caneta' está no singular e 'coloridas' no plural.",
+        "evidenceQuote": "havia lápis novos, canetas coloridas"
+      }
+    },
+    {
+      "questionId": "m9",
+      "block": "mock",
+      "number": 9,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "hard",
+      "questionType": "open_answer",
+      "isContextualized": false,
+      "skillFocus": "Trocar o gênero de um personagem do texto e adaptar artigo e adjetivo",
+      "baseTextId": "t1",
+      "statement": "No texto, lemos: 'A professora Helena sorriu e abriu a caixa.' Imagine que quem sorriu foi o professor Hélio, que estava animado. Reescreva a frase começando com 'O professor Hélio' e usando 'animado' entre vírgulas, logo depois do nome.",
+      "table": null,
+      "optionList": null,
+      "answer": {
+        "correctOptionLabel": null,
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "O professor Hélio, animado, sorriu e abriu a caixa.",
+          "acceptedList": [
+            "O professor Hélio, animado, sorriu e abriu a caixa"
+          ]
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Ao trocar a professora por um professor, o artigo 'A' vira 'O' e o substantivo 'professora' vira 'professor'. O adjetivo 'animado' fica no masculino singular, para concordar com 'professor Hélio'. O verbo continua no singular.",
+        "evidenceQuote": "A professora Helena sorriu e abriu a caixa."
+      }
+    },
+    {
+      "questionId": "m10",
+      "block": "mock",
+      "number": 10,
+      "topicRef": "lp5-word-classes",
+      "difficulty": "hard",
+      "questionType": "multiple_choice",
+      "isContextualized": false,
+      "skillFocus": "Distinguir a classe de uma mesma palavra usada em duas frases diferentes",
+      "baseTextId": "t1",
+      "statement": "Compare as frases. I: 'havia uma caixa azul' (do texto). II: 'O azul é a cor preferida de Luana.' Qual alternativa classifica corretamente a palavra 'azul' nas duas frases?",
+      "table": null,
+      "optionList": [
+        {
+          "label": "A",
+          "text": "Adjetivo nas duas frases."
+        },
+        {
+          "label": "B",
+          "text": "Substantivo na frase I e adjetivo na frase II."
+        },
+        {
+          "label": "C",
+          "text": "Adjetivo na frase I e substantivo na frase II."
+        },
+        {
+          "label": "D",
+          "text": "Substantivo nas duas frases."
+        }
+      ],
+      "answer": {
+        "correctOptionLabel": "C",
+        "expectedAnswer": {
+          "kind": "text",
+          "value": "Adjetivo na frase I e substantivo na frase II.",
+          "acceptedList": []
+        },
+        "computable": false,
+        "calculationExpression": null,
+        "solutionStepList": [],
+        "explanation": "Na frase I, 'azul' caracteriza a caixa: é adjetivo. Na frase II, 'azul' vem depois do artigo 'O' e dá nome a uma cor: é substantivo. A mesma palavra pode mudar de classe conforme o que faz na frase.",
+        "evidenceQuote": "uma caixa azul"
+      }
+    }
+  ]
+}

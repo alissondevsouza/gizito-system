@@ -52,8 +52,8 @@ A F1-11 fica pronta quando o professor devolver a auditoria sem erro crítico (c
 - [x] 1.2 Design doc §9 com a marca de amostra, versão 1.8
 
 ### M2 — Kits de amostra
-- [ ] 2.1 `bun run pipeline` de Matemática e de Português do 5º ano, os dois `ready`
-- [ ] 2.2 `render:kit --sample` dos dois e cópia para `docs/pedagogy/amostras/`
+- [x] 2.1 `bun run pipeline` de Matemática e de Português do 5º ano, os dois `ready`
+- [x] 2.2 `render:kit --sample` dos dois e cópia para `docs/pedagogy/amostras/`
 
 ### M3 — Pacote da auditoria
 - [ ] 3.1 Rerodada de `7-portuguese-carta-cortada` e `7-portuguese-figuras-de-linguagem` pelo `test:pedagogy`
