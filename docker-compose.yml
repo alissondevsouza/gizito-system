@@ -33,6 +33,26 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: unless-stopped
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-gizito}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-gizito-local-dev}
+      MC_HOST_local: http://${MINIO_ROOT_USER:-gizito}:${MINIO_ROOT_PASSWORD:-gizito-local-dev}@127.0.0.1:9000
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc mb --ignore-existing local/gizito > /dev/null && mc ready local > /dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
   evolution:
     image: evoapicloud/evolution-api:v2.3.7
     restart: unless-stopped
@@ -102,4 +122,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
   evolution_instances:

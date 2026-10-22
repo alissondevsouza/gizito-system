@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "bun:test";
+import { computeContentHash } from "@gizito/integrations";
 import sharp from "sharp";
-import { computeContentHash } from "#src/pipeline/extract.ts";
 import { createPersonalDataPainter } from "#src/regression/personal-data-painter.ts";
 
 const painter = createPersonalDataPainter();

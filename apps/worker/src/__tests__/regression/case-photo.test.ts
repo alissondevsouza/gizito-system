@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it } from "bun:test";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { computeContentHash } from "@gizito/integrations";
 import sharp from "sharp";
 import { regressionCaseOf } from "#src/__tests__/regression/__fixtures__/regression.ts";
-import { computeContentHash } from "#src/pipeline/extract.ts";
 import {
   loadCasePhotoList,
   type PersonalDataLabel,

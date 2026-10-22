@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createSemaphore } from "#src/render/semaphore.ts";
+import { createSemaphore } from "#src/concurrency/semaphore.ts";
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
   let resolve: () => void = () => undefined;

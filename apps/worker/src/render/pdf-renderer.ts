@@ -1,8 +1,8 @@
 import { createValidationIssue, err, ok, type Result, type ValidationIssue } from "@gizito/core";
+import { createSemaphore } from "@gizito/integrations";
 import { PDFDocument } from "pdf-lib";
 import { type Browser, type BrowserContext, chromium } from "playwright";
 import type { KitItemAttribute, RenderDocument } from "#src/render/document.ts";
-import { createSemaphore } from "#src/render/semaphore.ts";
 
 export const DEFAULT_RENDER_TIMEOUT_MS = 30_000;
 

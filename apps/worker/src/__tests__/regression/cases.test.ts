@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { computeContentHash } from "#src/pipeline/extract.ts";
+import { computeContentHash } from "@gizito/integrations";
 import { loadPhotoVariationList } from "#src/regression/case-photo.ts";
 import {
   type CaseTag,

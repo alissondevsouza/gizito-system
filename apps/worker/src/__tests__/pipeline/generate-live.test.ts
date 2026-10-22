@@ -7,6 +7,7 @@ import {
   validateStudyKit,
 } from "@gizito/core";
 import {
+  computeContentHash,
   createAnthropicProvider,
   createMathjsEvaluator,
   isKatexParsable,
@@ -16,7 +17,7 @@ import {
   generationCaseList,
 } from "#src/__tests__/pipeline/__fixtures__/generation-cases.ts";
 import type { AiCallRecord } from "#src/pipeline/ai-call.ts";
-import { analyzeMaterial, computeContentHash } from "#src/pipeline/extract.ts";
+import { analyzeMaterial } from "#src/pipeline/extract.ts";
 import { createMemoryExtractionCache } from "#src/pipeline/extraction-cache.ts";
 import { generateKit } from "#src/pipeline/generate.ts";
 import { checkMathMarkup } from "#src/pipeline/math-markup.ts";

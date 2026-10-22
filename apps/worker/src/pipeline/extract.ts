@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   type AiFailureCode,
   type AiImage,
@@ -22,6 +21,7 @@ import {
   TAXONOMY_VERSION,
   type ValidationIssue,
 } from "@gizito/core";
+import { computeContentHash } from "@gizito/integrations";
 import { type AiCallRecord, toAiCallRecord } from "#src/pipeline/ai-call.ts";
 import { buildExtractionCacheKey, type ExtractionCache } from "#src/pipeline/extraction-cache.ts";
 import {
@@ -82,10 +82,6 @@ type PhotoOutcome =
       readonly aiCallList: readonly AiCallRecord[];
       readonly cause?: unknown;
     };
-
-export function computeContentHash(data: Uint8Array): string {
-  return createHash("sha256").update(data).digest("hex");
-}
 
 async function extractPhoto(
   photo: ExtractionPhoto,

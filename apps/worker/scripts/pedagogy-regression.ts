@@ -3,6 +3,7 @@ import { join } from "node:path";
 import {
   createAnthropicProvider,
   createMathjsEvaluator,
+  createSemaphore,
   isKatexParsable,
 } from "@gizito/integrations";
 import { parseAiEnvironment } from "#src/cli/pipeline-input.ts";
@@ -42,7 +43,6 @@ import {
   runRegressionCase,
 } from "#src/regression/run-case.ts";
 import { createPdfRenderer, errorNameOf } from "#src/render/pdf-renderer.ts";
-import { createSemaphore } from "#src/render/semaphore.ts";
 
 const USAGE_EXIT_CODE = 2;
 const CRITICAL_EXIT_CODE = 1;

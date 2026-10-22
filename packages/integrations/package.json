@@ -12,12 +12,15 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
-    "test:ai-live": "AI_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/ai/anthropic-live.test.ts"
+    "test": "bun test --path-ignore-patterns '**/integration/**'",
+    "test:ai-live": "AI_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/ai/anthropic-live.test.ts",
+    "test:integration": "bun test src/__tests__/integration",
+    "test:storage-live": "STORAGE_LIVE_TEST=1 bun --env-file=../../.env test src/__tests__/storage/r2-live.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",
     "@gizito/core": "workspace:*",
+    "aws4fetch": "^1.0.20",
     "katex": "^0.19.0",
     "mathjs": "^15.2.0",
     "pino": "^10.4.0",

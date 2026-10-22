@@ -1,10 +1,11 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { err, ok, type Result } from "@gizito/core";
+import { computeContentHash } from "@gizito/integrations";
 import sharp from "sharp";
 import { z } from "zod";
 import { photoMediaTypeOf } from "#src/cli/pipeline-input.ts";
-import { computeContentHash, type ExtractionPhoto } from "#src/pipeline/extract.ts";
+import type { ExtractionPhoto } from "#src/pipeline/extract.ts";
 import {
   CASE_PHOTO_DIRECTORY_NAME,
   casePhotoSchema,

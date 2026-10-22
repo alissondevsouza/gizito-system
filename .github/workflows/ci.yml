@@ -27,7 +27,7 @@ jobs:
       - run: docker compose config --quiet
       - run: bun run typecheck
       - run: bun run test
-      - run: docker compose up -d --wait postgres
+      - run: docker compose up -d --wait postgres minio
       - run: bun run --cwd apps/worker browser:install --with-deps
       - run: bun run test:integration
       - run: bun run build
