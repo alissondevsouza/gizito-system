@@ -1,6 +1,6 @@
 # API HTTP (`apps/api`)
 
-**Versão:** 1.3 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9.1, §9.2; design doc §6; `.claude/rules/api.md` · **Implementação:** F0-07 (`/health`), F2-01 a F2-11
+**Versão:** 1.4 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9.1, §9.2; design doc §6; `.claude/rules/api.md` · **Implementação:** F0-07 (`/health`), F2-01 a F2-11
 
 Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos chamam services; services usam Drizzle e `transitionOrder` dentro de transação. A API não chama IA. Prefixo sem versão no MVP (`/orders`, não `/v1/orders`); versionar quando houver segundo consumidor.
 
@@ -21,7 +21,7 @@ Elysia em Bun. Toda rota tem schema Zod de entrada e de resposta; handlers finos
 | Método e rota | Entrada | Efeito | Resposta |
 |---|---|---|---|
 | `POST /orders` | multipart: `grade`, `subject`, `photos` (1–5, JPEG ou PNG pelos bytes iniciais, ≤ 8 MB cada) | valida contagem, tamanho e formato; reserva a vaga do rate limit; normaliza (gira pelo EXIF, reduz a 1600 px, JPEG 80 sem EXIF, XMP, IPTC nem ICC), gera miniatura de 400 px e o hash, recusa foto repetida; grava foto e miniatura no R2; numa transação, cria o `draft`, as `order_photo` (`photo_index` na ordem do envio) e enfileira `order.analyze` singleton por pedido; falha depois do primeiro upload remove os objetos | `201 { publicToken, shortCode, status }` e `Set-Cookie` do dispositivo novo |
-| `PUT /orders/:token/photos` | multipart: `orderPhotoId` e `photos` repetidos em pares (1–5) | "Trocar foto" em `draft` ou `preview_ready` (`photos_changed → draft`, limpa `material_profile`); mesmas regras de foto; recusa duplicata contra as fotos atuais; nova checagem sob o lock do pedido; marca as antigas com `replaced_datetime`, insere as novas no mesmo índice e enfileira `order.analyze` se não houver um pendente; depois do commit apaga as antigas do R2 e grava `delete_datetime` | `200` com o corpo do `GET`; `409 invalid_state` fora dos dois estados; `404 not_found` para foto que não é atual |
+| `PUT /orders/:token/photos` | multipart: `orderPhotoId` e `photos` repetidos em pares (1–5) | "Trocar foto" em `draft` ou `preview_ready` (`photos_changed → draft`); limpa `analysis`, `material_profile` e o `legibility_score` das fotos que ficam, nos dois estados; mesmas regras de foto; recusa duplicata contra as fotos atuais; nova checagem sob o lock do pedido; marca as antigas com `replaced_datetime`, insere as novas no mesmo índice e enfileira `order.analyze` se não houver um pendente; depois do commit apaga as antigas do R2 e grava `delete_datetime` | `200` com o corpo do `GET`; `409 invalid_state` fora dos dois estados; `404 not_found` para foto que não é atual |
 | `GET /orders/:token` | — | — | `200` com o estado e os dados da etapa atual (seção 3) |
 | `POST /orders/:token/confirm` | `topicIdList` (1–3) ou `otherTopicText`, `email`, `noteText?`, `perceivedDifficulty?`, `acceptedTerms: true` | cria a cobrança no gateway primeiro (idempotente por `chargeId`; cobrança órfã expira sozinha em 30 min); depois, numa transação, `preview_ready → awaiting_payment` e insert de `charge` | `200` com a cobrança (`qrCode`, `qrCodeBase64`, `expireDatetime`, `amountCents`) |
 | `POST /orders/:token/charges` | — | nova cobrança só se a anterior expirou (`charge_expired`); `charge_active` se ainda válida; `invalid_state` se já pago | `201` com a cobrança |
@@ -38,16 +38,18 @@ A resposta sempre traz `publicToken`, `shortCode`, `status`, `grade`, `subject`,
 
 | Status | Campos adicionais |
 |---|---|
-| `draft` | `photoList` (`orderPhotoId`, `photoIndex`, `thumbnailUrl` assinada por `SIGNED_URL_TTL_SECONDS`, `legibilityScore`; vazia se as fotos já expiraram), aviso por foto e `warningList` quando a análise voltou a `draft` (F2-02) |
+| `draft` | `photoList` (`orderPhotoId`, `photoIndex`, `thumbnailUrl` assinada por `SIGNED_URL_TTL_SECONDS`, `legibilityScore`, `isUsable`, `photoIssueList`; vazia se as fotos já expiraram) e `analysisFailure`: `null` com a análise pendente, ou `{ failCode, isMaterialMismatch, unsupportedTopicList }` quando a análise voltou a `draft`. `failCode` é `photos_unreadable`, `only_unsupported_topics`, `no_topic_found` (spec pedagógica §3.3) ou `analysis_unavailable` (análise indisponível depois das retentativas; texto da tela na F2-09) |
 | `analyzing` | `photoList` |
-| `preview_ready` | `photoList` (para "Trocar foto"), `topicCandidateList` (id, nome, confiança), `materialProfile` resumido, `kitPreview` (contagens e preço vindos do core) (F2-02) |
+| `preview_ready` | `photoList` (para "Trocar foto"), `topicCandidateList` (`topicId`, `label` da taxonomia, `confidence`), `unsupportedTopicList` (`unsupportedTopicId`, `label`, `reason`), `materialProfile` resumido (`exerciseFormatList`, `notationList`, `isHandwritten`; os rótulos vêm dos mapas do core na F2-09) e `kitPreview` (`workedExampleCount`, `practiceQuestionCount`, `mockQuestionCount`, `answerKeyCount`, `priceCents`, do core) |
 | `awaiting_payment` | `charge` (`qrCode`, `qrCodeBase64`, `ticketUrl`, `expireDatetime`, `amountCents`), `substate: "charge_expired" \| null`, `email` mascarado |
 | `paid`, `processing` | `whatsapp` (`enabled`, `linked`, `phoneLast4`), `startedDatetime` |
 | `ready` | `kit` (`publishedDatetime`, `pageCountActivities`, `pageCountAnswerKey`, `topicIdList`), `whatsapp`; os downloads vêm por rota própria |
 | `failed` | `failReasonCode` mapeado para a mensagem do design doc 5.2; `supportUrl` |
 | `refunded` | `refundedDatetime` (de `charge.refund_datetime`) |
 
-O web usa só `status` (e `substate`) para decidir a rota (design doc §6.8).
+O web usa só `status` (e `substate`) para decidir a rota (design doc §6.8). Em `draft`, `analysisFailure` nula quer dizer análise pendente (tela de carregando); preenchida, quer dizer o aviso da seção 6.3 do design doc.
+
+Em cada foto, `isUsable` e `photoIssueList` vêm da última análise (`null` e lista vazia enquanto ela não existe). A resposta nunca traz evidência, `terminologyList`, `contextThemeList`, `apparentLevel`, avisos internos (`issueList`) nem `sourceWarningList`: o schema da view descarta tudo o que não declara.
 
 ## 4. Webhooks
 
@@ -84,4 +86,5 @@ Operador único com sessão (login por senha forte em env, cookie `HttpOnly`, ex
 - **1.0 (2026-10-15):** versão inicial (F0-03). Os schemas de entrada e resposta entram em `packages/core` conforme as rotas forem implementadas (F2-01 em diante).
 - **1.1 (2026-10-16):** F0-07: `/health` com `503 unavailable`, códigos `not_found` e `internal_error`, erros genéricos do `onError` (status lançado com corpo do contrato passa como está), log por padrão de rota, config com obrigatórias e defaults, desligamento por sinal.
 - **1.2 (2026-10-19):** revisão da F0: o webhook do Mercado Pago enfileira `charge.reconcile` com `webhookEventId`, para o worker marcar `processed_datetime` em `markOrderPaidAndEnqueue`; log `request` com status real e `code`; `listen` sem `reusePort`; desligamento fecha o banco com teto.
+- **1.4 (2026-10-22):** F2-02: prévia no `GET` (`analysisFailure` em `draft`; assuntos, não atendidos, perfil resumido e `kitPreview` em `preview_ready`; `isUsable` e `photoIssueList` por foto) e a troca de fotos limpando `analysis`, perfil e notas também em `draft`.
 - **1.3 (2026-10-22):** F2-01: `POST /orders` com a normalização e a ordem do trabalho, `PUT /orders/:token/photos` ("Trocar foto" em lote), `photoList` em `preview_ready` e vazia com fotos expiradas, códigos `photo_duplicate`, `payload_too_large`, `challenge_required` e `service_unavailable`, `photoIndex` nos erros, rate limit com HMAC e IPv6 /64, cookie do dispositivo, CORS com credenciais, config do storage, do segredo e do proxy.

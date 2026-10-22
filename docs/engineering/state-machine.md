@@ -1,6 +1,6 @@
 # Máquina de estados do pedido
 
-**Versão:** 1.1 · **Data:** 2026-10-19 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
+**Versão:** 1.2 · **Data:** 2026-10-22 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
 
 O estado do pedido só muda pela função `transitionOrder(status, event)` do core, chamada por um service **dentro de uma transação** (invariante 1). A máquina é dado (`orderTransitionList`), não código: toda transição válida está na tabela abaixo e toda combinação fora dela devolve `InvalidTransitionError` sem lançar.
 
@@ -31,11 +31,11 @@ stateDiagram-v2
 
 | De | Evento | Para | Quem dispara | Quando |
 |---|---|---|---|---|
-| `draft` | `start_analysis` | `analyzing` | worker, `order.analyze` | ao pegar o job |
-| `analyzing` | `analysis_succeeded` | `preview_ready` | worker, `order.analyze` | extração devolveu ao menos um candidato e material suficiente; o teto de 3 assuntos é da confirmação |
-| `analyzing` | `analysis_failed` | `draft` | worker, `order.analyze` | fotos insuficientes ou ilegíveis; avisos por foto gravados |
+| `draft` | `start_analysis` | `analyzing` | worker, `order.analyze` | ao pegar o job, com `order.analysis` nula (análise pendente); `draft` com análise já gravada não reinicia (`decideAnalysisStart`) |
+| `analyzing` | `analysis_succeeded` | `preview_ready` | worker, `order.analyze` | extração devolveu ao menos um candidato e material suficiente; o teto de 3 assuntos é da confirmação; grava `order.analysis` e `material_profile` |
+| `analyzing` | `analysis_failed` | `draft` | worker, `order.analyze` | fotos insuficientes ou ilegíveis, só assunto não atendido ou nenhum assunto (avisos por foto e `failCode` em `order.analysis`); ou análise indisponível (`analysis_unavailable`: falha definitiva do provedor ou do storage, ou retentativas esgotadas pelo `onExhausted`) |
 | `preview_ready` | `confirm` | `awaiting_payment` | api, `POST /orders/:token/confirm` | assuntos, e-mail e aceite válidos; a cobrança é criada no gateway antes (idempotente por `chargeId`) e gravada na mesma transação da transição |
-| `preview_ready` | `photos_changed` | `draft` | api, rota de fotos (F2-01) | o responsável troca uma foto pela ação "Trocar foto" (design doc §6.3, PRD §5 "foto ruim: nova foto antes do Pix"); os assuntos confirmados são descartados e a análise recomeça por `start_analysis` |
+| `preview_ready` | `photos_changed` | `draft` | api, rota de fotos (F2-01) | o responsável troca uma foto pela ação "Trocar foto" (design doc §6.3, PRD §5 "foto ruim: nova foto antes do Pix"); os assuntos confirmados são descartados, `order.analysis` e `material_profile` são limpos e a análise recomeça por `start_analysis` (a troca em `draft` também limpa a análise, sem transição) |
 | `awaiting_payment` | `payment_confirmed` | `paid` | worker, `charge.reconcile` (disparado pelo webhook com `orderId` ou pelo agendador) | **após consultar o gateway**; `markOrderPaidAndEnqueue` enfileira `order.generate` e expira as demais cobranças `pending` do pedido na mesma transação |
 | `paid` | `generation_started` | `processing` | worker, `order.generate` | ao pegar o job |
 | `paid` | `generation_failed` | `failed` | worker, `onExhausted` de `order.generate` (ADR-0009) | o job esgotou as tentativas antes de começar a gerar; `fail_reason_code` do job e `order.notify` `kit_failed` na mesma transação |
@@ -62,6 +62,8 @@ Não é um status do pedido. Com o pedido em `awaiting_payment`, o sub-estado de
 | Falha transitória até esgotar a fila | o `onExhausted` de `order.generate` aplica `generation_failed` (de `paid` ou `processing`) e enfileira `kit_failed` na transação do `failed` do job; o admin pode reprocessar a partir de `failed` |
 | Reembolso durante `processing` | `refund` leva a `refunded`; quando o job tentar `kit_published`, a máquina recusa e o kit não é publicado |
 | Arquivo final indisponível | `publishKit` só roda com as duas keys; sem elas o pedido não chega a `ready` |
+| Análise reexecutada | `analyzing` retoma sem transição, com o cache da extração; `preview_ready` e `draft` já analisado são pulados sem chamar a IA |
+| Troca de foto logo depois do fim da análise | o job é concluído na mesma transação de `analysis_succeeded` ou `analysis_failed` (`completeWithin`, ADR-0013), então a troca sempre enfileira a análise nova |
 
 ## 5. Estado → rota (design doc §6.8)
 
@@ -73,5 +75,6 @@ O web decide a rota canônica a partir do status devolvido por `GET /orders/:tok
 
 ## Histórico
 
+- **1.2 (2026-10-22):** F2-02: análise pendente (`order.analysis` nula), `analysis_unavailable`, reexecução do `order.analyze` e conclusão do job na transação da transição (ADR-0013). Sem transição nova.
 - **1.1 (2026-10-19):** `preview_ready → draft` por `photos_changed` ("Trocar foto") e `paid → failed` por `generation_failed` (esgotamento antes de gerar), decididos pelo humano na revisão da F0 (`specs/cross/revisao-f0/`); `confirmedOrderStatusList` (alcançáveis de `awaiting_payment`) exige ao menos um assunto.
 - **1.0 (2026-10-15):** versão inicial (F0-03), espelhando o código de F0-04.

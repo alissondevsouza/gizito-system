@@ -1,6 +1,6 @@
 # Jobs e fila (`apps/worker`)
 
-**Versão:** 1.6 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md`; `docs/pedagogy/spec-pedagogica.md` (contratos e códigos do pipeline) · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
+**Versão:** 1.7 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md`; `docs/pedagogy/spec-pedagogica.md` (contratos e códigos do pipeline) · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
 
 O worker é um processo Bun que consome a fila no Postgres. Cada job tem um handler em `src/jobs/{nome}.ts`, payload validado por `jobPayloadSchema` ao enfileirar e ao consumir, e é **idempotente**: checa o estado do pedido antes de agir e reexecução não duplica kit, cobrança, e-mail nem mensagem.
 
@@ -22,7 +22,42 @@ O worker agrupa os jobs em raias pela coluna Concorrência (`buildJobLaneList`):
 - `order.analyze` numa raia própria de 2, porque o responsável espera a prévia na tela;
 - `order.notify` e `whatsapp.inbound` numa raia de 2.
 
-O pool do worker tem duas conexões por vaga (handler e renovação do lease) mais 2. Cada vaga é um laço sobre `workJob` que dorme 1 s com a fila vazia e 5 s depois de erro de banco, sem morrer. Só sobem raias com handler registrado em `src/jobs/index.ts`; enquanto um job não tem handler, ninguém o reclama nem o agenda.
+O pool do worker tem duas conexões por vaga (handler e renovação do lease) mais 2. Cada vaga é um laço sobre `workJob` que dorme 1 s com a fila vazia e 5 s depois de erro de banco, sem morrer. Só sobem raias dos jobs em `handledJobNameList` de `src/jobs/index.ts`, cujo mapa (`buildJobHandlerMap`) recebe banco, `AiProvider`, storage e logger no boot; enquanto um job não tem handler, ninguém o reclama nem o agenda.
+
+### Fluxo de `order.analyze` (F2-02; spec pedagógica §3; ADR-0013)
+
+```mermaid
+flowchart TD
+  A[pega job] --> S{trava o pedido: decideAnalysisStart}
+  S -->|draft sem análise| B[start_analysis → analyzing; lê as fotos atuais]
+  S -->|analyzing: retry ou queda| R[lê as fotos atuais, sem transição]
+  S -->|draft já analisado, preview_ready ou outro| K[skip + completeWithin, mesma transação]
+  B --> G[storage.get de cada foto]
+  R --> G
+  G -->|storage_unavailable| T[falha transitória: fica em analyzing]
+  G -->|ausente ou recusada| U
+  G --> E[analyzeMaterial: uma chamada por foto, cache por hash]
+  E --> C[grava ai_call de cada chamada]
+  C -->|falha transitória| T
+  C -->|ai_auth_failed ou ai_request_invalid| U[analysis_unavailable]
+  C -->|ok| P[buildOrderAnalysis]
+  P --> F[completeWithin + finishOrderAnalysis, mesma transação]
+  U --> F
+  F -->|preview_ready| V[analysis_succeeded → preview_ready]
+  F -->|falha da prévia ou indisponível| D[analysis_failed → draft com o aviso]
+```
+
+- O início trava o pedido e decide pelo core (`decideAnalysisStart`). Em `draft` sem análise, aplica `start_analysis`. Em `analyzing`, retoma sem transição. Nos outros casos pula. Nos dois primeiros, lê as fotos atuais (por `photo_index`) na mesma transação, então uma troca feita antes do início entra na análise.
+- `order.analysis` nula em `draft` ou `analyzing` quer dizer análise pendente. A troca de fotos limpa `analysis`, `material_profile` e as notas de legibilidade, e enfileira uma análise nova (`api.md` §2).
+- O cache da extração fica em `extraction_cache` (`data-model.md`). Cada entrada guarda a extração já sanitizada e vale até o fim da retenção da foto que a criou. Numa retentativa ou numa troca, a foto já lida não gera chamada nova.
+- Cada chamada de IA vira uma linha de `ai_call` com o `order_id`, gravada logo depois da etapa (`Ok` ou `Err`) e antes de qualquer transição. Uma queda do processo durante as chamadas, que levam segundos, perde o registro delas (`known-issues.md`).
+- A transação final chama primeiro `completeWithin` (ADR-0013) e depois `finishOrderAnalysis`. Esta confere se o pedido ainda está em `analyzing` e se as fotos atuais são as analisadas, e só então grava a análise, o `material_profile` (só em `preview_ready`) e o `legibility_score` de cada foto. Os desfechos:
+  - lease perdido: desfaz e devolve `lease_lost`;
+  - fotos diferentes das analisadas: desfaz e devolve `analysis_photo_set_changed` (transitória), e a retentativa relê as fotos;
+  - pedido fora de `analyzing`: desfaz e termina sem efeito, com log `warn`.
+- Falha que não volta à fila (`ai_auth_failed`, `ai_request_invalid`, foto ausente ou recusada no storage, pedido sem foto atual) encerra em `{ outcome: "analysis_unavailable" }`, com log `error` e o job `completed` (ADR-0013). Falha transitória (`ai_*` transitório, `extraction_cache_failed`, `storage_unavailable`) segue o retry da fila com o pedido em `analyzing`.
+- `onExhausted`: com o pedido em `analyzing`, `analysis_failed` com `analysis_unavailable`, na transação do `failed`; nos outros estados, no-op.
+- Log por análise: `orderId`, `stage: "analyze"`, duração, custo, número de chamadas, desfecho, `failCode` e código de erro. Nunca evidência, perfil ou texto da foto.
 
 ## 2. Fluxo de `order.generate` (PRD §7.4; contratos e códigos na spec pedagógica, ADR-0010)
 
@@ -95,7 +130,8 @@ flowchart TD
   - Ele é chamado na mesma transação do `failed` definitivo de uma falha transitória: retentativas esgotadas, `unhandled_error`, `job_timeout`, `invalid_error_code` ou `lock_expired` esgotado na varredura. Não é chamado em falha não retryable, `payload_invalid` ou `lease_lost`.
   - Contrato: estado de pedido inesperado é no-op; ele só lança em erro de infraestrutura. Se lança, nada é gravado e o job fica `active` até a varredura seguinte, que pula esse job, segue com os outros e loga `error` `job_compensation_failed`.
   - Refeita pela varredura, a compensação recebe `lock_expired` como código.
-  - Por job: `order.generate` → `generation_failed` + `kit_failed`; `order.analyze` → `analysis_failed` (volta a `draft` com aviso); `order.notify` → notificação `failed`; os demais, só o log.
+  - Por job: `order.generate` → `generation_failed` + `kit_failed`; `order.analyze` → `analysis_failed` com `analysis_unavailable` (volta a `draft` com aviso); `order.notify` → notificação `failed`; os demais, só o log.
+- **Conclusão dentro da transação do handler (ADR-0013):** o contexto do handler traz `completeWithin(tx)`, que conclui o job na transação do próprio handler e devolve `false` se o lease se perdeu. Quando o handler devolve `Ok` e o `completeJob` de sempre não acha o job ativo, o `workJob` relê a tentativa por `(job_id, attempt_count)`: `completed` dá o desfecho `completed`, e qualquer outro status dá `lease_lost`. Hoje só o `order.analyze` usa.
 - Dead letter: job esgotado fica na tabela `job` como `failed`, com `last_error_code` e `finish_datetime`, para o admin ver; alerta por taxa de `failed` e por qualquer `payload_invalid`.
 - `workJob` devolve a exceção do handler em `cause` para diagnóstico; ela pode carregar mensagem de provedor ou dado de entrada, então só vai para log em `debug` (invariante 9).
 
@@ -122,3 +158,4 @@ flowchart TD
 - **1.4 (2026-10-19):** F1-02 e ADR-0010: alocação das vagas no core antes do `plan`, `validateKitPlan`, composição do kit, revisão com severidade pelo código, regeneração por reparo (plano, kit ou itens), nova chamada de revisão sem gastar a regeneração e `fail_reason_code` `other_topic_unfeasible`.
 - **1.5 (2026-10-21):** F1-07: registro de cada chamada pelo `onAiCall`, teto conferido antes da chamada com o custo já gasto, `ai_aborted` no sinal, regeneração por execução e revisão completa depois do reparo por item vindo da validação.
 - **1.6 (2026-10-22):** F2-01: `order.analyze` enfileirado também pela troca de fotos e singleton por `orderId`.
+- **1.7 (2026-10-22):** F2-02 e ADR-0013: fluxo do `order.analyze` (início sob trava, retomada, `skip`, cache no banco, `ai_call`, `analysis_unavailable`, `onExhausted`), `completeWithin` no contexto do handler e mapa de handlers montado no boot.

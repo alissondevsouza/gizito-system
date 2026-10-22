@@ -6,6 +6,11 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-22] Job de análise: fake de IA decodifica a imagem, modelo sem preço derruba o boot — F2-02
+
+- O `createFakeAiProvider` reduz cada imagem com o sharp antes de responder, como o adaptador real. Bytes que não decodificam (um "JPEG" de 4 bytes feito à mão) viram `ai_image_invalid`, a foto entra na junção como `null` e o pedido cai em `photos_unreadable` sem erro nenhum. O teste parece testar a prévia e testa outra coisa. Fixture de foto para o fake precisa ser imagem de verdade (sharp `create` + `jpeg()`), com o roteiro do fake indexado pelo `computeContentHash` dos bytes, porque o storage devolve cópia e a identidade do objeto se perde.
+- `createAnthropicProvider` lança `UnknownAiModelError` na construção quando o modelo não tem preço na tabela. No worker isso acontecia no boot, depois do parse da configuração, e saía com stack trace em vez da mensagem que nomeia o campo. A configuração do worker passou a recusar `AI_MODEL_EXTRACT` e `AI_MODEL_GENERATE` sem preço (`findModelPrice`). Teste que sobe o processo precisa de ids reais de modelo, não de nomes inventados.
+
 ## [2026-10-22] Upload de fotos: multipart do Elysia, `aws4fetch` no S3, fixtures que viram a mesma foto — F2-01
 
 - No Elysia 1.4 com schema Zod, o campo de arquivo repetido chega como `File` quando vem um só e como `File[]` quando vêm dois ou mais (vale também para campo de texto repetido). O schema precisa aceitar os dois e normalizar para lista (`z.union([item, z.array(item)]).transform(...)`), senão o envio de uma foto falha na validação.

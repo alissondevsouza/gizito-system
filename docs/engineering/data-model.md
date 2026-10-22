@@ -1,6 +1,6 @@
 # Modelo de dados
 
-**Versão:** 1.5 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
+**Versão:** 1.6 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
 
 PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolamento é por pedido, e toda leitura pública passa pelo `public_token`.
 
@@ -16,7 +16,7 @@ PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolame
 - `update_datetime` é mantido pelo trigger `set_update_datetime` (`BEFORE UPDATE`) em toda tabela, definido como SQL customizado na migration; tabela nova precisa do seu trigger (o teste `migrations.test.ts` do `db` falha sem ele).
 - Colunas `jsonb` usam a coluna própria de `src/schema/jsonb.ts`, nunca o `jsonb` do `drizzle-orm`: com o driver `bun-sql` ele grava string JSON em vez de objeto (lessons de 2026-10-15). O teste de convenções exige a coluna própria e os testes de integração leem `jsonb_typeof`.
 - FKs para `order` são `ON DELETE RESTRICT` (o pedido nunca é apagado; remoção LGPD anonimiza, §5); `kit.superseded_by_kit_id` é `ON DELETE SET NULL`.
-- Checks no banco: `amount_cents > 0`; `whatsapp_phone` e `whatsapp_consent_datetime` nulos ou preenchidos juntos; `topic_id_list` é array e, somado ao "outro", cobre até `MAX_TOPIC_COUNT` assuntos; `notification.order_id` nulo só na ajuda do WhatsApp; `recipient_hash` com 64 hex; `legibility_score` em 0–1; `width`, `height` e `page_count_*` > 0; contagens de tokens, `cost_cents` e `duration_ms` ≥ 0.
+- Checks no banco: `amount_cents > 0`; `whatsapp_phone` e `whatsapp_consent_datetime` nulos ou preenchidos juntos; `topic_id_list` é array e, somado ao "outro", cobre até `MAX_TOPIC_COUNT` assuntos; `notification.order_id` nulo só na ajuda do WhatsApp; `recipient_hash` com 64 hex; `legibility_score` em 0–1; `width`, `height` e `page_count_*` > 0; contagens de tokens, `cost_cents` e `duration_ms` ≥ 0; `order.analysis` nula em `analyzing` e com `outcome` `preview_ready` em `preview_ready` (`order_analysis_check`).
 - `ai_call.cost_cents` é em **centavos de dólar**, a moeda da fatura do provedor de IA (ADR-0011); `input_token_count` soma os tokens sem cache, os escritos e os lidos do cache. Comparação com valores em reais (preço do kit, metas de custo) converte no relatório.
 
 ## 2. Diagrama
@@ -31,6 +31,15 @@ erDiagram
   order ||--o{ support_ticket : "reportes"
   kit o|--o| kit : "superseded_by_kit_id"
 
+  extraction_cache {
+    uuid extraction_cache_id PK
+    text cache_key UK "hash da foto, ano, disciplina, taxonomia, prompt e modelo"
+    jsonb extraction "photoExtractionSchema, já sanitizada"
+    jsonb issue_list "avisos internos da sanitização"
+    timestamptz expire_datetime "fim da retenção da foto que criou a entrada"
+    timestamptz insert_datetime
+    timestamptz update_datetime
+  }
   preview_request {
     uuid preview_request_id PK
     text client_ip_hash "HMAC do IP normalizado"
@@ -51,6 +60,7 @@ erDiagram
     text note_text "até 300 chars"
     perceived_difficulty perceived_difficulty
     jsonb material_profile
+    jsonb analysis "orderAnalysisSchema; nula com a análise pendente"
     text whatsapp_phone "E.164, só com consentimento"
     timestamptz whatsapp_consent_datetime
     timestamptz paid_datetime
@@ -182,6 +192,7 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 | `order` | `email` | busca no admin |
 | `order` | `whatsapp_phone` (parcial, não nulo) | SAIR/PARAR e vínculo repetido |
 | `order_photo` | `order_id`; unique parcial `(order_id, photo_index)` com `replaced_datetime` nulo; `(delete_datetime, insert_datetime)`; `content_hash` | listagem; uma foto atual por índice; purge; cache de extração por hash (F1-02) |
+| `extraction_cache` | unique `cache_key`; `expire_datetime` | acerto do cache da extração; purga das vencidas |
 | `preview_request` | `(client_ip_hash, insert_datetime)`; `(device_hash, insert_datetime)`; `insert_datetime` | contagem do rate limit da prévia por janela; remoção das linhas com mais de 24 h |
 | `charge` | `order_id`; unique `gateway_payment_id` (parcial, não nulo); unique `(gateway, gateway_order_id)` (parcial, não nulo); `(status, expire_datetime)` | idempotência do pagamento; localizar a cobrança pelo webhook; reconciliação |
 | `kit` | `order_id`; `(delete_datetime, published_datetime)` | download; purge |
@@ -197,6 +208,7 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 - `order_photo`: a imagem (fica no R2, privada, com a miniatura em `photos/{orderId}/{orderPhotoId}-thumbnail.jpg`); EXIF já removido antes do upload. As fotos atuais do pedido são as que têm `replaced_datetime` e `delete_datetime` nulos.
 - `preview_request`: IP e cookie em claro. Só HMAC-SHA256 com `CLIENT_HASH_SECRET`, e a linha sai com mais de 24 h, apagada no próprio insert da reserva.
 - `ai_call`: prompt, resposta, texto extraído. Só números e códigos.
+- `extraction_cache`: a foto nem o `order_id`. Guarda a extração já sanitizada (evidência sem dado pessoal, perfil), que é texto derivado da foto e por isso tem a validade dela.
 - `webhook_event`: corpo bruto. Só identificação e resultado.
 - `charge`: o `qr_code` existe na tabela (o web precisa exibi-lo) mas nunca vai para log.
 - `job`: o payload de `whatsapp.inbound` carrega telefone e texto só enquanto o job pode rodar; ao terminar, fica reduzido a `name` e `webhookEventId` (`personalDataJobRetainedFieldMap` do core).
@@ -205,6 +217,10 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 
 - Fotos: `retention.purge` apaga do storage a foto e a miniatura após `PHOTO_RETENTION_DAYS` (30) e grava `delete_datetime`; a linha fica. Foto trocada ("Trocar foto") sai do storage logo depois do commit e ganha `delete_datetime`; se a remoção falhar, fica com `delete_datetime` nulo e a purga a apaga pelos 30 dias. A regra de ciclo de vida de 30 dias no prefixo `photos/` do bucket (F2-13, ADR-0012) é a rede de segurança para objeto órfão sem linha.
 - Rate limit: `preview_request` guarda 24 h (`PREVIEW_REQUEST_RETENTION_HOURS`). A linha velha sai no próximo insert da reserva; com pouco tráfego, pode ficar mais tempo, então a purga da F2-06 também apaga as linhas com mais de 24 h.
+- Análise e cache da extração (F2-02; quem executa é a F2-06):
+  - `extraction_cache` sai quando `expire_datetime` passa (`purgeExpiredExtractionCache`, em lotes). O valor é `photoDeleteDeadline` da foto que gravou a entrada. Acerto de outro pedido não estende a validade; regravação depois de vencida usa a foto nova, com os mesmos bytes.
+  - `order.analysis` (com `terminologyList` e `contextThemeList` tirados da foto) é limpa junto com as fotos do pedido, em `PHOTO_RETENTION_DAYS`.
+  - `order.material_profile` é limpo junto com as fotos nos pedidos que não chegaram a `awaiting_payment`; nos demais, fica para a geração e sai com o `study_kit`.
 - PDFs e `study_kit`: após `KIT_RETENTION_MONTHS` (12), apaga do storage, grava `delete_datetime` e limpa `study_kit`; `ai_call` permanece para métricas.
 - Remoção a pedido do titular: admin apaga `email`, `whatsapp_phone`, fotos e PDFs, mantendo o pedido como registro contábil anonimizado.
 - As funções de prazo (`photoDeleteDeadline`, `kitDeleteDeadline`) estão no core e recebem o relógio por parâmetro.
@@ -214,6 +230,10 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `lock_timeout` de 10 s, `idle_in_transaction_session_timeout` de 60 s e `connectionTimeout` de 5 s; o `migrate.ts` desliga só o `statement_timeout`. `pingDatabase` e `getQueueMetrics` têm teto de 2 s (`DatabaseTimeoutError`). Uma transação parada segurando `FOR UPDATE` no pedido é derrubada pelo banco em vez de travar as escritas daquele pedido.
 
 - `markOrderPaidAndEnqueue(tx, { orderId, chargeId, gatewayPaymentId, paidDatetime, webhookEventId? }, { now? })`: trava `order`, `charge` e o `webhook_event` informado com `FOR UPDATE`; a decisão é `decidePaymentConfirmation` do core. `paid`: grava o status de destino da máquina e `paid_datetime`, marca a cobrança `paid` com o `gateway_payment_id`, expira as demais cobranças `pending` do pedido e enfileira `order.generate`. Cobrança já `paid` ou `refunded` com o mesmo pagamento: no-op (`already_paid`). Outra cobrança paga com o pedido já `paid` ou posterior: marca a cobrança `paid`, abre `support_ticket` `duplicate_payment` e não muda o estado. Com `webhookEventId`, grava `processed_datetime` e `outcome_code` (`paid`, `already_paid`, `duplicate_payment`). Erros (`OrderNotFoundError`, `ChargeNotFoundError`, `WebhookEventNotFoundError`, `GatewayPaymentInUseError` quando o pagamento já está em outra cobrança, `ChargePaymentMismatchError`, `InvalidTransitionError`) voltam como `Result` antes de qualquer escrita; só uma corrida em que outra transação grave o mesmo `gateway_payment_id` entre a checagem e a escrita cai no unique e lança, com rollback.
+- `startOrderAnalysis(tx, orderId)` (F2-02): trava o pedido e aplica `decideAnalysisStart` do core. `start` aplica `start_analysis`; `resume` (`analyzing`) não muda o estado; nos dois, devolve ano, disciplina e as fotos atuais por `photo_index` (`orderPhotoId`, `storageKey`, `insertDatetime`), lidas na mesma transação. `skip` devolve o status sem escrita.
+- `finishOrderAnalysis(tx, { orderId, analysis })` (F2-02): a análise passa em `orderAnalysisSchema`; trava o pedido; `transitionOrder` pelo evento da análise (`analysis_succeeded` ou `analysis_failed`), que exige `analyzing`; confere se as fotos atuais são as analisadas, na mesma ordem (`AnalysisPhotoSetChangedError`); grava `status`, `analysis`, `material_profile` (só em `preview_ready`) e o `legibility_score` de cada foto analisada. Os erros voltam como `Result` antes de qualquer escrita. O handler chama `completeWithin` antes, na mesma transação (ADR-0013).
+- `recordAiCallList(executor, orderId, list)`: uma linha de `ai_call` por chamada.
+- `findExtractionCacheEntry`, `saveExtractionCacheEntry` (upsert por `cache_key`) e `purgeExpiredExtractionCache(executor, { now, batchSize })`: entrada que não passa no schema conta como ausente.
 - `republishKit(tx, { orderId, kit })` (admin, F2-11): insere o kit novo com as duas keys e grava `superseded_by_kit_id` no anterior; sem transição de estado, porque o pedido já está `ready`.
 - `publishKit(tx, { orderId, kitId, studyKit, generationVersion, taxonomyVersion, activitiesStorageKey, answerKeyStorageKey, pageCountActivities, pageCountAnswerKey }, { now? })`: a entrada passa em `publishKitInputSchema` do core (as duas keys iguais a `kitStorageKey` do próprio kit); trava o pedido, `transitionOrder(status, "kit_published")`, insere `kit` com `published_datetime`, grava `ready_datetime` e enfileira `order.notify` `kit_ready`. Transição inválida (por exemplo reembolso durante `processing`) volta como erro sem inserir kit. Nunca com uma key só.
 
@@ -224,4 +244,5 @@ Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `l
 - **1.2 (2026-10-15):** F0-06 acrescenta a tabela `job` (diagrama, índices, o que não guarda), a convenção da coluna `jsonb` própria e as assinaturas reais de `markOrderPaidAndEnqueue` e `publishKit` em §6.
 - **1.3 (2026-10-19):** revisão da F0 (migration `0002_revisao_f0`): índices parciais da `job`; unique de `(gateway, gateway_order_id)`; índices de `whatsapp_phone` e `content_hash`; check de `topic_id_list` contando o "outro"; `notification` com `recipient_hash`, `order_id` nulo só na ajuda e unique por destinatário; timeouts do pool em §6.
 - **1.4 (2026-10-20):** F1-05: `ai_call.cost_cents` em centavos de dólar e `input_token_count` com os tokens de cache (§1, ADR-0011).
+- **1.6 (2026-10-22):** F2-02 (migration `0004_job_analise`): tabela `extraction_cache`, coluna `order.analysis` com o check por status, retenção da análise e do cache, `startOrderAnalysis`, `finishOrderAnalysis`, `recordAiCallList` e as funções do cache.
 - **1.5 (2026-10-22):** F2-01 (migration `0003_pedidos_e_upload`): `order_photo.photo_index` com unique parcial por foto não trocada, `order_photo.replaced_datetime`, tabela `preview_request` com HMAC de IP e dispositivo, fotos no prefixo `photos/` (ADR-0012), miniatura junto da foto na retenção.

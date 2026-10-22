@@ -180,9 +180,9 @@ Roadmap F2-02. O tamanho subiu de M para L porque a entrega cruza core, db, inte
 - [x] 4.2 View com `isUsable`, `photoIssueList`, `analysisFailure` e campos da prévia · Arquivos: `apps/api/src/services/orders.ts`, testes · Verificação: `bun run --cwd apps/api test:integration`
 
 ### M5 — visto funcionando e fechamento
-- [ ] 5.1 Suíte: `bun run lint`, `bun run typecheck`, `bun run test`, integração dos workspaces tocados, `bun run build`
-- [ ] 5.2 RF-12 com api, worker, Postgres, MinIO e IA real
-- [ ] 5.3 Docs: `jobs.md`, `api.md`, `data-model.md`, `state-machine.md`, ADR-0013 e linha no `docs/README.md`
+- [x] 5.1 Suíte: `bun run lint`, `bun run typecheck`, `bun run test`, integração dos workspaces tocados, `bun run build`
+- [x] 5.2 RF-12 com api, worker, Postgres, MinIO e IA real
+- [x] 5.3 Docs: `jobs.md`, `api.md`, `data-model.md`, `state-machine.md`, ADR-0013 e linha no `docs/README.md`
 - [ ] 5.4 Revisão neutra e `review.md`
 
 ## Decisões
@@ -196,5 +196,12 @@ Roadmap F2-02. O tamanho subiu de M para L porque a entrega cruza core, db, inte
 | 2026-10-22 | Revisão da spec aprovada na rodada 1, sem CRÍTICO; os 4 ALERTAs e as sugestões foram incorporados | `analysis_unavailable` e `skip` com `completeWithin`; RF-12 com duas fotos; retenção da análise; desfechos do fim definidos; releitura do job no `workJob`; ordem das travas; notas limpas na troca |
 
 ## Status
-- **Fase:** spec aprovada pelo verificador na rodada 1, com os alertas incorporados. M1 em curso.
+- **Fase:** M1 a M4 implementados e M5.1 a M5.3 feitos; falta a revisão neutra (5.4).
+- **Suíte:** lint, typecheck, unit dos 6 workspaces, integração (db 161, worker 54, api 38, integrations 6) e build verdes.
+- **RF-12 (visto funcionando, 22/10/2026):** api, worker, Postgres e MinIO no ar, com a IA real (`claude-haiku-5-5`, prompt `extract-v1`):
+  - `POST /orders` com as duas fotos sintéticas levou a `preview_ready` em cerca de 6 s, com `ma5-equivalent-fractions`, `ma5-decimal-numbers`, `ma5-comparing-rationals` (`high`) e `ma5-addition-subtraction` (`medium`);
+  - a troca da segunda foto por uma variação voltou a `draft` com a análise limpa e chegou a `preview_ready` em 7,6 s, com uma chamada nova só para a foto trocada (acerto de cache na primeira);
+  - foram 3 linhas de `ai_call` com o `order_id`, US$ 0,0026 na primeira análise e US$ 0,0008 na segunda;
+  - os dois jobs terminaram `completed` na 1ª tentativa, e os logs não trouxeram texto do material;
+  - os dados do teste foram apagados do banco de dev e do MinIO depois.
 - **Pendências do humano:** nenhuma até aqui. O texto da tela para `analysis_unavailable` fica para a F2-09.
