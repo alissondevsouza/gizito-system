@@ -144,8 +144,8 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 - [x] 6.6 Spec pedagógica 1.5 e `known-issues.md`
 - [x] 6.7 Rodada dos casos afetados com `AI_EFFORT_GENERATE=medium` (rodada 2) e dos que falharam com o esforço padrão (rodada 3) · Verificação: `bun run test:pedagogy --case ...`
 - [x] 6.8 Parágrafo de texto-base de 1 a 800 caracteres e `acceptableRefusalList` nos dois casos de fronteira (decisões do humano de 21/10/2026, depois da rodada 3) · Arquivos: `packages/core/src/pedagogy/kit/schemas.ts`, `apps/worker/src/regression/{regression-case,case-check,regression-report}.ts`, os dois `case.json` · Verificação: `bun run test`
-- [ ] 6.9 Rodada completa dos 35 casos com o esforço padrão · Verificação: `bun run test:pedagogy`
-- [ ] 6.10 Revisão neutra, rodada 2, das correções
+- [x] 6.9 Rodada completa dos 35 casos com o esforço padrão, juntada ao complemento depois da queda da sessão (decisão do humano) · Verificação: `bun run test:pedagogy`
+- [x] 6.10 Revisão neutra, rodada 2, das correções (reprovada; CRÍTICO e ALERTA corrigidos em `6e2402d`, teto de 2 rodadas atingido)
 
 ## Decisões
 
@@ -169,7 +169,11 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 ## Status
 
 21/10/2026:
-- M1 a M5 feitos.
-- M6 tem as correções das rodadas 1 a 3 com as decisões do humano.
+- M1 a M6 feitos.
+- A rodada final juntada teve 2 bloqueadores críticos inesperados (`review.md`): kits que falharam depois da única regeneração, sem defeito fixo.
 
-Próximo passo: rodada completa (6.9), revisão neutra rodada 2 (6.10) e 4.4. A revisão do assunto `lp5-word-classes` pelo professor fica pendente.
+O pronto da F1-10 pede zero. Fechar a F1-10 com os 2 críticos registrados, ou mudar a regeneração (PRD §7.4), é decisão do humano.
+
+Pendências do humano:
+- revisão do assunto `lp5-word-classes` pelo professor;
+- push e merge.

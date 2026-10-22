@@ -134,3 +134,60 @@ Foram 13 casos: os 10 críticos da rodada 1, os outros 2 do 5º ano de Portuguê
 - `7-math-potenciacao-raiz` desta vez deu `no_topic_found`; na rodada 2 tinha dado o assunto vizinho. O caso oscila entre as duas respostas, e a recalibração não resolve. Decisão do humano.
 
 Situação, somando as três rodadas: dos 10 críticos da rodada 1, 8 fecharam, e os 2 que seguem abertos dependem das decisões acima.
+
+## Rodada 2 da revisão neutra (correções)
+
+**Veredito:** REPROVADO.
+- **CRÍTICO:** a recalibração dos casos de fronteira tirou a exigência do aviso `grade_mismatch`, e a recusa passava mostrando o texto de foto ilegível.
+- **ALERTA:** `min` é também a unidade minuto, e `min(45 min, 50 min)` dava `unsupported` no avaliador.
+- **SUGESTÕES:**
+  - tabela de Decisões com lista dentro da célula;
+  - combinações sem sentido em `acceptableFailCodeList`;
+  - chaves de `material-phrases.json` sem conferência;
+  - `lp5-word-classes` repetindo `EF05LP26` e a ideia de "gênero e número" de `lp5-nominal-agreement`.
+
+### Resposta do orquestrador
+
+Corrigido em `6e2402d`, com teste:
+- **CRÍTICO:** `acceptableRefusalList: [{ failCode, requiredSourceWarningCodeList }]`, e os dois casos de fronteira exigem `grade_mismatch` quando recusam.
+- **ALERTA:** o símbolo de unidade é renomeado no AST antes do `evaluate`, e `min` com minutos passa.
+- **Sugestões:** as combinações do formato do caso e as chaves das frases do material.
+
+A tabela de Decisões foi refeita. A sobreposição de `lp5-word-classes` com a concordância vai para a revisão do professor, que já estava pendente.
+
+O teto de 2 rodadas foi atingido: a correção do CRÍTICO não passou por um verifier novo e fica para o humano conferir no handoff.
+
+## Rodada final (juntada)
+
+A rodada completa (`rodada-final`) parou em 34 de 35 casos, quando a sessão caiu. Ela rodou com o `generate` v2 de antes de `708b1b9`, que exige JSON sem bloco de código. 4 kits falharam:
+- 3 com `ai_output_invalid` na geração: o diagnóstico com o fixture do core deu 1 de 4 reparos do v2 dentro de bloco Markdown, contra 0 de 4 no v1, e 6 de 6 limpos depois da correção;
+- `6-portuguese-tempos-verbais`, com uma resposta aceita errada.
+
+Por decisão do humano, o complemento (`rodada-final-complemento`, US$ 3,40) rodou com o código final:
+- os 4 que falharam;
+- `7-portuguese-figuras-de-linguagem`, que faltou;
+- os 2 casos de fronteira, porque a regra deles mudou depois que a rodada começou.
+
+O resumo em `docs/pedagogy/regressao/2026-10-21-extract-v1+plan-v1+generate-v2+review-v2.md` junta as duas execuções. Cada caso vem da última execução em que rodou, e a origem está em `rodada-final-composta/origin.json`.
+
+| # | Critério | Meta | Valor | Resultado |
+|---|---|---|---|---|
+| 1 | Bloqueador crítico inesperado | 0 | 2 | falhou |
+| 2 | Extração sem falha | ≥ 90% | 35 de 35 | ok |
+| 3 | Foto ilegível recusada e dado pessoal sinalizado sem cópia | 100% | 5 de 5 | ok |
+| 5 | Custo médio por kit | ≤ R$ 2,99 | US$ 0,41 (R$ 2,44 a 6,00) | ok |
+| 6 | Custo médio por prévia | ≤ R$ 0,10 | US$ 0,001 | ok |
+| 7 | Geração p95 (não bloqueia) | ≤ 5 min | 5 min 34 s | falhou |
+
+Números da geração:
+- 32 kits, 30 prontos e 2 falhos.
+- 9 regenerados (28%), contra 64% na rodada 1.
+- Bloqueadores em todas as tentativas: `review_answer_ambiguous` × 4, `review_evidence_unsupported` × 3, `review_explanation_inconsistent` × 2 e mais 5 códigos com 1 cada.
+
+Os 2 críticos restantes não são defeitos fixos. Os dois kits falharam depois da única regeneração (PRD §7.4):
+- `7-portuguese-carta-cortada`: plano inválido e, em seguida, geração inválida. O diagnóstico com o mesmo assunto e um perfil de carta gerou 2 kits prontos em 2 tentativas, então a falha não se repete. Nesta execução a prévia ofereceu o assunto vizinho; no diagnóstico, recusou. As duas respostas valem.
+- `7-portuguese-figuras-de-linguagem`: a citação do texto-base não foi encontrada e, depois do reparo, a revisão achou outra citação que não sustenta a resposta.
+
+`7-math-potenciacao-raiz` recusou sem `grade_mismatch`, e isso conta como `source_warning_missed`, aviso que não entra no gate.
+
+Ressalva: 4 casos da junção foram rodados de novo depois de falharem. 3 deles falharam por um defeito que foi corrigido; o quarto, `6-portuguese-tempos-verbais`, não. A taxa de falha de kit é de 2 em 32 na junção; sem a junção, foi de 4 em 30 na `rodada-final` e de 2 em 6 no complemento.
