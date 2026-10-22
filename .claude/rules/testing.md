@@ -17,7 +17,7 @@ paths:
 ## Estratégia
 - Unit (~40%): domínio puro do `core` (máquina de estados, validações pedagógicas, taxonomia, parsers), services com dependências injetadas.
 - Integração (~50%): Postgres REAL via container docker (`@gizito/db/test-helpers`); fila, transações de pagamento, idempotência de webhook, retenção.
-- E2E (~10%): Playwright no web com API real e adaptadores falsos (`FakePaymentGateway`, `FakeAiProvider`, `FakeNotificationChannel`, storage em disco).
+- E2E (~10%): Playwright no web com API real e adaptadores falsos (`FakePaymentGateway`, `FakeAiProvider`, `FakeNotificationChannel`, storage em disco). Locators por papel e rótulo (`getByRole`, `getByLabel`) tirados do snapshot de acessibilidade do Playwright MCP, nunca por classe CSS. E2E que falha: reproduza o passo no Playwright MCP antes de mexer no teste.
 
 ## Scripts separados (obrigatório)
 - `test`: apenas unit, rápido, sem Docker.

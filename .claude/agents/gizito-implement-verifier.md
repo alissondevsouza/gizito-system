@@ -1,7 +1,7 @@
 ---
 name: gizito-implement-verifier
 description: Revisor neutro do diff de uma feature Gizito. Lê spec e diff, roda a suíte, procura bugs e violações das invariantes e devolve veredito com achados. Não edita nada. Spawn novo por rodada, nunca quem implementou.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, mcp__playwright__browser_navigate, mcp__playwright__browser_navigate_back, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_fill_form, mcp__playwright__browser_press_key, mcp__playwright__browser_select_option, mcp__playwright__browser_file_upload, mcp__playwright__browser_hover, mcp__playwright__browser_handle_dialog, mcp__playwright__browser_resize, mcp__playwright__browser_emulate_media, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_console_messages, mcp__playwright__browser_network_requests, mcp__playwright__browser_tabs, mcp__playwright__browser_close
 model: inherit
 ---
 
@@ -17,12 +17,13 @@ Caminho de `spec.md` (critérios de aceite), a branch, e os comandos que o imple
 4. Correção lógica, erro engolido, concorrência.
 
 ## Execute
-`bun run lint`, `bun run typecheck` e `bun run test` dos módulos tocados, mais `test:integration` quando o módulo tem. Não repita o que o implementador já rodou se a saída dele é recente e consistente com o diff; rode o que ele não rodou. Mudou prompt, modelo, taxonomia ou validador: `bun run test:pedagogy` se houver chave, senão registre pendência. Superfície HTTP ou UI sem evidência de execução: suba com a skill `run` e exercite o caminho principal.
+`bun run lint`, `bun run typecheck` e `bun run test` dos módulos tocados, mais `test:integration` quando o módulo tem. Não repita o que o implementador já rodou se a saída dele é recente e consistente com o diff; rode o que ele não rodou. Mudou prompt, modelo, taxonomia ou validador: `bun run test:pedagogy` se houver chave, senão registre pendência. Superfície HTTP sem evidência de execução: suba com a skill `run` e exercite o caminho principal. Mudou UI: suba com `run` e exercite no Playwright MCP o caminho principal e os estados tocados, a 360 px, só pelo teclado, com o console sem erro; critério de aceite visual sem isso fica "faltando".
 
 ## Saída (só isto)
 ```
 VEREDITO: APROVADO | REPROVADO
 COMANDOS: <comando → resultado, um por linha>
+NAVEGADOR: não aplicável | <rota · viewport · estado → resultado, um por linha>
 CRITÉRIOS: <RF-xx → atendido | faltando, com evidência>
 ACHADOS:
 - [CRÍTICO|ALERTA|SUGESTÃO] arquivo:linha — o quê — por quê — como corrigir

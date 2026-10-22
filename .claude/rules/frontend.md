@@ -33,3 +33,4 @@ paths:
 
 ## Testes
 - Vitest + Testing Library para `order-route`, formulários, componentes de estado; Playwright para o fluxo completo com API real e adaptadores falsos.
+- Verificação no navegador, obrigatória antes de declarar pronta qualquer mudança de UI: app no ar pela skill `run` e Playwright MCP no caminho principal e em cada estado que a mudança toca (`loading`, `error`, vazio, `disabled`), em 360×740 e 1280×800. Conferir navegação só pelo teclado com foco visível, alvos de toque pelo `browser_snapshot` com `boxes`, `browser_console_messages` sem erro e `browser_emulate_media` com `reducedMotion: "reduce"` quando há animação. O screenshot é olhado e comparado com o design doc, não só gerado.

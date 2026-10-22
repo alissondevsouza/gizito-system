@@ -14,6 +14,9 @@ updated: {{DATE}}
 | Comando | Resultado |
 |---|---|
 
+### Navegador
+<!-- não aplicável | rota · viewport · estado → resultado, do Playwright MCP -->
+
 ### Critérios de aceite
 | RF | Atendido | Evidência (teste ou arquivo) |
 |---|---|---|

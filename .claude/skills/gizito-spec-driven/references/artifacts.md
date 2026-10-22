@@ -19,6 +19,6 @@ Pouco e preciso. O subagente recebe `CLAUDE.md` e as rules sozinho.
 
 - **gizito-spec-verifier**: a descrição original do pedido, o caminho de `spec.md`, e a frase "avalie só o que está escrito".
 - **gizito-implementer**: caminho de `spec.md`, o milestone (número e tasks) que ele deve fazer, os arquivos que são dele e a instrução de não tocar nos demais, e a nota "não commite".
-- **gizito-implement-verifier**: caminho de `spec.md`, a branch, a lista `comando → resultado` do que você já rodou, e, em rerodada, o `review.md` anterior com a instrução de revalidar só os pontos corrigidos.
+- **gizito-implement-verifier**: caminho de `spec.md`, a branch, a lista `comando → resultado` do que você já rodou (verificações no Playwright MCP incluídas, como `rota · viewport · estado → resultado`), e, em rerodada, o `review.md` anterior com a instrução de revalidar só os pontos corrigidos.
 
 Não passe seu raciocínio, hipóteses ou "acho que está certo". A independência é o valor do spawn.
