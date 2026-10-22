@@ -89,6 +89,28 @@ export function orderStatusResponse({
   };
 }
 
+export const canceledOrderResponse = {
+  id: GATEWAY_ORDER_ID,
+  type: "online",
+  external_reference: "22222222-2222-4222-8222-222222222222",
+  total_amount: "29.90",
+  status: "canceled",
+  status_detail: "canceled_transaction",
+  created_date: "2026-10-22T12:00:00.826Z",
+  last_updated_date: "2026-10-22T12:06:10.109320977Z",
+  transactions: {
+    payments: [
+      {
+        id: GATEWAY_PAYMENT_ID,
+        amount: "29.90",
+        status: "canceled",
+        status_detail: "canceled_transaction",
+        payment_method: { id: "pix", type: "bank_transfer" },
+      },
+    ],
+  },
+};
+
 export const REFUND_ID = "REF01J67CQQH5904WDBVZEM1234D";
 
 export const refundResponse = {

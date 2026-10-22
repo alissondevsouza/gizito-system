@@ -7,6 +7,7 @@ import {
   type PaymentGatewayErrorCode,
 } from "@gizito/core";
 import {
+  canceledOrderResponse,
   createdOrderResponse,
   errorResponse,
   GATEWAY_ORDER_ID,
@@ -348,6 +349,48 @@ describe("refund na Orders API (spec F2-03, RF-06)", () => {
   it("resposta sem reembolso é gateway_response_invalid", async () => {
     const { gateway } = gatewayWith([jsonReply(200, { transactions: { refunds: [] } })]);
     expect((await caughtGatewayError(gateway.refund(reference))).code).toBe(
+      "gateway_response_invalid",
+    );
+  });
+});
+
+describe("cancelCharge na Orders API (spec F2-04, RF-07)", () => {
+  it("cancela a order sem corpo, com chave própria, e não devolve nada", async () => {
+    const { gateway, requestList } = gatewayWith([jsonReply(200, canceledOrderResponse)]);
+    expect(await gateway.cancelCharge(reference)).toBeUndefined();
+    const [request] = requestList;
+    expect(request?.url).toBe(`${MERCADOPAGO_API_BASE_URL}/v1/orders/${GATEWAY_ORDER_ID}/cancel`);
+    expect(request?.method).toBe("POST");
+    expect(request?.body).toBeNull();
+    expect(request?.headers.get("x-idempotency-key")).toBe(`cancel-${CHARGE_ID}`);
+    expect(request?.headers.get("authorization")).toBe(`Bearer ${ACCESS_TOKEN}`);
+  });
+
+  it("order que já não pode ser cancelada (4xx) é gateway_rejected sem retentativa", async () => {
+    const { gateway, requestList } = gatewayWith([
+      jsonReply(422, errorResponse("order_status_not_allowed")),
+    ]);
+    const error = await caughtGatewayError(gateway.cancelCharge(reference));
+    expect(error.code).toBe("gateway_rejected");
+    expect(error.cause).toEqual({ status: 422, providerCode: "order_status_not_allowed" });
+    expect(requestList).toHaveLength(1);
+  });
+
+  it("500 seguido de 200 cancela, com a mesma chave nas duas tentativas", async () => {
+    const { gateway, requestList } = gatewayWith([
+      jsonReply(500, errorResponse("internal_error")),
+      jsonReply(200, canceledOrderResponse),
+    ]);
+    await gateway.cancelCharge(reference);
+    expect(requestList.map((request) => request.headers.get("x-idempotency-key"))).toEqual([
+      `cancel-${CHARGE_ID}`,
+      `cancel-${CHARGE_ID}`,
+    ]);
+  });
+
+  it("resposta fora do schema é gateway_response_invalid", async () => {
+    const { gateway } = gatewayWith([jsonReply(200, { ok: true })]);
+    expect((await caughtGatewayError(gateway.cancelCharge(reference))).code).toBe(
       "gateway_response_invalid",
     );
   });

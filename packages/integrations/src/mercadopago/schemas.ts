@@ -1,4 +1,9 @@
-import { CHARGE_TTL_MINUTES, type ChargeStatus, type CreateChargeInput } from "@gizito/core";
+import {
+  CHARGE_TTL_MINUTES,
+  type ChargeStatus,
+  type CreateChargeInput,
+  MAX_WEBHOOK_ACTION_LENGTH,
+} from "@gizito/core";
 import { z } from "zod";
 import { formatCentsAsDecimal } from "#src/mercadopago/amount.ts";
 
@@ -57,6 +62,11 @@ export const orderStatusResponseSchema = z.object({
     .nullish(),
 });
 
+export const canceledOrderResponseSchema = z.object({
+  id: z.string().min(1),
+  status: z.string().min(1),
+});
+
 export const refundResponseSchema = z.object({
   transactions: z.object({
     refunds: z.array(z.object({ id: z.string().min(1) })).min(1),
@@ -95,4 +105,6 @@ export function resolveChargeStatus(
   return chargeStatusByOrderStatus.get(orderStatus) ?? null;
 }
 
-export const webhookBodySchema = z.object({ action: z.string().min(1) });
+export const webhookBodySchema = z.object({
+  action: z.string().min(1).max(MAX_WEBHOOK_ACTION_LENGTH),
+});

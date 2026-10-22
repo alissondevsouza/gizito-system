@@ -78,6 +78,23 @@ export function describePaymentGatewayContract(
     );
 
     it(
+      "cancelar uma cobrança pendente deixa a consulta expired (spec F2-04, RF-02)",
+      async () => {
+        const gateway = createGateway();
+        const input = chargeInput(payerEmail);
+        const created = await gateway.createCharge(input);
+        const reference = {
+          chargeId: input.chargeId,
+          gatewayOrderId: created.gatewayOrderId,
+          gatewayPaymentId: created.gatewayPaymentId,
+        };
+        await gateway.cancelCharge(reference);
+        expect((await gateway.getChargeStatus(reference)).status).toBe("expired");
+      },
+      testTimeoutMs,
+    );
+
+    it(
       "webhook sem assinatura é recusado sem IO",
       async () => {
         const parsed = parsedWebhookSchema.parse(

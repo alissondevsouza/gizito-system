@@ -16,6 +16,7 @@ import type { z } from "zod";
 import { parseDecimalAsCents } from "#src/mercadopago/amount.ts";
 import {
   buildCreateOrderBody,
+  canceledOrderResponseSchema,
   createdOrderResponseSchema,
   errorResponseSchema,
   orderStatusResponseSchema,
@@ -221,6 +222,16 @@ export function createMercadoPagoGateway({
       const lastRefund = refunded.transactions.refunds.at(-1);
       if (lastRefund === undefined) throw gatewayError("gateway_response_invalid");
       return { refundId: lastRefund.id };
+    },
+    async cancelCharge(reference: ChargeReference): Promise<void> {
+      await send(
+        {
+          method: "POST",
+          path: `${orderPath(reference.gatewayOrderId)}/cancel`,
+          idempotencyKey: `cancel-${reference.chargeId}`,
+        },
+        canceledOrderResponseSchema,
+      );
     },
     async parseWebhook({ headerMap, queryMap, rawBody }: WebhookRequest): Promise<ParsedWebhook> {
       if (queryMap.type !== MERCADOPAGO_ORDER_WEBHOOK_TYPE) {

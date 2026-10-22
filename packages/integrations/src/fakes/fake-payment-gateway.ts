@@ -1,8 +1,12 @@
 import {
+  type ChargeReference,
   type ChargeStatus,
+  type ChargeStatusResult,
   type CreateChargeInput,
   type CreatedCharge,
   createChargeInputSchema,
+  KIT_PRICE_CENTS,
+  MAX_WEBHOOK_ACTION_LENGTH,
   type PaymentGateway,
   PaymentGatewayError,
   type PaymentGatewayErrorCode,
@@ -12,17 +16,29 @@ import { z } from "zod";
 
 export const FAKE_WEBHOOK_SIGNATURE_HEADER = "x-fake-signature";
 export const FAKE_WEBHOOK_SIGNATURE = "fake-signature";
+export const FAKE_WEBHOOK_ORDER_TYPE = "order";
 export const FAKE_QR_CODE_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 const fakeWebhookBodySchema = z.object({
   gatewayOrderId: z.string().min(1),
-  action: z.string().min(1),
+  action: z.string().min(1).max(MAX_WEBHOOK_ACTION_LENGTH),
 });
+
+const FAKE_GATEWAY_ORDER_ID_PREFIX = "fake-order-";
+
+export const fakeUnknownChargeStatusList = ["paid", "pending", "expired"] as const;
+export type FakeUnknownChargeStatus = (typeof fakeUnknownChargeStatusList)[number];
 export type FakeWebhookBody = z.infer<typeof fakeWebhookBodySchema>;
 
 export function fakeGatewayOrderId(chargeId: string): string {
-  return `fake-order-${chargeId}`;
+  return `${FAKE_GATEWAY_ORDER_ID_PREFIX}${chargeId}`;
+}
+
+function chargeIdOfFakeGatewayOrderId(gatewayOrderId: string): string | null {
+  return gatewayOrderId.startsWith(FAKE_GATEWAY_ORDER_ID_PREFIX)
+    ? gatewayOrderId.slice(FAKE_GATEWAY_ORDER_ID_PREFIX.length)
+    : null;
 }
 
 export function fakeGatewayPaymentId(chargeId: string): string {
@@ -53,6 +69,8 @@ export type FakeCreateGate = {
 
 export type FakePaymentGatewayOptions = {
   readonly withQrImage?: boolean;
+  readonly unknownChargeStatus?: FakeUnknownChargeStatus;
+  readonly now?: () => Date;
 };
 
 export type FakePaymentGateway = PaymentGateway & {
@@ -62,6 +80,8 @@ export type FakePaymentGateway = PaymentGateway & {
   readonly failNextCreate: (code?: PaymentGatewayErrorCode) => void;
   readonly failCreateAfter: (successCount: number, code?: PaymentGatewayErrorCode) => void;
   readonly failNextStatus: (code?: PaymentGatewayErrorCode) => void;
+  readonly failNextCancel: (code?: PaymentGatewayErrorCode) => void;
+  readonly cancelReferenceList: readonly ChargeReference[];
   readonly markPaid: (chargeId: string, paidDatetime?: Date) => void;
   readonly markExpired: (chargeId: string) => void;
   readonly pauseCreate: () => FakeCreateGate;
@@ -99,6 +119,8 @@ function createGate(): FakeCreateGate & { readonly enter: () => Promise<void> } 
 
 export function createFakePaymentGateway({
   withQrImage = true,
+  unknownChargeStatus,
+  now = () => new Date(),
 }: FakePaymentGatewayOptions = {}): FakePaymentGateway {
   const chargeById = new Map<string, FakeCharge>();
   const chargeIdByGatewayOrderId = new Map<string, string>();
@@ -107,6 +129,8 @@ export function createFakePaymentGateway({
   let createCallCount = 0;
   let createFailure: CreateFailure | null = null;
   let statusFailure: PaymentGatewayErrorCode | null = null;
+  let cancelFailure: PaymentGatewayErrorCode | null = null;
+  const cancelReferenceList: ChargeReference[] = [];
   let activeCreateGate: ReturnType<typeof createGate> | null = null;
 
   function takeCreateFailure(): PaymentGatewayErrorCode | null {
@@ -132,6 +156,19 @@ export function createFakePaymentGateway({
     return chargeOf(chargeId);
   }
 
+  function unknownChargeStatusOf(gatewayOrderId: string): ChargeStatusResult | null {
+    const chargeId = chargeIdOfFakeGatewayOrderId(gatewayOrderId);
+    if (unknownChargeStatus === undefined || chargeId === null) return null;
+    if (chargeIdByGatewayOrderId.has(gatewayOrderId)) return null;
+    return {
+      status: unknownChargeStatus,
+      gatewayPaymentId: fakeGatewayPaymentId(chargeId),
+      amountCents: KIT_PRICE_CENTS,
+      externalReference: null,
+      paidDatetime: unknownChargeStatus === "paid" ? now() : null,
+    };
+  }
+
   return {
     name: "fake",
     createdChargeList,
@@ -148,6 +185,10 @@ export function createFakePaymentGateway({
     failNextStatus(code = "gateway_unavailable") {
       statusFailure = code;
     },
+    failNextCancel(code = "gateway_unavailable") {
+      cancelFailure = code;
+    },
+    cancelReferenceList,
     markPaid(chargeId, paidDatetime = new Date()) {
       const charge = chargeOf(chargeId);
       charge.status = "paid";
@@ -198,6 +239,8 @@ export function createFakePaymentGateway({
         statusFailure = null;
         throw new PaymentGatewayError(code);
       }
+      const unknown = unknownChargeStatusOf(reference.gatewayOrderId);
+      if (unknown !== null) return unknown;
       const charge = chargeOfGatewayOrder(reference.gatewayOrderId);
       return {
         status: charge.status,
@@ -215,7 +258,23 @@ export function createFakePaymentGateway({
       charge.status = "refunded";
       return { refundId: `fake-refund-${charge.input.chargeId}` };
     },
+    async cancelCharge(reference) {
+      cancelReferenceList.push(reference);
+      if (cancelFailure !== null) {
+        const code = cancelFailure;
+        cancelFailure = null;
+        throw new PaymentGatewayError(code);
+      }
+      if (unknownChargeStatusOf(reference.gatewayOrderId) !== null) return;
+      const charge = chargeOfGatewayOrder(reference.gatewayOrderId);
+      if (charge.status !== "pending") throw new PaymentGatewayError("gateway_rejected");
+      charge.status = "expired";
+    },
     async parseWebhook(request) {
+      const { type } = request.queryMap;
+      if (type !== undefined && type !== FAKE_WEBHOOK_ORDER_TYPE) {
+        return { valid: false, reason: "unsupported_event" };
+      }
       if (request.headerMap[FAKE_WEBHOOK_SIGNATURE_HEADER] !== FAKE_WEBHOOK_SIGNATURE) {
         return { valid: false, reason: "invalid_signature" };
       }

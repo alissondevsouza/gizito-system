@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { createHmac } from "node:crypto";
-import type { WebhookRequest } from "@gizito/core";
+import { MAX_WEBHOOK_ACTION_LENGTH, type WebhookRequest } from "@gizito/core";
 import {
   GATEWAY_ORDER_ID,
   orderWebhookBody,
@@ -137,5 +137,15 @@ describe("parseWebhook do Mercado Pago (spec F2-03, RF-06)", () => {
     const body = { ...orderWebhookBody("order.processed"), data: { id: "ORD01OUTRA" } };
     const parsed = await gateway.parseWebhook({ ...valid, rawBody: JSON.stringify(body) });
     expect(parsed.valid && parsed.gatewayOrderId).toBe(GATEWAY_ORDER_ID);
+  });
+
+  it("action acima do teto é malformed, porque entra no external_id (spec F2-04, RF-07)", async () => {
+    const tooLong = "a".repeat(MAX_WEBHOOK_ACTION_LENGTH + 1);
+    expect(await gateway.parseWebhook(signedRequest({ action: tooLong }))).toEqual({
+      valid: false,
+      reason: "malformed",
+    });
+    const atLimit = "a".repeat(MAX_WEBHOOK_ACTION_LENGTH);
+    expect((await gateway.parseWebhook(signedRequest({ action: atLimit }))).valid).toBe(true);
   });
 });

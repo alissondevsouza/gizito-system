@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   chargeExpireDatetime,
   KIT_PRICE_CENTS,
+  MAX_WEBHOOK_ACTION_LENGTH,
   PaymentGatewayError,
   type PaymentGatewayErrorCode,
 } from "@gizito/core";
@@ -141,6 +142,82 @@ describe("FakePaymentGateway (spec F2-03, RF-05)", () => {
         reason: "malformed",
       });
     }
+  });
+
+  it("cancelCharge expira a pendente, recusa paga ou já expirada e guarda as chamadas (spec F2-04, RF-07)", async () => {
+    const gateway = createFakePaymentGateway();
+    await gateway.createCharge(input);
+    await gateway.cancelCharge(reference);
+    expect((await gateway.getChargeStatus(reference)).status).toBe("expired");
+    await expectGatewayError(gateway.cancelCharge(reference), "gateway_rejected");
+    const paidChargeId = "66666666-6666-4666-8666-666666666666";
+    const paidReference = {
+      chargeId: paidChargeId,
+      gatewayOrderId: fakeGatewayOrderId(paidChargeId),
+      gatewayPaymentId: fakeGatewayPaymentId(paidChargeId),
+    };
+    await gateway.createCharge({ ...input, chargeId: paidChargeId });
+    gateway.markPaid(paidChargeId, NOW);
+    await expectGatewayError(gateway.cancelCharge(paidReference), "gateway_rejected");
+    expect((await gateway.getChargeStatus(paidReference)).status).toBe("paid");
+    gateway.failNextCancel();
+    await expectGatewayError(gateway.cancelCharge(reference), "gateway_unavailable");
+    expect(gateway.cancelReferenceList).toEqual([reference, reference, paidReference, reference]);
+  });
+
+  it("unknownChargeStatus responde pela order desconhecida com ids derivados; sem a opção, recusa (spec F2-04, RF-07)", async () => {
+    const paidAt = new Date("2026-10-22T12:07:00.000Z");
+    const unknownChargeId = "77777777-7777-4777-8777-777777777777";
+    const unknownReference = {
+      chargeId: unknownChargeId,
+      gatewayOrderId: fakeGatewayOrderId(unknownChargeId),
+      gatewayPaymentId: null,
+    };
+    for (const status of ["paid", "pending", "expired"] as const) {
+      const gateway = createFakePaymentGateway({ unknownChargeStatus: status, now: () => paidAt });
+      expect(await gateway.getChargeStatus(unknownReference)).toEqual({
+        status,
+        gatewayPaymentId: fakeGatewayPaymentId(unknownChargeId),
+        amountCents: KIT_PRICE_CENTS,
+        externalReference: null,
+        paidDatetime: status === "paid" ? paidAt : null,
+      });
+      await gateway.cancelCharge(unknownReference);
+      await gateway.createCharge(input);
+      expect((await gateway.getChargeStatus(reference)).status).toBe("pending");
+      await expectGatewayError(
+        gateway.getChargeStatus({ ...unknownReference, gatewayOrderId: "ORD-real" }),
+        "gateway_rejected",
+      );
+    }
+    await expectGatewayError(
+      createFakePaymentGateway().getChargeStatus(unknownReference),
+      "gateway_rejected",
+    );
+  });
+
+  it("action acima do teto é malformed, como no adaptador real", async () => {
+    const gateway = createFakePaymentGateway();
+    const request = buildFakeWebhookRequest({
+      gatewayOrderId: reference.gatewayOrderId,
+      action: "a".repeat(MAX_WEBHOOK_ACTION_LENGTH + 1),
+    });
+    expect(await gateway.parseWebhook(request)).toEqual({ valid: false, reason: "malformed" });
+  });
+
+  it("parseWebhook ignora type diferente de order, como o adaptador real", async () => {
+    const gateway = createFakePaymentGateway();
+    const request = buildFakeWebhookRequest({
+      gatewayOrderId: reference.gatewayOrderId,
+      action: "payment.updated",
+    });
+    expect(await gateway.parseWebhook({ ...request, queryMap: { type: "payment" } })).toEqual({
+      valid: false,
+      reason: "unsupported_event",
+    });
+    expect((await gateway.parseWebhook({ ...request, queryMap: { type: "order" } })).valid).toBe(
+      true,
+    );
   });
 
   it("pauseCreate segura as criações até o release, e withQrImage: false imita o sandbox", async () => {
