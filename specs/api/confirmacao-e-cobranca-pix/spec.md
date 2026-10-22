@@ -303,11 +303,24 @@ A API foi vista no ar com o fake:
 - `charges` deu 409 e 201;
 - o log saiu sem dado pessoal.
 
-Os dados do teste foram apagados do banco de dev e do MinIO. A migration 0005 ficou aplicada no banco de dev. O critério do sandbox (RF-12) fica pendente com o humano.
+Os dados do teste foram apagados do banco de dev e do MinIO. A migration 0005 ficou aplicada no banco de dev.
+
+RF-12 no sandbox (22/10/2026, com a credencial de teste posta pelo humano):
+- primeira rodada: 3 passam e 1 é pulado. Passaram a criação, a mesma chave devolvendo a mesma order, a consulta `pending` com R$ 29,90 e a segunda cobrança do mesmo pedido, que virou outra order;
+- segunda rodada, com o id da primeira order: 4 passam. A order ficou `canceled`/`expired`.
+
+A order real confirmou:
+- o `expiration_time: "PT30M"` dentro do pagamento, com `date_of_expiration` 30 minutos depois da criação;
+- o `qr_code_base64` preenchido e o `ticket_url` em https;
+- a expiração em lote, 1 min 44 s depois do vencimento.
+
+Na primeira tentativa da segunda rodada, 90 s depois do vencimento, a order ainda estava `pending`. O teste passou a pedir 35 minutos.
 
 Pendências para o humano:
-- credencial de teste do Mercado Pago no `.env` como `MERCADOPAGO_TEST_ACCESS_TOKEN` (o `test:payment-live` não lê a `MERCADOPAGO_ACCESS_TOKEN` da api) e a rodada do RF-12; 30 minutos depois, a segunda rodada com `MERCADOPAGO_LIVE_EXPIRED_ORDER_ID=<id impresso>` na linha de comando;
 - `.env.example`: a revisão do código viu que `MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET` já estão lá e que falta `MERCADOPAGO_TEST_ACCESS_TOKEN`; o agente não lê nem edita o arquivo.
 
-Herança para a F2-04: o `action` do corpo não entra no HMAC (RF-06) e o `ts` do `x-signature` não é conferido contra uma janela de tolerância; a deduplicação por `webhook_event` e a consulta ao gateway tiram o efeito de um replay, mas a F2-04 decide se acrescenta a janela.
+Herança para a F2-04:
+- o `action` do corpo não entra no HMAC (RF-06), e o `ts` do `x-signature` não é conferido contra uma janela de tolerância. A deduplicação por `webhook_event` e a consulta ao gateway tiram o efeito de um replay, mas a F2-04 decide se acrescenta a janela;
+- o gateway só marca a order `canceled`/`expired` 1 a 2 minutos depois do vencimento. A reconciliação vê `action_required` nesse intervalo e só marca `expired` numa varredura seguinte;
+- a assinatura do webhook se prova com uma notificação real do sandbox (linha LOW no `known-issues.md`).
 Herança para a F2-09: o `gateway_rejected` (4xx definitivo do Mercado Pago, como e-mail do pagador recusado) sai como `503 service_unavailable` "tente de novo"; a tela pode precisar de outra mensagem, que leve a conferir o e-mail.

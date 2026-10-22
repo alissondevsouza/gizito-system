@@ -10,7 +10,8 @@ paths:
 
 ## Criar cobrança
 - `POST https://api.mercadopago.com/v1/orders` com header `X-Idempotency-Key` = `charge_id` interno; `type: "online"`, `total_amount: "29.90"` (de `KIT_PRICE_CENTS`), `external_reference: order_id`, `processing_mode: "automatic"`, `transactions.payments[0]` com `amount`, `payment_method: { id: "pix", type: "bank_transfer" }` e `expiration_time: "PT30M"` (dentro do pagamento: o modo automático não aceita `expiration_time` na raiz); `payer.email` = e-mail do pedido. **Não enviar CPF do comprador.** Adaptador em `packages/integrations/src/mercadopago/` (F2-03).
-- Guardar `gateway_order_id`, `gateway_payment_id`, `qr_code`, `qr_code_base64` (vazio no sandbox, gravado nulo), `ticket_url`, `expire_datetime`. A resposta não traz vencimento: vale o calculado antes da chamada.
+- Guardar `gateway_order_id`, `gateway_payment_id`, `qr_code`, `qr_code_base64` (nulo se vier vazio), `ticket_url`, `expire_datetime`. O `expire_datetime` é o calculado antes da chamada, uma fração de segundo antes do `date_of_expiration` do pagamento no gateway.
+- O gateway expira a order em lote, de 1 a 2 minutos depois do vencimento (`canceled`/`expired`, sandbox em 22/10/2026). Nesse intervalo, a consulta ainda dá `action_required`: a reconciliação não pode tratar isso como erro.
 - Cobrança nova só com a anterior expirada ou falha; um pedido tem no máximo uma cobrança ativa (trava do pedido na inserção). A vencida fica `pending` até a reconciliação consultar o gateway.
 - Erros viram `PaymentGatewayError` (`gateway_unavailable`, `gateway_rejected`, `gateway_response_invalid`); rede, timeout e 5xx têm uma retentativa com a mesma chave; 429 não é retentado.
 

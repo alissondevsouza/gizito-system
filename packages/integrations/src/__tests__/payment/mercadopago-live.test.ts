@@ -36,13 +36,13 @@ describe.skipIf(!liveEnvironment?.success)("sandbox do Mercado Pago (test:paymen
     testTimeoutMs: LIVE_TEST_TIMEOUT_MS,
     onChargeCreated: (gatewayOrderId) => {
       console.info(
-        `order criada no sandbox: ${gatewayOrderId}; depois de 30 min, rode de novo com MERCADOPAGO_LIVE_EXPIRED_ORDER_ID=${gatewayOrderId}`,
+        `order criada no sandbox: ${gatewayOrderId}; depois de 35 min (o gateway expira em lote, alguns minutos depois do vencimento), rode de novo com MERCADOPAGO_LIVE_EXPIRED_ORDER_ID=${gatewayOrderId}`,
       );
     },
   });
 
   it.skipIf(expiredOrderId === undefined)(
-    "a order criada há mais de 30 minutos ficou expired",
+    "a order criada há mais de 35 minutos ficou expired",
     async () => {
       const status = await createSandboxGateway().getChargeStatus({
         chargeId: crypto.randomUUID(),
