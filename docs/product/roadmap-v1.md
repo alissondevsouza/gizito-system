@@ -23,7 +23,7 @@ Resumo por fase:
 | Fase | Features | Concluídas | Em andamento | Pendentes |
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
-| F1 Prova técnica e pedagógica | 11 | 10 | 0 | 1 |
+| F1 Prova técnica e pedagógica | 11 | 11 | 0 | 0 |
 | F2 Fluxo comercial | 14 | 0 | 0 | 14 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
@@ -141,7 +141,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 10 de 11 concluídas
+**Estado:** em andamento · 11 de 11 concluídas; falta o gate
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -219,9 +219,15 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
     - Você decidiu fechar a F1-10 com os 2 críticos registrados como dívida HIGH (`known-issues.md`), com a taxa real medida no piloto (21/10/2026).
     - Revisão neutra reprovada nas rodadas 1 e 2, com os achados corrigidos. O teto de 2 rodadas foi atingido, e você conferiu e aprovou as correções da rodada 2 (21/10/2026).
     - O professor aprovou o `lp5-word-classes` como está (21/10/2026).
-- [ ] **F1-11 `homologacao-e-amostras`** — pedagogy · P · depende: F1-10
+- [x] **F1-11 `homologacao-e-amostras`** — pedagogy · P · depende: F1-10 · 21/10/2026 · `specs/pedagogy/homologacao-e-amostras/`
   - Entrega: revisão de amostra por professor; 2 kits de amostra (Matemática e Português) marcados como amostra; custo por prévia e por kit, e tempo, registrados no PRD seção 3
   - Pronto quando: critério de lançamento do PRD 7.6 atendido
+  - Concluída em: 21/10/2026.
+    - Marca “Kit de amostra” no render (`render:kit --sample`, design doc 1.8 §9) e os dois kits de amostra do 5º ano em `docs/pedagogy/amostras/`.
+    - PRD 1.6 §3 com o custo-alvo da prévia (até R$ 0,10, medido cerca de R$ 0,01), o custo do kit (IA cerca de R$ 2,44, dentro de 10% do preço) e o tempo de geração (p95 de 5 min 34 s, acima do alvo de 5 min).
+    - Auditoria do professor em 10 kits (`docs/pedagogy/homologacao/2026-10-21-auditoria-do-professor.md`): 8 sorteados da regressão, 1 por ano × disciplina, mais os 2 de amostra. Zero defeito nas 252 linhas: nenhum crítico, grave ou leve. A revisão foi do professor, e você a transcreveu na planilha (21/10/2026).
+    - O 7º ano de Português não teve kit pronto na rodada final nem na rerodada. O Kit 08 é o da rodada 2, com esforço `medium`, por decisão sua. A taxa de falha dessa célula (1 kit pronto em 7 gerações) entrou na dívida HIGH (`known-issues.md`).
+    - Revisão neutra aprovada na rodada 1, com os 3 alertas e as 2 sugestões corrigidos.
 
 - [ ] **Gate F1 → F2:** regressão verde, amostra do professor sem erro crítico, custo por kit e por prévia dentro da margem do preço de R$ 29,90
 

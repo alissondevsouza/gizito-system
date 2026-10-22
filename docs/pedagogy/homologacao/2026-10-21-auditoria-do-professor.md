@@ -1,6 +1,6 @@
 # Auditoria do professor · F1-11
 
-**Estado:** aguardando a planilha devolvida pelo professor.
+**Estado:** concluída em 21/10/2026, com zero defeito crítico na amostra.
 
 Este documento cumpre a spec pedagógica §13.3 e o critério de lançamento do PRD §7.6. Ele traz só ids, códigos e números. O material, os kits e a planilha preenchida ficam em `tests/pedagogy/output/homologacao/`, fora do git; os kits de amostra são a exceção e ficam em `docs/pedagogy/amostras/`.
 
@@ -69,4 +69,26 @@ Fica em `tests/pedagogy/output/homologacao/pacote-professor/` e foi montado por 
 
 ## Resultado
 
-A preencher com a planilha devolvida: contagem por classe e por código em cada kit, e a lista dos críticos com o caso de regressão criado para cada um (PRD §7.6).
+A revisão foi feita pelo professor, e o humano a transcreveu na planilha em 21/10/2026. A planilha devolvida está em `tests/pedagogy/output/homologacao/auditoria-gizito-revisado.xlsx`. Apesar da extensão, o arquivo é ODS, salvo pelo LibreOffice.
+
+Conferência: a planilha tem as mesmas 252 linhas do pacote, na mesma ordem, com todos os `itemId` de cada `study_kit.json`. Nenhuma linha ficou em branco e nenhuma foi acrescentada.
+
+| Kit | Linhas | Sem defeito | Crítico | Grave | Leve |
+|---|---|---|---|---|---|
+| Kit 01 | 24 | 24 | 0 | 0 | 0 |
+| Kit 02 | 26 | 26 | 0 | 0 | 0 |
+| Kit 03 | 24 | 24 | 0 | 0 | 0 |
+| Kit 04 | 25 | 25 | 0 | 0 | 0 |
+| Kit 05 | 24 | 24 | 0 | 0 | 0 |
+| Kit 06 | 27 | 27 | 0 | 0 | 0 |
+| Kit 07 | 25 | 25 | 0 | 0 | 0 |
+| Kit 08 | 26 | 26 | 0 | 0 | 0 |
+| Kit 09 | 26 | 26 | 0 | 0 | 0 |
+| Kit 10 | 25 | 25 | 0 | 0 | 0 |
+| **Total** | **252** | **252** | **0** | **0** | **0** |
+
+O critério 4 do gate (§13.2) e o critério de lançamento do PRD §7.6 estão atendidos, e nenhum caso novo de regressão foi criado.
+
+Ressalvas:
+- A planilha não tem nenhum comentário. Como não houve defeito, nenhum era exigido, mas também não há registro do que o professor observou.
+- O Kit 08 saiu com `AI_EFFORT_GENERATE=medium`. Zero crítico nele não valida a configuração de produção do 7º ano de Português, cuja taxa de falha está na dívida HIGH.

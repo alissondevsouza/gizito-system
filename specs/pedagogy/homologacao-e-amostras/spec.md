@@ -2,7 +2,7 @@
 feature: F1-11 homologacao-e-amostras
 module: pedagogy
 size: P
-status: in_progress
+status: done
 branch: feat/pedagogy/homologacao-e-amostras
 updated: 2026-10-21
 ---
@@ -64,8 +64,8 @@ A F1-11 fica pronta quando o professor devolver a auditoria sem erro crítico (c
 - [x] 4.1 PRD §3 e histórico 1.6
 
 ### M5 — Resultado da auditoria (depende do professor)
-- [ ] 5.1 Resumo da planilha devolvida e, se houver crítico, a correção e o caso novo. Antes de resumir, conferir que cada kit devolvido tem todos os `itemId` do seu `study_kit.json`
-- [ ] 5.2 F1-11 marcada no roadmap
+- [x] 5.1 Resumo da planilha devolvida e, se houver crítico, a correção e o caso novo. Antes de resumir, conferir que cada kit devolvido tem todos os `itemId` do seu `study_kit.json`
+- [x] 5.2 F1-11 marcada no roadmap
 
 ## Decisões
 
@@ -76,9 +76,8 @@ A F1-11 fica pronta quando o professor devolver a auditoria sem erro crítico (c
 | 21/10/2026 | A célula do 7º ano de Português vem de uma rerodada dos seus 2 casos pelo `test:pedagogy` | A rodada final juntada não tem kit `ready` nessa célula, e o §13.3 pede 1 kit por ano × disciplina |
 | 21/10/2026 | A rerodada falhou de novo (`ai_output_invalid` e recusa na prévia). Decisão do humano: auditar o único kit `ready` do 7º ano de Português, o da rodada 2 (prompts v2, tax-v2, esforço `medium`), e registrar a taxa de falha da célula (1 em 7) na dívida HIGH, com a proposta de corrigir antes do piloto | Não gasta mais e o pacote vai ao professor hoje; o conteúdo vem dos mesmos prompts |
 | 21/10/2026 | Kits com rótulo neutro para o professor; a relação entre rótulo e caso fica só no documento da auditoria | O id do caso revela a intenção do teste (por exemplo, `dado-pessoal`) e enviesa a leitura |
+| 21/10/2026 | A planilha devolvida, com zero defeito e nenhum comentário, é registrada como a revisão do professor, transcrita pelo humano | Decisão do humano. A planilha foi preenchida em uma sessão curta, e o humano informou que transcreveu a leitura do professor |
 
 ## Status
 
-M1 a M4 concluídos. A revisão neutra aprovou na rodada 1, e os 3 alertas e as 2 sugestões foram corrigidos (`review.md`). O pacote está em `tests/pedagogy/output/homologacao/pacote-professor.zip`. O script que o montou fica ao lado, em `audit_package.py`, e roda com Python e openpyxl.
-
-Próximo passo, do humano: enviar o pacote ao professor. O M5 começa quando a planilha preenchida voltar. Ela deve ser colocada em `tests/pedagogy/output/homologacao/` e então é preciso pedir a continuação da F1-11.
+Concluída em 21/10/2026. O professor achou zero defeito nas 252 linhas dos 10 kits, numa revisão que o humano transcreveu. A F1-11 está marcada no roadmap. O gate F1 → F2 é decisão do humano.
