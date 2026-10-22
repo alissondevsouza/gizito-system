@@ -6,6 +6,13 @@ Diferença para ADRs (`docs/engineering/adr/`): ADR registra uma **decisão arqu
 
 ---
 
+## [2026-10-21] Regressão pedagógica: unidade do mathjs encobre função, JSON em bloco Markdown, oscilação na fronteira — F1-10
+
+- No `evaluate` do mathjs, a unidade posta no escopo pelo símbolo encobre a função de mesmo nome. Com `min` (minuto) no escopo, `min(45 min, 50 min)` chamava a unidade e dava `unsupported`. Renomear no AST os símbolos de unidade (`unit:min`) antes do `evaluate` separa os dois. Ao liberar uma função nova no avaliador, testar com as unidades da tabela que têm o mesmo nome.
+- Um prompt de geração que pede JSON em texto pode passar a devolver o JSON dentro de bloco Markdown (```` ```json ````) depois de uma mudança que nem fala de formato. O reparo por item, com saída curta, foi o mais afetado. O `JSON.parse` estrito recusa e gasta a regeneração. Dizer no prompt que a resposta começa em `{` e termina em `}`, sem bloco de código. Para achar a causa sem afrouxar o adaptador, validar fora dele, com `outputSchema: z.unknown()` num provedor que embrulha o real e imprime só os caminhos do Zod. Isso não serve para etapa com saída estruturada, porque o `z.unknown()` não vira JSON Schema válido e a API recusa (`ai_request_invalid`).
+- Esforço `medium` na geração baixou tempo e custo, mas quebrou 3 de 3 reparos com JSON inválido. Trocar o esforço pede rodada com reparo exercitado, não só com kit limpo na 1ª tentativa.
+- Caso de fronteira (material de outro ano sem assunto equivalente no ano do pedido) oscila entre recusa e assunto vizinho de confiança média na mesma imagem. Uma expectativa única vira bloqueador crítico aleatório. O caso precisa aceitar as duas respostas (`acceptableRefusalList`), com os avisos exigidos em cada uma.
+
 ## [2026-10-21] PDF pelo Chromium: borda tracejada pesa, cabeçalho não vê as fontes da página, fração em `\displaystyle` sai da linha — F1-08
 
 - O Skia desenha cada traço de uma borda `dashed` como um caminho separado no PDF. As 20 caixas tracejadas de espaço de cálculo somaram ~520 KB, e o caderno de Matemática passou de 226 KB para 746 KB. Nos PDFs, usar borda sólida.
