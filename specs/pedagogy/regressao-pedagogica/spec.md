@@ -173,6 +173,6 @@ Concluída em 21/10/2026, com M1 a M6 feitos. A rodada final juntada teve 2 bloq
 
 O humano aprovou as correções da revisão neutra rodada 2 em 21/10/2026.
 
-Pendências do humano:
-- parecer do professor sobre `lp5-word-classes`, enviado em 21/10/2026;
-- push e merge.
+O professor aprovou o `lp5-word-classes` como está em 21/10/2026.
+
+Pendências do humano: push e merge.

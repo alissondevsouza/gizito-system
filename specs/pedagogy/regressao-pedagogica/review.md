@@ -196,5 +196,5 @@ Ressalva: 4 casos da junção foram rodados de novo depois de falharem. 3 deles 
 
 Em 21/10/2026, o humano decidiu fechar a F1-10 com os 2 críticos da rodada final juntada registrados como dívida HIGH (`known-issues.md`), para medir a taxa real no piloto. A revisão neutra ficou reprovada nas duas rodadas permitidas, com todos os achados corrigidos. As correções da rodada 2 ficam para a conferência do humano.
 
-Em 21/10/2026, o humano conferiu e aprovou as correções da rodada 2 (`6e2402d` e `708b1b9`) e levou o `lp5-word-classes` à revisão do professor.
+Em 21/10/2026, o humano conferiu e aprovou as correções da rodada 2 (`6e2402d` e `708b1b9`) e levou o `lp5-word-classes` à revisão do professor, que o aprovou como está.
 
