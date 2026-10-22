@@ -79,4 +79,6 @@ A F1-11 fica pronta quando o professor devolver a auditoria sem erro crítico (c
 
 ## Status
 
-M1 a M4 concluídos. O pacote está em `tests/pedagogy/output/homologacao/pacote-professor.zip`. Próximo passo: revisão neutra do diff. Depois, o humano envia o pacote ao professor, e M5 espera a planilha devolvida.
+M1 a M4 concluídos. A revisão neutra aprovou na rodada 1, e os 3 alertas e as 2 sugestões foram corrigidos (`review.md`). O pacote está em `tests/pedagogy/output/homologacao/pacote-professor.zip`. O script que o montou fica ao lado, em `audit_package.py`, e roda com Python e openpyxl.
+
+Próximo passo, do humano: enviar o pacote ao professor. O M5 começa quando a planilha preenchida voltar. Ela deve ser colocada em `tests/pedagogy/output/homologacao/` e então é preciso pedir a continuação da F1-11.
