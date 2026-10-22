@@ -50,6 +50,7 @@ import { type ClientKeyHashMap, reservePreviewRequest } from "#src/services/prev
 
 const ORDER_CODE_CONSTRAINT_LIST = ["order_short_code_idx", "order_public_token_idx"] as const;
 const CURRENT_PHOTO_INDEX_CONSTRAINT = "order_photo_order_id_photo_index_idx";
+export const ORDER_ANALYSIS_INVALID_ERROR_CODE = "order_analysis_invalid";
 
 export type OrderServiceErrorCode = Extract<
   ApiErrorCode,
@@ -344,7 +345,7 @@ function stageViewOf(status: OrderStatus, analysis: OrderAnalysis | null) {
 }
 
 async function buildOrderView(
-  { db, storage }: OrderServiceDependencies,
+  { db, storage, logger }: OrderServiceDependencies,
   row: Pick<
     typeof order.$inferSelect,
     | "orderId"
@@ -366,7 +367,15 @@ async function buildOrderView(
     insertDatetime: row.insertDatetime.toISOString(),
   };
   if (!isPhotoStageOrderStatus(row.status)) return orderViewSchema.parse(base);
-  const analysis = orderAnalysisSchema.nullable().parse(row.analysis);
+  const parsedAnalysis = orderAnalysisSchema.nullable().safeParse(row.analysis);
+  if (!parsedAnalysis.success) {
+    logger.error(
+      { orderId: row.orderId, errorCode: ORDER_ANALYSIS_INVALID_ERROR_CODE },
+      "análise gravada fora do schema",
+    );
+    throw parsedAnalysis.error;
+  }
+  const analysis = parsedAnalysis.data;
   const photoList = await Promise.all(
     (await listCurrentPhotos(db, row.orderId)).map(async (photo) => ({
       orderPhotoId: photo.orderPhotoId,

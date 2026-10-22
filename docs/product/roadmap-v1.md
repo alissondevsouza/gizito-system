@@ -246,7 +246,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 - [ ] **F2-02 `job-analise`** **em andamento** — worker, db, api, core, integrations · L · depende: F2-01, F1-06
   - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida; cache da extração e resultado no banco; prévia no `GET /orders/:token` (`api.md` §3); `ObjectStorage.get`
   - Pronto quando: transições e avisos testados; reexecução idempotente
-  - Feito até agora: spec em `specs/worker/job-analise/` (tamanho revisto de M para L em 22/10/2026: cruza cinco workspaces e decide onde cache e resultado ficam no banco)
+  - Feito até agora: implementada na branch `feat/worker/job-analise` (spec e revisão em `specs/worker/job-analise/`; tamanho revisto de M para L em 22/10/2026), aprovada na 2ª rodada da revisão neutra em 22/10/2026 e vista funcionando com a IA real; falta o merge do humano
 - [ ] **F2-03 `confirmacao-e-cobranca-pix`** — api, integrations · L · depende: F2-02
   - Entrega: `POST /orders/:token/confirm` (recusa assunto ainda não atendido, também como “outro”); `MercadoPagoGateway` (createCharge via Orders API, getChargeStatus, parseWebhook, refund) e fake; renovação de cobrança expirada
   - Pronto quando: no sandbox: cobrança criada, expira em 30 min, renova sem duplicar pedido

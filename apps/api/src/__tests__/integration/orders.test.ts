@@ -568,6 +568,19 @@ describe("GET /orders/:token (RF-04)", () => {
     }
   });
 
+  it("análise gravada fora do schema dá 500 e loga o orderId com código estável, sem o conteúdo", async () => {
+    const { app, readEntryList } = setup();
+    const created = await createdOrder(app, 1);
+    await testDatabase.db
+      .update(order)
+      .set({ analysis: { outcome: "preview_ready", nota: EVIDENCE_TEXT } })
+      .where(eq(order.orderId, created.orderId));
+    await expectApiError(await getOrder(app, created.publicToken), 500, "internal_error");
+    const entry = readEntryList().find((item) => item.msg === "análise gravada fora do schema");
+    expect(entry).toMatchObject({ orderId: created.orderId, errorCode: "order_analysis_invalid" });
+    expect(JSON.stringify(readEntryList())).not.toContain(EVIDENCE_TEXT);
+  });
+
   it("depois da prévia, só os campos base", async () => {
     const { app } = setup();
     const created = await createdOrder(app, 1);

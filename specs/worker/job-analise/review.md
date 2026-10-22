@@ -1,8 +1,8 @@
 ---
 feature: job-analise
 module: worker
-round: 1
-verdict: REPROVADO
+round: 2
+verdict: APROVADO
 updated: 2026-10-22
 ---
 
@@ -68,3 +68,30 @@ Não aplicável: prompt, modelo, taxonomia e validador não mudaram.
 - **SUGESTÃO do log, corrigida.** O rollback leva o código do erro. O log `warn` "análise sem efeito" traz `errorCode` (`invalid_transition` ou `order_not_found`), e o teste confere `invalid_transition`.
 - **SUGESTÃO do 500, contestada.** Tratar a análise inválida como pendente não resolve `preview_ready`, cuja view exige assuntos: o `GET` daria 500 do mesmo jeito. Em `draft`, a tela ficaria em "carregando" para sempre, sem nenhum job. Um 500 alto e com log é melhor que uma prévia errada em silêncio. A regra entrou no `data-model.md` §5: mudança que estreite o `orderAnalysisSchema`, o `mergedExtractionSchema` ou a taxonomia migra ou limpa as análises gravadas no mesmo deploy, como já vale para o `study_kit`.
 - Depois da correção: lint limpo; worker com 343 unit e 56 de integração verdes.
+
+## Rodada 2
+
+Revalidação só dos pontos corrigidos (`efbdea5`), por um verificador novo.
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun run lint` | limpo, 413 arquivos |
+| `bun run --cwd apps/worker typecheck` | sem erro |
+| `bun test src/__tests__/integration/order-analyze.test.ts` (worker) | 19 pass |
+| mutação numa cópia, sem o `completeWithin` do `finish` | 7 de 19 falham (prévia pronta, as 4 falhas da prévia, `analysis_unavailable`, lease roubado) |
+| mutação numa cópia, sem o `completeWithin` do `skip` | 2 de 19 falham (`draft` já analisado e `preview_ready`) |
+| cópia restaurada | 19 de 19 |
+
+### Critérios de aceite
+| RF | Atendido | Evidência |
+|---|---|---|
+| RF-05 | sim | `runAnalyzeAndProbeHandoff` enfileira entre o `handle` e o `completeJob`; a mutação derruba os testes |
+| RF-07 | sim | sonda exigida em `preview_ready`, nas 4 voltas a `draft`, em `analysis_unavailable` e nos dois `skip`; `skip` em `preview_ready` testado no worker |
+
+### Achados
+- [SUGESTÃO] `apps/api/src/app.ts:83` — o 500 do `GET` com análise gravada fora do schema era logado só com `errorCode` e `errorName`, sem o `orderId`. Não bloqueia.
+- A contestação da rodada 1 (500 em vez de tratar a análise como pendente) **se sustenta**: o schema só é aplicado em `draft`, `analyzing` e `preview_ready`, então pedido pago nunca chega lá, e a regra do `data-model.md` fecha a causa.
+
+### Resposta do orquestrador
+- **SUGESTÃO, corrigida.** `buildOrderView` usa `safeParse`. Se a análise não passa, loga `error` "análise gravada fora do schema" com `orderId` e `errorCode: order_analysis_invalid`, sem o conteúdo, e relança, o que dá o 500. Teste de integração na api: 500 `internal_error`, log com o `orderId` e sem o texto gravado. A api ficou com 39 testes de integração e 41 unit verdes, e o lint limpo.
