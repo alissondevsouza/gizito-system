@@ -17,7 +17,12 @@ import {
 } from "@gizito/core";
 import { charge, job, order } from "@gizito/db";
 import { createTestDatabase, type TestDatabase, truncateAllTables } from "@gizito/db/test-helpers";
-import { createMemoryLogger, FAKE_QR_CODE_BASE64 } from "@gizito/integrations/fakes";
+import {
+  createMemoryLogger,
+  FAKE_QR_CODE_BASE64,
+  type FakePaymentGateway,
+  fakeGatewayOrderId,
+} from "@gizito/integrations/fakes";
 import { asc, eq, sql } from "drizzle-orm";
 import { buildAppDependencies, type TestAppDependencies } from "#src/__tests__/__fixtures__/app.ts";
 import { createApp } from "#src/app.ts";
@@ -160,6 +165,15 @@ async function orderRow(orderId: string) {
 
 async function jobRowList(orderId: string) {
   return testDatabase.db.select().from(job).where(sql`${job.payload}->>'orderId' = ${orderId}`);
+}
+
+function gatewayChargeOf(gateway: FakePaymentGateway, orderId: string) {
+  const input = gateway.createChargeInputList.find((candidate) => candidate.orderId === orderId);
+  const created = gateway.createdChargeList.find(
+    (candidate) => candidate.gatewayOrderId === fakeGatewayOrderId(input?.chargeId ?? ""),
+  );
+  if (created === undefined) throw new Error(`gateway sem cobrança do pedido ${orderId}`);
+  return created;
 }
 
 function topicLabel(topicId: string): string {
@@ -392,8 +406,8 @@ describe("POST /orders/:token/confirm (spec F2-03, RF-08)", () => {
     );
   });
 
-  it("falha no insert do job desfaz tudo, dá 500 e loga a órfã", async () => {
-    const { app, readEntryList } = setup();
+  it("falha no insert do job desfaz tudo, dá 500 e loga a órfã sem dado pessoal", async () => {
+    const { app, gateway, readEntryList, lineList } = setup();
     const created = await insertOrder();
     await withFailingJobInsert(async () => {
       expect((await postConfirm(app, created.publicToken)).status).toBe(500);
@@ -408,6 +422,11 @@ describe("POST /orders/:token/confirm (spec F2-03, RF-08)", () => {
         errorCode: "internal_error",
       }),
     );
+    const orphanCharge = gatewayChargeOf(gateway, created.orderId);
+    for (const secret of [PAYER_EMAIL, "mae.da.ana", created.publicToken, NOTE_TEXT]) {
+      expect(lineList.join("\n")).not.toContain(secret);
+    }
+    expect(lineList.join("\n")).not.toContain(orphanCharge.qrCode);
   });
 
   it("observação e outro com controle são gravados saneados; outro vazio vira nulo", async () => {
@@ -603,7 +622,7 @@ describe("logs da cobrança sem dado pessoal (spec F2-03, RF-13)", () => {
     gate.release();
     await expectApiError(await pending, 409, "invalid_state");
     const [chargeRow] = await chargeRowList(created.orderId);
-    const orphanCharge = gateway.createdChargeList.at(-1);
+    const orphanCharge = gatewayChargeOf(gateway, orphaned.orderId);
     const logText = lineList.join("\n");
     expect(logText).toContain(ORPHAN_CHARGE_LOG_MESSAGE);
     for (const secret of [
@@ -614,7 +633,7 @@ describe("logs da cobrança sem dado pessoal (spec F2-03, RF-13)", () => {
       orphaned.publicToken,
       NOTE_TEXT,
       chargeRow?.qrCode ?? "sem-qr",
-      orphanCharge?.qrCode ?? "sem-qr-da-orfa",
+      orphanCharge.qrCode,
       FAKE_QR_CODE_BASE64,
     ]) {
       expect(logText).not.toContain(secret);

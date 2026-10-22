@@ -1,8 +1,8 @@
 ---
 feature: confirmacao-e-cobranca-pix
 module: api
-round: 1
-verdict: REPROVADO
+round: 2
+verdict: APROVADO
 updated: 2026-10-22
 ---
 
@@ -77,3 +77,40 @@ Ficaram para o humano ou para outra feature:
 
 Contestado:
 - **Maiúscula do rótulo no meio da frase**: baixar a inicial estragaria rótulos que começam com sigla ou nome próprio. O web recebe o `unsupportedTopicList` e pode compor o texto na F2-09; o `error` da api é o texto de reserva.
+
+## Rodada 2
+
+Revalidação só dos pontos corrigidos (`git diff 0847c07..56f047d`), por outro `gizito-implement-verifier` novo.
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun test src/__tests__/integration/charges.test.ts` (api, cópia do `56f047d`) | 29 passam |
+| `bun test src/__tests__/payment` (integrations, cópia) | 54 passam, 4 pulados (live) |
+| `bun test src/__tests__/order/confirm.test.ts` (core, cópia) | 8 passam |
+| `bun run test:integration` (integrations, cópia) | 6 passam |
+| mutações do revisor: valor 1 no gateway; e-mail errado na renovação; e-mail e QR (juntos e separados) no warn da órfã, no ramo `!committed.ok`; sem o warn; leitura do corpo com `response.json()` ou sem retentativa | todas falham (de 1 a 4 testes) |
+| mutação do revisor: e-mail e QR no warn da órfã, no ramo `catch` (exceção no commit) | 29 passam: nada percebe |
+
+### Navegador
+Não aplicável.
+
+### Critérios de aceite
+| RF | Atendido | Evidência (teste ou arquivo) |
+|---|---|---|
+| RF-02 | sim | `confirm.test.ts` com "Ampliação na MALHA quadriculada" nas duas disciplinas |
+| RF-06 | sim | `mercadopago-gateway.test.ts` (corpo cortado com retentativa e a mesma chave) |
+| RF-08 | sim | `charges.test.ts` (entrada recebida pelo fake e `getChargeStatus`) |
+| RF-09 | sim | `charges.test.ts` (e-mail gravado na renovação, `no-store`) |
+| RF-13 | sim | `charges.test.ts` (órfã provocada e varrida) |
+
+### Achados
+- [ALERTA] `apps/api/src/services/charges.ts:204` — a órfã do ramo `catch` (exceção dentro da transação) não passa por nenhuma varredura de log; o invariante 9 só está coberto num dos dois caminhos da órfã.
+- [SUGESTÃO] `apps/api/src/__tests__/integration/charges.test.ts:606` — o QR da órfã vem de `createdChargeList.at(-1)`, que depende da ordem das chamadas.
+
+### Resposta do orquestrador
+Os dois foram corrigidos:
+- O teste da falha no insert do job varre o log atrás de e-mail, token, observação e QR da órfã. A mutação do ramo `catch` (e-mail e QR no warn) agora falha: 28 passam e 1 falha.
+- O QR da órfã é localizado pelo `orderId`, cruzando `createChargeInputList` com `createdChargeList`.
+
+Como não houve CRÍTICO, não há rodada 3.

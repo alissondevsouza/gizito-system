@@ -2,7 +2,7 @@
 feature: confirmacao-e-cobranca-pix
 module: api
 size: L
-status: in_progress
+status: done
 branch: feat/api/confirmacao-e-cobranca-pix
 updated: 2026-10-22
 ---
@@ -296,7 +296,14 @@ Unit no core e no integrations, e integração na api com Postgres real e o fake
 | 2026-10-22 | Revisão da spec (rodada 1, aprovada com 6 alertas): visão do pagamento com assuntos e kit; corpo do 422; barreira no fake; trava por pedido no processo; teste real com `MERCADOPAGO_TEST_ACCESS_TOKEN` e segunda cobrança; 429 sem retentativa; `charged_back` pelo `status_detail`; `warn` da órfã em qualquer falha | alertas e sugestões aceitos; a sugestão do CLI do pipeline ficou fora (ver Fora de escopo) |
 
 ## Status
-Spec escrita e aprovada na rodada 1 da revisão em 22/10/2026, com os alertas incorporados. Todas as tasks feitas em 22/10/2026; a API foi vista no ar com o fake (`confirm` 422, 400, 200 e 409; `charges` 409 e 201; log sem dado pessoal), e os dados do teste foram apagados do banco de dev e do MinIO. A migration 0005 ficou aplicada no banco de dev. Próximo passo: revisão neutra do código.
+Concluída em 22/10/2026. Todas as tasks foram feitas. A revisão da spec aprovou na rodada 1. A revisão do código reprovou a rodada 1 com 2 CRÍTICOs, os dois por falta de teste, pegos por mutação: o valor e o e-mail enviados ao gateway, e o log da órfã. A rodada 2 aprovou, e os alertas dela foram corrigidos (`review.md`).
+
+A API foi vista no ar com o fake:
+- `confirm` deu 422, 400, 200 e 409;
+- `charges` deu 409 e 201;
+- o log saiu sem dado pessoal.
+
+Os dados do teste foram apagados do banco de dev e do MinIO. A migration 0005 ficou aplicada no banco de dev. O critério do sandbox (RF-12) fica pendente com o humano.
 
 Pendências para o humano:
 - credencial de teste do Mercado Pago no `.env` como `MERCADOPAGO_TEST_ACCESS_TOKEN` (o `test:payment-live` não lê a `MERCADOPAGO_ACCESS_TOKEN` da api) e a rodada do RF-12; 30 minutos depois, a segunda rodada com `MERCADOPAGO_LIVE_EXPIRED_ORDER_ID=<id impresso>` na linha de comando;
