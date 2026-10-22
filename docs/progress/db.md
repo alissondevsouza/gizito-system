@@ -1,8 +1,8 @@
 # Progresso: db
 
 **Workspace:** `@gizito/db`
-**Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-19
+**Fase atual:** F2 — Fluxo comercial (F1 concluída em 2026-10-21)
+**Última atualização:** 2026-10-21
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -50,5 +50,5 @@
 
 - Toda tabela nova precisa do trigger `set_update_datetime` na migration (`migrations.test.ts` falha sem ele) e toda coluna `jsonb` usa `#src/schema/jsonb.ts`
 - `republishKit` em F2-11 (admin); expurgo de jobs `completed` com `retention.purge` (F2-06)
-- `kit.study_kit` fica `jsonb` sem tipo até `studyKitSchema` (F1-03)
+- `kit.study_kit` segue `jsonb` sem tipo. O `studyKitSchema` existe no core desde a F1-03, e a tipagem entra quando o kit passar a ser gravado (F2-05)
 - `coverageThreshold` volta ao `bunfig.toml` quando o Bun deixar de avaliar os arquivos do core importados (known-issues)

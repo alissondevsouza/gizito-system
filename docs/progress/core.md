@@ -1,8 +1,8 @@
 # Progresso: core
 
 **Workspace:** `@gizito/core`
-**Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-19
+**Fase atual:** F2 — Fluxo comercial (F1 concluída em 2026-10-21)
+**Última atualização:** 2026-10-21
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -46,10 +46,11 @@
 
 - [x] Esqueleto do workspace, lint, typecheck e teste verdes (F0-01)
 - [x] Constantes, enums, máquina de estados, schemas de entidade e de job, regras puras e interfaces (F0-04)
+- [x] Taxonomia `tax-v1` (F1-01), assuntos ainda não atendidos (F1-02) e `tax-v2` com `lp5-word-classes` (F1-10)
+- [x] Schemas, alocação, composição, validações e revisão do kit (F1-03)
 
 ## Pendências
 
-- Schemas do kit, alocação, composição e validações em F1-03, conforme `docs/pedagogy/spec-pedagogica.md` §14 (`order.materialProfile` fica `unknown` até lá)
 - Payloads da API (`POST /orders`, `confirm`) em F2-01; mapeamento estado → rota no web em F2-09
 - Contratos HTTP de cada rota nova entram em `api/` conforme F2 avança
 
@@ -65,3 +66,19 @@
 - `pedagogy/taxonomy/unsupported.ts`: `unsupportedTopicSchema`, `unsupportedTopicList` (7 áreas ainda não atendidas, ids `{ma|lp}-{slug}`, com o texto aprovado pelo professor, rótulo curto, motivo, como a extração reconhece e palavras do "outro"), `normalizeKeywordText` e `findUnsupportedTopicList(text, subject)`. Substitui `taxonomyExclusionList`.
 - `schemas.ts` exporta `topicSubjectPrefixMap` e `uniqueListSchema`. `markdown.ts` publica a tabela de não atendidos em `taxonomia.md`. O histórico da `tax-v1` congela também a lista (`unsupportedFingerprint`).
 - Testes: 346.
+
+## Feature schemas-e-validacoes-do-kit (2026-10-20, `3641d79`)
+
+- `pedagogy/extraction/`: `photoExtractionSchema`, `materialProfileSchema`, `sanitizePhotoExtraction`, `mergePhotoExtractionList` e `decidePreviewOutcome`.
+- `pedagogy/slots.ts` (`planKitSlots`, as 20 vagas com assunto e dificuldade), `pedagogy/plan/` (`kitPlanSchema`) e `pedagogy/validation/plan.ts` (`validateKitPlan`).
+- `pedagogy/kit/`: `kitContentSchema` e o de reparo, `studyKitSchema`, `composeStudyKit`, `applyKitRepair`, `listAnswerKey` e o formato das respostas.
+- `pedagogy/validation/`: `validateStudyKit`, com o `MathEvaluator` injetado, e os códigos com severidade e reparo fixos (`decideRepair`).
+- `pedagogy/review/`: `reviewResultSchema` e `interpretReview`.
+- `labels.ts`: rótulos pt-BR.
+- Testes: 689. Há uma fixture válida e uma inválida por código, e as tabelas da spec pedagógica viraram teste. Spec: `specs/core/schemas-e-validacoes-do-kit/`.
+
+## Ajustes da F1-05 à F1-10 (2026-10-20 e 2026-10-21)
+
+- `AiProvider` com `Result` (F1-05, ADR-0011).
+- Correções da regressão (F1-10, spec pedagógica 1.5 §15.10): `tax-v2` com `lp5-word-classes` (180 assuntos) e parágrafo de texto-base de 1 a 800 caracteres.
+- Testes: 730.

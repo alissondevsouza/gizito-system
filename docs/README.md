@@ -15,7 +15,7 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 | [`product/`](product/) | PRD (`product-doc-v1.md`): escopo, jornada, pedagogia, arquitetura decidida, decisões em aberto; roadmap por fases (`roadmap-v1.md`) |
 | [`design/`](design/) | Guia de design, identidade, mascote, telas, PDFs (`design-doc-v1.md`) |
 | [`gizito-image/`](gizito-image/) | Referências visuais do mascote |
-| [`pedagogy/`](pedagogy/) | [`taxonomia.md`](pedagogy/taxonomia.md) (gerado do core por `bun run taxonomy:doc`, com os assuntos ainda não atendidos); [`spec-pedagogica.md`](pedagogy/spec-pedagogica.md) (schemas do kit, alocação das questões, validações com código e severidade, regeneração, casos de regressão, homologação); [`prompts-v1.md`](pedagogy/prompts-v1.md); [`amostras/`](pedagogy/amostras/) (kits de amostra da landing); [`homologacao/`](pedagogy/homologacao/) (auditoria do professor) |
+| [`pedagogy/`](pedagogy/) | [`taxonomia.md`](pedagogy/taxonomia.md) (gerado do core por `bun run taxonomy:doc`, com os assuntos ainda não atendidos); [`spec-pedagogica.md`](pedagogy/spec-pedagogica.md) (schemas do kit, alocação das questões, validações com código e severidade, regeneração, casos de regressão, homologação); [`prompts-v1.md`](pedagogy/prompts-v1.md) e [`prompts-v2.md`](pedagogy/prompts-v2.md); [`regressao/`](pedagogy/regressao/) (relatórios da regressão); [`amostras/`](pedagogy/amostras/) (kits de amostra da landing); [`homologacao/`](pedagogy/homologacao/) (auditoria do professor) |
 | [`engineering/`](engineering/) | [`architecture.md`](engineering/architecture.md), [`data-model.md`](engineering/data-model.md), [`state-machine.md`](engineering/state-machine.md), [`api.md`](engineering/api.md), [`jobs.md`](engineering/jobs.md), [`adr/`](engineering/adr/), [`known-issues.md`](engineering/known-issues.md) |
 | [`ops/`](ops/) | Runbook e deploy (a criar) |
 | [`legal/`](legal/) | Termos, privacidade, ajuda (a criar) |
@@ -47,14 +47,14 @@ Este diretório é a **memória persistente do projeto**: produto, design, decis
 
 ## Estado por Módulo
 
-> Atualizado em 2026-10-19 (F1 em andamento; taxonomia v1 no core). Monorepo e infra local criados; core com domínio puro; db com schema, migrations, fila e as transações obrigatórias; api, worker e web sobem com `bun run dev` e respondem health; integrations só com o logger. Detalhes em `progress/{modulo}.md`.
+> Atualizado em 2026-10-21 (F1 concluída; próxima fase F2). O pipeline vai do caderno aos dois PDFs por linha de comando (`bun run pipeline`), com a regressão de 35 casos (`bun run test:pedagogy`), a auditoria do professor e os kits de amostra. Ainda não há banco nem fila no pipeline: os handlers dos jobs, a web e o Pix entram na F2. Detalhes em `progress/{modulo}.md`.
 
 | Módulo | Workspace | Status |
 |--------|-----------|--------|
-| Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia `tax-v1` com 179 assuntos, integridade e consulta (F1-01, revisada pelo professor); schemas do kit em F1-03 |
+| Core | `@gizito/core` | constantes, enums, máquina de estados, schemas e interfaces (F0-04); taxonomia `tax-v2` com 180 assuntos e os não atendidos (F1-01, F1-02, F1-10); schemas, alocação, composição e validações do kit e interpretação da revisão (F1-03) |
 | Database | `@gizito/db` | schema das 8 tabelas, conexão Bun.SQL e test-helpers (F0-05); tabela `job` e fila própria com `SKIP LOCKED`, `markOrderPaidAndEnqueue` e `publishKit` (F0-06) |
-| Integrations | `@gizito/integrations` | logger Pino com redação e fake em memória (F0-07); adaptadores a partir de F1 |
+| Integrations | `@gizito/integrations` | logger Pino com redação e fake em memória (F0-07); avaliador mathjs e LaTeX (F1-04), conferência de KaTeX, adaptador Anthropic e `FakeAiProvider` (F1-05); Mercado Pago, Evolution, Resend e R2 na F2 |
 | API | `@gizito/api` | Elysia com config fail-fast, `/health`, erros `{ error, code }`, CORS e log por rota (F0-07); rotas de pedido a partir de F2-01 |
-| Worker | `@gizito/worker` | loop da fila por raias, agendador, manutenção de locks e `/health` com métricas (F0-07); handlers a partir de F1 |
+| Worker | `@gizito/worker` | loop da fila por raias, agendador, manutenção de locks e `/health` com métricas (F0-07); pipeline de extração e geração, render dos dois PDFs com marca de amostra, `bun run pipeline` e `bun run test:pedagogy` (F1-06 a F1-11); handlers dos jobs na F2 |
 | Web | `@gizito/web` | TanStack Start com Tailwind v4, tokens de cor e página vazia (F0-07); identidade em F2-08 |
-| Infra | `docker-compose.yml`, `infra/`, `.github/` | monorepo, Biome, Turborepo e CI (F0-01); compose com Postgres, Redis e Evolution (F0-02) |
+| Infra | `docker-compose.yml`, `infra/`, `.github/` | monorepo, Biome, Turborepo e CI (F0-01); compose com Postgres, Redis e Evolution (F0-02); imagem do worker com Chromium e navegador do Playwright na CI (F1-08) |

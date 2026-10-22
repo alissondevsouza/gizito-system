@@ -1,8 +1,8 @@
 # Progresso: api
 
 **Workspace:** `@gizito/api`
-**Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-19
+**Fase atual:** F2 — Fluxo comercial (F1 concluída em 2026-10-21)
+**Última atualização:** 2026-10-21
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 

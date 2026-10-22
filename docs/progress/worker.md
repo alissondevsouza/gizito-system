@@ -1,8 +1,8 @@
 # Progresso: worker
 
 **Workspace:** `@gizito/worker`
-**Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-19
+**Fase atual:** F2 — Fluxo comercial (F1 concluída em 2026-10-21)
+**Última atualização:** 2026-10-21
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -24,11 +24,25 @@
 - `src/scheduler.ts`: manutenção a cada 30 s com o `onExhausted` do mapa de handlers. `src/index.ts`: fecha o banco com teto de 5 s.
 - Testes: 21 unit e 17 de integração.
 
+## Fase F1: pipeline, render, CLI e regressão (2026-10-20 e 2026-10-21)
+
+- **pipeline-extracao** (F1-06, `31b3a8b`): prompt `extract` v1 e `analyzeMaterial` em `src/pipeline/extract.ts`. Faz uma chamada por foto, em paralelo, com uma nova chamada para saída inválida, e guarda cache por hash (`extraction-cache.ts`).
+- **pipeline-geracao** (F1-07, `690a62b`): prompts `plan`, `generate` e `review` e o `generateKit` em `src/pipeline/generate.ts`. Cobre alocação, plano, geração, composição, validação com mathjs e KaTeX (`math-markup.ts`), revisão, uma regeneração pelo código mais forte e o teto de custo. Cada chamada é registrada em `ai-call.ts`.
+- **render-pdf** (F1-08, `986ea36`): `renderKit` e `createPdfRenderer` em `src/render/`, com templates `kit-v1`, KaTeX no servidor, conferência no DOM e segunda tentativa. Também o script `render:kit` e o `Dockerfile` com Chromium.
+- **cli-do-pipeline** (F1-09, `a4a247c`): `runPipeline` em `src/pipeline/run-pipeline.ts`, sem banco nem fila, e o `bun run pipeline` na raiz (`scripts/pipeline.ts`, `src/cli/`).
+- **regressao-pedagogica** (F1-10, `708b1b9`): `bun run test:pedagogy` (`scripts/pedagogy-regression.ts`, `src/regression/`), com relatório pelos critérios do gate. Também os prompts `generate` e `review` v2.
+- **homologacao-e-amostras** (F1-11): `isSample` no `renderKit` e `render:kit --sample` (selo “Kit de amostra” na capa e no rodapé).
+- Testes: 343 unit. A integração do render tem 19 testes.
+
 ## Implementado
 
 - [x] Esqueleto do workspace, lint, typecheck e teste verdes (F0-01)
 - [x] Loop da fila por raias, agendador, manutenção de locks e `/health` com métricas (F0-07)
+- [x] Pipeline de extração e geração, sem banco nem fila (F1-06, F1-07, F1-09)
+- [x] Render dos dois PDFs, imagem com Chromium e marca de amostra (F1-08, F1-11)
+- [x] Regressão pedagógica `bun run test:pedagogy` (F1-10)
 
 ## Pendências
 
-- Handlers: `order.analyze` (F1/F2-02), `order.generate` (F2-05), `order.notify` (F2-07), `charge.reconcile` (F2-04), `retention.purge` (F2-06), `whatsapp.inbound` (F2-10); cada um entra em `jobHandlerMap` como `{ handle, onExhausted? }` e passa a ser consumido e agendado sozinho; `onExhausted` de cada job conforme `jobs.md` §4
+- Handlers: `order.analyze` (F2-02), `order.generate` (F2-05), `order.notify` (F2-07), `charge.reconcile` (F2-04), `retention.purge` (F2-06), `whatsapp.inbound` (F2-10); cada um entra em `jobHandlerMap` como `{ handle, onExhausted? }` e passa a ser consumido e agendado sozinho; `onExhausted` de cada job conforme `jobs.md` §4
+- Dívidas da geração em `known-issues.md`: tempo p95 acima de 5 min (MEDIUM) e 7º ano de Português com 1 kit pronto em 7 gerações (HIGH)

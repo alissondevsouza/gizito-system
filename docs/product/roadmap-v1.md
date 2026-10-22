@@ -1,7 +1,7 @@
 # Gizito — Roadmap de Implementação v1.5
 
 **Status:** em execução  
-**Fase atual:** F1 — Prova técnica e pedagógica  
+**Fase atual:** F2 — Fluxo comercial  
 **Data:** 14/10/2026  
 **Estado atualizado em:** 21/10/2026  
 **Relação com o PRD:** detalha a seção 11 do `product-doc-v1.md` em fases, features e critérios de passagem  
@@ -97,7 +97,7 @@ flowchart LR
 | Fase | Objetivo | Saída principal | Critério de saída | Esforço estimado | Estado |
 |---|---|---|---|---|---|
 | F0 Fundação | Repositório pronto para construir | monorepo, infra local, core e db com máquina de estados e fila, docs técnicos | lint, typecheck e testes verdes; fila idempotente testada; ADRs escritos | 1 a 2 semanas | concluída |
-| F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 35 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | em andamento |
+| F1 Prova técnica e pedagógica | Do caderno aos dois PDFs, com validação, sem web nem Pix | taxonomia v1, pipeline completo por CLI, regressão com 35 casos, 2 kits de amostra | zero bloqueador crítico inesperado na regressão; amostra aprovada por professor; custo e tempo medidos | 3 a 5 semanas | concluída |
 | F2 Fluxo comercial | Compra ponta a ponta em produção | API, worker, web, WhatsApp, admin, legal, deploy | checklist da seção 10 do PRD completa; compra real feita por você e entregue num celular real | 4 a 6 semanas | pendente |
 | F3 Piloto pago | Validar H1 a H4 com dinheiro real | 10 a 20 responsáveis, auditoria semanal, métricas | memo de decisão com evidência das hipóteses | 3 a 4 semanas de calendário | pendente |
 | F4 Pós-validação | Crescer só com gatilho | 8º e 9º ano, preço, WhatsApp oficial, novas matérias | por gatilho, item a item | aberto | pendente |
@@ -141,7 +141,7 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
 
 ## 4. Fase 1 — Prova técnica e pedagógica
 
-**Estado:** em andamento · 11 de 11 concluídas; falta o gate
+**Estado:** concluída · 11 de 11 concluídas · gate fechado em 21/10/2026
 
 - [x] **F1-01 `taxonomia-v1`** — pedagogy, core · L · depende: F0-04 · 19/10/2026 · `92cbec0` · `specs/pedagogy/taxonomia-v1/`
   - Entrega: 8 arquivos (4º a 7º × Matemática e Português) com 15 a 30 assuntos cada: id estável, nome, descrição, habilidades BNCC, pré-requisitos, validações aplicáveis; `taxonomyVersion`
@@ -229,7 +229,11 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
     - O 7º ano de Português não teve kit pronto na rodada final nem na rerodada. O Kit 08 é o da rodada 2, com esforço `medium`, por decisão sua. A taxa de falha dessa célula (1 kit pronto em 7 gerações) entrou na dívida HIGH (`known-issues.md`).
     - Revisão neutra aprovada na rodada 1, com os 3 alertas e as 2 sugestões corrigidos.
 
-- [ ] **Gate F1 → F2:** regressão verde, amostra do professor sem erro crítico, custo por kit e por prévia dentro da margem do preço de R$ 29,90
+- [x] **Gate F1 → F2:** regressão verde, amostra do professor sem erro crítico, custo por kit e por prévia dentro da margem do preço de R$ 29,90 — 21/10/2026, fechado por decisão sua
+  - Regressão: não está totalmente verde. A rodada final juntada teve 2 bloqueadores críticos inesperados, ambos do 7º ano de Português, que você aceitou como dívida HIGH na F1-10. O diagnóstico da F1-11 mostrou que a falha da carta (`lp7-linguistic-variety`) é sistemática, e você decidiu não corrigir agora (`known-issues.md`). Os outros critérios do relatório passaram: extração em 35 de 35, foto ilegível e dado pessoal em 5 de 5.
+  - Amostra do professor: zero defeito em 10 kits e 252 linhas (F1-11).
+  - Custo: prévia de US$ 0,0011 (cerca de R$ 0,01, meta de R$ 0,10) e kit de US$ 0,41 de IA (cerca de R$ 2,44, abaixo de 10% do preço), registrados no PRD 1.6 §3.
+  - Tempo de geração: p95 de 5 min 34 s, acima do alvo de 5 min. Esse critério não bloqueia, e a dívida MEDIUM em `known-issues.md` diz o que fazer.
 
 ## 5. Fase 2 — Fluxo comercial
 

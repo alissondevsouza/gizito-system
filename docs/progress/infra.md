@@ -1,8 +1,8 @@
 # Progresso: infra
 
 **Workspace:** raiz do monorepo (`package.json`, `turbo.json`, `biome.json`, `tsconfig.base.json`, `docker-compose.yml`, `infra/`, `.github/`)
-**Fase atual:** F1 — Prova técnica e pedagógica (F0 concluída em 2026-10-16)
-**Última atualização:** 2026-10-16
+**Fase atual:** F2 — Fluxo comercial (F1 concluída em 2026-10-21)
+**Última atualização:** 2026-10-21
 
 ## Feature repo-e-monorepo (2026-10-14, `8d2509c`)
 
@@ -22,9 +22,9 @@
 
 - [x] Monorepo, scripts raiz, CI (F0-01)
 - [x] Infra local: Postgres, Redis e Evolution API no docker compose (F0-02)
+- [x] Imagem do worker com Chromium (`apps/worker/Dockerfile`) e navegador do Playwright na CI (F1-08); `bun run pipeline` e `bun run test:pedagogy` na raiz (F1-09, F1-10)
 
 ## Pendências
 
-- Compose de produção, proxy com TLS, backups e Dockerfiles em F2-13; imagem do worker com Chromium em F1-08. O compose de produção deve exigir a chave (`${EVOLUTION_API_KEY:?}`), sem o default só-local do compose de dev
-- Scripts `db:generate`/`db:migrate` em F0-05 e `test:pedagogy` em F1-10 (Turborepo falha em task sem implementação)
+- Compose de produção, proxy com TLS, backups e os Dockerfiles da api e da web em F2-13. O compose de produção deve exigir a chave (`${EVOLUTION_API_KEY:?}`), sem o default só-local do compose de dev
 - Primeiro run do CI depende do primeiro push, que é do humano
