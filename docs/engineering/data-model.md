@@ -221,6 +221,7 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
   - `extraction_cache` sai quando `expire_datetime` passa (`purgeExpiredExtractionCache`, em lotes). O valor é `photoDeleteDeadline` da foto que gravou a entrada. Acerto de outro pedido não estende a validade; regravação depois de vencida usa a foto nova, com os mesmos bytes.
   - `order.analysis` (com `terminologyList` e `contextThemeList` tirados da foto) é limpa junto com as fotos do pedido, em `PHOTO_RETENTION_DAYS`.
   - `order.material_profile` é limpo junto com as fotos nos pedidos que não chegaram a `awaiting_payment`; nos demais, fica para a geração e sai com o `study_kit`.
+  - O `GET /orders/:token` valida `order.analysis` pelo `orderAnalysisSchema` e responde 500 quando ela não passa. Uma mudança que estreite esse schema, o `mergedExtractionSchema` ou a taxonomia precisa migrar ou limpar as análises já gravadas no mesmo deploy, como o `study_kit`.
 - PDFs e `study_kit`: após `KIT_RETENTION_MONTHS` (12), apaga do storage, grava `delete_datetime` e limpa `study_kit`; `ai_call` permanece para métricas.
 - Remoção a pedido do titular: admin apaga `email`, `whatsapp_phone`, fotos e PDFs, mantendo o pedido como registro contábil anonimizado.
 - As funções de prazo (`photoDeleteDeadline`, `kitDeleteDeadline`) estão no core e recebem o relógio por parâmetro.

@@ -7,6 +7,7 @@ import {
   type Grade,
   JOB_MAX_ATTEMPT_COUNT,
   type OrderAnalysis,
+  type OrderStatus,
   orderAnalysisSchema,
   type PhotoExtraction,
   PUBLIC_TOKEN_BYTES,
@@ -35,7 +36,7 @@ import {
   type FakeAiResponse,
   type FakeObjectStorage,
 } from "@gizito/integrations/fakes";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import sharp from "sharp";
 import {
   failureOf,
@@ -235,8 +236,34 @@ function extractCallCount() {
   return harness.provider.requestList.filter((record) => record.stage === "extract").length;
 }
 
-async function replacePhotosRightAway(orderId: string) {
-  return enqueueSingletonJob(testDatabase.db, { name: "order.analyze", orderId }, orderId);
+async function runAnalyzeAndProbeHandoff(definition: JobDefinition = harness.definition) {
+  const probe = { enqueuedBeforeCompleteJob: false };
+  const outcome = await workJob(testDatabase.db, {
+    nameList: ["order.analyze"],
+    workerId: WORKER_ID,
+    handler: async (claimedJob, context) => {
+      const result = await definition.handle(claimedJob, context);
+      if (claimedJob.payload.name === "order.analyze") {
+        const { orderId } = claimedJob.payload;
+        const enqueued = await enqueueSingletonJob(
+          testDatabase.db,
+          { name: "order.analyze", orderId },
+          orderId,
+        );
+        probe.enqueuedBeforeCompleteJob = enqueued !== null;
+      }
+      return result;
+    },
+    onExhausted: definition.onExhausted,
+  });
+  return { outcome, ...probe };
+}
+
+async function stealLease(orderId: string) {
+  await testDatabase.db
+    .update(job)
+    .set({ attemptCount: sql`${job.attemptCount} + 1`, lockedBy: "outro-worker" })
+    .where(and(eq(job.status, "active"), sql`${job.payload}->>'orderId' = ${orderId}`));
 }
 
 function failureScript(code: AiFailureCode): PhotoScript {
@@ -264,8 +291,9 @@ describe("order.analyze: desfechos da prévia (spec F2-02, RF-07)", () => {
         }),
       ),
     ]);
-    const outcome = await runAnalyze();
+    const { outcome, enqueuedBeforeCompleteJob } = await runAnalyzeAndProbeHandoff();
     expect(outcome).toMatchObject({ outcome: "completed", errorCode: null });
+    expect(enqueuedBeforeCompleteJob).toBe(true);
 
     const reloaded = await loadOrder(created.orderId);
     expect(reloaded.status).toBe("preview_ready");
@@ -280,8 +308,8 @@ describe("order.analyze: desfechos da prévia (spec F2-02, RF-07)", () => {
     expect(await countAiCalls(created.orderId)).toEqual(["ok", "ok"]);
     expect((await loadAnalyzeJobList(created.orderId)).map((row) => row.status)).toEqual([
       "completed",
+      "pending",
     ]);
-    expect(await replacePhotosRightAway(created.orderId)).not.toBeNull();
 
     const entry = harness.memoryLogger
       .readEntryList()
@@ -316,7 +344,9 @@ describe("order.analyze: desfechos da prévia (spec F2-02, RF-07)", () => {
     ],
   ])("%s volta a draft com o aviso", async (_label, extraction, failCode, isMaterialMismatch) => {
     const created = await createOrder([onlyOutput(extraction)]);
-    expect((await runAnalyze()).outcome).toBe("completed");
+    const { outcome, enqueuedBeforeCompleteJob } = await runAnalyzeAndProbeHandoff();
+    expect(outcome.outcome).toBe("completed");
+    expect(enqueuedBeforeCompleteJob).toBe(true);
     const reloaded = await loadOrder(created.orderId);
     expect(reloaded.status).toBe("draft");
     expect(reloaded.analysis).toMatchObject({
@@ -325,7 +355,6 @@ describe("order.analyze: desfechos da prévia (spec F2-02, RF-07)", () => {
       isMaterialMismatch,
     });
     expect(reloaded.materialProfile).toBeNull();
-    expect(await replacePhotosRightAway(created.orderId)).not.toBeNull();
   });
 });
 
@@ -353,12 +382,13 @@ describe("order.analyze: falhas (spec F2-02, RF-07)", () => {
 
   it("falha que não volta à fila encerra em analysis_unavailable e conclui o job", async () => {
     const created = await createOrder([failureScript("ai_auth_failed")]);
-    expect((await runAnalyze()).outcome).toBe("completed");
+    const { outcome, enqueuedBeforeCompleteJob } = await runAnalyzeAndProbeHandoff();
+    expect(outcome.outcome).toBe("completed");
+    expect(enqueuedBeforeCompleteJob).toBe(true);
     const reloaded = await loadOrder(created.orderId);
     expect(reloaded.status).toBe("draft");
     expect(reloaded.analysis).toEqual({ outcome: "analysis_unavailable" });
     expect(await countAiCalls(created.orderId)).toEqual(["ai_auth_failed"]);
-    expect(await replacePhotosRightAway(created.orderId)).not.toBeNull();
     const entry = harness.memoryLogger
       .readEntryList()
       .find((item) => item.msg === "análise indisponível");
@@ -404,23 +434,44 @@ describe("order.analyze: falhas (spec F2-02, RF-07)", () => {
 });
 
 describe("order.analyze: reexecução e corridas (spec F2-02, RF-04 e RF-05)", () => {
-  it("pedido já em preview_ready ou draft analisado é pulado sem IA e o job fica concluído", async () => {
-    const created = await createOrder([onlyOutput(unreadableExtraction)]);
-    await runAnalyze();
-    expect((await loadOrder(created.orderId)).status).toBe("draft");
-    const calledBefore = extractCallCount();
-    await enqueueSingletonJob(
-      testDatabase.db,
-      { name: "order.analyze", orderId: created.orderId },
-      created.orderId,
-    );
-    expect((await runAnalyze()).outcome).toBe("completed");
-    expect(extractCallCount()).toBe(calledBefore);
-    expect(await replacePhotosRightAway(created.orderId)).not.toBeNull();
-    const entry = harness.memoryLogger
-      .readEntryList()
-      .find((item) => item.msg === "análise pulada");
-    expect(entry).toMatchObject({ orderId: created.orderId, status: "draft", outcome: "skip" });
+  it.each<[string, PhotoExtraction, OrderStatus]>([
+    ["draft já analisado", unreadableExtraction, "draft"],
+    ["preview_ready", photoExtractionOf(), "preview_ready"],
+  ])(
+    "%s é pulado sem IA, e o job concluído na transação do início",
+    async (_label, extraction, status) => {
+      const created = await createOrder([onlyOutput(extraction)]);
+      await runAnalyze();
+      expect((await loadOrder(created.orderId)).status).toBe(status);
+      const calledBefore = extractCallCount();
+      await enqueueSingletonJob(
+        testDatabase.db,
+        { name: "order.analyze", orderId: created.orderId },
+        created.orderId,
+      );
+      const { outcome, enqueuedBeforeCompleteJob } = await runAnalyzeAndProbeHandoff();
+      expect(outcome.outcome).toBe("completed");
+      expect(enqueuedBeforeCompleteJob).toBe(true);
+      expect(extractCallCount()).toBe(calledBefore);
+      expect((await loadOrder(created.orderId)).status).toBe(status);
+      const entry = harness.memoryLogger
+        .readEntryList()
+        .find((item) => item.msg === "análise pulada");
+      expect(entry).toMatchObject({ orderId: created.orderId, status, outcome: "skip" });
+    },
+  );
+
+  it("lease roubado durante a análise desfaz o fim: lease_lost, pedido em analyzing e análise nula", async () => {
+    const created = await createOrder([onlyOutput(photoExtractionOf())]);
+    const definition = definitionWithStorageHook(() => stealLease(created.orderId));
+    expect(await runAnalyze(new Date(), definition)).toMatchObject({ outcome: "lease_lost" });
+    const reloaded = await loadOrder(created.orderId);
+    expect(reloaded.status).toBe("analyzing");
+    expect(reloaded.analysis).toBeNull();
+    expect(reloaded.materialProfile).toBeNull();
+    expect(await loadLegibilityList(created.orderId)).toEqual([null]);
+    const [stolen] = await loadAnalyzeJobList(created.orderId);
+    expect(stolen).toMatchObject({ status: "active", lockedBy: "outro-worker" });
   });
 
   it("foto trocada por fora durante a análise volta à fila sem gravar", async () => {
@@ -454,9 +505,8 @@ describe("order.analyze: reexecução e corridas (spec F2-02, RF-04 e RF-05)", (
     const reloaded = await loadOrder(created.orderId);
     expect(reloaded.status).toBe("draft");
     expect(reloaded.analysis).toEqual({ outcome: "analysis_unavailable" });
-    expect(harness.memoryLogger.readEntryList().some((item) => item.outcome === "no_effect")).toBe(
-      true,
-    );
+    const entry = harness.memoryLogger.readEntryList().find((item) => item.outcome === "no_effect");
+    expect(entry).toMatchObject({ orderId: created.orderId, errorCode: "invalid_transition" });
   });
 });
 
@@ -477,7 +527,12 @@ describe("order.analyze: esgotamento (spec F2-02, RF-08)", () => {
     const reloaded = await loadOrder(created.orderId);
     expect(reloaded.status).toBe("draft");
     expect(reloaded.analysis).toEqual({ outcome: "analysis_unavailable" });
-    expect(await replacePhotosRightAway(created.orderId)).not.toBeNull();
+    const enqueuedAfterCompensation = await enqueueSingletonJob(
+      testDatabase.db,
+      { name: "order.analyze", orderId: created.orderId },
+      created.orderId,
+    );
+    expect(enqueuedAfterCompensation).not.toBeNull();
   });
 
   it("lock vencido esgotado na varredura também leva a analysis_unavailable", async () => {

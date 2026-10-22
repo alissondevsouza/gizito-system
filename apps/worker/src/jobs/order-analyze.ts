@@ -52,7 +52,10 @@ type AnalysisEnd = {
 };
 
 class AnalysisRollback extends Error {
-  constructor(readonly failure: JobFailure | null) {
+  constructor(
+    readonly failure: JobFailure | null,
+    readonly reasonCode: string | null = null,
+  ) {
     super("order analysis transaction rolled back");
     this.name = "AnalysisRollback";
   }
@@ -71,11 +74,11 @@ function costCentsOf(aiCallList: readonly AiCallRecord[]): number {
   return aiCallList.reduce((total, record) => total + record.costCents, 0);
 }
 
-async function rollbackOutcome<T>(run: () => Promise<T>): Promise<Result<T, JobFailure | null>> {
+async function rollbackOutcome<T>(run: () => Promise<T>): Promise<Result<T, AnalysisRollback>> {
   try {
     return ok(await run());
   } catch (error) {
-    if (error instanceof AnalysisRollback) return err(error.failure);
+    if (error instanceof AnalysisRollback) return err(error);
     throw error;
   }
 }
@@ -110,7 +113,7 @@ export function createOrderAnalyzeJob(dependencies: OrderAnalyzeDependencies): J
         if (result.error instanceof AnalysisPhotoSetChangedError) {
           throw new AnalysisRollback({ errorCode: result.error.code, retryable: true });
         }
-        throw new AnalysisRollback(null);
+        throw new AnalysisRollback(null, result.error.code);
       }),
     );
     const summary = {
@@ -121,10 +124,11 @@ export function createOrderAnalyzeJob(dependencies: OrderAnalyzeDependencies): J
       aiCallCount: aiCallList.length,
     };
     if (!finished.ok) {
-      if (finished.error !== null) return err(finished.error);
+      const { failure, reasonCode } = finished.error;
+      if (failure !== null) return err(failure);
       logger.warn(
-        { ...summary, outcome: "no_effect" },
-        "análise sem efeito: o pedido saiu de analyzing",
+        { ...summary, outcome: "no_effect", errorCode: reasonCode },
+        "análise sem efeito",
       );
       return ok(null);
     }
@@ -157,7 +161,7 @@ export function createOrderAnalyzeJob(dependencies: OrderAnalyzeDependencies): J
         return result;
       }),
     );
-    if (!started.ok) return err(started.error ?? leaseLostFailure);
+    if (!started.ok) return err(started.error.failure ?? leaseLostFailure);
     if (!started.value.ok) {
       return err({ errorCode: started.value.error.code, retryable: false });
     }
