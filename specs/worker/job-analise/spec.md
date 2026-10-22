@@ -166,10 +166,10 @@ Roadmap F2-02. O tamanho subiu de M para L porque a entrega cruza core, db, inte
 - [x] 1.3 `orderAnalysisSchema`, `analysisFailCodeList`, `decideAnalysisStart` e campos da view · Arquivos: `packages/core/src/order/{analysis.ts,view.ts}`, `index.ts`, testes · Verificação: `bun run --cwd packages/core test`
 
 ### M2 — banco e fila
-- [ ] 2.1 Migration `0004_job_analise`: `order.analysis` e `extraction_cache` · Arquivos: `packages/db/src/schema/…`, `packages/db/drizzle/…` · Verificação: `bun run db:generate --filter=@gizito/db`, testes de convenção
-- [ ] 2.2 Cache (`find`, `save`, `purge`) com integração · Arquivos: `packages/db/src/extraction-cache.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
-- [ ] 2.3 `startOrderAnalysis`, `finishOrderAnalysis`, `recordAiCallList` com integração · Arquivos: `packages/db/src/order/analysis.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
-- [ ] 2.4 `completeWithin` no `workJob` com integração · Arquivos: `packages/db/src/queue/work.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
+- [x] 2.1 Migration `0004_job_analise`: `order.analysis` e `extraction_cache` · Arquivos: `packages/db/src/schema/…`, `packages/db/drizzle/…` · Verificação: `bun run db:generate --filter=@gizito/db`, testes de convenção
+- [x] 2.2 Cache (`find`, `save`, `purge`) com integração · Arquivos: `packages/db/src/extraction-cache.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
+- [x] 2.3 `startOrderAnalysis`, `finishOrderAnalysis`, `recordAiCallList` com integração · Arquivos: `packages/db/src/order/analysis.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
+- [x] 2.4 `completeWithin` no `workJob` com integração · Arquivos: `packages/db/src/queue/work.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
 
 ### M3 — worker
 - [ ] 3.1 Config com IA e storage, boot e `buildJobHandlerMap` · Arquivos: `apps/worker/src/{config.ts,index.ts,jobs/index.ts}`, testes · Verificação: `bun run --cwd apps/worker test`

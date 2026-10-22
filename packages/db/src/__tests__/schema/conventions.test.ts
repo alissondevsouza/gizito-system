@@ -59,14 +59,18 @@ const expectedIndexMap: Record<string, { name: string; unique: boolean; partial?
     { name: "preview_request_device_hash_insert_datetime_idx", unique: false },
     { name: "preview_request_insert_datetime_idx", unique: false },
   ],
+  extraction_cache: [
+    { name: "extraction_cache_cache_key_idx", unique: true },
+    { name: "extraction_cache_expire_datetime_idx", unique: false },
+  ],
 };
 
 describe("convenções do schema", () => {
-  it("tableList contém exatamente as dez tabelas exportadas", () => {
+  it("tableList contém exatamente as onze tabelas exportadas", () => {
     const exportedNameList = exportedTableEntryList.map(([, table]) => getTableName(table)).sort();
     const listedNameList: string[] = tableList.map((table) => getTableName(table)).sort();
     expect(listedNameList).toEqual(exportedNameList);
-    expect(tableList).toHaveLength(10);
+    expect(tableList).toHaveLength(11);
   });
 
   it("export Drizzle é o camelCase singular do nome da tabela", () => {
@@ -159,6 +163,9 @@ describe("convenções do schema", () => {
       getTableConfig(table).columns.filter((column) => column.getSQLType() === "jsonb"),
     );
     expect(jsonbColumnList.map((column) => column.name).sort()).toEqual([
+      "analysis",
+      "extraction",
+      "issue_list",
       "material_profile",
       "payload",
       "study_kit",

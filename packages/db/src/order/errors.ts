@@ -39,3 +39,12 @@ export class WebhookEventNotFoundError extends Error {
     this.name = "WebhookEventNotFoundError";
   }
 }
+
+export class AnalysisPhotoSetChangedError extends Error {
+  readonly code = "analysis_photo_set_changed";
+
+  constructor(readonly orderId: string) {
+    super(`Current photos of order ${orderId} differ from the analyzed ones`);
+    this.name = "AnalysisPhotoSetChangedError";
+  }
+}

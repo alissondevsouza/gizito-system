@@ -2,6 +2,7 @@ import { expect } from "bun:test";
 import { randomBytes } from "node:crypto";
 import {
   KIT_PRICE_CENTS,
+  type OrderAnalysis,
   PUBLIC_TOKEN_BYTES,
   SHORT_CODE_ALPHABET,
   SHORT_CODE_LENGTH,
@@ -30,14 +31,50 @@ export function randomShortCode(): string {
   return code;
 }
 
+export function buildPreviewReadyAnalysis(analyzedPhotoId: string): OrderAnalysis {
+  return {
+    outcome: "preview_ready",
+    analyzedPhotoIdList: [analyzedPhotoId],
+    mergedExtraction: {
+      photoList: [
+        {
+          photoIndex: 1,
+          legibility: "good",
+          isUsable: true,
+          legibilityScore: 1,
+          photoIssueList: [],
+        },
+      ],
+      topicCandidateList: [{ topicId: "ma5-fractions", confidence: "high", photoIndexList: [1] }],
+      unsupportedTopicList: [],
+      sourceWarningList: [],
+      materialProfile: {
+        exerciseFormatList: ["computation"],
+        notationList: [],
+        terminologyList: [],
+        contextThemeList: [],
+        apparentLevel: "at_grade",
+        hasFigures: false,
+        isHandwritten: false,
+      },
+      issueList: [],
+    },
+  };
+}
+
 export function buildOrderInsert(
   overrides: Partial<typeof order.$inferInsert> = {},
 ): typeof order.$inferInsert {
+  const previewAnalysis =
+    overrides.status === "preview_ready"
+      ? { analysis: buildPreviewReadyAnalysis(crypto.randomUUID()) }
+      : {};
   return {
     publicToken: randomPublicToken(),
     shortCode: randomShortCode(),
     grade: "5",
     subject: "math",
+    ...previewAnalysis,
     ...overrides,
   };
 }

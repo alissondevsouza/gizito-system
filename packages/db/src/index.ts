@@ -1,4 +1,5 @@
 export * from "#src/client.ts";
+export * from "#src/extraction-cache.ts";
 export * from "#src/health.ts";
 export * from "#src/migrations.ts";
 export * from "#src/order/index.ts";

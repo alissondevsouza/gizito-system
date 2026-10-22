@@ -29,6 +29,13 @@
       "when": 1792636658672,
       "tag": "0003_pedidos_e_upload",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792677195790,
+      "tag": "0004_job_analise",
+      "breakpoints": true
     }
   ]
 }

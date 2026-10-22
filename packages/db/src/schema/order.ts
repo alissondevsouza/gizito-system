@@ -25,6 +25,7 @@ export const order = pgTable(
     noteText: text("note_text"),
     perceivedDifficulty: perceivedDifficultyEnum("perceived_difficulty"),
     materialProfile: jsonb("material_profile"),
+    analysis: jsonb("analysis"),
     whatsappPhone: text("whatsapp_phone"),
     whatsappConsentDatetime: datetime("whatsapp_consent_datetime"),
     paidDatetime: datetime("paid_datetime"),
@@ -43,6 +44,10 @@ export const order = pgTable(
     check(
       "order_whatsapp_consent_check",
       sql`(${table.whatsappPhone} IS NULL) = (${table.whatsappConsentDatetime} IS NULL)`,
+    ),
+    check(
+      "order_analysis_check",
+      sql`CASE ${table.status} WHEN 'analyzing' THEN ${table.analysis} IS NULL WHEN 'preview_ready' THEN ${table.analysis}->>'outcome' IS NOT DISTINCT FROM 'preview_ready' ELSE true END`,
     ),
     check(
       "order_topic_id_list_check",

@@ -9,7 +9,8 @@ import {
   outcomeCodeSchema,
   type Result,
 } from "@gizito/core";
-import type { Executor } from "#src/client.ts";
+import { and, eq } from "drizzle-orm";
+import type { Executor, Transaction } from "#src/client.ts";
 import { type ClaimedJob, type ClaimJobOptions, claimJob } from "#src/queue/claim.ts";
 import { compensateExhaustedJob, type ExhaustedJobHandler } from "#src/queue/exhausted.ts";
 import {
@@ -19,12 +20,14 @@ import {
   type JobFailure,
   releaseJob,
 } from "#src/queue/finish.ts";
-import { renewJobLease } from "#src/queue/lease.ts";
+import { type JobLease, renewJobLease } from "#src/queue/lease.ts";
+import { job } from "#src/schema/job.ts";
 
 const MILLISECONDS_PER_SECOND = 1000;
 
 export type JobHandlerContext = {
   signal: AbortSignal;
+  completeWithin: (tx: Transaction) => Promise<boolean>;
 };
 
 export type JobHandler = (
@@ -71,6 +74,7 @@ type LeaseKeeperOptions = Pick<
   clock: () => Date;
   leaseRenewIntervalMs: number;
   maxRunMs: number;
+  completeWithin: JobHandlerContext["completeWithin"];
 };
 
 async function runHandler(
@@ -99,6 +103,7 @@ async function runWithLease(
     maxRunMs,
     onLeaseRenewError,
     signal,
+    completeWithin,
   }: LeaseKeeperOptions,
 ): Promise<HandlerRun> {
   const controller = new AbortController();
@@ -129,7 +134,10 @@ async function runWithLease(
   if (signal?.aborted) abortOnShutdown();
   signal?.addEventListener("abort", abortOnShutdown, { once: true });
   try {
-    const run = await runHandler(handler, claimedJob, { signal: controller.signal });
+    const run = await runHandler(handler, claimedJob, {
+      signal: controller.signal,
+      completeWithin,
+    });
     return { ...run, abortReason };
   } finally {
     clearInterval(renewTimer);
@@ -175,6 +183,20 @@ async function failWithCompensation(
   });
 }
 
+async function isCompletedAttempt(executor: Executor, lease: JobLease): Promise<boolean> {
+  const [row] = await executor
+    .select({ jobId: job.jobId })
+    .from(job)
+    .where(
+      and(
+        eq(job.jobId, lease.jobId),
+        eq(job.attemptCount, lease.attemptCount),
+        eq(job.status, "completed"),
+      ),
+    );
+  return row !== undefined;
+}
+
 export async function workJob(
   executor: Executor,
   {
@@ -204,6 +226,11 @@ export async function workJob(
     name: claimedJob.name,
     attemptCount: claimedJob.attemptCount,
   };
+  let calledCompleteWithin = false;
+  const completeWithin = (tx: Transaction) => {
+    calledCompleteWithin = true;
+    return completeJob(tx, claimedJob, { now: clock() });
+  };
   const { result, cause, abortReason } = await runWithLease(executor, claimedJob, handler, {
     clock,
     lockTimeoutSeconds,
@@ -211,10 +238,13 @@ export async function workJob(
     maxRunMs,
     onLeaseRenewError,
     signal,
+    completeWithin,
   });
   const causeEntry = cause === undefined ? {} : { cause };
   if (result.ok) {
-    const completed = await completeJob(executor, claimedJob, { now: clock() });
+    const completed =
+      (await completeJob(executor, claimedJob, { now: clock() })) ||
+      (calledCompleteWithin && (await isCompletedAttempt(executor, claimedJob)));
     return { ...summary, outcome: completed ? "completed" : "lease_lost", errorCode: null };
   }
   if (abortReason === "shutdown" && result.error.retryable) {
