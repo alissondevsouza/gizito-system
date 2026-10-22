@@ -1,12 +1,12 @@
 import { afterAll, describe, expect, it } from "bun:test";
-import { apiErrorSchema, apiHealthSchema } from "@gizito/core";
+import { apiErrorSchema, apiHealthSchema, MAX_ORDER_UPLOAD_BYTES } from "@gizito/core";
 import { createDatabase } from "@gizito/db";
 import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { status } from "elysia";
 import { z } from "zod";
+import { buildAppDependencies, WEB_PUBLIC_URL } from "#src/__tests__/__fixtures__/app.ts";
 import { createApp, UNMATCHED_ROUTE } from "#src/app.ts";
 
-const WEB_PUBLIC_URL = "http://localhost:3000";
 const unreachableDatabase = createDatabase({
   databaseUrl: "postgres://gizito:gizito@127.0.0.1:1/gizito",
   maxConnections: 1,
@@ -18,11 +18,11 @@ afterAll(async () => {
 
 function createTestApp() {
   const memoryLogger = createMemoryLogger();
-  const app = createApp({
-    db: unreachableDatabase.db,
-    logger: memoryLogger.logger,
-    webPublicUrl: `${WEB_PUBLIC_URL}/`,
-  });
+  const app = createApp(
+    buildAppDependencies(unreachableDatabase.db, memoryLogger.logger, {
+      webPublicUrl: `${WEB_PUBLIC_URL}/`,
+    }),
+  );
   return { app, ...memoryLogger };
 }
 
@@ -60,7 +60,7 @@ describe("erros e log de request", () => {
     expect(
       requestEntryList.map(({ method, route, status }) => ({ method, route, status })),
     ).toEqual([
-      { method: "GET", route: UNMATCHED_ROUTE, status: 404 },
+      { method: "GET", route: "/orders/:token", status: 404 },
       { method: "GET", route: "/health", status: 503 },
     ]);
     for (const entry of requestEntryList) {
@@ -163,5 +163,35 @@ describe("CORS restrito ao web (api.md §1)", () => {
       }),
     );
     expect(preflight.headers.get("access-control-allow-origin")).toBeNull();
+  });
+});
+
+describe("limite do corpo e CORS com credenciais (F2-01)", () => {
+  it("Content-Length acima de MAX_ORDER_UPLOAD_BYTES dá 413 payload_too_large antes de ler o corpo", async () => {
+    const { app, readEntryList, waitForEntryList } = createTestApp();
+    const response = await app.handle(
+      request("/orders", {
+        method: "POST",
+        headers: {
+          "content-length": String(MAX_ORDER_UPLOAD_BYTES + 1),
+          "content-type": "multipart/form-data; boundary=x",
+        },
+        body: "--x--",
+      }),
+    );
+    expect(response.status).toBe(413);
+    expect(apiErrorSchema.parse(await response.json()).code).toBe("payload_too_large");
+    await waitForEntryList((entryList) => entryList.some((entry) => entry.msg === "request"));
+    expect(readEntryList().find((entry) => entry.msg === "request")).toMatchObject({
+      status: 413,
+      errorCode: "payload_too_large",
+    });
+  });
+
+  it("CORS libera credenciais só para a origem do web", async () => {
+    const { app } = createTestApp();
+    const response = await app.handle(request("/health", { headers: { origin: WEB_PUBLIC_URL } }));
+    expect(response.headers.get("access-control-allow-origin")).toBe(WEB_PUBLIC_URL);
+    expect(response.headers.get("access-control-allow-credentials")).toBe("true");
   });
 });

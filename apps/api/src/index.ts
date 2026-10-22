@@ -1,5 +1,5 @@
 import { createDatabase } from "@gizito/db";
-import { createLogger } from "@gizito/integrations";
+import { createLogger, createPhotoNormalizer, createR2ObjectStorage } from "@gizito/integrations";
 import { z } from "zod";
 import { createApp } from "#src/app.ts";
 import { apiConfigSchema } from "#src/config.ts";
@@ -14,7 +14,23 @@ if (!parsedConfig.success) {
 const config = parsedConfig.data;
 const logger = createLogger({ service: "api", level: config.LOG_LEVEL });
 const database = createDatabase({ databaseUrl: config.DATABASE_URL });
-const app = createApp({ db: database.db, logger, webPublicUrl: config.WEB_PUBLIC_URL }).listen({
+const storage = createR2ObjectStorage({
+  endpoint: config.R2_ENDPOINT,
+  bucket: config.R2_BUCKET,
+  region: config.R2_REGION,
+  accessKeyId: config.R2_ACCESS_KEY_ID,
+  secretAccessKey: config.R2_SECRET_ACCESS_KEY,
+});
+const app = createApp({
+  db: database.db,
+  logger,
+  webPublicUrl: config.WEB_PUBLIC_URL,
+  storage,
+  normalizePhoto: createPhotoNormalizer(),
+  clientHashSecret: config.CLIENT_HASH_SECRET,
+  trustedProxyHopCount: config.TRUSTED_PROXY_HOP_COUNT,
+  isSecureCookie: config.NODE_ENV === "production",
+}).listen({
   hostname: config.HOST,
   port: config.API_PORT,
   reusePort: false,

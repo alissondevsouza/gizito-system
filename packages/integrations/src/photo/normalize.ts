@@ -20,8 +20,8 @@ const JPEG_BACKGROUND_COLOR = "#ffffff";
 export const PHOTO_INVALID_CODE = "photo_invalid";
 
 export type NormalizedPhoto = {
-  readonly data: Uint8Array;
-  readonly thumbnailData: Uint8Array;
+  readonly data: Uint8Array<ArrayBuffer>;
+  readonly thumbnailData: Uint8Array<ArrayBuffer>;
   readonly width: number;
   readonly height: number;
   readonly contentHash: string;
@@ -36,8 +36,8 @@ export type PhotoNormalizerOptions = {
   readonly maxInputPixels?: number;
 };
 
-function toUint8Array(buffer: Buffer): Uint8Array {
-  return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+function toUint8Array(buffer: Buffer): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(buffer);
 }
 
 async function encodeJpeg(

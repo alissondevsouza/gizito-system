@@ -1,5 +1,12 @@
-import { type ApiError, apiErrorSchema } from "@gizito/core";
+import {
+  type ApiError,
+  apiErrorSchema,
+  MAX_PHOTO_BYTES,
+  MAX_PHOTO_COUNT,
+  type PhotoIndex,
+} from "@gizito/core";
 import { ElysiaCustomStatusResponse } from "elysia";
+import type { OrderServiceError, OrderServiceErrorCode } from "#src/services/orders.ts";
 
 export const notFoundError: ApiError = {
   error: "Não encontramos o que você procurou.",
@@ -46,4 +53,51 @@ function isResponseValidationError(error: unknown): boolean {
   return (
     typeof error === "object" && error !== null && "type" in error && error.type === "response"
   );
+}
+
+const MEGABYTE = 1024 * 1024;
+
+export const payloadTooLargeError: ApiError = {
+  error: `O envio passou do limite de ${MAX_PHOTO_COUNT} fotos de até ${MAX_PHOTO_BYTES / MEGABYTE} MB.`,
+  code: "payload_too_large",
+};
+
+const photoPosition = (photoIndex: PhotoIndex | undefined) =>
+  photoIndex === undefined ? "Uma foto" : `A foto ${photoIndex + 1}`;
+
+const orderErrorMessageMap: Readonly<
+  Record<OrderServiceErrorCode, (photoIndex: PhotoIndex | undefined) => string>
+> = {
+  too_many_photos: () => `Envie no máximo ${MAX_PHOTO_COUNT} fotos.`,
+  photo_too_large: (photoIndex) =>
+    `${photoPosition(photoIndex)} está acima de ${MAX_PHOTO_BYTES / MEGABYTE} MB. Escolha uma imagem menor.`,
+  photo_invalid: (photoIndex) =>
+    `Não consegui abrir ${photoPosition(photoIndex).toLowerCase()}. Envie uma foto em JPG ou PNG.`,
+  photo_duplicate: (photoIndex) =>
+    `${photoPosition(photoIndex)} é igual a outra deste pedido. Escolha uma foto diferente.`,
+  challenge_required: () => "Você já enviou muitas fotos por agora. Tente de novo mais tarde.",
+  order_not_found: () => "Pedido não encontrado.",
+  not_found: () => "Não encontramos esta foto no pedido.",
+  invalid_state: () => "Não dá para trocar as fotos deste pedido agora.",
+  service_unavailable: () => "Não conseguimos guardar as fotos agora. Tente de novo em instantes.",
+};
+
+export const orderErrorStatusMap: Readonly<Record<OrderServiceErrorCode, number>> = {
+  too_many_photos: 400,
+  photo_too_large: 413,
+  photo_invalid: 422,
+  photo_duplicate: 422,
+  challenge_required: 429,
+  order_not_found: 404,
+  not_found: 404,
+  invalid_state: 409,
+  service_unavailable: 503,
+};
+
+export function toOrderErrorResponse({ code, photoIndex }: OrderServiceError): ApiErrorResponse {
+  const body: ApiError = { error: orderErrorMessageMap[code](photoIndex), code };
+  return {
+    status: orderErrorStatusMap[code],
+    body: photoIndex === undefined ? body : { ...body, photoIndex },
+  };
 }

@@ -331,12 +331,12 @@ Um corpo enviado em chunks sem `Content-Length` e acima do teto do servidor rece
 - [x] 3.4 MinIO no compose, com bucket e healthcheck; CI; `test:integration` do `integrations` contra o MinIO; `test:storage-live`. · Verificação: `docker compose up -d --wait postgres minio` e `bun run --cwd packages/integrations test:integration`.
 
 ### M4 — api
-- [ ] 4.1 Config (RF-09) e deps do app (`storage`, `now`, `randomBytes`, `clientHashSecret`, `trustedProxyHopCount`); recusa por `Content-Length`; CORS com credenciais; `index.ts` monta o R2. · Verificação: `config.test.ts` e `boot.test.ts`.
-- [ ] 4.2 `http/client-identity.ts` (IP e cookie) e `services/preview-rate-limit.ts` (reserva com advisory lock). · Verificação: unit e integração (concorrência e /64).
-- [ ] 4.3 `POST /orders`: route, service de criação, retry de colisão e limpeza em `try/finally`. · Verificação: unit e integração.
-- [ ] 4.4 `GET /orders/:token`: 404 neutro, `orderViewSchema` e `no-store`. · Verificação: unit e integração.
-- [ ] 4.5 `PUT /orders/:token/photos` em lote: `photos_changed`, nova checagem sob o lock, `replaced_datetime`, job singleton, remoção depois do commit e corrida. · Verificação: integração.
-- [ ] 4.6 Teste de logs (RF-10) e 503 do storage. · Verificação: `bun run --cwd apps/api test` e `test:integration`.
+- [x] 4.1 Config (RF-09) e deps do app (`storage`, `now`, `randomBytes`, `clientHashSecret`, `trustedProxyHopCount`); recusa por `Content-Length`; CORS com credenciais; `index.ts` monta o R2. · Verificação: `config.test.ts` e `boot.test.ts`.
+- [x] 4.2 `http/client-identity.ts` (IP e cookie) e `services/preview-rate-limit.ts` (reserva com advisory lock). · Verificação: unit e integração (concorrência e /64).
+- [x] 4.3 `POST /orders`: route, service de criação, retry de colisão e limpeza em `try/finally`. · Verificação: unit e integração.
+- [x] 4.4 `GET /orders/:token`: 404 neutro, `orderViewSchema` e `no-store`. · Verificação: unit e integração.
+- [x] 4.5 `PUT /orders/:token/photos` em lote: `photos_changed`, nova checagem sob o lock, `replaced_datetime`, job singleton, remoção depois do commit e corrida. · Verificação: integração.
+- [x] 4.6 Teste de logs (RF-10) e 503 do storage. · Verificação: `bun run --cwd apps/api test` e `test:integration`.
 
 ### M5 — docs e verificação
 - [ ] 5.1 Atualizar os docs da lista de Arquivos, com o roadmap da F2-01 e da F2-09 (aparelho, HEIC e desafio) e o PRD 1.7. Mudanças no `known-issues.md`:

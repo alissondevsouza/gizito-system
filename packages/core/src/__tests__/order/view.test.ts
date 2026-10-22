@@ -5,6 +5,7 @@ import {
   PUBLIC_TOKEN,
   SHORT_CODE,
 } from "#src/__tests__/__fixtures__/entities.ts";
+import { MAX_PHOTO_COUNT } from "#src/constants.ts";
 import { orderStatusList } from "#src/enums.ts";
 import {
   createOrderResponseSchema,
@@ -36,13 +37,20 @@ describe("orderViewSchema (api.md §3)", () => {
     );
   });
 
-  it("draft, analyzing e preview_ready trazem photoList com ao menos uma foto", () => {
+  it("draft, analyzing e preview_ready trazem photoList, vazia se as fotos já expiraram", () => {
     for (const status of photoStageOrderStatusList) {
       expect(
         orderViewSchema.safeParse({ ...baseView, status, photoList: [photoView] }).success,
       ).toBe(true);
-      expect(orderViewSchema.safeParse({ ...baseView, status, photoList: [] }).success).toBe(false);
+      expect(orderViewSchema.safeParse({ ...baseView, status, photoList: [] }).success).toBe(true);
       expect(orderViewSchema.safeParse({ ...baseView, status }).success).toBe(false);
+      expect(
+        orderViewSchema.safeParse({
+          ...baseView,
+          status,
+          photoList: Array.from({ length: MAX_PHOTO_COUNT + 1 }, () => photoView),
+        }).success,
+      ).toBe(false);
     }
   });
 

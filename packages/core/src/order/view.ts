@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { guidSchema, webUrlSchema } from "#src/common.ts";
-import { MAX_PHOTO_COUNT, MIN_PHOTO_COUNT } from "#src/constants.ts";
+import { MAX_PHOTO_COUNT } from "#src/constants.ts";
 import { gradeSchema, type OrderStatus, subjectSchema } from "#src/enums.ts";
 import { photoIndexSchema } from "#src/order/photo.ts";
 import { publicTokenSchema, shortCodeSchema } from "#src/order/schemas.ts";
@@ -48,7 +48,7 @@ const orderViewBaseSchema = z.object({
 export const orderViewSchema = z.discriminatedUnion("status", [
   orderViewBaseSchema.extend({
     status: z.enum(photoStageOrderStatusList),
-    photoList: z.array(orderPhotoViewSchema).min(MIN_PHOTO_COUNT).max(MAX_PHOTO_COUNT),
+    photoList: z.array(orderPhotoViewSchema).max(MAX_PHOTO_COUNT),
   }),
   orderViewBaseSchema.extend({
     status: z.enum(postPhotoStageOrderStatusList),

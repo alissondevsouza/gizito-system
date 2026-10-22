@@ -8,6 +8,7 @@ import {
   withDatabaseName,
 } from "@gizito/db/test-helpers";
 import { createLogger } from "@gizito/integrations";
+import { buildAppDependencies, CLIENT_HASH_SECRET } from "#src/__tests__/__fixtures__/app.ts";
 import { findFreePort, waitForHttpStatus } from "#src/__tests__/integration/helpers.ts";
 import { createApp } from "#src/app.ts";
 
@@ -25,11 +26,9 @@ afterAll(async () => {
 
 describe("GET /health com banco", () => {
   it("responde 200 ok", async () => {
-    const app = createApp({
-      db: testDatabase.db,
-      logger: createLogger({ service: "api-test", level: "silent" }),
-      webPublicUrl: "http://localhost:3000",
-    });
+    const app = createApp(
+      buildAppDependencies(testDatabase.db, createLogger({ service: "api-test", level: "silent" })),
+    );
     const response = await app.handle(new Request("http://localhost/health"));
     expect(response.status).toBe(200);
     expect(apiHealthSchema.parse(await response.json())).toEqual({ status: "ok" });
@@ -46,6 +45,11 @@ function spawnApi(port: number) {
       API_PORT: String(port),
       LOG_LEVEL: "info",
       PAYMENT_GATEWAY: "fake",
+      R2_ENDPOINT: "http://127.0.0.1:9000",
+      R2_BUCKET: "gizito",
+      R2_ACCESS_KEY_ID: "gizito",
+      R2_SECRET_ACCESS_KEY: "gizito-local-dev",
+      CLIENT_HASH_SECRET,
     },
     stdout: "pipe",
     stderr: "pipe",

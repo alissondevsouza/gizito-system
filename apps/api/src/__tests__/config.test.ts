@@ -7,6 +7,19 @@ const validEnvironment = {
   DATABASE_URL: "postgres://gizito:gizito@127.0.0.1:5433/gizito",
   PAYMENT_GATEWAY: "fake",
   WEB_PUBLIC_URL: "http://localhost:3000",
+  R2_ENDPOINT: "http://127.0.0.1:9000",
+  R2_BUCKET: "gizito",
+  R2_ACCESS_KEY_ID: "gizito",
+  R2_SECRET_ACCESS_KEY: "gizito-local-dev",
+  CLIENT_HASH_SECRET: "x".repeat(32),
+};
+
+const productionReadyEnvironment = {
+  ...validEnvironment,
+  NODE_ENV: "production",
+  PAYMENT_GATEWAY: "mercadopago",
+  R2_ENDPOINT: "https://conta.r2.cloudflarestorage.com",
+  TRUSTED_PROXY_HOP_COUNT: "1",
 };
 
 describe("config da api (api.md §6)", () => {
@@ -45,12 +58,7 @@ describe("config da api (api.md §6)", () => {
   });
 
   it("recusa LOG_LEVEL=debug em produção, nomeando o campo", () => {
-    const result = apiConfigSchema.safeParse({
-      ...validEnvironment,
-      NODE_ENV: "production",
-      PAYMENT_GATEWAY: "mercadopago",
-      LOG_LEVEL: "debug",
-    });
+    const result = apiConfigSchema.safeParse({ ...productionReadyEnvironment, LOG_LEVEL: "debug" });
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual(["LOG_LEVEL"]);
@@ -65,16 +73,53 @@ describe("config da api (api.md §6)", () => {
   });
 
   it("recusa PAYMENT_GATEWAY=fake em produção, nomeando o campo", () => {
-    const result = apiConfigSchema.safeParse({ ...validEnvironment, NODE_ENV: "production" });
+    const result = apiConfigSchema.safeParse({
+      ...productionReadyEnvironment,
+      PAYMENT_GATEWAY: "fake",
+    });
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(z.prettifyError(result.error)).toContain("PAYMENT_GATEWAY");
+    expect(apiConfigSchema.safeParse(productionReadyEnvironment).success).toBe(true);
+  });
+
+  it("nomeia as chaves do storage e o segredo do hash de cliente quando faltam (F2-01)", () => {
+    const {
+      R2_ENDPOINT: _endpoint,
+      R2_BUCKET: _bucket,
+      R2_ACCESS_KEY_ID: _accessKeyId,
+      R2_SECRET_ACCESS_KEY: _secretAccessKey,
+      CLIENT_HASH_SECRET: _clientHashSecret,
+      ...withoutStorage
+    } = validEnvironment;
+    const result = apiConfigSchema.safeParse(withoutStorage);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join(".")).sort()).toEqual([
+      "CLIENT_HASH_SECRET",
+      "R2_ACCESS_KEY_ID",
+      "R2_BUCKET",
+      "R2_ENDPOINT",
+      "R2_SECRET_ACCESS_KEY",
+    ]);
     expect(
-      apiConfigSchema.safeParse({
-        ...validEnvironment,
-        NODE_ENV: "production",
-        PAYMENT_GATEWAY: "mercadopago",
-      }).success,
-    ).toBe(true);
+      apiConfigSchema.safeParse({ ...validEnvironment, CLIENT_HASH_SECRET: "curto" }).success,
+    ).toBe(false);
+    expect(apiConfigSchema.parse(validEnvironment)).toMatchObject({
+      R2_REGION: "auto",
+      TRUSTED_PROXY_HOP_COUNT: 0,
+    });
+  });
+
+  it("em produção, recusa storage sem https e api sem proxy confiável, nomeando o campo", () => {
+    for (const [field, value] of [
+      ["R2_ENDPOINT", "http://127.0.0.1:9000"],
+      ["TRUSTED_PROXY_HOP_COUNT", "0"],
+    ] as const) {
+      const result = apiConfigSchema.safeParse({ ...productionReadyEnvironment, [field]: value });
+      expect(result.success).toBe(false);
+      if (result.success) return;
+      expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual([field]);
+    }
   });
 });

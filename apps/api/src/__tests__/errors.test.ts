@@ -1,7 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { apiErrorSchema } from "@gizito/core";
 import { status } from "elysia";
-import { toApiErrorResponse } from "#src/errors.ts";
+import {
+  orderErrorStatusMap,
+  payloadTooLargeError,
+  toApiErrorResponse,
+  toOrderErrorResponse,
+} from "#src/errors.ts";
 
 describe("toApiErrorResponse", () => {
   it("rota desconhecida vira 404 not_found", () => {
@@ -63,5 +68,40 @@ describe("toApiErrorResponse", () => {
     for (const code of ["NOT_FOUND", "PARSE", "UNKNOWN"]) {
       expect(apiErrorSchema.safeParse(toApiErrorResponse(code, null).body).success).toBe(true);
     }
+  });
+});
+
+describe("erros de pedido (spec F2-01, tabela de erros)", () => {
+  it("cada código tem status e corpo no contrato", () => {
+    for (const code of Object.keys(orderErrorStatusMap) as (keyof typeof orderErrorStatusMap)[]) {
+      const response = toOrderErrorResponse({ code });
+      expect(apiErrorSchema.parse(response.body).code).toBe(code);
+      expect(response.status).toBe(orderErrorStatusMap[code]);
+    }
+    expect(orderErrorStatusMap).toEqual({
+      too_many_photos: 400,
+      photo_too_large: 413,
+      photo_invalid: 422,
+      photo_duplicate: 422,
+      challenge_required: 429,
+      order_not_found: 404,
+      not_found: 404,
+      invalid_state: 409,
+      service_unavailable: 503,
+    });
+  });
+
+  it("erro de foto cita a posição para a pessoa e leva photoIndex 0-based", () => {
+    const response = toOrderErrorResponse({ code: "photo_too_large", photoIndex: 1 });
+    expect(response.body).toEqual({
+      error: "A foto 2 está acima de 8 MB. Escolha uma imagem menor.",
+      code: "photo_too_large",
+      photoIndex: 1,
+    });
+    expect(toOrderErrorResponse({ code: "photo_invalid" }).body).not.toHaveProperty("photoIndex");
+  });
+
+  it("corpo grande demais tem contrato próprio", () => {
+    expect(apiErrorSchema.parse(payloadTooLargeError).code).toBe("payload_too_large");
   });
 });
