@@ -16,10 +16,12 @@ import {
   baseTextTitleOf,
   blockTitleMap,
   documentHtml,
+  fileLabelOf,
   footerHtml,
   generatedDateHtml,
   headerHtml,
   type KitTemplateContext,
+  sampleMarkHtml,
   topicListHtml,
 } from "#src/render/templates/kit-v1/common.ts";
 
@@ -40,6 +42,7 @@ ${generatedDateHtml(context.generatedAt)}
 <div class="cover-box">
 <p>Respostas comentadas das questões do caderno de atividades, na mesma ordem. Para o responsável conferir depois que a criança resolver.</p>
 </div>
+${sampleMarkHtml(context)}
 ${aiNoteHtml()}
 </section>`;
 }
@@ -113,7 +116,7 @@ ${answerBlockList.map((block) => answerBlockHtml(studyKit, block))}`;
       body,
     ),
     headerHtml: headerHtml(studyKit, context.assets),
-    footerHtml: footerHtml("Gabarito", context.assets),
+    footerHtml: footerHtml(fileLabelOf("Gabarito", context), context.assets),
     itemAttribute: "data-kit-answer",
     expectedItemIdList: questionIdList,
   };

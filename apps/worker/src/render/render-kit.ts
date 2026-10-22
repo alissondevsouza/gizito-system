@@ -23,6 +23,7 @@ import { kitTemplateMap } from "#src/render/templates/index.ts";
 export type KitRenderRequest = {
   readonly studyKit: StudyKit;
   readonly generatedAt: Date;
+  readonly isSample?: boolean;
 };
 
 export type KitRenderDependencies = {
@@ -65,9 +66,10 @@ function isOutsideRange(count: number, range: CountRange): boolean {
 async function buildDocumentPair({
   studyKit,
   generatedAt,
+  isSample = false,
 }: KitRenderRequest): Promise<Result<readonly [RenderDocument, RenderDocument], PdfRenderFailure>> {
   try {
-    const context = { assets: await loadRenderAssets(), generatedAt };
+    const context = { assets: await loadRenderAssets(), generatedAt, isSample };
     const template = kitTemplateMap[studyKit.formatVersion];
     return ok([template.activities(studyKit, context), template.answerKey(studyKit, context)]);
   } catch (error) {

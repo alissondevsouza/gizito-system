@@ -187,3 +187,28 @@ describe("renderKit (spec F1-08, RF-07)", () => {
     expect(callList).toHaveLength(0);
   });
 });
+
+describe("renderKit com a marca de amostra (spec F1-11, RF-01)", () => {
+  it.each([
+    [true, true],
+    [undefined, false],
+  ] as const)(
+    "com isSample %p, a marca aparece nos dois documentos: %p",
+    async (isSample, hasMark) => {
+      const { pdfRenderer, callList } = createScriptedRenderer({
+        "data-kit-item": [rendered(ACTIVITIES_PAGE_RANGE.min)],
+        "data-kit-answer": [rendered(ANSWER_KEY_PAGE_RANGE.min)],
+      });
+      const result = await renderKit(
+        { studyKit, generatedAt: FIXED_GENERATED_AT, isSample },
+        { pdfRenderer },
+      );
+      expect(result.ok).toBe(true);
+      expect(callList).toHaveLength(2);
+      for (const document of callList) {
+        expect(document.html.includes('class="sample-mark"')).toBe(hasMark);
+        expect(document.footerHtml.includes("Kit de amostra")).toBe(hasMark);
+      }
+    },
+  );
+});

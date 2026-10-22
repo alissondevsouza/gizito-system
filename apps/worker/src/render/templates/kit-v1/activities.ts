@@ -22,11 +22,13 @@ import {
   baseTextTitleOf,
   blockTitleMap,
   documentHtml,
+  fileLabelOf,
   footerHtml,
   generatedDateHtml,
   headerHtml,
   type KitTemplateContext,
   kitTableHtml,
+  sampleMarkHtml,
   topicListHtml,
 } from "#src/render/templates/kit-v1/common.ts";
 
@@ -54,6 +56,7 @@ ${topicListHtml(studyKit)}
 <p>As respostas comentadas estão no outro arquivo, o gabarito.</p>
 </div>
 ${generatedDateHtml(context.generatedAt)}
+${sampleMarkHtml(context)}
 ${aiNoteHtml()}
 </section>`;
 }
@@ -178,7 +181,7 @@ ${mockHtml(studyKit)}`;
       body,
     ),
     headerHtml: headerHtml(studyKit, context.assets),
-    footerHtml: footerHtml("Atividades", context.assets),
+    footerHtml: footerHtml(fileLabelOf("Atividades", context), context.assets),
     itemAttribute: "data-kit-item",
     expectedItemIdList: [...workedExampleIdList, ...questionIdList],
   };

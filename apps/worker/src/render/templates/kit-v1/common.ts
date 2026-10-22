@@ -16,12 +16,18 @@ import { kitV1Stylesheet } from "#src/render/templates/kit-v1/styles.ts";
 export type KitTemplateContext = {
   readonly assets: RenderAssets;
   readonly generatedAt: Date;
+  readonly isSample: boolean;
 };
 
 export const blockTitleMap: Readonly<Record<QuestionBlock, string>> = {
   practice: "Exercícios de fixação",
   mock: "Mini-simulado",
 };
+
+export const SAMPLE_MARK_LABEL = "Kit de amostra";
+
+export const SAMPLE_MARK_TEXT =
+  "Gerado pelo próprio Gizito a partir de uma página de caderno de exemplo, para mostrar como é o material.";
 
 export const AI_NOTE_TEXT =
   "Material complementar gerado com apoio de inteligência artificial. Não substitui o professor nem garante nota. Em caso de dúvida, consulte o material da escola ou o professor.";
@@ -69,6 +75,15 @@ export function aiNoteHtml(): SafeHtml {
 
 export function generatedDateHtml(generatedAt: Date): SafeHtml {
   return html`<p class="cover-date">Gerado em ${formatKitDate(generatedAt)}</p>`;
+}
+
+export function sampleMarkHtml(context: KitTemplateContext): SafeHtml | null {
+  if (!context.isSample) return null;
+  return html`<p class="sample-mark"><span class="sample-label">${SAMPLE_MARK_LABEL}</span> ${SAMPLE_MARK_TEXT}</p>`;
+}
+
+export function fileLabelOf(fileLabel: string, context: KitTemplateContext): string {
+  return context.isSample ? `${fileLabel} · ${SAMPLE_MARK_LABEL}` : fileLabel;
 }
 
 export function kitTableHtml(table: KitTable | null): SafeHtml | null {

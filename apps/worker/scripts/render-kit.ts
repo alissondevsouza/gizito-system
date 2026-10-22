@@ -1,12 +1,18 @@
 import { mkdir } from "node:fs/promises";
+import { parseArgs } from "node:util";
 import { studyKitSchema } from "@gizito/core";
 import { DEFAULT_RENDER_CONCURRENCY } from "#src/config.ts";
 import { createPdfRenderer } from "#src/render/pdf-renderer.ts";
 import { renderKit } from "#src/render/render-kit.ts";
 
-const [studyKitPath, outputDirectory] = process.argv.slice(2);
+const { values, positionals } = parseArgs({
+  args: process.argv.slice(2),
+  options: { sample: { type: "boolean", default: false } },
+  allowPositionals: true,
+});
+const [studyKitPath, outputDirectory] = positionals;
 if (studyKitPath === undefined || outputDirectory === undefined) {
-  console.error("uso: bun run render:kit <study_kit.json> <pasta>");
+  console.error("uso: bun run render:kit <study_kit.json> <pasta> [--sample]");
   process.exit(1);
 }
 
@@ -21,7 +27,7 @@ if (!parsed.success) {
 const pdfRenderer = createPdfRenderer({ concurrency: DEFAULT_RENDER_CONCURRENCY });
 try {
   const result = await renderKit(
-    { studyKit: parsed.data, generatedAt: new Date() },
+    { studyKit: parsed.data, generatedAt: new Date(), isSample: values.sample },
     { pdfRenderer },
   );
   if (!result.ok) {

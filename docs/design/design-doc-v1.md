@@ -1,7 +1,7 @@
-# Gizito — Guia de Design, Identidade Visual e Experiência (v1.7)
+# Gizito — Guia de Design, Identidade Visual e Experiência (v1.8)
 
 **Tipo:** complemento de UI/UX e branding ao `product-doc-v1.md`  
-**Data:** 14/10/2026 · revisão 1.7 em 21/10/2026 (ver seção 15)  
+**Data:** 14/10/2026 · revisão 1.8 em 21/10/2026 (ver seção 15)  
 **Status:** especificação proposta, pronta para orientar design e implementação  
 **Produto:** kit de reforço escolar personalizado, adquirido por Pix a cada necessidade  
 **Marca escolhida:** **Gizito**
@@ -408,6 +408,7 @@ Os PDFs são o **produto comprado**, portanto devem expressar qualidade superior
 - Mascote pode aparecer pequeno na capa e em uma dica pedagógica pontual, **não em cada página**. A variante professor pode ilustrar a capa do gabarito.
 - Evitar fundos escuros, grandes manchas de tinta, ruídos de papel e elementos supérfluos; preservar economia de impressão.
 - Nota discreta: material complementar gerado com apoio de IA; não substitui professor nem garante nota.
+- **Kit de amostra** (landing, 6.1): mesmo template e mesmo pipeline, com o selo “Kit de amostra” e uma frase curta de origem na capa dos dois arquivos, e “Atividades · Kit de amostra” e “Gabarito · Kit de amostra” no rodapé. Sem marca-d'água, para economizar impressão.
 
 ### Páginas conceituais
 
@@ -503,6 +504,7 @@ A paginação exata varia conforme os assuntos e não deve forçar páginas vazi
 
 ## 15. Histórico de revisões
 
+- **1.8 (21/10/2026):** marca do kit de amostra nos PDFs (9): selo “Kit de amostra” com a frase de origem na capa dos dois arquivos e no rodapé, sem marca-d'água. Motivo: o 6.1 pede amostras “marcadas como amostra” sem dizer como; F1-11.
 - **1.7 (21/10/2026):** logo aprovado pelo humano (4.4): `docs/gizito-image/logo/logo-aprovada.png`, com o Gizito espiando por trás do lettering, e as variações geradas dele (logo completo, avatar, `og-image.png` e favicons pelo rosto do Gizito). O logo passa a ser raster (PNG/WebP), como o mascote, sem SVG nem versão horizontal (3.4, 4.4, 11). A estrela no pingo do “i” e o símbolo desenhado em vetor foram recusados. Motivo: decisão do humano.
 - **1.6 (20/10/2026):** microcopy (5.2) para matéria legível de outra disciplina ou de outro ano, que antes caía no texto de foto ilegível, e para redação como assunto ainda não atendido, que não depende de imagem nem de fala; aviso correspondente em `rascunho` (6.8). Motivo: spec pedagógica §15, aprovada na F1-02.
 - **1.5 (19/10/2026):** assuntos ainda não atendidos na prévia (6.3): aparecem à parte, sem chip selecionável e sem entrar como “outro”; sem assunto atendido, o pedido volta a `rascunho` com aviso (6.8); microcopy das duas situações (5.2) e critério de aceite (12). Motivo: PRD 1.3, seção 7.7.

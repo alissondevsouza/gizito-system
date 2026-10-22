@@ -33,6 +33,9 @@ li { margin: 0 0 1mm; }
 .cover-box { border: 1pt solid var(--color-board); border-radius: 3mm; padding: 4mm 5mm; margin: 8mm 0 6mm; }
 .cover-box h2 { margin-top: 0; }
 .cover-date { font-weight: 700; }
+.sample-mark { border: 1pt dashed var(--color-board); border-radius: 3mm; padding: 2.5mm 4mm; margin: 6mm 0 0; }
+.sample-label { font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 1.5mm; }
+.cover-short .sample-mark { margin: 3mm 0 0; padding: 2mm 4mm; }
 .ai-note { font-size: 9pt; color: var(--color-muted); border-top: 0.5pt solid var(--color-line); padding-top: 2mm; margin-top: 8mm; }
 .cover-short { border-bottom: 1pt solid var(--color-line); padding: 0 0 4mm; margin: 0 0 7mm; }
 .cover-short .cover-main { align-items: center; }

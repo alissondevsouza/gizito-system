@@ -17,7 +17,12 @@ import {
 import { loadRenderAssets, type RenderAssets } from "#src/render/assets.ts";
 import { expectedAnswerHtml, kitTextHtml } from "#src/render/kit-text.ts";
 import { kitTemplateMap } from "#src/render/templates/index.ts";
-import { AI_NOTE_TEXT, formatKitDate } from "#src/render/templates/kit-v1/common.ts";
+import {
+  AI_NOTE_TEXT,
+  formatKitDate,
+  SAMPLE_MARK_LABEL,
+  SAMPLE_MARK_TEXT,
+} from "#src/render/templates/kit-v1/common.ts";
 
 let assets: RenderAssets;
 let realMathKit: StudyKit;
@@ -31,8 +36,8 @@ beforeAll(async () => {
 
 const template = kitTemplateMap["kit-v1"];
 
-function documentPairOf(studyKit: StudyKit) {
-  const context = { assets, generatedAt: FIXED_GENERATED_AT };
+function documentPairOf(studyKit: StudyKit, isSample = false) {
+  const context = { assets, generatedAt: FIXED_GENERATED_AT, isSample };
   return {
     activities: template.activities(studyKit, context),
     answerKey: template.answerKey(studyKit, context),
@@ -274,6 +279,28 @@ describe("cabeçalho e rodapé (spec F1-08, RF-04)", () => {
     for (const marginal of [activities.footerHtml, answerKey.footerHtml]) {
       expect(marginal).toContain('<span class="pageNumber"></span>');
       expect(marginal).toContain('<span class="totalPages"></span>');
+    }
+  });
+});
+
+describe("kit de amostra (spec F1-11, RF-01)", () => {
+  it("com a marca, as duas capas trazem o selo e os rodapés dizem que é amostra", () => {
+    const { activities, answerKey } = documentPairOf(realPortugueseKit, true);
+    for (const document of [activities, answerKey]) {
+      const cover = sectionHtml(document.html, "cover");
+      expect(cover).toContain(SAMPLE_MARK_LABEL);
+      expect(cover).toContain(SAMPLE_MARK_TEXT);
+    }
+    expect(activities.footerHtml).toContain(`Atividades · ${SAMPLE_MARK_LABEL}`);
+    expect(answerKey.footerHtml).toContain(`Gabarito · ${SAMPLE_MARK_LABEL}`);
+  });
+
+  it("sem a marca, nenhum dos dois arquivos menciona amostra", () => {
+    const { activities, answerKey } = documentPairOf(realPortugueseKit);
+    for (const document of [activities, answerKey]) {
+      expect(document.html).not.toContain(SAMPLE_MARK_LABEL);
+      expect(document.html).not.toContain('class="sample-mark"');
+      expect(document.footerHtml).not.toContain(SAMPLE_MARK_LABEL);
     }
   });
 });
