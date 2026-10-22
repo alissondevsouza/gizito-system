@@ -55,7 +55,7 @@ Roadmap F2-04 (tamanho revisto de M para L: toca core, db, integrations, api e w
   - `FakePaymentGateway.cancelCharge`: `pending → expired`; `paid`, `refunded` ou já `expired` → `gateway_rejected`; `cancelReferenceList` guarda as chamadas; `failNextCancel(code)`.
   - `FakePaymentGateway.parseWebhook`: `queryMap.type` presente e diferente de `order` → `unsupported_event`, para a api provar o 200 "ignorado" com o fake.
   - `action` do corpo limitado a `MAX_WEBHOOK_ACTION_LENGTH` (64) no adaptador real e no fake; acima disso → `malformed`. Ele entra no `external_id`, que tem índice unique: sem teto, um corpo grande estouraria o índice com 500 (invariante 4).
-  - `createFakePaymentGateway({ unknownChargeStatus })`: o fake guarda as cobranças na memória do processo, então a api e o worker, em processos separados, não veem as cobranças um do outro. Com `unknownChargeStatus` (`paid`, `pending` ou `expired`), `getChargeStatus` de uma `fake-order-{chargeId}` desconhecida responde com esse status, `gatewayPaymentId` = `fake-payment-{chargeId}`, `amountCents` = `KIT_PRICE_CENTS`, `externalReference` nulo e `paidDatetime` = agora quando `paid`; `cancelCharge` de desconhecida é no-op. Sem a opção, continua `gateway_rejected`. Só o worker usa, por `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS` (RF-09), e só com `PAYMENT_GATEWAY=fake`, que já é recusado em produção. É o que permite a verificação da task 5.3 e, na F2-09, o E2E com api e worker separados.
+  - `createFakePaymentGateway({ unknownChargeStatus })`: o fake guarda as cobranças na memória do processo, então a api e o worker, em processos separados, não veem as cobranças um do outro. Com `unknownChargeStatus` (`paid`, `pending` ou `expired`), `getChargeStatus` de uma `fake-order-{chargeId}` desconhecida responde com esse status, `gatewayPaymentId` = `fake-payment-{chargeId}`, `amountCents` = `KIT_PRICE_CENTS`, `externalReference` nulo e `paidDatetime` = agora quando `paid`; `cancelCharge` de desconhecida é no-op. Sem a opção, continua `gateway_rejected`. Só o worker usa, por `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS` (RF-09), e só com `PAYMENT_GATEWAY=fake`, que já é recusado em produção. É o que permite a verificação da task 5.3 e, na F2-09, o E2E com api e worker separados. Efeito colateral a conhecer no dev: com `paid`, a varredura marca paga toda cobrança `pending` com mais de 1 minuto de pedido `awaiting_payment`, com ou sem webhook, e um pedido com mais de uma cobrança abre `duplicate_payment` 5 minutos depois do vencimento da antiga (conferência do RF-05).
   - `test:payment-live`: a suíte de contrato já cobre o cancelamento real (cria e cancela uma order no sandbox).
 
   · Aceite: unit com `fetch` injetado e fixture `canceledOrderResponse` (caminho, método, chave, sem corpo; 200; 4xx → `gateway_rejected` sem retentativa; 500 depois 200 → sucesso com a mesma chave; resposta fora do schema → `gateway_response_invalid`); `action` com 65 caracteres → `malformed` no real e no fake; unit do fake (`cancelCharge`, `failNextCancel`, `type` na query, `unknownChargeStatus` em cada valor e sem a opção); contrato no fake.
@@ -167,24 +167,24 @@ Unit no core (decisão, schema, erro), no integrations (adaptador com `fetch` in
 ## Tasks
 
 ### M1 — core
-- [ ] 1.1 `chargeId` no payload do `charge.reconcile`; `cancelCharge` na interface; `webhookAckSchema`; constantes `MAX_WEBHOOK_BODY_BYTES`, `WEBHOOK_RATE_LIMIT_PER_MINUTE`, `CHARGE_RECONCILE_BATCH_SIZE` · Verificação: `bun test` no core, `bun run typecheck`
-- [ ] 1.2 `ChargeAmountMismatchError`, `decidePaymentConfirmation` com `amountCents`, `markOrderPaidInputSchema.amountCents`; `decideChargeReconciliation` e `chargeReconcileOutcomeList` · Verificação: `bun test` no core
+- [x] 1.1 `chargeId` no payload do `charge.reconcile`; `cancelCharge` na interface; `webhookAckSchema`; constantes `MAX_WEBHOOK_BODY_BYTES`, `MAX_WEBHOOK_ACTION_LENGTH`, `WEBHOOK_RATE_LIMIT_PER_MINUTE`, `CHARGE_RECONCILE_BATCH_SIZE`, `CHARGE_RECONCILE_AFTER_EXPIRY_MINUTES` · Verificação: `bun test` no core, `bun run typecheck`
+- [x] 1.2 `ChargeAmountMismatchError`, `decidePaymentConfirmation` com `amountCents`, `markOrderPaidInputSchema.amountCents`; `decideChargeReconciliation` (com o fallback do `gatewayPaymentId`) e `chargeReconcileOutcomeList` · Verificação: `bun test` no core
 
 ### M2 — db
-- [ ] 2.1 checks por status, migration 0006, `markOrderPaidAndEnqueue` com `amountCents` e `expiredChargeList`, fixtures ajustadas · Verificação: `bun run test:integration` no db
-- [ ] 2.2 `charge/reconcile.ts` e `webhook/events.ts` com testes · Verificação: `bun run test:integration` no db
+- [x] 2.1 checks por status e índice `(status, insert_datetime)`, migration 0006, `markOrderPaidAndEnqueue` com `amountCents`, `expiredChargeList` e os `charge.reconcile` agendados por cobrança expirada, fixtures ajustadas · Verificação: `bun run test:integration` no db
+- [x] 2.2 `charge/reconcile.ts` e `webhook/events.ts` (com `processed?`) com testes · Verificação: `bun run test:integration` no db
 
 ### M3 — integrations
-- [ ] 3.1 `cancelCharge` no Mercado Pago (schema, fixture, testes) e no fake (`failNextCancel`, `cancelReferenceList`), `type` no `parseWebhook` do fake, caso de cancelamento no contrato · Verificação: `bun test` no integrations
+- [x] 3.1 `cancelCharge` no Mercado Pago (schema, fixture, testes) e no fake (`failNextCancel`, `cancelReferenceList`), `type` e teto do `action` no `parseWebhook` do fake e do real, `unknownChargeStatus` no fake, caso de cancelamento no contrato · Verificação: `bun test` no integrations
 
 ### M4 — api
 - [ ] 4.1 `webhook-rate-limit.ts` com unit · Verificação: `bun test` na api
-- [ ] 4.2 `services/webhooks.ts`, `routes/webhooks.ts`, `errors.ts`, `app.ts` · Verificação: `bun run test:integration` na api (`webhooks.test.ts`)
+- [ ] 4.2 `services/charge-webhooks.ts`, `routes/webhooks/mercadopago.ts`, `errors.ts`, `app.ts` · Verificação: `bun run test:integration` na api (`webhooks.test.ts`)
 
 ### M5 — worker
-- [ ] 5.1 config e montagem do gateway, `charge.reconcile` em `handledJobNameList` · Verificação: `bun test` no worker
+- [ ] 5.1 config (`MERCADOPAGO_*` com `mercadopago`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS` só com `fake`) e montagem do gateway, `charge.reconcile` em `handledJobNameList` · Verificação: `bun test` no worker
 - [ ] 5.2 `jobs/charge-reconcile.ts` com o teste de integração · Verificação: `bun run test:integration` no worker
-- [ ] 5.3 api e worker no ar com `PAYMENT_GATEWAY=fake` contra o banco de dev, o worker com `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`: pedido levado a `awaiting_payment` pelo `confirm`, webhook do fake por `curl` (`x-fake-signature`, corpo `{ gatewayOrderId, action }`), worker reconcilia pelo job dirigido e o `GET` mostra `paid`; webhook repetido dá `duplicate`; `type=payment` dá `ignored`; dados apagados depois · Verificação: respostas, linhas em `webhook_event`, `charge`, `order` e `job`, e logs sem corpo nem e-mail
+- [ ] 5.3 api e worker no ar com `PAYMENT_GATEWAY=fake` contra o banco de dev, o worker com `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`: pedido levado a `awaiting_payment` pelo `confirm`, webhook do fake por `curl` (`x-fake-signature`, corpo `{ gatewayOrderId, action }`), worker reconcilia pelo job dirigido e o `GET` mostra `paid`; webhook repetido dá `duplicate`; `type=payment` dá `ignored`; dados apagados depois · Verificação: respostas, linhas em `webhook_event` (`outcome_code` em `paid` ou `already_paid`, porque a varredura pode chegar antes do job dirigido), `charge`, `order` e `job`, e logs sem corpo nem e-mail
 
 ### M6 — docs e fechamento
 - [ ] 6.1 `api.md`, `jobs.md`, `data-model.md`, `state-machine.md`, `payments.md`, `known-issues.md`, roadmap
@@ -200,7 +200,8 @@ Unit no core (decisão, schema, erro), no integrations (adaptador com `fetch` in
 | 2026-10-22 | 401 para assinatura inválida | o gateway reenvia e o segredo errado fica visível |
 | 2026-10-22 | Divergência de valor ou referência: log `error`, sem ticket e sem escrita | caminho quase impossível; a varredura repete o alerta a cada 2 min |
 | 2026-10-22 | `expired` também antes do `expire_datetime` quando o gateway já deu a order como `canceled`/`failed` | o gateway é a fonte; o comprador precisa de "gerar novo Pix" |
+| 2026-10-22 | Revisão da spec (rodada 2, aprovada): nomes da task 4.2 alinhados ao RF-08, tasks com o que a rodada 1 acrescentou, efeito do `unknownChargeStatus=paid` na varredura registrado no RF-07 e na 5.3 | alerta e sugestões aceitos |
 | 2026-10-22 | Revisão da spec (rodada 1, reprovada por 1 CRÍTICO): fake com `unknownChargeStatus` por env só no worker, para api e worker em processos separados; conferência agendada das cobranças expiradas pelo `markOrderPaidAndEnqueue` (`expire_datetime` + 5 min); desfecho do job declarado por caminho (`Err` não retryable nas anomalias); `gatewayPaymentId` da cobrança como fallback; `recordWebhookEvent` com `processed`; teto no `action`; índice `(status, insert_datetime)`; nomes de arquivo nos globs da regra de pagamentos | CRÍTICO e alertas aceitos; a sugestão de mover a fábrica do gateway para o `integrations` ficou de fora, porque os fakes vivem num entrypoint separado e a fábrica precisaria dos dois |
 
 ## Status
-Spec escrita em 22/10/2026. A revisão da spec (rodada 1) reprovou por um CRÍTICO, a task 5.3 com o fake em memória em dois processos; a correção e os alertas estão na tabela de Decisões, e a rodada 2 revalida só esses pontos. M1 (core), M2 (db) e M3 (integrations) implementados antes da rodada 2 e ajustados conforme ela. Próximo passo: M4 (api) e M5 (worker).
+Spec escrita em 22/10/2026. A revisão da spec reprovou a rodada 1 por um CRÍTICO (a task 5.3 com o fake em memória em dois processos) e aprovou a rodada 2 depois das correções (tabela de Decisões). M1, M2 e M3 implementados e com checkpoint. Em andamento: M4 (api) e M5 (worker).

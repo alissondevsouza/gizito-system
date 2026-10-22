@@ -8,13 +8,16 @@ import {
   MAX_SERVER_REQUEST_BODY_BYTES,
   type ObjectStorage,
   type PaymentGateway,
+  WEBHOOK_RATE_LIMIT_PER_MINUTE,
 } from "@gizito/core";
 import type { Database } from "@gizito/db";
 import type { Logger, PhotoNormalizer } from "@gizito/integrations";
 import { Elysia, ElysiaCustomStatusResponse, StatusMap, status } from "elysia";
 import { payloadTooLargeError, toApiErrorResponse } from "#src/errors.ts";
+import { createWebhookRateLimiter, type WebhookRateLimiter } from "#src/http/webhook-rate-limit.ts";
 import { createHealthRoutes } from "#src/routes/health.ts";
 import { createOrderRoutes } from "#src/routes/orders.ts";
+import { createMercadoPagoWebhookRoutes } from "#src/routes/webhooks/mercadopago.ts";
 import { createChargeCreationLock } from "#src/services/charges.ts";
 
 export const UNMATCHED_ROUTE = "unmatched";
@@ -32,6 +35,7 @@ export type AppDependencies = {
   now?: () => Date;
   randomBytes?: (length: number) => Uint8Array;
   runInBackground?: (task: () => Promise<void>) => void;
+  webhookRateLimiter?: WebhookRateLimiter;
 };
 
 const defaultRandomBytes = (length: number) => new Uint8Array(randomBytes(length));
@@ -70,6 +74,10 @@ export function createApp({
   now = () => new Date(),
   randomBytes: drawRandomBytes = defaultRandomBytes,
   runInBackground = createBackgroundRunner(logger),
+  webhookRateLimiter = createWebhookRateLimiter({
+    limitPerMinute: WEBHOOK_RATE_LIMIT_PER_MINUTE,
+    now,
+  }),
   ...orderDependencies
 }: AppDependencies) {
   const requestStartMap = new WeakMap<Request, number>();
@@ -117,6 +125,16 @@ export function createApp({
         randomBytes: drawRandomBytes,
         runInBackground,
         chargeCreationLock: createChargeCreationLock(),
+      }),
+    )
+    .use(
+      createMercadoPagoWebhookRoutes({
+        db,
+        logger,
+        now,
+        paymentGateway: orderDependencies.paymentGateway,
+        trustedProxyHopCount: orderDependencies.trustedProxyHopCount,
+        webhookRateLimiter,
       }),
     );
 }

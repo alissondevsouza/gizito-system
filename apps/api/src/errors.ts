@@ -3,11 +3,16 @@ import {
   apiErrorSchema,
   MAX_PHOTO_BYTES,
   MAX_PHOTO_COUNT,
+  MAX_WEBHOOK_BODY_BYTES,
   type PhotoIndex,
   type UnsupportedTopicReason,
   type UnsupportedTopicView,
 } from "@gizito/core";
 import { ElysiaCustomStatusResponse } from "elysia";
+import type {
+  WebhookServiceError,
+  WebhookServiceErrorCode,
+} from "#src/services/charge-webhooks.ts";
 import type { ChargeServiceError, ChargeServiceErrorCode } from "#src/services/charges.ts";
 import type { OrderServiceError, OrderServiceErrorCode } from "#src/services/orders.ts";
 
@@ -59,6 +64,17 @@ function isResponseValidationError(error: unknown): boolean {
 }
 
 const MEGABYTE = 1024 * 1024;
+const KILOBYTE = 1024;
+
+export const webhookPayloadTooLargeError: ApiError = {
+  error: `O corpo da notificação passou de ${MAX_WEBHOOK_BODY_BYTES / KILOBYTE} KB.`,
+  code: "payload_too_large",
+};
+
+export const rateLimitedError: ApiError = {
+  error: "Muitas notificações deste endereço. Tente de novo em um minuto.",
+  code: "rate_limited",
+};
 
 export const payloadTooLargeError: ApiError = {
   error: `O envio passou do limite de ${MAX_PHOTO_COUNT} fotos de até ${MAX_PHOTO_BYTES / MEGABYTE} MB.`,
@@ -149,4 +165,21 @@ export function toChargeErrorResponse(error: ChargeServiceError): ApiErrorRespon
     };
   }
   return { status, body: { error: chargeErrorMessageMap[error.code], code: error.code } };
+}
+
+const webhookErrorMessageMap: Readonly<Record<WebhookServiceErrorCode, string>> = {
+  unauthorized: "Assinatura da notificação inválida.",
+  validation_error: "Notificação fora do formato esperado.",
+};
+
+export const webhookErrorStatusMap: Readonly<Record<WebhookServiceErrorCode, number>> = {
+  unauthorized: 401,
+  validation_error: 400,
+};
+
+export function toWebhookErrorResponse({ code }: WebhookServiceError): ApiErrorResponse {
+  return {
+    status: webhookErrorStatusMap[code],
+    body: { error: webhookErrorMessageMap[code], code },
+  };
 }
