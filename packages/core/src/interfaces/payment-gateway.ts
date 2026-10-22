@@ -16,7 +16,7 @@ export const createdChargeSchema = z.object({
   gatewayOrderId: z.string().min(1),
   gatewayPaymentId: z.string().min(1).nullable(),
   qrCode: z.string().min(1),
-  qrCodeBase64: z.string().min(1),
+  qrCodeBase64: z.string().min(1).nullable(),
   ticketUrl: httpsUrlSchema.nullable(),
   expireDatetime: z.date(),
 });
@@ -37,12 +37,6 @@ export const chargeStatusResultSchema = z.object({
   paidDatetime: z.date().nullable(),
 });
 export type ChargeStatusResult = z.infer<typeof chargeStatusResultSchema>;
-
-export const refundInputSchema = z.object({
-  amountCents: z.int().positive(),
-  reason: z.string().trim().min(1).max(200),
-});
-export type RefundInput = z.infer<typeof refundInputSchema>;
 
 export const refundResultSchema = z.object({
   refundId: z.string().min(1),
@@ -78,10 +72,28 @@ export const parsedWebhookSchema = z.discriminatedUnion("valid", [
 ]);
 export type ParsedWebhook = z.infer<typeof parsedWebhookSchema>;
 
+export const paymentGatewayErrorCodeList = [
+  "gateway_unavailable",
+  "gateway_rejected",
+  "gateway_response_invalid",
+] as const;
+export const paymentGatewayErrorCodeSchema = z.enum(paymentGatewayErrorCodeList);
+export type PaymentGatewayErrorCode = z.infer<typeof paymentGatewayErrorCodeSchema>;
+
+export class PaymentGatewayError extends Error {
+  constructor(
+    readonly code: PaymentGatewayErrorCode,
+    options?: { cause?: unknown },
+  ) {
+    super(`Payment gateway failed with ${code}`, options);
+    this.name = "PaymentGatewayError";
+  }
+}
+
 export interface PaymentGateway {
   readonly name: PaymentGatewayName;
   createCharge(input: CreateChargeInput): Promise<CreatedCharge>;
   getChargeStatus(reference: ChargeReference): Promise<ChargeStatusResult>;
-  refund(reference: ChargeReference, input: RefundInput): Promise<RefundResult>;
+  refund(reference: ChargeReference): Promise<RefundResult>;
   parseWebhook(request: WebhookRequest): Promise<ParsedWebhook>;
 }

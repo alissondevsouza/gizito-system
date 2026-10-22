@@ -36,6 +36,13 @@
       "when": 1792677195790,
       "tag": "0004_job_analise",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792681556472,
+      "tag": "0005_confirmacao_e_cobranca_pix",
+      "breakpoints": true
     }
   ]
 }

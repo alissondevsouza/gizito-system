@@ -36,7 +36,9 @@ import {
   createChargeInputSchema,
   createdChargeSchema,
   type PaymentGateway,
+  PaymentGatewayError,
   parsedWebhookSchema,
+  paymentGatewayErrorCodeList,
 } from "#src/interfaces/payment-gateway.ts";
 import { expectedAnswerSchema } from "#src/pedagogy/expected-answer.ts";
 import { err, ok } from "#src/result.ts";
@@ -102,6 +104,42 @@ describe("contratos das interfaces: um fake mínimo compila e devolve tipos vali
       rawBody: "{}",
     });
     expect(parsedWebhookSchema.parse(accepted).valid).toBe(true);
+    expect(
+      await gateway.refund({
+        chargeId: CHARGE_ID,
+        gatewayOrderId: "gw-1",
+        gatewayPaymentId: "pay-1",
+      }),
+    ).toEqual({
+      refundId: "ref-1",
+    });
+  });
+
+  it("PaymentGateway: qrCodeBase64 pode faltar, mas nunca vem vazio", () => {
+    const created = {
+      gatewayOrderId: "gw-1",
+      gatewayPaymentId: "pay-1",
+      qrCode: "000201",
+      qrCodeBase64: null,
+      ticketUrl: null,
+      expireDatetime: new Date("2026-10-15T12:30:00.000Z"),
+    };
+    expect(createdChargeSchema.safeParse(created).success).toBe(true);
+    expect(createdChargeSchema.safeParse({ ...created, qrCodeBase64: "" }).success).toBe(false);
+  });
+
+  it("PaymentGatewayError leva código estável e não expõe a causa na mensagem", () => {
+    const cause = { status: 500, providerCode: "internal_error" };
+    const error = new PaymentGatewayError("gateway_unavailable", { cause });
+    expect(error.name).toBe("PaymentGatewayError");
+    expect(error.code).toBe("gateway_unavailable");
+    expect(error.cause).toBe(cause);
+    expect(error.message).not.toContain("internal_error");
+    expect(paymentGatewayErrorCodeList).toEqual([
+      "gateway_unavailable",
+      "gateway_rejected",
+      "gateway_response_invalid",
+    ]);
   });
 
   it("NotificationChannel", async () => {

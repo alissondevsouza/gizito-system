@@ -10,6 +10,7 @@ describe("erros da api (api.md §1)", () => {
     }
     expect(apiErrorCodeList).toContain("not_found");
     expect(apiErrorCodeList).toContain("internal_error");
+    expect(apiErrorCodeList).toContain("unsupported_topic");
   });
 
   it("aceita { error, code } e recusa código desconhecido ou mensagem vazia", () => {

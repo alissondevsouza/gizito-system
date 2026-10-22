@@ -1,0 +1,1 @@
+ALTER TABLE "charge" ALTER COLUMN "qr_code_base64" DROP NOT NULL;

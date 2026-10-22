@@ -38,6 +38,16 @@ describe("charge", () => {
     expect(chargeSchema.safeParse(row).success).toBe(true);
   });
 
+  it("aceita cobrança sem qr_code_base64, que o sandbox devolve vazio", async () => {
+    const orderId = await insertOrderId();
+    const [row] = await testDatabase.db
+      .insert(charge)
+      .values(buildChargeInsert(orderId, { qrCodeBase64: null }))
+      .returning();
+    expect(row?.qrCodeBase64).toBeNull();
+    expect(chargeSchema.safeParse(row).success).toBe(true);
+  });
+
   it("aceita várias cobranças sem gateway_payment_id no mesmo pedido", async () => {
     const orderId = await insertOrderId();
     await testDatabase.db

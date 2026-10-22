@@ -21,6 +21,10 @@ describe("chargeSchema", () => {
       ).success,
     ).toBe(true);
   });
+  it("aceita cobrança sem imagem do QR, que o sandbox não devolve", () => {
+    expect(chargeSchema.safeParse(buildCharge({ qrCodeBase64: null })).success).toBe(true);
+    expect(chargeSchema.safeParse(buildCharge({ qrCodeBase64: "" })).success).toBe(false);
+  });
   it("rejeita valor não positivo, gateway desconhecido, qr vazio e ticketUrl inválida", () => {
     expect(chargeSchema.safeParse(buildCharge({ amountCents: 0 })).success).toBe(false);
     expect(chargeSchema.safeParse(buildCharge({ amountCents: 29.9 })).success).toBe(false);

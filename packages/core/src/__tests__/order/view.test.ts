@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+  buildCharge,
   ORDER_ID,
   PHOTO_ID,
   PUBLIC_TOKEN,
@@ -10,12 +11,15 @@ import { orderStatusList } from "#src/enums.ts";
 import { type OrderAnalysis, unavailableOrderAnalysis } from "#src/order/analysis.ts";
 import {
   analysisFailureViewOf,
+  awaitingPaymentViewOf,
   createOrderResponseSchema,
   isPhotoReplaceableOrderStatus,
   kitPreview,
+  latestChargeOf,
   orderViewSchema,
   photoAnalysisViewOf,
   photoStageOrderStatusList,
+  postConfirmationViewOrderStatusList,
   postPhotoStageOrderStatusList,
   previewViewOf,
 } from "#src/order/view.ts";
@@ -150,10 +154,27 @@ describe("orderViewSchema (api.md §3)", () => {
     }
   });
 
-  it("depois da prévia, só os campos base", () => {
-    for (const status of postPhotoStageOrderStatusList) {
+  it("depois do pagamento, só os campos base", () => {
+    expect([...postConfirmationViewOrderStatusList]).toEqual(
+      postPhotoStageOrderStatusList.filter((status) => status !== "awaiting_payment"),
+    );
+    for (const status of postConfirmationViewOrderStatusList) {
       expect(orderViewSchema.safeParse({ ...baseView, status }).success).toBe(true);
     }
+  });
+
+  it("awaiting_payment exige a cobrança, o sub-estado e o e-mail mascarado", () => {
+    const awaiting = awaitingPaymentViewOf([buildCharge()], "mae@example.com", CHARGE_START);
+    const view = { ...baseView, status: "awaiting_payment", ...awaiting };
+    expect(orderViewSchema.safeParse(view).success).toBe(true);
+    expect(orderViewSchema.safeParse({ ...baseView, status: "awaiting_payment" }).success).toBe(
+      false,
+    );
+    expect(orderViewSchema.safeParse({ ...view, email: "mae@example.com" }).success).toBe(false);
+    expect(
+      orderViewSchema.safeParse({ ...view, charge: { ...view.charge, qrCodeBase64: null } })
+        .success,
+    ).toBe(true);
   });
 
   it("recusa token, data ou miniatura fora do formato", () => {
@@ -249,5 +270,65 @@ describe("montagem da prévia (spec F2-02, RF-10)", () => {
     });
     expect(analysisFailureViewOf(previewAnalysis)).toBeNull();
     expect(analysisFailureViewOf(null)).toBeNull();
+  });
+});
+
+const CHARGE_START = new Date("2026-10-15T12:00:00.000Z");
+const FIRST_EXPIRE = new Date("2026-10-15T12:30:00.000Z");
+const SECOND_CHARGE_ID = "77777777-7777-4777-8777-777777777777";
+
+describe("awaitingPaymentViewOf (api.md §3)", () => {
+  it("mostra a cobrança ativa sem sub-estado e o e-mail mascarado", () => {
+    expect(awaitingPaymentViewOf([buildCharge()], "mae@example.com", CHARGE_START)).toEqual({
+      charge: {
+        amountCents: 2990,
+        qrCode: "00020126580014br.gov.bcb.pix",
+        qrCodeBase64: "iVBORw0KGgo=",
+        ticketUrl: null,
+        expireDatetime: FIRST_EXPIRE.toISOString(),
+      },
+      substate: null,
+      email: "m***@example.com",
+    });
+  });
+
+  it("pending vencida e expired dão charge_expired", () => {
+    const afterExpire = new Date(FIRST_EXPIRE.getTime() + 1);
+    expect(awaitingPaymentViewOf([buildCharge()], "m@x.com", FIRST_EXPIRE)?.substate).toBe(
+      "charge_expired",
+    );
+    expect(awaitingPaymentViewOf([buildCharge()], "m@x.com", afterExpire)?.substate).toBe(
+      "charge_expired",
+    );
+    expect(
+      awaitingPaymentViewOf([buildCharge({ status: "expired" })], "m@x.com", CHARGE_START)
+        ?.substate,
+    ).toBe("charge_expired");
+  });
+
+  it("com duas cobranças, vale a mais recente, com desempate pelo id", () => {
+    const expired = buildCharge();
+    const renewed = buildCharge({
+      chargeId: SECOND_CHARGE_ID,
+      qrCode: "renovado",
+      insertDatetime: FIRST_EXPIRE,
+      expireDatetime: new Date(FIRST_EXPIRE.getTime() + 30 * 60_000),
+    });
+    const afterExpire = new Date(FIRST_EXPIRE.getTime() + 1);
+    for (const chargeList of [
+      [expired, renewed],
+      [renewed, expired],
+    ]) {
+      const view = awaitingPaymentViewOf(chargeList, "m@x.com", afterExpire);
+      expect(view?.charge.qrCode).toBe("renovado");
+      expect(view?.substate).toBeNull();
+    }
+    const tied = buildCharge({ chargeId: SECOND_CHARGE_ID, qrCode: "empate" });
+    expect(latestChargeOf([tied, expired])?.qrCode).toBe("empate");
+    expect(latestChargeOf([expired, tied])?.qrCode).toBe("empate");
+  });
+
+  it("sem cobrança devolve nulo", () => {
+    expect(awaitingPaymentViewOf([], "m@x.com", CHARGE_START)).toBeNull();
   });
 });

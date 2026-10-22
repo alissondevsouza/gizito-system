@@ -27,6 +27,18 @@ export const paymentEnvironmentSchema = z.object({
   PAYMENT_GATEWAY: paymentGatewaySchema,
 });
 
+const optionalSecretSchema = z
+  .string()
+  .trim()
+  .transform((value) => (value === "" ? undefined : value))
+  .optional();
+
+export const mercadoPagoEnvironmentSchema = z.object({
+  MERCADOPAGO_ACCESS_TOKEN: optionalSecretSchema,
+  MERCADOPAGO_WEBHOOK_SECRET: optionalSecretSchema,
+});
+export type MercadoPagoEnvironment = z.infer<typeof mercadoPagoEnvironmentSchema>;
+
 export const DEFAULT_STORAGE_REGION = "auto";
 export const MIN_CLIENT_HASH_SECRET_LENGTH = 32;
 
@@ -171,4 +183,41 @@ export function checkTrustedProxyProductionEnvironment(
       message: MISSING_PROXY_HOP_IN_PRODUCTION_MESSAGE,
     });
   }
+}
+
+export const ASAAS_WITHOUT_ADAPTER_MESSAGE = "PAYMENT_GATEWAY=asaas ainda não tem adaptador";
+
+export function missingMercadoPagoKeyMessage(key: keyof MercadoPagoEnvironment): string {
+  return `${key} é obrigatória com PAYMENT_GATEWAY=mercadopago`;
+}
+
+export type PaymentGatewaySetting =
+  | { readonly name: "mercadopago"; readonly accessToken: string; readonly webhookSecret: string }
+  | { readonly name: "fake" };
+
+export function resolvePaymentGatewaySetting(
+  environment: { PAYMENT_GATEWAY: PaymentGatewayName } & MercadoPagoEnvironment,
+  context: EnvironmentIssueSink,
+): PaymentGatewaySetting | null {
+  if (environment.PAYMENT_GATEWAY === "fake") return { name: "fake" };
+  if (environment.PAYMENT_GATEWAY === "asaas") {
+    context.addIssue({
+      code: "custom",
+      path: ["PAYMENT_GATEWAY"],
+      message: ASAAS_WITHOUT_ADAPTER_MESSAGE,
+    });
+    return null;
+  }
+  const { MERCADOPAGO_ACCESS_TOKEN: accessToken, MERCADOPAGO_WEBHOOK_SECRET: webhookSecret } =
+    environment;
+  for (const [key, value] of [
+    ["MERCADOPAGO_ACCESS_TOKEN", accessToken],
+    ["MERCADOPAGO_WEBHOOK_SECRET", webhookSecret],
+  ] as const) {
+    if (value === undefined) {
+      context.addIssue({ code: "custom", path: [key], message: missingMercadoPagoKeyMessage(key) });
+    }
+  }
+  if (accessToken === undefined || webhookSecret === undefined) return null;
+  return { name: "mercadopago", accessToken, webhookSecret };
 }

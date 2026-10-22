@@ -11,7 +11,7 @@ export const chargeSchema = timestampFieldsSchema.extend({
   amountCents: z.int().positive(),
   status: chargeStatusSchema,
   qrCode: z.string().min(1),
-  qrCodeBase64: z.string().min(1),
+  qrCodeBase64: z.string().min(1).nullable(),
   ticketUrl: httpsUrlSchema.nullable(),
   expireDatetime: z.date(),
   paidDatetime: z.date().nullable(),

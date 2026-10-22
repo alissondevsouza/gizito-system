@@ -12,6 +12,7 @@ export const apiErrorCodeList = [
   "payload_too_large",
   "charge_expired",
   "charge_active",
+  "unsupported_topic",
   "rate_limited",
   "challenge_required",
   "validation_error",

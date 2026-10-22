@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { guidSchema, webUrlSchema } from "#src/common.ts";
+import { deriveAwaitingPaymentSubstate } from "#src/charge/rules.ts";
+import type { Charge } from "#src/charge/schemas.ts";
+import { guidSchema, httpsUrlSchema, webUrlSchema } from "#src/common.ts";
 import {
   ANSWER_KEY_COUNT,
   KIT_PRICE_CENTS,
@@ -9,8 +11,14 @@ import {
   PRACTICE_QUESTION_COUNT,
   WORKED_EXAMPLE_COUNT,
 } from "#src/constants.ts";
-import { gradeSchema, type OrderStatus, subjectSchema } from "#src/enums.ts";
+import {
+  awaitingPaymentSubstateSchema,
+  gradeSchema,
+  type OrderStatus,
+  subjectSchema,
+} from "#src/enums.ts";
 import { analysisFailCodeSchema, type OrderAnalysis } from "#src/order/analysis.ts";
+import { maskEmail, maskedEmailSchema } from "#src/order/email.ts";
 import { photoIndexSchema } from "#src/order/photo.ts";
 import { publicTokenSchema, shortCodeSchema } from "#src/order/schemas.ts";
 import type { MergedExtraction } from "#src/pedagogy/extraction/merge.ts";
@@ -36,6 +44,14 @@ export const photoStageOrderStatusList = [
 
 export const postPhotoStageOrderStatusList = [
   "awaiting_payment",
+  "paid",
+  "processing",
+  "ready",
+  "failed",
+  "refunded",
+] as const satisfies readonly OrderStatus[];
+
+export const postConfirmationViewOrderStatusList = [
   "paid",
   "processing",
   "ready",
@@ -170,6 +186,66 @@ export function previewViewOf(analysis: OrderAnalysis): PreviewView | null {
   };
 }
 
+export const chargeViewSchema = z.object({
+  amountCents: z.int().positive(),
+  qrCode: z.string().min(1),
+  qrCodeBase64: z.string().min(1).nullable(),
+  ticketUrl: httpsUrlSchema.nullable(),
+  expireDatetime: z.iso.datetime(),
+});
+export type ChargeView = z.infer<typeof chargeViewSchema>;
+
+export const awaitingPaymentViewSchema = z.object({
+  charge: chargeViewSchema,
+  substate: awaitingPaymentSubstateSchema.nullable(),
+  email: maskedEmailSchema,
+});
+export type AwaitingPaymentView = z.infer<typeof awaitingPaymentViewSchema>;
+
+export type ViewedCharge = Pick<
+  Charge,
+  | "chargeId"
+  | "status"
+  | "amountCents"
+  | "qrCode"
+  | "qrCodeBase64"
+  | "ticketUrl"
+  | "expireDatetime"
+  | "insertDatetime"
+>;
+
+function isMoreRecentCharge(candidate: ViewedCharge, current: ViewedCharge): boolean {
+  const timeDifference = candidate.insertDatetime.getTime() - current.insertDatetime.getTime();
+  return timeDifference > 0 || (timeDifference === 0 && candidate.chargeId > current.chargeId);
+}
+
+export function latestChargeOf<C extends ViewedCharge>(chargeList: readonly C[]): C | null {
+  return chargeList.reduce<C | null>(
+    (latest, charge) => (latest === null || isMoreRecentCharge(charge, latest) ? charge : latest),
+    null,
+  );
+}
+
+export function awaitingPaymentViewOf(
+  chargeList: readonly ViewedCharge[],
+  email: string,
+  now: Date,
+): AwaitingPaymentView | null {
+  const charge = latestChargeOf(chargeList);
+  if (charge === null) return null;
+  return {
+    charge: {
+      amountCents: charge.amountCents,
+      qrCode: charge.qrCode,
+      qrCodeBase64: charge.qrCodeBase64,
+      ticketUrl: charge.ticketUrl,
+      expireDatetime: charge.expireDatetime.toISOString(),
+    },
+    substate: deriveAwaitingPaymentSubstate(charge, now),
+    email: maskEmail(email),
+  };
+}
+
 const orderViewBaseSchema = z.object({
   publicToken: publicTokenSchema,
   shortCode: shortCodeSchema,
@@ -196,7 +272,11 @@ export const orderViewSchema = z.discriminatedUnion("status", [
     ...previewViewSchema.shape,
   }),
   orderViewBaseSchema.extend({
-    status: z.enum(postPhotoStageOrderStatusList),
+    status: z.literal("awaiting_payment"),
+    ...awaitingPaymentViewSchema.shape,
+  }),
+  orderViewBaseSchema.extend({
+    status: z.enum(postConfirmationViewOrderStatusList),
   }),
 ]);
 export type OrderView = z.infer<typeof orderViewSchema>;

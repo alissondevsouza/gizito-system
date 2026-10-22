@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 import {
+  ASAAS_WITHOUT_ADAPTER_MESSAGE,
   aiEnvironmentSchema,
   aiModelSettingSchema,
   checkProductionEnvironment,
@@ -13,9 +14,12 @@ import {
   isStorageEndpointAllowed,
   isTrustedProxyHopCountAllowed,
   MISSING_PROXY_HOP_IN_PRODUCTION_MESSAGE,
+  mercadoPagoEnvironmentSchema,
+  missingMercadoPagoKeyMessage,
   nodeEnvList,
   paymentEnvironmentSchema,
   portSchema,
+  resolvePaymentGatewaySetting,
   sharedEnvironmentSchema,
   storageEnvironmentSchema,
   trustedProxyEnvironmentSchema,
@@ -251,6 +255,74 @@ describe("hop do proxy em produção (F2-01)", () => {
         path: ["TRUSTED_PROXY_HOP_COUNT"],
         message: MISSING_PROXY_HOP_IN_PRODUCTION_MESSAGE,
       },
+    ]);
+  });
+});
+
+describe("gateway de pagamento no ambiente (api.md §6)", () => {
+  const issueCollector = () => {
+    const issueList: { code: "custom"; path: string[]; message: string }[] = [];
+    return {
+      issueList,
+      context: {
+        addIssue: (issue: { code: "custom"; path: string[]; message: string }) =>
+          issueList.push(issue),
+      },
+    };
+  };
+
+  it("mercadopago exige o access token e o segredo do webhook, nomeando cada um", () => {
+    const { issueList, context } = issueCollector();
+    expect(resolvePaymentGatewaySetting({ PAYMENT_GATEWAY: "mercadopago" }, context)).toBeNull();
+    expect(issueList).toEqual([
+      {
+        code: "custom",
+        path: ["MERCADOPAGO_ACCESS_TOKEN"],
+        message: missingMercadoPagoKeyMessage("MERCADOPAGO_ACCESS_TOKEN"),
+      },
+      {
+        code: "custom",
+        path: ["MERCADOPAGO_WEBHOOK_SECRET"],
+        message: missingMercadoPagoKeyMessage("MERCADOPAGO_WEBHOOK_SECRET"),
+      },
+    ]);
+  });
+
+  it("chave vazia no ambiente conta como ausente", () => {
+    const parsed = mercadoPagoEnvironmentSchema.parse({
+      MERCADOPAGO_ACCESS_TOKEN: "  ",
+      MERCADOPAGO_WEBHOOK_SECRET: "",
+    });
+    expect(parsed).toEqual({
+      MERCADOPAGO_ACCESS_TOKEN: undefined,
+      MERCADOPAGO_WEBHOOK_SECRET: undefined,
+    });
+    const { issueList, context } = issueCollector();
+    expect(
+      resolvePaymentGatewaySetting({ PAYMENT_GATEWAY: "mercadopago", ...parsed }, context),
+    ).toBeNull();
+    expect(issueList).toHaveLength(2);
+  });
+
+  it("mercadopago completo, fake sem chave e asaas recusado por falta de adaptador", () => {
+    const { issueList, context } = issueCollector();
+    expect(
+      resolvePaymentGatewaySetting(
+        {
+          PAYMENT_GATEWAY: "mercadopago",
+          MERCADOPAGO_ACCESS_TOKEN: "APP_USR-teste",
+          MERCADOPAGO_WEBHOOK_SECRET: "segredo",
+        },
+        context,
+      ),
+    ).toEqual({ name: "mercadopago", accessToken: "APP_USR-teste", webhookSecret: "segredo" });
+    expect(resolvePaymentGatewaySetting({ PAYMENT_GATEWAY: "fake" }, context)).toEqual({
+      name: "fake",
+    });
+    expect(issueList).toEqual([]);
+    expect(resolvePaymentGatewaySetting({ PAYMENT_GATEWAY: "asaas" }, context)).toBeNull();
+    expect(issueList).toEqual([
+      { code: "custom", path: ["PAYMENT_GATEWAY"], message: ASAAS_WITHOUT_ADAPTER_MESSAGE },
     ]);
   });
 });

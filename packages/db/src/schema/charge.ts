@@ -17,7 +17,7 @@ export const charge = pgTable(
     amountCents: integer("amount_cents").notNull(),
     status: chargeStatusEnum("status").notNull().default("pending"),
     qrCode: text("qr_code").notNull(),
-    qrCodeBase64: text("qr_code_base64").notNull(),
+    qrCodeBase64: text("qr_code_base64"),
     ticketUrl: text("ticket_url"),
     expireDatetime: datetime("expire_datetime").notNull(),
     paidDatetime: datetime("paid_datetime"),
