@@ -7,15 +7,11 @@ import {
   deviceIdSchema,
   normalizeClientIp,
 } from "@gizito/core";
+import type { ClientKeyHashMap } from "#src/services/preview-rate-limit.ts";
 
 export const DEVICE_COOKIE_NAME = "gizito_device";
 
 const SECONDS_PER_DAY = 24 * 60 * 60;
-
-export type ClientKeyHashMap = {
-  readonly clientIpHash: string;
-  readonly deviceHash: string;
-};
 
 export type ClientIdentity = ClientKeyHashMap & {
   readonly deviceId: DeviceId;

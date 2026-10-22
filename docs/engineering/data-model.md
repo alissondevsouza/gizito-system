@@ -204,7 +204,7 @@ A fila é a tabela `job` (ADR-0008, migration `0001_fila`), sem FK: o pedido, qu
 ## 5. Retenção e soft delete
 
 - Fotos: `retention.purge` apaga do storage a foto e a miniatura após `PHOTO_RETENTION_DAYS` (30) e grava `delete_datetime`; a linha fica. Foto trocada ("Trocar foto") sai do storage logo depois do commit e ganha `delete_datetime`; se a remoção falhar, fica com `delete_datetime` nulo e a purga a apaga pelos 30 dias. A regra de ciclo de vida de 30 dias no prefixo `photos/` do bucket (F2-13, ADR-0012) é a rede de segurança para objeto órfão sem linha.
-- Rate limit: `preview_request` guarda 24 h (`PREVIEW_REQUEST_RETENTION_HOURS`).
+- Rate limit: `preview_request` guarda 24 h (`PREVIEW_REQUEST_RETENTION_HOURS`). A linha velha sai no próximo insert da reserva; com pouco tráfego, pode ficar mais tempo, então a purga da F2-06 também apaga as linhas com mais de 24 h.
 - PDFs e `study_kit`: após `KIT_RETENTION_MONTHS` (12), apaga do storage, grava `delete_datetime` e limpa `study_kit`; `ai_call` permanece para métricas.
 - Remoção a pedido do titular: admin apaga `email`, `whatsapp_phone`, fotos e PDFs, mantendo o pedido como registro contábil anonimizado.
 - As funções de prazo (`photoDeleteDeadline`, `kitDeleteDeadline`) estão no core e recebem o relógio por parâmetro.

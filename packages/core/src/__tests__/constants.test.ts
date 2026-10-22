@@ -36,6 +36,7 @@ import {
   MAX_PREVIEW_AI_COST_BRL_CENTS,
   MAX_REPAIR_ITEM_COUNT,
   MAX_REVIEW_NOTE_LENGTH,
+  MAX_SERVER_REQUEST_BODY_BYTES,
   MAX_SIGNED_URL_TTL_SECONDS,
   MAX_STATEMENT_WORD_COUNT_BY_GRADE,
   MAX_TERM_LENGTH,
@@ -123,6 +124,7 @@ describe("constantes de negócio (PRD §5, §6 e §7)", () => {
 
   it("fotos, miniaturas, URL assinada e rate limit da F2-01", () => {
     expect(MAX_ORDER_UPLOAD_BYTES).toBeGreaterThan(MAX_PHOTO_COUNT * MAX_PHOTO_BYTES);
+    expect(MAX_SERVER_REQUEST_BODY_BYTES).toBeGreaterThan(MAX_ORDER_UPLOAD_BYTES);
     expect(MAX_PHOTO_INPUT_PIXELS).toBeGreaterThanOrEqual(64_000_000);
     expect(PHOTO_THUMBNAIL_MAX_SIDE_PX).toBeLessThan(AI_IMAGE_MAX_SIDE_PX);
     expect(SIGNED_URL_TTL_SECONDS).toBe(10 * 60);

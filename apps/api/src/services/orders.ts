@@ -5,6 +5,7 @@ import {
   type CreateOrderResponse,
   detectPhotoFormat,
   err,
+  errorNameOf,
   type Grade,
   isPhotoReplaceableOrderStatus,
   MAX_PHOTO_BYTES,
@@ -40,8 +41,7 @@ import {
 } from "@gizito/db";
 import type { Logger, NormalizedPhoto, PhotoNormalizer } from "@gizito/integrations";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
-import type { ClientKeyHashMap } from "#src/http/client-identity.ts";
-import { reservePreviewRequest } from "#src/services/preview-rate-limit.ts";
+import { type ClientKeyHashMap, reservePreviewRequest } from "#src/services/preview-rate-limit.ts";
 
 const ORDER_CODE_CONSTRAINT_LIST = ["order_short_code_idx", "order_public_token_idx"] as const;
 const CURRENT_PHOTO_INDEX_CONSTRAINT = "order_photo_order_id_photo_index_idx";
@@ -71,6 +71,7 @@ export type OrderServiceDependencies = {
   readonly logger: Logger;
   readonly now: () => Date;
   readonly randomBytes: (length: number) => Uint8Array;
+  readonly runInBackground: (task: () => Promise<void>) => void;
 };
 
 export type CreateOrderRequest = {
@@ -172,8 +173,8 @@ async function uploadPhotoList(
       [thumbnailKey, normalized.thumbnailData],
     ] as const) {
       if (key === undefined) continue;
-      await storage.putPrivate({ key, body, contentType: "image/jpeg" });
       uploadedKeyList.push(key);
+      await storage.putPrivate({ key, body, contentType: "image/jpeg" });
     }
   }
 }
@@ -234,6 +235,29 @@ async function listCurrentPhotos(executor: Executor, orderId: string): Promise<C
     .orderBy(asc(orderPhoto.photoIndex));
 }
 
+type PhotoOutcome = {
+  readonly orderId: string;
+  readonly photoCount: number;
+  readonly startTime: number;
+  readonly errorCode?: OrderServiceErrorCode | "internal_error";
+};
+
+function logPhotoOutcome(
+  logger: Logger,
+  message: string,
+  { orderId, photoCount, startTime, errorCode }: PhotoOutcome,
+): void {
+  logger.info(
+    {
+      orderId,
+      photoCount,
+      durationMs: Math.round(performance.now() - startTime),
+      ...(errorCode === undefined ? {} : { errorCode }),
+    },
+    message,
+  );
+}
+
 function isPhotoStageOrderStatus(status: OrderStatus): boolean {
   return photoStageOrderStatusList.some((photoStage) => photoStage === status);
 }
@@ -286,23 +310,22 @@ export async function createOrder(
   if (!prepared.ok) return prepared;
 
   const orderId = crypto.randomUUID();
+  const outcome = { orderId, photoCount: prepared.value.length, startTime };
   const uploadedKeyList: StorageKey[] = [];
   let isCommitted = false;
   try {
     await uploadPhotoList(storage, orderId, prepared.value, uploadedKeyList);
     const created = await insertOrderWithFreshCodes(dependencies, request, orderId, prepared.value);
     isCommitted = true;
-    logger.info(
-      {
-        orderId,
-        photoCount: prepared.value.length,
-        durationMs: Math.round(performance.now() - startTime),
-      },
-      "pedido criado",
-    );
+    logPhotoOutcome(logger, "pedido criado", outcome);
     return ok(created);
   } catch (error) {
-    if (error instanceof ObjectStorageError) return err({ code: "service_unavailable" });
+    const isStorageFailure = error instanceof ObjectStorageError;
+    logPhotoOutcome(logger, "pedido recusado", {
+      ...outcome,
+      errorCode: isStorageFailure ? "service_unavailable" : "internal_error",
+    });
+    if (isStorageFailure) return err({ code: "service_unavailable" });
     throw error;
   } finally {
     if (!isCommitted) await removeObjectList(dependencies, orderId, uploadedKeyList);
@@ -439,23 +462,32 @@ async function removeReplacedPhotoList(
 ): Promise<void> {
   for (const orderPhotoId of replacedPhotoIdList) {
     const keyList = photoKeyListOf(orderId, orderPhotoId);
-    if (await removeObjectList(dependencies, orderId, keyList, orderPhotoId)) {
+    if (!(await removeObjectList(dependencies, orderId, keyList, orderPhotoId))) continue;
+    try {
       await dependencies.db
         .update(orderPhoto)
         .set({ deleteDatetime: dependencies.now() })
         .where(eq(orderPhoto.orderPhotoId, orderPhotoId));
+    } catch (error) {
+      dependencies.logger.warn(
+        {
+          orderId,
+          orderPhotoId,
+          errorCode: "photo_delete_mark_failed",
+          errorName: errorNameOf(error),
+        },
+        "marcação da foto removida falhou",
+      );
     }
   }
 }
 
-export async function replaceOrderPhotoList(
+async function replaceWithinOrder(
   dependencies: OrderServiceDependencies,
+  row: { readonly orderId: string; readonly status: OrderStatus },
   request: ReplaceOrderPhotoListRequest,
-): Promise<Result<OrderView, OrderServiceError>> {
-  const startTime = performance.now();
-  const { db, storage, normalizePhoto, logger, now } = dependencies;
-  const row = await findOrderByToken(db, request.publicToken);
-  if (row === null) return err({ code: "order_not_found" });
+): Promise<Result<string[], OrderServiceError>> {
+  const { db, storage, normalizePhoto, now } = dependencies;
   if (!isPhotoReplaceableOrderStatus(row.status)) return err({ code: "invalid_state" });
   const currentList = await listCurrentPhotos(db, row.orderId);
   const matched = matchReplacementList(request.replacementList, currentList);
@@ -484,6 +516,7 @@ export async function replaceOrderPhotoList(
     );
     if (!committed.ok) return committed;
     isCommitted = true;
+    return ok(replacedPhotoIdList);
   } catch (error) {
     if (error instanceof ObjectStorageError) return err({ code: "service_unavailable" });
     if (isUniqueViolation(error, CURRENT_PHOTO_INDEX_CONSTRAINT)) return err({ code: "not_found" });
@@ -491,15 +524,42 @@ export async function replaceOrderPhotoList(
   } finally {
     if (!isCommitted) await removeObjectList(dependencies, row.orderId, uploadedKeyList);
   }
+}
 
-  await removeReplacedPhotoList(dependencies, row.orderId, replacedPhotoIdList);
-  logger.info(
-    {
-      orderId: row.orderId,
-      photoCount: prepared.value.length,
-      durationMs: Math.round(performance.now() - startTime),
-    },
-    "fotos trocadas",
+export async function replaceOrderPhotoList(
+  dependencies: OrderServiceDependencies,
+  request: ReplaceOrderPhotoListRequest,
+): Promise<Result<OrderView, OrderServiceError>> {
+  const startTime = performance.now();
+  if (request.replacementList.length > MAX_PHOTO_COUNT) return err({ code: "too_many_photos" });
+  const row = await findOrderByToken(dependencies.db, request.publicToken);
+  if (row === null) return err({ code: "order_not_found" });
+  const outcome = {
+    orderId: row.orderId,
+    photoCount: request.replacementList.length,
+    startTime,
+  };
+  let replaced: Result<string[], OrderServiceError>;
+  try {
+    replaced = await replaceWithinOrder(dependencies, row, request);
+  } catch (error) {
+    logPhotoOutcome(dependencies.logger, "troca de fotos recusada", {
+      ...outcome,
+      errorCode: "internal_error",
+    });
+    throw error;
+  }
+  if (!replaced.ok) {
+    logPhotoOutcome(dependencies.logger, "troca de fotos recusada", {
+      ...outcome,
+      errorCode: replaced.error.code,
+    });
+    return replaced;
+  }
+  logPhotoOutcome(dependencies.logger, "fotos trocadas", outcome);
+  const replacedPhotoIdList = replaced.value;
+  dependencies.runInBackground(() =>
+    removeReplacedPhotoList(dependencies, row.orderId, replacedPhotoIdList),
   );
   return getOrderView(dependencies, request.publicToken);
 }

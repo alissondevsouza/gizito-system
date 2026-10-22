@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { AI_IMAGE_MAX_SIDE_PX, PHOTO_THUMBNAIL_MAX_SIDE_PX } from "@gizito/core";
 import sharp from "sharp";
+import { createSemaphore, type Semaphore } from "#src/concurrency/semaphore.ts";
 import { computeContentHash } from "#src/photo/content-hash.ts";
 import { createPhotoNormalizer } from "#src/photo/normalize.ts";
 
@@ -116,8 +117,39 @@ describe("normalizePhoto (spec F2-01, RF-01)", () => {
     expect(await smallLimit(bomb)).toEqual({ ok: false, error: "photo_invalid" });
   });
 
-  it("o limite de concorrência por processo passa pelo semáforo, que recusa limite inválido", () => {
-    expect(() => createPhotoNormalizer({ concurrency: 0 })).toThrow(RangeError);
-    expect(() => createPhotoNormalizer({ concurrency: 1 })).not.toThrow();
+  it("cada normalização roda dentro de uma vaga do semáforo; com 1 vaga, uma de cada vez", async () => {
+    const eventList: string[] = [];
+    const inner = createSemaphore(1);
+    const recordingSemaphore: Semaphore = {
+      run: (task) =>
+        inner.run(async () => {
+          eventList.push("entra");
+          try {
+            return await task();
+          } finally {
+            eventList.push("sai");
+          }
+        }),
+    };
+    const serial = createPhotoNormalizer({ semaphore: recordingSemaphore });
+    const [first, second] = await Promise.all([
+      serial(await syntheticJpegWithExif(600, 400)),
+      serial(await syntheticPng(500, 300)),
+    ]);
+    expect([first?.ok, second?.ok]).toEqual([true, true]);
+    expect(eventList).toEqual(["entra", "sai", "entra", "sai"]);
+  });
+
+  it("formato recusado nem entra no semáforo", async () => {
+    const eventList: string[] = [];
+    const recordingSemaphore: Semaphore = {
+      run: (task) => {
+        eventList.push("entra");
+        return task();
+      },
+    };
+    const serial = createPhotoNormalizer({ semaphore: recordingSemaphore });
+    expect(await serial(asciiBytes("GIF89a"))).toEqual({ ok: false, error: "photo_invalid" });
+    expect(eventList).toEqual([]);
   });
 });

@@ -33,8 +33,8 @@ Formato: severidade · descrição · arquivo · origem (review/feature) · cond
 
 | Data | Issue | Commit |
 |------|-------|--------|
-| 2026-10-22 | Foto repetida no mesmo pedido custava uma extração a mais e contava duas vezes na junção: o upload recusa a foto com o mesmo `content_hash` normalizado de outra do pedido (`photo_duplicate`), no envio e na troca | F2-01, `feat/api/pedidos-e-upload` |
-| 2026-10-22 | `storageKeySchema` aceitava GUID maiúsculo, `ObjectStorage` recebia `string` e o TTL da URL assinada não era constante: o schema só aceita minúsculas, a interface recebe `StorageKey` e o TTL validado, e `SIGNED_URL_TTL_SECONDS` vive no core | F2-01, `feat/api/pedidos-e-upload` |
+| 2026-10-22 | Foto repetida no mesmo pedido custava uma extração a mais e contava duas vezes na junção: o upload recusa a foto com o mesmo `content_hash` normalizado de outra do pedido (`photo_duplicate`), no envio e na troca | `63de6b9` |
+| 2026-10-22 | `storageKeySchema` aceitava GUID maiúsculo, `ObjectStorage` recebia `string` e o TTL da URL assinada não era constante: o schema só aceita minúsculas, a interface recebe `StorageKey` e o TTL validado, e `SIGNED_URL_TTL_SECONDS` vive no core | `07fba78` |
 | 2026-10-21 | O assunto `lp5-word-classes` da `tax-v2` estava sem a revisão do professor, inclusive na sobreposição com `lp5-nominal-agreement` (`EF05LP26`, gênero e número): o professor aprovou como está | F1-10, `feat/pedagogy/regressao-pedagogica` |
 | 2026-10-21 | Taxonomia, schemas e validadores do kit, avaliador matemático, modelos e prompts da F1-01 a F1-07 entraram sem regressão pedagógica: a F1-10 rodou `bun run test:pedagogy` com os 35 casos (rodada 1 e rodada final juntada, resumos em `docs/pedagogy/regressao/`), e as correções viraram `tax-v2`, `generate` e `review` v2 e a spec pedagógica 1.5 | `22ed80a` |
 | 2026-10-21 | Nome de pessoa ou de escola copiado pela extração para a `evidence` ou o perfil: nos 4 casos com dado pessoal inventado, nenhum nome, escola ou telefone passou, nem por palavra do nome (`personal_data_copied`, rodada final da F1-10) | `22ed80a` |

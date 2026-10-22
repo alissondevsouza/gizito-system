@@ -5,6 +5,7 @@ import {
   apiErrorSchema,
   errorNameOf,
   MAX_ORDER_UPLOAD_BYTES,
+  MAX_SERVER_REQUEST_BODY_BYTES,
   type ObjectStorage,
 } from "@gizito/core";
 import type { Database } from "@gizito/db";
@@ -15,7 +16,6 @@ import { createHealthRoutes } from "#src/routes/health.ts";
 import { createOrderRoutes } from "#src/routes/orders.ts";
 
 export const UNMATCHED_ROUTE = "unmatched";
-export const SERVER_MAX_REQUEST_BODY_BYTES = 2 * MAX_ORDER_UPLOAD_BYTES;
 
 export type AppDependencies = {
   db: Database;
@@ -28,6 +28,7 @@ export type AppDependencies = {
   isSecureCookie: boolean;
   now?: () => Date;
   randomBytes?: (length: number) => Uint8Array;
+  runInBackground?: (task: () => Promise<void>) => void;
 };
 
 const defaultRandomBytes = (length: number) => new Uint8Array(randomBytes(length));
@@ -57,11 +58,16 @@ export function createApp({
   webPublicUrl,
   now = () => new Date(),
   randomBytes: drawRandomBytes = defaultRandomBytes,
+  runInBackground = (task) => {
+    task().catch((error: unknown) => {
+      logger.error({ errorName: errorNameOf(error) }, "tarefa em segundo plano falhou");
+    });
+  },
   ...orderDependencies
 }: AppDependencies) {
   const requestStartMap = new WeakMap<Request, number>();
   const errorCodeMap = new WeakMap<Request, ApiErrorCode>();
-  return new Elysia({ serve: { maxRequestBodySize: SERVER_MAX_REQUEST_BODY_BYTES } })
+  return new Elysia({ serve: { maxRequestBodySize: MAX_SERVER_REQUEST_BODY_BYTES } })
     .use(cors({ origin: new URL(webPublicUrl).origin, credentials: true }))
     .onRequest(({ request }) => {
       requestStartMap.set(request, performance.now());
@@ -102,6 +108,7 @@ export function createApp({
         logger,
         now,
         randomBytes: drawRandomBytes,
+        runInBackground,
       }),
     );
 }

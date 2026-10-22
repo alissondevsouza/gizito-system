@@ -12,7 +12,7 @@ import {
   type Result,
 } from "@gizito/core";
 import sharp from "sharp";
-import { createSemaphore } from "#src/concurrency/semaphore.ts";
+import { createSemaphore, type Semaphore } from "#src/concurrency/semaphore.ts";
 import { computeContentHash } from "#src/photo/content-hash.ts";
 
 const JPEG_BACKGROUND_COLOR = "#ffffff";
@@ -32,7 +32,7 @@ export type PhotoNormalizer = (
 ) => Promise<Result<NormalizedPhoto, typeof PHOTO_INVALID_CODE>>;
 
 export type PhotoNormalizerOptions = {
-  readonly concurrency?: number;
+  readonly semaphore?: Semaphore;
   readonly maxInputPixels?: number;
 };
 
@@ -55,10 +55,9 @@ async function encodeJpeg(
 }
 
 export function createPhotoNormalizer({
-  concurrency = PHOTO_NORMALIZE_CONCURRENCY,
+  semaphore = createSemaphore(PHOTO_NORMALIZE_CONCURRENCY),
   maxInputPixels = MAX_PHOTO_INPUT_PIXELS,
 }: PhotoNormalizerOptions = {}): PhotoNormalizer {
-  const semaphore = createSemaphore(concurrency);
   return async (bytes) => {
     if (detectPhotoFormat(bytes.subarray(0, PHOTO_SIGNATURE_MAX_BYTES)) === null) {
       return err(PHOTO_INVALID_CODE);

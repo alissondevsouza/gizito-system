@@ -8,7 +8,11 @@ import {
 } from "@gizito/core";
 import { type Database, previewRequest, type Transaction } from "@gizito/db";
 import { and, count, eq, gt, lt, sql } from "drizzle-orm";
-import type { ClientKeyHashMap } from "#src/http/client-identity.ts";
+
+export type ClientKeyHashMap = {
+  readonly clientIpHash: string;
+  readonly deviceHash: string;
+};
 
 const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
 

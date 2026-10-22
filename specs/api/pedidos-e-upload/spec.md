@@ -375,7 +375,7 @@ Um corpo enviado em chunks sem `Content-Length` e acima do teto do servidor rece
   - ler as fotos atuais (por `photo_index`) depois de travar o pedido e aplicar `start_analysis`, na mesma transação;
   - em `photos_changed`, limpar o que gravar da prévia;
   - concluir o job na mesma transação de `analysis_failed → draft`, ou reenfileirar se as fotos mudaram enquanto o job ainda estava ativo: uma troca nesse intervalo vê o singleton ainda `active` e não enfileira nada.
-- **Para a F2-06:** apagar também a miniatura de cada foto.
+- **Para a F2-06:** apagar também a miniatura de cada foto e as linhas de `preview_request` com mais de 24 h (a reserva só apaga no próximo insert).
 - **Para a F2-09:** desafio Turnstile no `challenge_required`, teste em aparelho e `credentials: "include"`.
 - **Para a F2-12:** a política de privacidade cita o cookie de dispositivo e o HMAC do IP guardado por 24 h.
 - **Para a F2-13:** regra de ciclo de vida de 30 dias no prefixo `photos/`, `TRUSTED_PROXY_HOP_COUNT` do proxy e `test:storage-live` verde.

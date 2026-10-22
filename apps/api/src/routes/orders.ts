@@ -10,7 +10,6 @@ import { toOrderErrorResponse } from "#src/errors.ts";
 import {
   buildDeviceCookie,
   type ClientIdentityOptions,
-  type ClientKeyHashMap,
   resolveClientIdentity,
 } from "#src/http/client-identity.ts";
 import {
@@ -20,6 +19,7 @@ import {
   type OrderServiceError,
   replaceOrderPhotoList,
 } from "#src/services/orders.ts";
+import type { ClientKeyHashMap } from "#src/services/preview-rate-limit.ts";
 
 export type OrderRouteDependencies = OrderServiceDependencies &
   ClientIdentityOptions & {

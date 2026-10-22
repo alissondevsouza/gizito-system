@@ -16,7 +16,7 @@ import {
 import { job, order, orderPhoto, previewRequest } from "@gizito/db";
 import { createTestDatabase, type TestDatabase, truncateAllTables } from "@gizito/db/test-helpers";
 import { createMemoryLogger } from "@gizito/integrations/fakes";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import sharp from "sharp";
 import {
   buildAppDependencies,
@@ -55,8 +55,35 @@ const hmac = (value: string) =>
 
 function setup(overrides: Partial<TestAppDependencies> = {}) {
   const memoryLogger = createMemoryLogger();
-  const dependencies = buildAppDependencies(testDatabase.db, memoryLogger.logger, overrides);
-  return { app: createApp(dependencies), dependencies, ...memoryLogger };
+  const backgroundTaskList: (() => Promise<void>)[] = [];
+  const dependencies = buildAppDependencies(testDatabase.db, memoryLogger.logger, {
+    runInBackground: (task) => {
+      backgroundTaskList.push(task);
+    },
+    ...overrides,
+  });
+  const settleBackgroundTasks = async () => {
+    await Promise.all(backgroundTaskList.splice(0).map((task) => task()));
+  };
+  return { app: createApp(dependencies), dependencies, settleBackgroundTasks, ...memoryLogger };
+}
+
+async function withFailingJobInsert(run: () => Promise<void>) {
+  await testDatabase.db.execute(
+    sql.raw(`CREATE FUNCTION fail_job_insert() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN RAISE EXCEPTION 'falha forçada no insert do job'; END $$`),
+  );
+  await testDatabase.db.execute(
+    sql.raw(
+      "CREATE TRIGGER fail_job_insert BEFORE INSERT ON job FOR EACH ROW EXECUTE FUNCTION fail_job_insert()",
+    ),
+  );
+  try {
+    await run();
+  } finally {
+    await testDatabase.db.execute(sql.raw("DROP TRIGGER fail_job_insert ON job"));
+    await testDatabase.db.execute(sql.raw("DROP FUNCTION fail_job_insert()"));
+  }
 }
 
 function clientHeaders({
@@ -318,7 +345,26 @@ describe("POST /orders (RF-01, RF-02, RF-03)", () => {
     expect(await testDatabase.db.$count(job)).toBe(0);
   });
 
-  it("falha do storage na 3ª gravação dá 503 e remove as duas primeiras", async () => {
+  it("falha no insert do job não deixa pedido nem foto e remove os objetos (mesma transação)", async () => {
+    const { app, dependencies } = setup();
+    await withFailingJobInsert(async () => {
+      const response = await postOrder(
+        app,
+        orderForm([
+          photoFile(await syntheticJpeg(8), "a.jpg"),
+          photoFile(await syntheticJpeg(9), "b.jpg"),
+        ]),
+      );
+      await expectApiError(response, 500, "internal_error");
+    });
+    expect(await testDatabase.db.$count(order)).toBe(0);
+    expect(await testDatabase.db.$count(orderPhoto)).toBe(0);
+    expect(await testDatabase.db.$count(job)).toBe(0);
+    expect(dependencies.storage.objectMap.size).toBe(0);
+    expect(dependencies.storage.deletedKeyList).toHaveLength(4);
+  });
+
+  it("falha do storage na 3ª gravação dá 503 e remove as duas primeiras e tenta a terceira", async () => {
     const { app, dependencies } = setup();
     dependencies.storage.failPutAfter(2);
     const response = await postOrder(
@@ -330,7 +376,7 @@ describe("POST /orders (RF-01, RF-02, RF-03)", () => {
     );
     await expectApiError(response, 503, "service_unavailable");
     expect(dependencies.storage.objectMap.size).toBe(0);
-    expect(dependencies.storage.deletedKeyList).toHaveLength(2);
+    expect(dependencies.storage.deletedKeyList).toHaveLength(3);
     expect(await testDatabase.db.$count(order)).toBe(0);
   });
 
@@ -390,7 +436,7 @@ describe("GET /orders/:token (RF-04)", () => {
 
 describe("PUT /orders/:token/photos (RF-05)", () => {
   it("em preview_ready, troca duas fotos numa chamada, volta a draft e enfileira uma análise", async () => {
-    const { app, dependencies } = setup();
+    const { app, dependencies, settleBackgroundTasks } = setup();
     const created = await createdOrder(app, 3);
     await testDatabase.db.update(job).set({ status: "completed", finishDatetime: new Date() });
     await testDatabase.db
@@ -424,12 +470,16 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
       .where(and(eq(orderPhoto.orderId, created.orderId), eq(orderPhoto.photoIndex, 0)));
     const replaced = replacedList.find((photo) => photo.orderPhotoId === first?.orderPhotoId);
     expect(replaced?.replacedDatetime).toBeInstanceOf(Date);
-    expect(replaced?.deleteDatetime).toBeInstanceOf(Date);
-    expect(
-      dependencies.storage.objectMap.has(
-        photoStorageKey(created.orderId, first?.orderPhotoId ?? ""),
-      ),
-    ).toBe(false);
+    expect(replaced?.deleteDatetime).toBeNull();
+    const oldPhotoKey = photoStorageKey(created.orderId, first?.orderPhotoId ?? "");
+    expect(dependencies.storage.objectMap.has(oldPhotoKey)).toBe(true);
+    await settleBackgroundTasks();
+    const [removed] = await testDatabase.db
+      .select()
+      .from(orderPhoto)
+      .where(eq(orderPhoto.orderPhotoId, first?.orderPhotoId ?? ""));
+    expect(removed?.deleteDatetime).toBeInstanceOf(Date);
+    expect(dependencies.storage.objectMap.has(oldPhotoKey)).toBe(false);
     const pendingJobList = await testDatabase.db
       .select()
       .from(job)
@@ -542,7 +592,7 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
   });
 
   it("duas trocas concorrentes da mesma foto: uma passa, a outra dá 404 e não deixa objeto", async () => {
-    const { app, dependencies } = setup();
+    const { app, dependencies, settleBackgroundTasks } = setup();
     const created = await createdOrder(app, 1);
     const [first] = await currentPhotoRowList(created.orderId);
     const [left, right] = await Promise.all([
@@ -558,6 +608,7 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
       ),
     ]);
     expect([left.status, right.status].sort()).toEqual([200, 404]);
+    await settleBackgroundTasks();
     const currentList = await currentPhotoRowList(created.orderId);
     expect(currentList).toHaveLength(1);
     expect([...dependencies.storage.objectMap.keys()].sort()).toEqual(
@@ -569,7 +620,7 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
   });
 
   it("falha ao remover o objeto antigo não muda a resposta e deixa delete_datetime nulo", async () => {
-    const { app, dependencies } = setup();
+    const { app, dependencies, settleBackgroundTasks, readEntryList } = setup();
     const created = await createdOrder(app, 1);
     const [first] = await currentPhotoRowList(created.orderId);
     dependencies.storage.failNextDelete();
@@ -579,12 +630,86 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
       replaceForm([[first?.orderPhotoId ?? "", photoFile(await syntheticJpeg(95), "nova.jpg")]]),
     );
     expect(response.status).toBe(200);
+    await settleBackgroundTasks();
     const [replaced] = await testDatabase.db
       .select()
       .from(orderPhoto)
       .where(eq(orderPhoto.orderPhotoId, first?.orderPhotoId ?? ""));
     expect(replaced?.replacedDatetime).toBeInstanceOf(Date);
     expect(replaced?.deleteDatetime).toBeNull();
+    expect(
+      readEntryList().find((entry) => entry.msg === "remoção no storage falhou"),
+    ).toMatchObject({
+      orderId: created.orderId,
+      orderPhotoId: first?.orderPhotoId,
+      errorCode: "storage_unavailable",
+    });
+  });
+
+  it("falha no insert do job desfaz a troca inteira e remove os objetos novos", async () => {
+    const { app, dependencies } = setup();
+    const created = await createdOrder(app, 1);
+    await setOrderStatus(created.orderId, "preview_ready");
+    const [first] = await currentPhotoRowList(created.orderId);
+    await testDatabase.db.delete(job);
+    const objectKeyList = [...dependencies.storage.objectMap.keys()];
+    await withFailingJobInsert(async () => {
+      const response = await putPhotos(
+        app,
+        created.publicToken,
+        replaceForm([[first?.orderPhotoId ?? "", photoFile(await syntheticJpeg(97), "nova.jpg")]]),
+      );
+      await expectApiError(response, 500, "internal_error");
+    });
+    const [row] = await testDatabase.db
+      .select()
+      .from(order)
+      .where(eq(order.orderId, created.orderId));
+    expect(row?.status).toBe("preview_ready");
+    const currentList = await currentPhotoRowList(created.orderId);
+    expect(currentList.map((photo) => photo.orderPhotoId)).toEqual([first?.orderPhotoId ?? ""]);
+    expect(await testDatabase.db.$count(orderPhoto)).toBe(1);
+    expect([...dependencies.storage.objectMap.keys()].sort()).toEqual(objectKeyList.sort());
+  });
+
+  it("mais pares que MAX_PHOTO_COUNT dá 400 too_many_photos", async () => {
+    const { app } = setup();
+    const created = await createdOrder(app, 1);
+    const photo = photoFile(await syntheticJpeg(98), "nova.jpg");
+    const response = await putPhotos(
+      app,
+      created.publicToken,
+      replaceForm(Array.from({ length: 6 }, () => [crypto.randomUUID(), photo] as const)),
+    );
+    await expectApiError(response, 400, "too_many_photos");
+  });
+
+  it("duas trocas concorrentes de fotos diferentes para o mesmo conteúdo: a segunda cai na duplicata sob o lock", async () => {
+    const { app, dependencies, settleBackgroundTasks } = setup();
+    const created = await createdOrder(app, 2);
+    const [first, second] = await currentPhotoRowList(created.orderId);
+    const sameContent = await syntheticJpeg(99);
+    const [left, right] = await Promise.all([
+      putPhotos(
+        app,
+        created.publicToken,
+        replaceForm([[first?.orderPhotoId ?? "", photoFile(sameContent, "x.jpg")]]),
+      ),
+      putPhotos(
+        app,
+        created.publicToken,
+        replaceForm([[second?.orderPhotoId ?? "", photoFile(sameContent, "y.jpg")]]),
+      ),
+    ]);
+    const statusList = [left.status, right.status].sort();
+    expect(statusList).toEqual([200, 422]);
+    const loser = left.status === 422 ? left : right;
+    const loserBody = apiErrorSchema.parse(await loser.json());
+    expect(loserBody.code).toBe("photo_duplicate");
+    await settleBackgroundTasks();
+    const currentList = await currentPhotoRowList(created.orderId);
+    expect(new Set(currentList.map((photo) => photo.contentHash)).size).toBe(2);
+    expect(dependencies.storage.objectMap.size).toBe(4);
   });
 });
 
@@ -706,7 +831,7 @@ describe("rate limit da prévia (RF-06)", () => {
 });
 
 describe("logs sem dado pessoal (RF-10)", () => {
-  it("criação, troca, 429 e 503 não logam token, IP, cookie nem nome de arquivo", async () => {
+  it("criação, troca, 429 e 503 não logam token, IP, cookie nem nome de arquivo, e a falha leva orderId", async () => {
     const { app, dependencies, lineList, readEntryList, waitForEntryList } = setup();
     const created = await createdOrder(app, 1);
     const [first] = await currentPhotoRowList(created.orderId);
@@ -717,6 +842,15 @@ describe("logs sem dado pessoal (RF-10)", () => {
         [first?.orderPhotoId ?? "", photoFile(await syntheticJpeg(110), "nome-da-crianca.jpg")],
       ]),
     );
+    const [replacedFirst] = await currentPhotoRowList(created.orderId);
+    dependencies.storage.failNextPut();
+    await putPhotos(
+      app,
+      created.publicToken,
+      replaceForm([
+        [replacedFirst?.orderPhotoId ?? "", photoFile(await syntheticJpeg(113), "boletim.jpg")],
+      ]),
+    );
     dependencies.storage.failNextPut();
     await postOrder(app, orderForm([photoFile(await syntheticJpeg(111), "escola-tal.jpg")]));
     await insertPreviewRequestList(PREVIEW_RATE_LIMIT_PER_HOUR.device, {
@@ -724,7 +858,7 @@ describe("logs sem dado pessoal (RF-10)", () => {
     });
     await postOrder(app, orderForm([photoFile(await syntheticJpeg(112), "caderno.jpg")]));
     await waitForEntryList(
-      (entryList) => entryList.filter((entry) => entry.msg === "request").length === 4,
+      (entryList) => entryList.filter((entry) => entry.msg === "request").length === 5,
     );
     const logText = lineList.join("\n");
     for (const forbidden of [
@@ -732,6 +866,7 @@ describe("logs sem dado pessoal (RF-10)", () => {
       CLIENT_IP,
       DEVICE_ID,
       "nome-da-crianca",
+      "boletim",
       "escola-tal",
       "caderno-0",
     ]) {
@@ -742,6 +877,18 @@ describe("logs sem dado pessoal (RF-10)", () => {
       orderId: created.orderId,
       photoCount: 1,
     });
+    expect(entryList.find((entry) => entry.msg === "troca de fotos recusada")).toMatchObject({
+      orderId: created.orderId,
+      photoCount: 1,
+      errorCode: "service_unavailable",
+    });
+    expect(entryList.find((entry) => entry.msg === "pedido recusado")).toMatchObject({
+      photoCount: 1,
+      errorCode: "service_unavailable",
+    });
+    expect(typeof entryList.find((entry) => entry.msg === "pedido recusado")?.orderId).toBe(
+      "string",
+    );
     expect(entryList.find((entry) => entry.msg === "fotos trocadas")).toMatchObject({
       orderId: created.orderId,
     });
