@@ -4,7 +4,10 @@ import {
   type ApiErrorCode,
   apiErrorSchema,
   createOrderResponseSchema,
+  kitPreview,
   MAX_PHOTO_BYTES,
+  type MergedExtraction,
+  type OrderAnalysis,
   type OrderStatus,
   orderViewSchema,
   PREVIEW_RATE_LIMIT_PER_DAY,
@@ -145,6 +148,78 @@ async function currentPhotoRowList(orderId: string) {
 async function setOrderStatus(orderId: string, status: OrderStatus) {
   await testDatabase.db.update(order).set({ status }).where(eq(order.orderId, orderId));
 }
+
+const EVIDENCE_TEXT = "título da página e seis contas";
+const TERMINOLOGY_TEXT = "numerador da turma";
+const CONTEXT_THEME_TEXT = "compras na feira";
+
+function mergedExtractionFor(photoCount: number): MergedExtraction {
+  return {
+    photoList: Array.from({ length: photoCount }, (_, index) => ({
+      photoIndex: index + 1,
+      legibility: index === 0 ? "good" : "unreadable",
+      isUsable: index === 0,
+      legibilityScore: index === 0 ? 1 : 0,
+      photoIssueList: index === 0 ? [] : ["blurry", "dark"],
+    })),
+    topicCandidateList: [
+      { topicId: "ma5-equivalent-fractions", confidence: "high", photoIndexList: [1] },
+      { topicId: "ma5-fractions", confidence: "medium", photoIndexList: [1] },
+    ],
+    unsupportedTopicList: [{ unsupportedTopicId: "ma-grid-symmetry", photoIndexList: [1] }],
+    sourceWarningList: [{ code: "personal_data_visible", photoIndexList: [1] }],
+    materialProfile: {
+      exerciseFormatList: ["computation", "word_problem"],
+      notationList: ["fraction_slash"],
+      terminologyList: [TERMINOLOGY_TEXT],
+      contextThemeList: [CONTEXT_THEME_TEXT],
+      apparentLevel: "at_grade",
+      hasFigures: false,
+      isHandwritten: true,
+    },
+    issueList: [
+      {
+        code: "extraction_personal_data_dropped",
+        severity: "warning",
+        stage: "extract",
+        itemId: null,
+        note: EVIDENCE_TEXT,
+        excerpt: null,
+      },
+    ],
+  };
+}
+
+async function setAnalysis(
+  orderId: string,
+  status: Extract<OrderStatus, "draft" | "preview_ready">,
+  buildAnalysis: (analyzedPhotoIdList: string[]) => OrderAnalysis,
+) {
+  const photoList = await currentPhotoRowList(orderId);
+  const analysis = buildAnalysis(photoList.map((photo) => photo.orderPhotoId));
+  await testDatabase.db.update(order).set({ status, analysis }).where(eq(order.orderId, orderId));
+  for (const [index, photo] of photoList.entries()) {
+    await testDatabase.db
+      .update(orderPhoto)
+      .set({ legibilityScore: index === 0 ? 1 : 0 })
+      .where(eq(orderPhoto.orderPhotoId, photo.orderPhotoId));
+  }
+  return analysis;
+}
+
+const previewAnalysis = (analyzedPhotoIdList: string[]): OrderAnalysis => ({
+  outcome: "preview_ready",
+  analyzedPhotoIdList,
+  mergedExtraction: mergedExtractionFor(analyzedPhotoIdList.length),
+});
+
+const failedAnalysis = (analyzedPhotoIdList: string[]): OrderAnalysis => ({
+  outcome: "analysis_failed",
+  failCode: "only_unsupported_topics",
+  isMaterialMismatch: false,
+  analyzedPhotoIdList,
+  mergedExtraction: { ...mergedExtractionFor(analyzedPhotoIdList.length), topicCandidateList: [] },
+});
 
 async function insertPreviewRequestList(
   count: number,
@@ -416,6 +491,83 @@ describe("GET /orders/:token (RF-04)", () => {
     }
   });
 
+  it("draft com a análise pendente traz analysisFailure nula e fotos sem avaliação (spec F2-02, RF-10)", async () => {
+    const { app } = setup();
+    const created = await createdOrder(app, 2);
+    const view = orderViewSchema.parse(await (await getOrder(app, created.publicToken)).json());
+    if (view.status !== "draft") throw new Error("esperava draft");
+    expect(view.analysisFailure).toBeNull();
+    for (const photo of view.photoList) {
+      expect(photo).toMatchObject({ isUsable: null, photoIssueList: [], legibilityScore: null });
+    }
+  });
+
+  it("draft depois da falha traz o aviso, os não atendidos e o motivo de cada foto (spec F2-02, RF-10)", async () => {
+    const { app } = setup();
+    const created = await createdOrder(app, 2);
+    await setAnalysis(created.orderId, "draft", failedAnalysis);
+    const view = orderViewSchema.parse(await (await getOrder(app, created.publicToken)).json());
+    if (view.status !== "draft") throw new Error("esperava draft");
+    expect(view.analysisFailure).toEqual({
+      failCode: "only_unsupported_topics",
+      isMaterialMismatch: false,
+      unsupportedTopicList: [
+        { unsupportedTopicId: "ma-grid-symmetry", label: expect.any(String), reason: "figure" },
+      ],
+    });
+    expect(
+      view.photoList.map(({ isUsable, photoIssueList, legibilityScore }) => ({
+        isUsable,
+        photoIssueList,
+        legibilityScore,
+      })),
+    ).toEqual([
+      { isUsable: true, photoIssueList: [], legibilityScore: 1 },
+      { isUsable: false, photoIssueList: ["blurry", "dark"], legibilityScore: 0 },
+    ]);
+  });
+
+  it("preview_ready traz assuntos com rótulo, não atendidos, perfil resumido e o kit, sem texto do material (spec F2-02, RF-10)", async () => {
+    const { app } = setup();
+    const created = await createdOrder(app, 2);
+    await setAnalysis(created.orderId, "preview_ready", previewAnalysis);
+    const body = await (await getOrder(app, created.publicToken)).json();
+    const view = orderViewSchema.parse(body);
+    if (view.status !== "preview_ready") throw new Error("esperava preview_ready");
+    expect(view.topicCandidateList).toEqual([
+      { topicId: "ma5-equivalent-fractions", label: expect.any(String), confidence: "high" },
+      { topicId: "ma5-fractions", label: expect.any(String), confidence: "medium" },
+    ]);
+    expect(view.unsupportedTopicList.map((topic) => topic.unsupportedTopicId)).toEqual([
+      "ma-grid-symmetry",
+    ]);
+    expect(view.materialProfile).toEqual({
+      exerciseFormatList: ["computation", "word_problem"],
+      notationList: ["fraction_slash"],
+      isHandwritten: true,
+    });
+    expect(view.kitPreview).toEqual(kitPreview);
+    expect(view.photoList[1]).toMatchObject({
+      isUsable: false,
+      photoIssueList: ["blurry", "dark"],
+    });
+    const serialized = JSON.stringify(body);
+    for (const leaked of [
+      "evidence",
+      EVIDENCE_TEXT,
+      "terminologyList",
+      TERMINOLOGY_TEXT,
+      "contextThemeList",
+      CONTEXT_THEME_TEXT,
+      "issueList",
+      "sourceWarningList",
+      "personal_data_visible",
+      "apparentLevel",
+    ]) {
+      expect(serialized).not.toContain(leaked);
+    }
+  });
+
   it("depois da prévia, só os campos base", async () => {
     const { app } = setup();
     const created = await createdOrder(app, 1);
@@ -439,11 +591,12 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
     const { app, dependencies, settleBackgroundTasks } = setup();
     const created = await createdOrder(app, 3);
     await testDatabase.db.update(job).set({ status: "completed", finishDatetime: new Date() });
+    await setAnalysis(created.orderId, "preview_ready", previewAnalysis);
     await testDatabase.db
       .update(order)
-      .set({ status: "preview_ready", materialProfile: { exerciseFormatList: [] } })
+      .set({ materialProfile: { exerciseFormatList: [] } })
       .where(eq(order.orderId, created.orderId));
-    const [first, , third] = await currentPhotoRowList(created.orderId);
+    const [first, second, third] = await currentPhotoRowList(created.orderId);
     const response = await putPhotos(
       app,
       created.publicToken,
@@ -460,7 +613,12 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
       .from(order)
       .where(eq(order.orderId, created.orderId));
     expect(row?.materialProfile).toBeNull();
+    expect(row?.analysis).toBeNull();
+    if (view.status !== "draft") throw new Error("esperava draft");
+    expect(view.analysisFailure).toBeNull();
     const currentList = await currentPhotoRowList(created.orderId);
+    expect(currentList[1]?.orderPhotoId).toBe(second?.orderPhotoId);
+    expect(currentList.map((photo) => photo.legibilityScore)).toEqual([null, null, null]);
     expect(currentList.map((photo) => photo.photoIndex)).toEqual([0, 1, 2]);
     expect(currentList[0]?.orderPhotoId).not.toBe(first?.orderPhotoId);
     expect(currentList[2]?.orderPhotoId).not.toBe(third?.orderPhotoId);
@@ -486,6 +644,37 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
       .where(eq(job.status, "pending"));
     expect(pendingJobList).toHaveLength(1);
     expect(await testDatabase.db.$count(previewRequest)).toBe(2);
+  });
+
+  it("em draft depois da falha, limpa o aviso e as notas e enfileira nova análise (spec F2-02, RF-09)", async () => {
+    const { app } = setup();
+    const created = await createdOrder(app, 2);
+    await testDatabase.db.update(job).set({ status: "completed", finishDatetime: new Date() });
+    await setAnalysis(created.orderId, "draft", failedAnalysis);
+    const [, second] = await currentPhotoRowList(created.orderId);
+    const response = await putPhotos(
+      app,
+      created.publicToken,
+      replaceForm([[second?.orderPhotoId ?? "", photoFile(await syntheticJpeg(70), "nova.jpg")]]),
+    );
+    expect(response.status).toBe(200);
+    const view = orderViewSchema.parse(await response.json());
+    if (view.status !== "draft") throw new Error("esperava draft");
+    expect(view.analysisFailure).toBeNull();
+    expect(view.photoList.map((photo) => [photo.legibilityScore, photo.isUsable])).toEqual([
+      [null, null],
+      [null, null],
+    ]);
+    const [row] = await testDatabase.db
+      .select({ analysis: order.analysis })
+      .from(order)
+      .where(eq(order.orderId, created.orderId));
+    expect(row?.analysis).toBeNull();
+    const pendingJobList = await testDatabase.db
+      .select()
+      .from(job)
+      .where(eq(job.status, "pending"));
+    expect(pendingJobList).toHaveLength(1);
   });
 
   it("em draft com análise pendente, a troca não cria segundo job", async () => {
@@ -693,7 +882,7 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
   it("falha no insert do job desfaz a troca inteira e remove os objetos novos", async () => {
     const { app, dependencies } = setup();
     const created = await createdOrder(app, 1);
-    await setOrderStatus(created.orderId, "preview_ready");
+    const analysis = await setAnalysis(created.orderId, "preview_ready", previewAnalysis);
     const [first] = await currentPhotoRowList(created.orderId);
     await testDatabase.db.delete(job);
     const objectKeyList = [...dependencies.storage.objectMap.keys()];
@@ -710,8 +899,10 @@ describe("PUT /orders/:token/photos (RF-05)", () => {
       .from(order)
       .where(eq(order.orderId, created.orderId));
     expect(row?.status).toBe("preview_ready");
+    expect(row?.analysis).toEqual(analysis);
     const currentList = await currentPhotoRowList(created.orderId);
     expect(currentList.map((photo) => photo.orderPhotoId)).toEqual([first?.orderPhotoId ?? ""]);
+    expect(currentList[0]?.legibilityScore).toBe(1);
     expect(await testDatabase.db.$count(orderPhoto)).toBe(1);
     expect([...dependencies.storage.objectMap.keys()].sort()).toEqual(objectKeyList.sort());
   });

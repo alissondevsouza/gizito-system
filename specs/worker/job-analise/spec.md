@@ -176,8 +176,8 @@ Roadmap F2-02. O tamanho subiu de M para L porque a entrega cruza core, db, inte
 - [x] 3.2 Handler `order.analyze`, adaptador do cache e `onExhausted`, com integração · Arquivos: `apps/worker/src/jobs/order-analyze.ts`, testes · Verificação: `bun run --cwd apps/worker test`, `bun run --cwd apps/worker test:integration`
 
 ### M4 — api
-- [ ] 4.1 Troca limpa a análise e as notas em `draft` e `preview_ready` · Arquivos: `apps/api/src/services/orders.ts`, testes · Verificação: `bun run --cwd apps/api test:integration`
-- [ ] 4.2 View com `isUsable`, `photoIssueList`, `analysisFailure` e campos da prévia · Arquivos: `apps/api/src/services/orders.ts`, testes · Verificação: `bun run --cwd apps/api test:integration`
+- [x] 4.1 Troca limpa a análise e as notas em `draft` e `preview_ready` · Arquivos: `apps/api/src/services/orders.ts`, testes · Verificação: `bun run --cwd apps/api test:integration`
+- [x] 4.2 View com `isUsable`, `photoIssueList`, `analysisFailure` e campos da prévia · Arquivos: `apps/api/src/services/orders.ts`, testes · Verificação: `bun run --cwd apps/api test:integration`
 
 ### M5 — visto funcionando e fechamento
 - [ ] 5.1 Suíte: `bun run lint`, `bun run typecheck`, `bun run test`, integração dos workspaces tocados, `bun run build`

@@ -1,5 +1,6 @@
 import {
   type ApiErrorCode,
+  analysisFailureViewOf,
   buildPublicToken,
   buildShortCode,
   type CreateOrderResponse,
@@ -13,16 +14,20 @@ import {
   type ObjectStorage,
   ObjectStorageError,
   ORDER_CODE_ATTEMPT_COUNT,
+  type OrderAnalysis,
   type OrderStatus,
   type OrderView,
   ok,
+  orderAnalysisSchema,
   orderViewSchema,
   PHOTO_SIGNATURE_MAX_BYTES,
   type PhotoIndex,
   PUBLIC_TOKEN_BYTES,
+  photoAnalysisViewOf,
   photoStageOrderStatusList,
   photoStorageKey,
   photoThumbnailStorageKey,
+  previewViewOf,
   publicTokenSchema,
   type Result,
   SHORT_CODE_LENGTH,
@@ -332,11 +337,24 @@ export async function createOrder(
   }
 }
 
+function stageViewOf(status: OrderStatus, analysis: OrderAnalysis | null) {
+  if (status === "draft") return { analysisFailure: analysisFailureViewOf(analysis) };
+  if (status === "preview_ready" && analysis !== null) return previewViewOf(analysis);
+  return {};
+}
+
 async function buildOrderView(
   { db, storage }: OrderServiceDependencies,
   row: Pick<
     typeof order.$inferSelect,
-    "orderId" | "publicToken" | "shortCode" | "status" | "grade" | "subject" | "insertDatetime"
+    | "orderId"
+    | "publicToken"
+    | "shortCode"
+    | "status"
+    | "grade"
+    | "subject"
+    | "insertDatetime"
+    | "analysis"
   >,
 ): Promise<OrderView> {
   const base = {
@@ -348,6 +366,7 @@ async function buildOrderView(
     insertDatetime: row.insertDatetime.toISOString(),
   };
   if (!isPhotoStageOrderStatus(row.status)) return orderViewSchema.parse(base);
+  const analysis = orderAnalysisSchema.nullable().parse(row.analysis);
   const photoList = await Promise.all(
     (await listCurrentPhotos(db, row.orderId)).map(async (photo) => ({
       orderPhotoId: photo.orderPhotoId,
@@ -357,9 +376,10 @@ async function buildOrderView(
         SIGNED_URL_TTL_SECONDS,
       ),
       legibilityScore: photo.legibilityScore,
+      ...photoAnalysisViewOf(analysis, photo.orderPhotoId),
     })),
   );
-  return orderViewSchema.parse({ ...base, photoList });
+  return orderViewSchema.parse({ ...base, photoList, ...stageViewOf(row.status, analysis) });
 }
 
 async function findOrderByToken(db: Database, publicToken: string) {
@@ -374,6 +394,7 @@ async function findOrderByToken(db: Database, publicToken: string) {
       grade: order.grade,
       subject: order.subject,
       insertDatetime: order.insertDatetime,
+      analysis: order.analysis,
     })
     .from(order)
     .where(eq(order.publicToken, parsedToken.data));
@@ -437,18 +458,24 @@ async function commitReplacement(
     if (duplicate !== undefined) {
       return err({ code: "photo_duplicate", photoIndex: duplicate.photoIndex });
     }
+    let status = locked.status;
     if (locked.status === "preview_ready") {
       const transition = transitionOrder(locked.status, "photos_changed");
       if (!transition.ok) return err({ code: "invalid_state" });
-      await tx
-        .update(order)
-        .set({ status: transition.value, materialProfile: null })
-        .where(eq(order.orderId, orderId));
+      status = transition.value;
     }
+    await tx
+      .update(order)
+      .set({ status, analysis: null, materialProfile: null })
+      .where(eq(order.orderId, orderId));
     await tx
       .update(orderPhoto)
       .set({ replacedDatetime: now() })
       .where(inArray(orderPhoto.orderPhotoId, [...replacedPhotoIdList]));
+    await tx
+      .update(orderPhoto)
+      .set({ legibilityScore: null })
+      .where(and(eq(orderPhoto.orderId, orderId), isNull(orderPhoto.replacedDatetime)));
     await tx.insert(orderPhoto).values(photoRowListOf(orderId, preparedList));
     await enqueueSingletonJob(tx, { name: "order.analyze", orderId }, orderId);
     return ok(undefined);
