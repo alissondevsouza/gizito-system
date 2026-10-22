@@ -217,8 +217,8 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
     - Com as decisões do humano, entraram `tax-v2` com `lp5-word-classes`, `generate` e `review` v2, `min` e `max` no avaliador, parágrafo curto no texto-base e casos de fronteira com duas respostas (spec pedagógica 1.5 §15.10).
     - A rodada final juntada (`docs/pedagogy/regressao/2026-10-21-extract-v1+plan-v1+generate-v2+review-v2.md`) teve 2 bloqueadores críticos, kits que falharam depois da única regeneração sem defeito fixo. Também mediu extração em 35 de 35, foto ilegível e dado pessoal em 5 de 5, US$ 0,41 por kit e geração p95 de 5 min 34 s.
     - Você decidiu fechar a F1-10 com os 2 críticos registrados como dívida HIGH (`known-issues.md`), com a taxa real medida no piloto (21/10/2026).
-    - Revisão neutra reprovada nas rodadas 1 e 2, com os achados corrigidos. O teto de 2 rodadas foi atingido, e as correções da rodada 2 ficam para a sua conferência (`review.md`).
-    - A revisão de `lp5-word-classes` pelo professor fica para a F1-11.
+    - Revisão neutra reprovada nas rodadas 1 e 2, com os achados corrigidos. O teto de 2 rodadas foi atingido, e você conferiu e aprovou as correções da rodada 2 (21/10/2026).
+    - O `lp5-word-classes` foi levado ao professor em 21/10/2026, e o parecer entra na F1-11.
 - [ ] **F1-11 `homologacao-e-amostras`** — pedagogy · P · depende: F1-10
   - Entrega: revisão de amostra por professor; 2 kits de amostra (Matemática e Português) marcados como amostra; custo por prévia e por kit, e tempo, registrados no PRD seção 3
   - Pronto quando: critério de lançamento do PRD 7.6 atendido

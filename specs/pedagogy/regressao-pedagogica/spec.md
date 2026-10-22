@@ -171,7 +171,8 @@ Roadmap F1-10, spec pedagógica §12 e §13. `bun run test:pedagogy` roda os 35 
 
 Concluída em 21/10/2026, com M1 a M6 feitos. A rodada final juntada teve 2 bloqueadores críticos inesperados (`review.md`). O humano decidiu fechar a F1-10 com eles registrados como dívida HIGH (`known-issues.md`).
 
+O humano aprovou as correções da revisão neutra rodada 2 em 21/10/2026.
+
 Pendências do humano:
-- conferir as correções da revisão neutra rodada 2, que ficaram sem verifier pelo teto de 2 rodadas;
-- revisão de `lp5-word-classes` pelo professor (F1-11);
+- parecer do professor sobre `lp5-word-classes`, enviado em 21/10/2026;
 - push e merge.
