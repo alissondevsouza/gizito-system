@@ -18,6 +18,8 @@ const productionReadyEnvironment = {
   ...validEnvironment,
   NODE_ENV: "production",
   PAYMENT_GATEWAY: "mercadopago",
+  MERCADOPAGO_ACCESS_TOKEN: "APP_USR-token-de-teste",
+  MERCADOPAGO_WEBHOOK_SECRET: "segredo-do-webhook",
   R2_ENDPOINT: "https://conta.r2.cloudflarestorage.com",
   TRUSTED_PROXY_HOP_COUNT: "1",
 };
@@ -70,6 +72,39 @@ describe("config da api (api.md §6)", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(z.prettifyError(result.error)).toContain("PAYMENT_GATEWAY");
+  });
+
+  it("mercadopago exige o access token e o segredo do webhook, nomeando cada um (spec F2-03, RF-11)", () => {
+    const {
+      MERCADOPAGO_ACCESS_TOKEN: _token,
+      MERCADOPAGO_WEBHOOK_SECRET: _secret,
+      ...withoutKeys
+    } = productionReadyEnvironment;
+    const result = apiConfigSchema.safeParse(withoutKeys);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join("."))).toEqual([
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "MERCADOPAGO_WEBHOOK_SECRET",
+    ]);
+    const withEmptySecret = apiConfigSchema.safeParse({
+      ...productionReadyEnvironment,
+      MERCADOPAGO_WEBHOOK_SECRET: "",
+    });
+    expect(withEmptySecret.success).toBe(false);
+  });
+
+  it("devolve o gateway resolvido: mercadopago com as chaves, fake sem elas e asaas recusado", () => {
+    expect(apiConfigSchema.parse(productionReadyEnvironment).paymentGateway).toEqual({
+      name: "mercadopago",
+      accessToken: "APP_USR-token-de-teste",
+      webhookSecret: "segredo-do-webhook",
+    });
+    expect(apiConfigSchema.parse(validEnvironment).paymentGateway).toEqual({ name: "fake" });
+    const asaas = apiConfigSchema.safeParse({ ...validEnvironment, PAYMENT_GATEWAY: "asaas" });
+    expect(asaas.success).toBe(false);
+    if (asaas.success) return;
+    expect(z.prettifyError(asaas.error)).toContain("asaas ainda não tem adaptador");
   });
 
   it("recusa PAYMENT_GATEWAY=fake em produção, nomeando o campo", () => {

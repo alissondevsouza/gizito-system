@@ -7,6 +7,7 @@ import {
   MAX_ORDER_UPLOAD_BYTES,
   MAX_SERVER_REQUEST_BODY_BYTES,
   type ObjectStorage,
+  type PaymentGateway,
 } from "@gizito/core";
 import type { Database } from "@gizito/db";
 import type { Logger, PhotoNormalizer } from "@gizito/integrations";
@@ -14,6 +15,7 @@ import { Elysia, ElysiaCustomStatusResponse, StatusMap, status } from "elysia";
 import { payloadTooLargeError, toApiErrorResponse } from "#src/errors.ts";
 import { createHealthRoutes } from "#src/routes/health.ts";
 import { createOrderRoutes } from "#src/routes/orders.ts";
+import { createChargeCreationLock } from "#src/services/charges.ts";
 
 export const UNMATCHED_ROUTE = "unmatched";
 
@@ -22,6 +24,7 @@ export type AppDependencies = {
   logger: Logger;
   webPublicUrl: string;
   storage: ObjectStorage;
+  paymentGateway: PaymentGateway;
   normalizePhoto: PhotoNormalizer;
   clientHashSecret: string;
   trustedProxyHopCount: number;
@@ -113,6 +116,7 @@ export function createApp({
         now,
         randomBytes: drawRandomBytes,
         runInBackground,
+        chargeCreationLock: createChargeCreationLock(),
       }),
     );
 }

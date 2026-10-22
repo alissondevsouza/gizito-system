@@ -3,8 +3,10 @@ import {
   checkStorageProductionEnvironment,
   checkTrustedProxyProductionEnvironment,
   clientHashEnvironmentSchema,
+  mercadoPagoEnvironmentSchema,
   paymentEnvironmentSchema,
   portSchema,
+  resolvePaymentGatewaySetting,
   sharedEnvironmentSchema,
   storageEnvironmentSchema,
   trustedProxyEnvironmentSchema,
@@ -16,6 +18,7 @@ export const DEFAULT_API_PORT = 3001;
 export const apiConfigSchema = sharedEnvironmentSchema
   .extend({
     ...paymentEnvironmentSchema.shape,
+    ...mercadoPagoEnvironmentSchema.shape,
     ...storageEnvironmentSchema.shape,
     ...clientHashEnvironmentSchema.shape,
     ...trustedProxyEnvironmentSchema.shape,
@@ -26,5 +29,9 @@ export const apiConfigSchema = sharedEnvironmentSchema
     checkProductionEnvironment(environment, context);
     checkStorageProductionEnvironment(environment, context);
     checkTrustedProxyProductionEnvironment(environment, context);
+  })
+  .transform((environment, context) => {
+    const paymentGateway = resolvePaymentGatewaySetting(environment, context);
+    return paymentGateway === null ? z.NEVER : { ...environment, paymentGateway };
   });
 export type ApiConfig = z.infer<typeof apiConfigSchema>;

@@ -4,8 +4,11 @@ import {
   MAX_PHOTO_BYTES,
   MAX_PHOTO_COUNT,
   type PhotoIndex,
+  type UnsupportedTopicReason,
+  type UnsupportedTopicView,
 } from "@gizito/core";
 import { ElysiaCustomStatusResponse } from "elysia";
+import type { ChargeServiceError, ChargeServiceErrorCode } from "#src/services/charges.ts";
 import type { OrderServiceError, OrderServiceErrorCode } from "#src/services/orders.ts";
 
 export const notFoundError: ApiError = {
@@ -100,4 +103,50 @@ export function toOrderErrorResponse({ code, photoIndex }: OrderServiceError): A
     status: orderErrorStatusMap[code],
     body: photoIndex === undefined ? body : { ...body, photoIndex },
   };
+}
+
+const unsupportedTopicReasonTextMap: Readonly<Record<UnsupportedTopicReason, string>> = {
+  figure: "depende de imagem ou de fala",
+  orality: "depende de imagem ou de fala",
+  open_writing: "é produção de texto que precisa de correção",
+};
+
+export function unsupportedTopicMessage(unsupportedTopicList: readonly UnsupportedTopicView[]) {
+  const [first] = unsupportedTopicList;
+  if (first === undefined) return "Ainda não consigo preparar esse assunto.";
+  return `Ainda não consigo preparar ${first.label}, porque ${unsupportedTopicReasonTextMap[first.reason]}.`;
+}
+
+const chargeErrorMessageMap: Readonly<
+  Record<Exclude<ChargeServiceErrorCode, "unsupported_topic">, string>
+> = {
+  order_not_found: "Pedido não encontrado.",
+  invalid_state: "Este pedido não está mais nesta etapa. Atualize a página para continuar.",
+  validation_error: "Confira os assuntos escolhidos e tente de novo.",
+  charge_active: "O Pix deste pedido ainda está valendo.",
+  service_unavailable: "Não conseguimos gerar o Pix agora. Tente de novo em instantes.",
+};
+
+export const chargeErrorStatusMap: Readonly<Record<ChargeServiceErrorCode, number>> = {
+  order_not_found: 404,
+  invalid_state: 409,
+  validation_error: 400,
+  unsupported_topic: 422,
+  charge_active: 409,
+  service_unavailable: 503,
+};
+
+export function toChargeErrorResponse(error: ChargeServiceError): ApiErrorResponse {
+  const status = chargeErrorStatusMap[error.code];
+  if (error.code === "unsupported_topic") {
+    return {
+      status,
+      body: {
+        error: unsupportedTopicMessage(error.unsupportedTopicList),
+        code: error.code,
+        unsupportedTopicList: [...error.unsupportedTopicList],
+      },
+    };
+  }
+  return { status, body: { error: chargeErrorMessageMap[error.code], code: error.code } };
 }

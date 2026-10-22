@@ -1,14 +1,22 @@
 import { randomBytes } from "node:crypto";
 import type { Database } from "@gizito/db";
 import { createPhotoNormalizer, type Logger } from "@gizito/integrations";
-import { createFakeObjectStorage, type FakeObjectStorage } from "@gizito/integrations/fakes";
+import {
+  createFakeObjectStorage,
+  createFakePaymentGateway,
+  type FakeObjectStorage,
+  type FakePaymentGateway,
+} from "@gizito/integrations/fakes";
 import sharp from "sharp";
 import type { AppDependencies } from "#src/app.ts";
 
 export const WEB_PUBLIC_URL = "http://localhost:3000";
 export const CLIENT_HASH_SECRET = "segredo-de-teste-com-mais-de-32-caracteres";
 
-export type TestAppDependencies = AppDependencies & { storage: FakeObjectStorage };
+export type TestAppDependencies = AppDependencies & {
+  storage: FakeObjectStorage;
+  paymentGateway: FakePaymentGateway;
+};
 
 export function buildAppDependencies(
   db: Database,
@@ -20,6 +28,7 @@ export function buildAppDependencies(
     logger,
     webPublicUrl: WEB_PUBLIC_URL,
     storage: createFakeObjectStorage(),
+    paymentGateway: createFakePaymentGateway(),
     normalizePhoto: createPhotoNormalizer(),
     clientHashSecret: CLIENT_HASH_SECRET,
     trustedProxyHopCount: 1,

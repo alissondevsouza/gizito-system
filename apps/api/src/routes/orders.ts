@@ -1,4 +1,5 @@
 import {
+  confirmOrderInputSchema,
   createOrderInputSchema,
   createOrderResponseSchema,
   orderViewSchema,
@@ -6,12 +7,18 @@ import {
 } from "@gizito/core";
 import { Elysia, status } from "elysia";
 import { z } from "zod";
-import { toOrderErrorResponse } from "#src/errors.ts";
+import { toChargeErrorResponse, toOrderErrorResponse } from "#src/errors.ts";
 import {
   buildDeviceCookie,
   type ClientIdentityOptions,
   resolveClientIdentity,
 } from "#src/http/client-identity.ts";
+import {
+  type ChargeServiceDependencies,
+  type ChargeServiceError,
+  confirmOrder,
+  renewCharge,
+} from "#src/services/charges.ts";
 import {
   createOrder,
   getOrderView,
@@ -22,6 +29,7 @@ import {
 import type { ClientKeyHashMap } from "#src/services/preview-rate-limit.ts";
 
 export type OrderRouteDependencies = OrderServiceDependencies &
+  ChargeServiceDependencies &
   ClientIdentityOptions & {
     readonly isSecureCookie: boolean;
   };
@@ -32,6 +40,11 @@ const orderTokenParamsSchema = z.object({ token: z.string() });
 
 function throwOrderError(error: OrderServiceError): never {
   const response = toOrderErrorResponse(error);
+  throw status(response.status, response.body);
+}
+
+function throwChargeError(error: ChargeServiceError): never {
+  const response = toChargeErrorResponse(error);
   throw status(response.status, response.body);
 }
 
@@ -106,5 +119,30 @@ export function createOrderRoutes(dependencies: OrderRouteDependencies) {
         body: replaceOrderPhotoListInputSchema,
         response: { 200: orderViewSchema },
       },
+    )
+    .post(
+      "/orders/:token/confirm",
+      async ({ body, params, set }) => {
+        set.headers["cache-control"] = NO_STORE;
+        const result = await confirmOrder(dependencies, { publicToken: params.token, input: body });
+        if (!result.ok) throwChargeError(result.error);
+        return result.value;
+      },
+      {
+        params: orderTokenParamsSchema,
+        body: confirmOrderInputSchema,
+        response: { 200: orderViewSchema },
+      },
+    )
+    .post(
+      "/orders/:token/charges",
+      async ({ params, set }) => {
+        set.headers["cache-control"] = NO_STORE;
+        const result = await renewCharge(dependencies, params.token);
+        if (!result.ok) throwChargeError(result.error);
+        set.status = 201;
+        return result.value;
+      },
+      { params: orderTokenParamsSchema, response: { 201: orderViewSchema } },
     );
 }

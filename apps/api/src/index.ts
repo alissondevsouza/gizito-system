@@ -1,10 +1,25 @@
+import type { PaymentGateway, PaymentGatewaySetting } from "@gizito/core";
 import { createDatabase } from "@gizito/db";
-import { createLogger, createPhotoNormalizer, createR2ObjectStorage } from "@gizito/integrations";
+import {
+  createLogger,
+  createMercadoPagoGateway,
+  createPhotoNormalizer,
+  createR2ObjectStorage,
+} from "@gizito/integrations";
+import { createFakePaymentGateway } from "@gizito/integrations/fakes";
 import { z } from "zod";
 import { createApp } from "#src/app.ts";
 import { apiConfigSchema } from "#src/config.ts";
 
 const DATABASE_CLOSE_TIMEOUT_SECONDS = 5;
+
+function createPaymentGateway(setting: PaymentGatewaySetting): PaymentGateway {
+  if (setting.name === "fake") return createFakePaymentGateway();
+  return createMercadoPagoGateway({
+    accessToken: setting.accessToken,
+    webhookSecret: setting.webhookSecret,
+  });
+}
 
 const parsedConfig = apiConfigSchema.safeParse(process.env);
 if (!parsedConfig.success) {
@@ -26,6 +41,7 @@ const app = createApp({
   logger,
   webPublicUrl: config.WEB_PUBLIC_URL,
   storage,
+  paymentGateway: createPaymentGateway(config.paymentGateway),
   normalizePhoto: createPhotoNormalizer(),
   clientHashSecret: config.CLIENT_HASH_SECRET,
   trustedProxyHopCount: config.TRUSTED_PROXY_HOP_COUNT,

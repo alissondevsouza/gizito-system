@@ -1,6 +1,7 @@
 import {
   type ApiErrorCode,
   analysisFailureViewOf,
+  awaitingPaymentViewOf,
   buildPublicToken,
   buildShortCode,
   type CreateOrderResponse,
@@ -37,6 +38,7 @@ import {
   transitionOrder,
 } from "@gizito/core";
 import {
+  charge,
   type Database,
   type Executor,
   enqueueSingletonJob,
@@ -51,6 +53,16 @@ import { type ClientKeyHashMap, reservePreviewRequest } from "#src/services/prev
 const ORDER_CODE_CONSTRAINT_LIST = ["order_short_code_idx", "order_public_token_idx"] as const;
 const CURRENT_PHOTO_INDEX_CONSTRAINT = "order_photo_order_id_photo_index_idx";
 export const ORDER_ANALYSIS_INVALID_ERROR_CODE = "order_analysis_invalid";
+export const CHARGE_MISSING_ERROR_CODE = "charge_missing";
+
+export class ChargeMissingError extends Error {
+  readonly code = CHARGE_MISSING_ERROR_CODE;
+
+  constructor(readonly orderId: string) {
+    super(`Order ${orderId} is awaiting payment without a charge`);
+    this.name = "ChargeMissingError";
+  }
+}
 
 export type OrderServiceErrorCode = Extract<
   ApiErrorCode,
@@ -344,20 +356,69 @@ function stageViewOf(status: OrderStatus, analysis: OrderAnalysis | null) {
   return {};
 }
 
-async function buildOrderView(
-  { db, storage, logger }: OrderServiceDependencies,
-  row: Pick<
-    typeof order.$inferSelect,
-    | "orderId"
-    | "publicToken"
-    | "shortCode"
-    | "status"
-    | "grade"
-    | "subject"
-    | "insertDatetime"
-    | "analysis"
-  >,
+type OrderViewRow = Pick<
+  typeof order.$inferSelect,
+  | "orderId"
+  | "publicToken"
+  | "shortCode"
+  | "status"
+  | "grade"
+  | "subject"
+  | "insertDatetime"
+  | "analysis"
+  | "email"
+  | "topicIdList"
+  | "otherTopicText"
+>;
+
+export async function listOrderCharges(executor: Executor, orderId: string) {
+  return executor
+    .select({
+      chargeId: charge.chargeId,
+      status: charge.status,
+      amountCents: charge.amountCents,
+      qrCode: charge.qrCode,
+      qrCodeBase64: charge.qrCodeBase64,
+      ticketUrl: charge.ticketUrl,
+      expireDatetime: charge.expireDatetime,
+      insertDatetime: charge.insertDatetime,
+    })
+    .from(charge)
+    .where(eq(charge.orderId, orderId));
+}
+
+async function buildAwaitingPaymentView(
+  { db, logger, now }: OrderServiceDependencies,
+  row: OrderViewRow,
+  base: Record<string, unknown>,
 ): Promise<OrderView> {
+  const awaitingPayment =
+    row.email === null
+      ? null
+      : awaitingPaymentViewOf(
+          {
+            chargeList: await listOrderCharges(db, row.orderId),
+            email: row.email,
+            topicIdList: row.topicIdList,
+            otherTopicText: row.otherTopicText,
+          },
+          now(),
+        );
+  if (awaitingPayment === null) {
+    logger.error(
+      { orderId: row.orderId, errorCode: CHARGE_MISSING_ERROR_CODE },
+      "pedido aguardando pagamento sem cobrança",
+    );
+    throw new ChargeMissingError(row.orderId);
+  }
+  return orderViewSchema.parse({ ...base, ...awaitingPayment });
+}
+
+async function buildOrderView(
+  dependencies: OrderServiceDependencies,
+  row: OrderViewRow,
+): Promise<OrderView> {
+  const { db, storage, logger } = dependencies;
   const base = {
     publicToken: row.publicToken,
     shortCode: row.shortCode,
@@ -366,6 +427,7 @@ async function buildOrderView(
     subject: row.subject,
     insertDatetime: row.insertDatetime.toISOString(),
   };
+  if (row.status === "awaiting_payment") return buildAwaitingPaymentView(dependencies, row, base);
   if (!isPhotoStageOrderStatus(row.status)) return orderViewSchema.parse(base);
   const parsedAnalysis = orderAnalysisSchema.nullable().safeParse(row.analysis);
   if (!parsedAnalysis.success) {
@@ -404,6 +466,9 @@ async function findOrderByToken(db: Database, publicToken: string) {
       subject: order.subject,
       insertDatetime: order.insertDatetime,
       analysis: order.analysis,
+      email: order.email,
+      topicIdList: order.topicIdList,
+      otherTopicText: order.otherTopicText,
     })
     .from(order)
     .where(eq(order.publicToken, parsedToken.data));
