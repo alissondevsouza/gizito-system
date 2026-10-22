@@ -16,6 +16,7 @@ logs
 .DS_Store
 .claude/worktrees/
 .claude/projects/
+.playwright-mcp/
 tests/pedagogy/cases/**/photos/
 tests/pedagogy/output/
 .output

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "bunx",
+      "args": [
+        "@playwright/mcp@0.0.83",
+        "--headless",
+        "--isolated",
+        "--output-dir",
+        ".playwright-mcp"
+      ]
+    }
+  }
+}
