@@ -1,7 +1,7 @@
-# PRD — Gizito | MVP v1.5
+# PRD — Gizito | MVP v1.6
 
 **Status:** especificação proposta para implementação  
-**Data:** 14/10/2026 · revisão 1.5 em 21/10/2026 (ver seção 13)  
+**Data:** 14/10/2026 · revisão 1.6 em 21/10/2026 (ver seção 13)  
 **Produto:** gerador de kits personalizados para preparação de provas escolares  
 **Modelo de receita:** pagamento único por kit via Pix  
 **Nome:** **Gizito**
@@ -41,10 +41,10 @@ O Gizito permite que um adulto responsável transforme **fotos da matéria escol
 | Upload → prévia válida | Prévias com assuntos confirmáveis / uploads concluídos | Medir; principal vazamento esperado (foto ruim) |
 | Prévia válida → e-mail informado | Pedidos com e-mail e aceite / prévias válidas | Medir |
 | Conversão prévia → Pix pago | Compras pagas / prévias válidas | Medir, sem estabelecer meta fictícia antes do piloto |
-| Custo por prévia | IA de extração + armazenamento, incluindo prévias que não convertem | Monitorar; custo-alvo definido na Fase 1 |
-| Custo variável por kit | IA (extração, geração, revisão, regeneração) + gateway + arquivos | Monitorar por pedido; referência orçamentária, não SLA |
+| Custo por prévia | IA de extração + armazenamento, incluindo prévias que não convertem | Custo-alvo de até R$ 0,10 por prévia. Na Fase 1 (regressão de 21/10/2026, 35 casos), a IA custou em média US$ 0,0011 por prévia (p95 US$ 0,0019), cerca de R$ 0,01 a R$ 6 por dólar. O armazenamento é desprezível |
+| Custo variável por kit | IA (extração, geração, revisão, regeneração) + gateway + arquivos | Monitorar por pedido; referência orçamentária, não SLA: IA até 10% do preço (R$ 2,99) em média. Na Fase 1, a IA custou em média US$ 0,41 por kit (p95 US$ 0,63), cerca de R$ 2,44; somado ao Pix (0,99%, cerca de R$ 0,30, seção 9.1), dá cerca de R$ 2,74 |
 | Sucesso de geração | Kits entregues sem intervenção / compras pagas | ≥ 95% no piloto, com recuperação de falhas |
-| Tempo de geração | Da confirmação do Pix aos dois PDFs prontos | Alvo: 95% em até 5 min, sujeito a medição (20 questões + revisão + 2 renders) |
+| Tempo de geração | Da confirmação do Pix aos dois PDFs prontos | Alvo: 95% em até 5 min. Na Fase 1, do plano aos dois PDFs, sem fila nem Pix: p50 de 3 min 21 s e p95 de 5 min 34 s, acima do alvo nos kits regenerados. É medido de novo no piloto, e a ação está em `docs/engineering/known-issues.md` |
 | Erro pedagógico grave | Resposta/gabarito incorreto ou conteúdo fora do nível | Zero nos casos auditados antes do lançamento; bloquear casos identificados em produção |
 | Recompra 30/60 dias | Compradores com 2ª compra / compradores elegíveis | Medir após implantação |
 | Reembolso/suporte | Pedidos reembolsados ou que exigem atendimento | Monitorar por motivo |
@@ -140,7 +140,7 @@ A extração roda antes do pagamento, em todo visitante, e por isso é o princip
 - Usar o modelo multimodal de **menor custo** na extração; o modelo forte fica para geração e revisão.
 - Cache por hash da imagem normalizada: reenviar a mesma foto não paga nova extração.
 - Rate limit por IP e identificador de dispositivo (por exemplo, 5 prévias/hora e 15/dia); desafio leve apenas ao exceder.
-- Custo-alvo por prévia definido na Fase 1 e acompanhado no painel.
+- Custo-alvo por prévia na seção 3, acompanhado no painel.
 - **Qualidade:** a prévia precisa convencer. Mostrar assuntos com nome claro, o perfil do material entendido (sem inventar trechos), a composição exata do kit, o preço e o link para o kit de amostra.
 
 ### Saída comercial (um kit por compra, em dois arquivos)
@@ -363,6 +363,7 @@ Detalhamento em features, dependências, pendências do humano e critérios de p
 
 ## 13. Histórico de revisões
 
+- **1.6 (21/10/2026):** custo e tempo medidos na Fase 1 (3). Custo-alvo da prévia de até R$ 0,10, com US$ 0,0011 medido. Referência do kit: IA até 10% do preço, com US$ 0,41 medido. Tempo de geração com p95 de 5 min 34 s, acima do alvo de 5 min. Fonte: rodada final da regressão de 21/10/2026, 35 casos, a R$ 6 por dólar; F1-11.
 - **1.5 (21/10/2026):** homologação da v1 com 35 casos em vez de 40 (7.6, 10, 11, 12.1): 30 imagens de caderno geradas por IA e 5 variações delas, sem foto real; a extração em caderno real passa a ser medida em produção. Motivo: não há como conseguir fotos reais antes do lançamento, e o humano prioriza lançar rápido, com o risco assumido. Decisão do humano em 21/10/2026.
 - **1.4 (20/10/2026):** provedor de IA decidido para a Fase 1: Anthropic, com Claude Haiku 5.5 na extração e Claude Sonnet 5.5 no plano, na geração e na revisão, e Gemini ou GPT como alternativa se o custo por kit passar da meta (12.1, antes em aberto em 12.2). Decisão do humano na F1-05.
 - **1.3 (19/10/2026):** assuntos ainda não atendidos (7.7): o material que trata de assunto deixado fora da taxonomia v1 por depender de figura ou oralidade é sinalizado na prévia; esse assunto não pode ser confirmado nem pedido como “outro”, o kit sai com os demais e, sem nenhum atendido, não há checkout (5, 6, 7.4, 10). Motivo: pelo caminho “outro”, o kit falharia depois do Pix no bloqueador de figura ausente. Decisão do humano na F1-01.

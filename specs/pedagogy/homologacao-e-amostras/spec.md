@@ -61,7 +61,7 @@ A F1-11 fica pronta quando o professor devolver a auditoria sem erro crítico (c
 - [ ] 3.3 Documento da auditoria com o sorteio e o estado
 
 ### M4 — Métricas no PRD
-- [ ] 4.1 PRD §3 e histórico 1.6
+- [x] 4.1 PRD §3 e histórico 1.6
 
 ### M5 — Resultado da auditoria (depende do professor)
 - [ ] 5.1 Resumo da planilha devolvida e, se houver crítico, a correção e o caso novo
