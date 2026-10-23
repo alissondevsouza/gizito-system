@@ -5,6 +5,7 @@ import { createTestDatabase, type TestDatabase, truncateAllTables } from "@gizit
 import { createMemoryLogger } from "@gizito/integrations/fakes";
 import { eq } from "drizzle-orm";
 import { ORDER_ID } from "#src/__tests__/integration/helpers.ts";
+import { handledJobNameList } from "#src/jobs/index.ts";
 import { buildExhaustedJobDispatcher } from "#src/runner/lanes.ts";
 import {
   enqueueScheduledJob,
@@ -59,6 +60,19 @@ describe("agendador com banco", () => {
       });
       await scheduler.stop();
     }
+    expect(await listJobs()).toEqual([
+      { name: "charge.reconcile", status: "pending", singletonKey: SCHEDULED_JOB_SINGLETON_KEY },
+    ]);
+  });
+
+  it("com os handlers reais, o agendador enfileira a reconciliação periódica (spec F2-04, RF-09)", async () => {
+    const { logger } = createMemoryLogger();
+    const scheduler = startScheduler({
+      db: testDatabase.db,
+      logger,
+      handledNameList: handledJobNameList,
+    });
+    await scheduler.stop();
     expect(await listJobs()).toEqual([
       { name: "charge.reconcile", status: "pending", singletonKey: SCHEDULED_JOB_SINGLETON_KEY },
     ]);

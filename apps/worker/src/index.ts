@@ -1,6 +1,13 @@
 import { hostname } from "node:os";
+import type { PaymentGateway, PaymentGatewaySetting } from "@gizito/core";
 import { createDatabase } from "@gizito/db";
-import { createAnthropicProvider, createLogger, createR2ObjectStorage } from "@gizito/integrations";
+import {
+  createAnthropicProvider,
+  createLogger,
+  createMercadoPagoGateway,
+  createR2ObjectStorage,
+} from "@gizito/integrations";
+import { createFakePaymentGateway, type FakeUnknownChargeStatus } from "@gizito/integrations/fakes";
 import { z } from "zod";
 import { workerConfigSchema } from "#src/config.ts";
 import { readWorkerHealth } from "#src/health.ts";
@@ -15,6 +22,17 @@ import {
 import { startScheduler } from "#src/scheduler.ts";
 
 const DATABASE_CLOSE_TIMEOUT_SECONDS = 5;
+
+function createPaymentGateway(
+  setting: PaymentGatewaySetting,
+  unknownChargeStatus: FakeUnknownChargeStatus | undefined,
+): PaymentGateway {
+  if (setting.name === "fake") return createFakePaymentGateway({ unknownChargeStatus });
+  return createMercadoPagoGateway({
+    accessToken: setting.accessToken,
+    webhookSecret: setting.webhookSecret,
+  });
+}
 
 const parsedConfig = workerConfigSchema.safeParse(process.env);
 if (!parsedConfig.success) {
@@ -49,6 +67,10 @@ const jobHandlerMap = buildJobHandlerMap({
   db: database.db,
   aiProvider,
   storage,
+  paymentGateway: createPaymentGateway(
+    config.paymentGateway,
+    config.FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS,
+  ),
   extractModel: config.AI_MODEL_EXTRACT,
   logger,
   now: () => new Date(),

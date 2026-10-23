@@ -4,6 +4,7 @@ import {
   DEFAULT_GENERATE_CONCURRENCY,
   DEFAULT_RENDER_CONCURRENCY,
   DEFAULT_WORKER_HEALTH_PORT,
+  FAKE_GATEWAY_OPTION_WITHOUT_FAKE_MESSAGE,
   MAX_GENERATE_CONCURRENCY,
   MAX_RENDER_CONCURRENCY,
   workerConfigSchema,
@@ -26,6 +27,8 @@ const productionEnvironment = {
   ...validEnvironment,
   NODE_ENV: "production",
   PAYMENT_GATEWAY: "mercadopago",
+  MERCADOPAGO_ACCESS_TOKEN: "APP_USR-token-de-teste",
+  MERCADOPAGO_WEBHOOK_SECRET: "segredo-do-webhook",
   R2_ENDPOINT: "https://conta.r2.cloudflarestorage.com",
 };
 
@@ -112,6 +115,58 @@ describe("config do worker", () => {
     if (result.success) return;
     expect(z.prettifyError(result.error)).toContain("PAYMENT_GATEWAY");
     expect(workerConfigSchema.safeParse(productionEnvironment).success).toBe(true);
+  });
+
+  it("mercadopago exige o access token e o segredo do webhook, nomeando cada um; asaas é recusado (spec F2-04, RF-09)", () => {
+    const {
+      MERCADOPAGO_ACCESS_TOKEN: _token,
+      MERCADOPAGO_WEBHOOK_SECRET: _secret,
+      ...withoutKeys
+    } = productionEnvironment;
+    const result = workerConfigSchema.safeParse(withoutKeys);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((issue) => issue.path.join(".")).sort()).toEqual([
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "MERCADOPAGO_WEBHOOK_SECRET",
+    ]);
+    const parsed = workerConfigSchema.parse(productionEnvironment);
+    expect(parsed.paymentGateway).toEqual({
+      name: "mercadopago",
+      accessToken: "APP_USR-token-de-teste",
+      webhookSecret: "segredo-do-webhook",
+    });
+    expect(workerConfigSchema.parse(validEnvironment).paymentGateway).toEqual({ name: "fake" });
+    const asaas = workerConfigSchema.safeParse({ ...validEnvironment, PAYMENT_GATEWAY: "asaas" });
+    expect(asaas.success).toBe(false);
+    if (!asaas.success) {
+      expect(asaas.error.issues.map((issue) => issue.path.join("."))).toEqual(["PAYMENT_GATEWAY"]);
+    }
+  });
+
+  it("FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS só vale com o gateway fake (spec F2-04, RF-09)", () => {
+    expect(
+      workerConfigSchema.parse({ ...validEnvironment, FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS: "paid" })
+        .FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS,
+    ).toBe("paid");
+    expect(
+      workerConfigSchema.safeParse({
+        ...validEnvironment,
+        FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS: "canceled",
+      }).success,
+    ).toBe(false);
+    const withRealGateway = workerConfigSchema.safeParse({
+      ...productionEnvironment,
+      FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS: "paid",
+    });
+    expect(withRealGateway.success).toBe(false);
+    if (withRealGateway.success) return;
+    expect(withRealGateway.error.issues).toEqual([
+      expect.objectContaining({
+        path: ["FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS"],
+        message: FAKE_GATEWAY_OPTION_WITHOUT_FAKE_MESSAGE,
+      }),
+    ]);
   });
 
   it("exige as chaves de IA e do storage, nomeando cada uma (spec F2-02, RF-11)", () => {
