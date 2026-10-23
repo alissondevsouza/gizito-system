@@ -2,7 +2,7 @@
 feature: job-geracao-e-publicacao
 module: worker
 size: M
-status: in_review
+status: done
 branch: feat/worker/job-geracao-e-publicacao
 updated: 2026-10-22
 ---
@@ -36,7 +36,7 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
   1. começa pelo RF-04; `skip` vira `Ok` com log `info`;
   2. monta a entrada pelo RF-02; erro → falha definitiva `generation_input_invalid`;
   3. lê o custo já gasto pelo RF-06 e chama `generateKit` com `spentCostCents`, `signal` do job e `onAiCall` que grava cada chamada em `ai_call` na hora (`recordAiCallList`), antes de qualquer transição;
-  4. com o `signal` do job já abortado, volta à fila com `generation_aborted` antes de renderizar (o lease parou de ser renovado); senão, `renderKit` com `generatedAt = now()`; falha → definitiva `render_failed`;
+  4. com o `signal` do job já abortado, volta à fila antes de renderizar (o runner grava `job_timeout` ou libera o job; o log leva `generation_aborted`), porque o lease parou de ser renovado; senão, `renderKit` com `generatedAt = now()`; falha → definitiva `render_failed`;
   5. gera `kitId`, sobe `activities.pdf` e `answer-key.pdf` em `kitStorageKey(orderId, kitId, kind)` com `putPrivate` (`application/pdf`);
   6. `publishKit` numa transação com `studyKit`, `generationVersion` e `taxonomyVersion` do próprio kit e as contagens de páginas.
 
@@ -122,8 +122,8 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
 | 2026-10-22 | Revisão neutra do código, rodada 1 (reprovada por 1 CRÍTICO): teste de timeout determinístico com fake que espera o `signal`; unit do mapa de handlers; `deleteKitObjects` também no `OrderNotFoundError` do `publishKit`; `signal` conferido antes do render (`generation_aborted`); `topic_not_selectable` na spec; históricos em ordem | CRÍTICO, ALERTA e as 5 sugestões aceitos (`review.md`) |
 
 ## Status
-- **Fase:** implementada; a revisão neutra reprovou a rodada 1 por um CRÍTICO (teste não determinístico), corrigido com os demais achados; aguardando a rodada 2, que revalida só os pontos corrigidos.
-- **Suíte (22/10/2026):** `bun run lint` limpo (452 arquivos); `bun run typecheck` 6 de 6; `bun run test` 6 de 6 verdes (core 861; db 112; integrations 481 e 21 pulados; api 45; worker 346 e 15 pulados); integração com Postgres real: db 184 (15 novos em `order-generation.test.ts`), worker 93 (21 novos em `order-generate.test.ts`); `bun run build` verde, com `playwright` externo no bundle do worker (o `bun build` não resolve o `chromium-bidi` opcional do Playwright; a imagem roda `bun apps/worker/src/index.ts`, sem bundle).
+- **Fase:** concluída na branch. A revisão neutra reprovou a rodada 1 por um CRÍTICO (teste de timeout não determinístico), corrigido junto com o ALERTA e as 5 sugestões em `58f27b7`; a rodada 2 aprovou e deixou 2 sugestões de texto, aplicadas (`review.md`). Falta o merge do humano.
+- **Suíte (22/10/2026, depois da rodada 1 da revisão):** `bun run lint` limpo (453 arquivos); `bun run typecheck` 6 de 6; `bun run test` 6 de 6 verdes (core 861; db 112; integrations 481 e 21 pulados; api 45; worker 347 e 15 pulados); integração com Postgres real: db 184 (15 novos em `order-generation.test.ts`), worker 94 (22 novos em `order-generate.test.ts`, rodado 6 vezes seguidas pelo orquestrador e 10 pelo verifier sem falha); `bun run build` verde, com `playwright` externo no bundle do worker (o `bun build` não resolve o `chromium-bidi` opcional do Playwright; a imagem roda `bun apps/worker/src/index.ts`, sem bundle).
 - **RF-10 (visto funcionando, 22/10/2026):** api (`PAYMENT_GATEWAY=fake`, porta 3101) e worker (`PAYMENT_GATEWAY=fake`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`, health 3102) no ar contra o banco de dev (7 migrations) e o MinIO, com a IA real do `.env`:
   - pedido inserido em `preview_ready` (5º ano, Matemática, `ma5-fractions` e `ma5-equivalent-fractions`), `confirm` 200 → `awaiting_payment`; webhook do fake `queued` (200); `charge.reconcile` dirigido deu `paid` em 15 s e enfileirou o `order.generate`;
   - `order.generate` levou o pedido a `processing` e a `ready` em 3 min 15 s na 1ª tentativa, sem regeneração (`repairList: ["initial"]`): `plan` 23,6 s, `generate` 156 s, `review` 15,2 s; custo US$ 0,388 (3 linhas de `ai_call` com o `order_id`: 4,81 + 28,23 + 5,78 centavos);

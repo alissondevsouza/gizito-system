@@ -1,8 +1,8 @@
 ---
 feature: job-geracao-e-publicacao
 module: worker
-round: 1
-verdict: REPROVADO
+round: 2
+verdict: APROVADO
 updated: 2026-10-22
 ---
 
@@ -58,3 +58,37 @@ Todos os achados foram aceitos e corrigidos:
 - **SUGESTÃO 3:** parâmetro renomeado para `isProviderIncident`.
 - **SUGESTÃO 4:** RF-02 da spec passou a listar `topic_not_selectable` com o motivo.
 - **SUGESTÃO 5:** entradas 1.9 movidas para o fim dos históricos de `jobs.md` e `data-model.md`.
+
+## Rodada 2
+
+### Comandos executados
+| Comando | Resultado |
+|---|---|
+| `bun test src/__tests__/integration/order-generate.test.ts` × 10 seguidas (worker) | 22 pass em todas; arquivo em ~4,4 s (os dois testes de timeout levam ~1 s cada, e o pipeline chega ao `review` com folga de 5 a 10 vezes dentro do `maxRunMs: 1000`) |
+| `bun run --cwd apps/worker test:integration` | 94 pass, 8 arquivos |
+| `bun test src/__tests__/jobs/index.test.ts` (worker) | 1 pass, 8 expects |
+| `bun run format`, `bun run lint`, typecheck e unit do worker | não repetidos pelo verifier; saída do orquestrador do mesmo dia (453 arquivos limpos; typecheck limpo; 347 pass e 15 pulados) |
+
+### Navegador
+não aplicável
+
+### Pontos revalidados
+| Ponto | Atendido | Evidência |
+|---|---|---|
+| 1. CRÍTICO: teste de timeout determinístico | sim | `order-generate.test.ts`: `untilAborted` e o fake de `plan` que espera o `signal`; o fixture devolve `ai_aborted` ao ver o sinal abortado e `resolveFailure` converte em `job_timeout`; 10 de 10 verdes no arquivo, 94 na suíte |
+| 2. ALERTA: unit do mapa de handlers | sim | `apps/worker/src/__tests__/jobs/index.test.ts`: chaves iguais a `handledJobNameList`, `order.generate` presente, `handle` e `onExhausted` em cada definição, sem tocar o banco |
+| 3. SUGESTÃO: `deleteKitObjects` em todo erro do `publishKit` | sim | `order-generate.ts`: a remoção precede o ramo `OrderNotFoundError`; o ramo de reembolso segue coberto |
+| 4. SUGESTÃO: `signal.aborted` antes do render | sim | `publish` recebe `context.signal` e, abortado, volta à fila sem `renderKit`; teste "teto de execução depois da revisão não renderiza nem publica"; `jobs.md` §2 e spec RF-07 passo 4; `generation_aborted` passa em `outcomeCodeSchema` e nunca chega a `fail_reason_code` |
+| 5. SUGESTÃO: `isProviderIncident` | sim | `order-generate.ts`; `isIncident` deixa de ser sombreada |
+| 6. SUGESTÃO: `topic_not_selectable` no RF-02 | sim | spec RF-02 com as três razões, iguais às do core; o handler leva a razão só ao log |
+| 7. SUGESTÃO: históricos em ordem | sim | 1.9 depois da 1.8 em `jobs.md` e `data-model.md` |
+
+### Achados
+- [SUGESTÃO] `docs/engineering/jobs.md` e `spec.md` (RF-07 passo 4) — diziam que o handler "volta à fila com `generation_aborted`", mas a fila grava `job_timeout` (o runner sobrepõe o código em `resolveFailure`) e, com lease perdido, nada; `generation_aborted` só existe no log `warn` — reescrever.
+- [SUGESTÃO] `spec.md`, Status — números da rodada 1 (lint 452; worker unit 346; integração 93 com 21 novos) — atualizar para 453, 347, 94 e 22 ao fechar.
+
+### Regressão pedagógica
+não aplicável: a correção toca só handler, testes, spec e docs.
+
+### Resposta do orquestrador
+As duas sugestões foram aplicadas: `jobs.md` §2 e o RF-07 da spec dizem que o handler volta à fila (o runner grava `job_timeout` ou libera o job; o log leva `generation_aborted`), e o Status da spec traz os números depois da correção.
