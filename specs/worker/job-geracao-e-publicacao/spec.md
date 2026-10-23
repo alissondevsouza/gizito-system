@@ -2,7 +2,7 @@
 feature: job-geracao-e-publicacao
 module: worker
 size: M
-status: in_progress
+status: in_review
 branch: feat/worker/job-geracao-e-publicacao
 updated: 2026-10-22
 ---
@@ -105,9 +105,9 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
 - [x] 2.2 Integração do handler pelo `workJob` · Arquivos: `apps/worker/src/__tests__/integration/order-generate.test.ts` · Verificação: `bun run --cwd apps/worker test:integration`
 
 ### M3 — fechamento
-- [ ] 3.1 Suíte: `bun run lint`, `bun run typecheck`, `bun run test`, integração dos workspaces tocados, `bun run build`
-- [ ] 3.2 RF-10 com api, worker, Postgres, MinIO e IA real
-- [ ] 3.3 Docs: `jobs.md`, `state-machine.md`, `data-model.md`, `known-issues.md`, roadmap
+- [x] 3.1 Suíte: `bun run lint`, `bun run typecheck`, `bun run test`, integração dos workspaces tocados, `bun run build`
+- [x] 3.2 RF-10 com api, worker, Postgres, MinIO e IA real
+- [x] 3.3 Docs: `jobs.md`, `state-machine.md`, `data-model.md`, `known-issues.md`, roadmap
 - [ ] 3.4 Revisão neutra e `review.md`
 
 ## Decisões
@@ -120,5 +120,15 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
 | 2026-10-22 | Sem retentativa própria do upload | Simplicidade; o teto de custo limita o total (Riscos) |
 
 ## Status
-- **Fase:** spec escrita; implementação não começou.
-- **Próximo passo:** M1.
+- **Fase:** implementada (M1 a M3, menos a task 3.4); aguardando a revisão neutra do código.
+- **Suíte (22/10/2026):** `bun run lint` limpo (452 arquivos); `bun run typecheck` 6 de 6; `bun run test` 6 de 6 verdes (core 861; db 112; integrations 481 e 21 pulados; api 45; worker 346 e 15 pulados); integração com Postgres real: db 184 (15 novos em `order-generation.test.ts`), worker 93 (21 novos em `order-generate.test.ts`); `bun run build` verde, com `playwright` externo no bundle do worker (o `bun build` não resolve o `chromium-bidi` opcional do Playwright; a imagem roda `bun apps/worker/src/index.ts`, sem bundle).
+- **RF-10 (visto funcionando, 22/10/2026):** api (`PAYMENT_GATEWAY=fake`, porta 3101) e worker (`PAYMENT_GATEWAY=fake`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`, health 3102) no ar contra o banco de dev (7 migrations) e o MinIO, com a IA real do `.env`:
+  - pedido inserido em `preview_ready` (5º ano, Matemática, `ma5-fractions` e `ma5-equivalent-fractions`), `confirm` 200 → `awaiting_payment`; webhook do fake `queued` (200); `charge.reconcile` dirigido deu `paid` em 15 s e enfileirou o `order.generate`;
+  - `order.generate` levou o pedido a `processing` e a `ready` em 3 min 15 s na 1ª tentativa, sem regeneração (`repairList: ["initial"]`): `plan` 23,6 s, `generate` 156 s, `review` 15,2 s; custo US$ 0,388 (3 linhas de `ai_call` com o `order_id`: 4,81 + 28,23 + 5,78 centavos);
+  - kit gravado com `generation_version` `extract-v1+plan-v1+generate-v2+review-v2`, `taxonomy_version` `tax-v2`, `study_kit` objeto, 10 e 5 páginas; os dois PDFs no MinIO em `orders/{orderId}/kits/{kitId}/` (220 KiB e 116 KiB, `%PDF-1.4`, 10 e 5 páginas ao reabrir com o pdf-lib); `order.notify` `kit_ready` pendente (a F2-07 o consome); job `order.generate` `completed`;
+  - logs da api e do worker sem e-mail, observação, texto do kit, assinatura, `qr_code` nem token; o worker loga `orderId`, `stage`, duração, custo, `aiCallCount`, `repairList`, `kitId`, páginas e `warningCodeList`;
+  - os dados do teste foram apagados do banco de dev e do MinIO depois.
+- **Para a F2-07:** o `kit_ready` e o `kit_failed` ficam `pending` até o handler do `order.notify` existir.
+- **Para a F2-11:** o `reprocess` só precisa da transição `failed → paid` e de enfileirar `order.generate`; o handler limpa o `fail_reason_code` ao começar.
+- **Para a F2-13:** o alerta de incidente do provedor lê o log `error` `incidente do provedor` e o `failedCount`; o 429 de teto de gasto ainda chega como `ai_rate_limited` (linha LOW no `known-issues.md`).
+- **Pendências do humano:** push, PR e merge.

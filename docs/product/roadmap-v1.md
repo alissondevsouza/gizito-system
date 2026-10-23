@@ -24,7 +24,7 @@ Resumo por fase:
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
 | F1 Prova técnica e pedagógica | 11 | 11 | 0 | 0 |
-| F2 Fluxo comercial | 14 | 4 | 0 | 10 |
+| F2 Fluxo comercial | 14 | 5 | 0 | 9 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
 
@@ -255,9 +255,10 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `POST /webhooks/mercadopago` com assinatura, `webhook_event`, GET do recurso, `markOrderPaidAndEnqueue`; job `charge.reconcile` (o webhook passa `webhookEventId` no payload; ao marcar pago, cancelar no gateway os outros Pix ainda pendentes do pedido, depois do commit)
   - Pronto quando: webhook duplicado é no-op; pagamento sem webhook é detectado pela reconciliação
   - Concluída em 22/10/2026 na branch `feat/api/webhook-e-reconciliacao` (spec e revisão em `specs/api/webhook-e-reconciliacao/`): webhook que registra e enfileira `charge.reconcile { orderId, chargeId, webhookEventId }`; job dirigido e periódico com a decisão no core, `cancelCharge` depois do commit e conferência agendada da cobrança antiga; checks por status na `charge` e valor conferido na confirmação (dívidas da revisão da F0); api e worker vistos no ar com o fake. Pendente do humano: a notificação real do sandbox por túnel (linha LOW no `known-issues.md`) e o merge
-- [ ] **F2-05 `job-geracao-e-publicacao`** — worker · M · depende: F1-07, F1-08, F2-04
+- [x] **F2-05 `job-geracao-e-publicacao`** — worker, core, db · M · depende: F1-07, F1-08, F2-04
   - Entrega: `order.generate`: pipeline, render, `publishKit`; `failed` com `outcome_code`; limite de custo
   - Pronto quando: `ready` só com dois PDFs no storage; reexecução idempotente
+  - Concluída em 22/10/2026 na branch `feat/worker/job-geracao-e-publicacao` (spec e revisão em `specs/worker/job-geracao-e-publicacao/`): handler com início sob trava (`decideGenerationStart`, `fail_reason_code` limpo), entrada pelo `buildGenerationInput`, custo já gasto no teto, `ai_call` por chamada, falha definitiva com `failOrderGeneration` (`kit_failed`) e o job `failed`, incidente do provedor como retry com log `error`, upload dos dois PDFs e `publishKit`; reexecução em `ready`, `failed` e `awaiting_payment` pula. A dívida MEDIUM do incidente do provedor saiu do `known-issues.md`
 - [ ] **F2-06 `downloads-e-retencao`** — api, worker · P · depende: F2-05
   - Entrega: `GET /orders/:token/downloads/:kind` com URL assinada curta; `retention.purge` com `isPhotoDueForPurge`, lotes até esvaziar, expurgo de jobs `completed` antigos e do cache da extração vencido (`purgeExpiredExtractionCache`, F2-02); `order.analysis` limpa junto com as fotos e `material_profile` junto com as fotos nos pedidos que não chegaram a `awaiting_payment` (regra no `data-model.md`, F2-02)
   - Pronto quando: URL expira; purge respeita 30 dias e 12 meses com relógio injetado; nenhuma foto passa de 30 dias

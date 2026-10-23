@@ -1,6 +1,6 @@
 # Máquina de estados do pedido
 
-**Versão:** 1.4 · **Data:** 2026-10-22 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
+**Versão:** 1.5 · **Data:** 2026-10-22 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
 
 O estado do pedido só muda pela função `transitionOrder(status, event)` do core, chamada por um service **dentro de uma transação** (invariante 1). A máquina é dado (`orderTransitionList`), não código: toda transição válida está na tabela abaixo e toda combinação fora dela devolve `InvalidTransitionError` sem lançar.
 
@@ -37,10 +37,10 @@ stateDiagram-v2
 | `preview_ready` | `confirm` | `awaiting_payment` | api, `POST /orders/:token/confirm` | assuntos, e-mail e aceite válidos; a cobrança é criada no gateway antes (idempotente por `chargeId`) e gravada na mesma transação da transição |
 | `preview_ready` | `photos_changed` | `draft` | api, rota de fotos (F2-01) | o responsável troca uma foto pela ação "Trocar foto" (design doc §6.3, PRD §5 "foto ruim: nova foto antes do Pix"); os assuntos confirmados são descartados, `order.analysis` e `material_profile` são limpos e a análise recomeça por `start_analysis` (a troca em `draft` também limpa a análise, sem transição) |
 | `awaiting_payment` | `payment_confirmed` | `paid` | worker, `charge.reconcile` (disparado pelo webhook com `orderId` e `chargeId` ou pelo agendador; F2-04) | **após consultar o gateway** e conferir referência e valor; `markOrderPaidAndEnqueue` enfileira `order.generate`, expira as demais cobranças `pending` do pedido e agenda a conferência delas na mesma transação; depois do commit, o worker cancela essas orders no gateway (`cancelCharge`) |
-| `paid` | `generation_started` | `processing` | worker, `order.generate` | ao pegar o job |
+| `paid` | `generation_started` | `processing` | worker, `order.generate` | ao pegar o job (`startOrderGeneration`, decisão `decideGenerationStart`); limpa o `fail_reason_code` de um reprocesso anterior |
 | `paid` | `generation_failed` | `failed` | worker, `onExhausted` de `order.generate` (ADR-0009) | o job esgotou as tentativas antes de começar a gerar; `fail_reason_code` do job e `order.notify` `kit_failed` na mesma transação |
 | `processing` | `kit_published` | `ready` | worker, `publishKit` | os dois PDFs no storage e validações críticas verdes |
-| `processing` | `generation_failed` | `failed` | worker, `order.generate` ou o `onExhausted` dele | bloqueador persistente após uma regeneração, custo excedido, erro não transitório ou tentativas esgotadas; `fail_reason_code` gravado |
+| `processing` | `generation_failed` | `failed` | worker, `order.generate` ou o `onExhausted` dele | bloqueador persistente após uma regeneração, custo excedido, render falho, entrada inválida ou tentativas esgotadas; `failOrderGeneration` grava `fail_reason_code` e enfileira `order.notify` `kit_failed` na mesma transação. Incidente do provedor de IA (`ai_auth_failed`, `ai_request_invalid`) só chega aqui pelo esgotamento (`jobs.md` §2) |
 | `failed` | `reprocess` | `paid` | admin | reenfileira `order.generate`; o job sempre parte de `paid` |
 | `paid`, `processing`, `ready`, `failed` | `refund` | `refunded` | admin, com motivo | após reembolso no gateway; `refund_id` gravado na cobrança |
 
@@ -62,7 +62,7 @@ Não é um status do pedido. Com o pedido em `awaiting_payment`, o sub-estado de
 | Consulta ao gateway com referência ou valor diferente da cobrança | `payment_mismatch`: nada muda, log `error` repetido pela varredura; caminho quase impossível, porque a api cria a order com o valor e a referência |
 | Falha de geração | uma regeneração automática dentro do mesmo job; persistindo, `generation_failed` e aviso ao responsável (`kit_failed`) |
 | Falha transitória até esgotar a fila | o `onExhausted` de `order.generate` aplica `generation_failed` (de `paid` ou `processing`) e enfileira `kit_failed` na transação do `failed` do job; o admin pode reprocessar a partir de `failed` |
-| Reembolso durante `processing` | `refund` leva a `refunded`; quando o job tentar `kit_published`, a máquina recusa e o kit não é publicado |
+| Reembolso durante `processing` | `refund` leva a `refunded`; quando o job tentar `kit_published`, a máquina recusa, o handler apaga os dois PDFs que subiu e termina sem efeito; uma falha definitiva nesse estado também fica sem efeito |
 | Arquivo final indisponível | `publishKit` só roda com as duas keys; sem elas o pedido não chega a `ready` |
 | Análise reexecutada | `analyzing` retoma sem transição, com o cache da extração; `preview_ready` e `draft` já analisado são pulados sem chamar a IA |
 | Troca de foto logo depois do fim da análise | o job é concluído na mesma transação de `analysis_succeeded` ou `analysis_failed` (`completeWithin`, ADR-0013), então a troca sempre enfileira a análise nova |
@@ -77,6 +77,7 @@ O web decide a rota canônica a partir do status devolvido por `GET /orders/:tok
 
 ## Histórico
 
+- **1.5 (2026-10-22):** F2-05: `generation_started` pelo `startOrderGeneration` limpa `fail_reason_code`; `generation_failed` pelo `failOrderGeneration` com `kit_failed` na mesma transação; incidente do provedor só chega a `failed` pelo esgotamento; reembolso durante `processing` apaga os PDFs subidos. Sem transição nova.
 - **1.4 (2026-10-22):** F2-04: `payment_confirmed` pelo `charge.reconcile` do webhook (`orderId` e `chargeId`) ou do agendador, com referência e valor conferidos; cancelamento dos outros Pix no gateway depois do commit e conferência agendada; `expired` antes do vencimento quando o gateway já cancelou; `payment_mismatch`. Sem transição nova.
 - **1.3 (2026-10-22):** F2-03: a renovação do Pix não marca a vencida `expired`; a trava do pedido garante uma cobrança ativa. Sem transição nova.
 - **1.2 (2026-10-22):** F2-02: análise pendente (`order.analysis` nula), `analysis_unavailable`, reexecução do `order.analyze` e conclusão do job na transação da transição (ADR-0013). Sem transição nova.

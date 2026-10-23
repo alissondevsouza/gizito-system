@@ -1,6 +1,6 @@
 # Modelo de dados
 
-**Versão:** 1.8 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
+**Versão:** 1.9 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §6, §9; `.claude/rules/database.md`; ADR-0008, ADR-0009 · **Código:** `packages/db` (F0-05, F0-06), enums e schemas em `packages/core` (F0-04)
 
 PostgreSQL 16 com Drizzle. Single-tenant: não há `store_id` nem RLS; o isolamento é por pedido, e toda leitura pública passa pelo `public_token`.
 
@@ -237,6 +237,9 @@ Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `l
 - `startOrderAnalysis(tx, orderId)` (F2-02): trava o pedido e aplica `decideAnalysisStart` do core. `start` aplica `start_analysis`; `resume` (`analyzing`) não muda o estado; nos dois, devolve ano, disciplina e as fotos atuais por `photo_index` (`orderPhotoId`, `storageKey`, `insertDatetime`), lidas na mesma transação. `skip` devolve o status sem escrita.
 - `finishOrderAnalysis(tx, { orderId, analysis })` (F2-02): a análise passa em `orderAnalysisSchema`; trava o pedido; `transitionOrder` pelo evento da análise (`analysis_succeeded` ou `analysis_failed`), que exige `analyzing`; confere se as fotos atuais são as analisadas, na mesma ordem (`AnalysisPhotoSetChangedError`); grava `status`, `analysis`, `material_profile` (só em `preview_ready`) e o `legibility_score` de cada foto analisada. Os erros voltam como `Result` antes de qualquer escrita. O handler chama `completeWithin` antes, na mesma transação (ADR-0013).
 - `recordAiCallList(executor, orderId, list)`: uma linha de `ai_call` por chamada.
+- `startOrderGeneration(tx, orderId)` (F2-05): trava o pedido e aplica `decideGenerationStart` do core. `start` (`paid`) aplica `generation_started` e limpa `fail_reason_code`; `resume` (`processing`) não muda o estado; nos dois, devolve os campos da geração (ano, disciplina, `topic_id_list`, `other_topic_text`, `perceived_difficulty`, `note_text`, `material_profile`, `analysis`) lidos na mesma transação. `skip` devolve o status sem escrita.
+- `failOrderGeneration(tx, { orderId, failReasonCode })` (F2-05): trava o pedido, `transitionOrder(status, "generation_failed")` (de `paid` ou `processing`), grava `status` e `fail_reason_code` e enfileira `order.notify` `kit_failed`. Transição inválida volta como `Result` sem escrita. É o que o handler e o `onExhausted` do `order.generate` chamam.
+- `sumOrderAiCostCents(executor, orderId)` (F2-05): soma de `ai_call.cost_cents` do pedido, o custo já gasto que entra no teto `MAX_AI_COST_CENTS_PER_ORDER` antes de cada chamada da geração.
 - `findExtractionCacheEntry`, `saveExtractionCacheEntry` (upsert por `cache_key`) e `purgeExpiredExtractionCache(executor, { now, batchSize })`: entrada que não passa no schema conta como ausente.
 - `republishKit(tx, { orderId, kit })` (admin, F2-11): insere o kit novo com as duas keys e grava `superseded_by_kit_id` no anterior; sem transição de estado, porque o pedido já está `ready`.
 - Checks por status na `charge` (migration `0006_webhook_e_reconciliacao`): `paid` e `refunded` exigem `paid_datetime` e `gateway_payment_id`; `refunded` exige também `refund_id` e `refund_datetime`. Fixture ou admin que marque uma cobrança paga precisa dos dois campos.
@@ -252,4 +255,5 @@ Toda conexão do pool (`createDatabase`) sai com `statement_timeout` de 30 s, `l
 - **1.6 (2026-10-22):** F2-02 (migration `0004_job_analise`): tabela `extraction_cache`, coluna `order.analysis` com o check por status, retenção da análise e do cache, `startOrderAnalysis`, `finishOrderAnalysis`, `recordAiCallList` e as funções do cache.
 - **1.5 (2026-10-22):** F2-01 (migration `0003_pedidos_e_upload`): `order_photo.photo_index` com unique parcial por foto não trocada, `order_photo.replaced_datetime`, tabela `preview_request` com HMAC de IP e dispositivo, fotos no prefixo `photos/` (ADR-0012), miniatura junto da foto na retenção.
 - **1.7 (2026-10-22):** F2-03 (migration `0005_confirmacao_e_cobranca_pix`): `charge.qr_code_base64` nulo, porque o sandbox do Mercado Pago devolve vazio; inserção de cobrança com o pedido travado em §6.
+- **1.9 (2026-10-22):** F2-05: `startOrderGeneration`, `failOrderGeneration` e `sumOrderAiCostCents` em §6; sem migration.
 - **1.8 (2026-10-22):** F2-04 (migration `0006_webhook_e_reconciliacao`): checks por status na `charge`, índice `(status, insert_datetime)`, `markOrderPaidAndEnqueue` com `amountCents`, `expiredChargeList` e a conferência agendada das cobranças expiradas, leituras da reconciliação e funções do `webhook_event` em §6.
