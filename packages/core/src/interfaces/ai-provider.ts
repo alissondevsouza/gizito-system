@@ -59,6 +59,16 @@ export function isRetryableAiFailureCode(code: AiFailureCode): boolean {
   return retryableAiFailureCodeList.some((retryableCode) => retryableCode === code);
 }
 
+export const aiProviderIncidentCodeList = [
+  "ai_auth_failed",
+  "ai_request_invalid",
+] as const satisfies readonly AiFailureCode[];
+export type AiProviderIncidentCode = (typeof aiProviderIncidentCodeList)[number];
+
+export function isAiProviderIncidentCode(code: string): code is AiProviderIncidentCode {
+  return aiProviderIncidentCodeList.some((incidentCode) => incidentCode === code);
+}
+
 export const invalidOutputAiFailureCodeList = [
   "ai_refused",
   "ai_output_truncated",
