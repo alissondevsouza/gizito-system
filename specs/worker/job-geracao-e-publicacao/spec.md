@@ -101,8 +101,8 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
 - [x] 1.2 `startOrderGeneration`, `failOrderGeneration`, `sumOrderAiCostCents` com integração · Arquivos: `packages/db/src/order/generation.ts`, `packages/db/src/order/index.ts`, testes · Verificação: `bun run --cwd packages/db test:integration`
 
 ### M2 — worker
-- [ ] 2.1 Handler `order.generate` com `onExhausted`, mapa, raias e boot · Arquivos: `apps/worker/src/jobs/order-generate.ts`, `apps/worker/src/jobs/index.ts`, `apps/worker/src/index.ts`, testes unit · Verificação: `bun run --cwd apps/worker test`
-- [ ] 2.2 Integração do handler pelo `workJob` · Arquivos: `apps/worker/src/__tests__/integration/order-generate.test.ts` · Verificação: `bun run --cwd apps/worker test:integration`
+- [x] 2.1 Handler `order.generate` com `onExhausted`, mapa, raias e boot · Arquivos: `apps/worker/src/jobs/order-generate.ts`, `apps/worker/src/jobs/index.ts`, `apps/worker/src/index.ts`, testes unit · Verificação: `bun run --cwd apps/worker test`
+- [x] 2.2 Integração do handler pelo `workJob` · Arquivos: `apps/worker/src/__tests__/integration/order-generate.test.ts` · Verificação: `bun run --cwd apps/worker test:integration`
 
 ### M3 — fechamento
 - [ ] 3.1 Suíte: `bun run lint`, `bun run typecheck`, `bun run test`, integração dos workspaces tocados, `bun run build`

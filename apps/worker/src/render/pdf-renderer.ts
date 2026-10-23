@@ -20,7 +20,7 @@ const PAGE_MARGIN = {
 } as const;
 
 export type RenderedPdf = {
-  readonly bytes: Uint8Array;
+  readonly bytes: Uint8Array<ArrayBuffer>;
   readonly pageCount: number;
 };
 

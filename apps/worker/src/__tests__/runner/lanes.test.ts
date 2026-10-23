@@ -24,11 +24,14 @@ describe("raias de concorrência (jobs.md §1)", () => {
     expect(CHARGE_RECONCILE_LANE_CONCURRENCY).toBe(2);
   });
 
-  it("com os handlers reais sobem as raias da prévia e da reconciliação (spec F2-04, RF-09)", () => {
-    const laneList = buildJobLaneList(handledJobNameList, { generateConcurrency: 2 });
-    expect(laneList.map(({ key, nameList }) => ({ key, nameList }))).toEqual([
-      { key: "charge_reconcile", nameList: ["charge.reconcile"] },
-      { key: "analyze", nameList: ["order.analyze"] },
+  it("com os handlers reais sobem as raias da geração, da reconciliação e da prévia (spec F2-05, RF-09)", () => {
+    const laneList = buildJobLaneList(handledJobNameList, { generateConcurrency: 3 });
+    expect(
+      laneList.map(({ key, nameList, concurrency }) => ({ key, nameList, concurrency })),
+    ).toEqual([
+      { key: "generate", nameList: ["order.generate"], concurrency: 3 },
+      { key: "charge_reconcile", nameList: ["charge.reconcile"], concurrency: 2 },
+      { key: "analyze", nameList: ["order.analyze"], concurrency: 2 },
     ]);
   });
 

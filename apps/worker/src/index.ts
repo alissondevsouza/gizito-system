@@ -4,8 +4,10 @@ import { createDatabase } from "@gizito/db";
 import {
   createAnthropicProvider,
   createLogger,
+  createMathjsEvaluator,
   createMercadoPagoGateway,
   createR2ObjectStorage,
+  isKatexParsable,
 } from "@gizito/integrations";
 import { createFakePaymentGateway, type FakeUnknownChargeStatus } from "@gizito/integrations/fakes";
 import { z } from "zod";
@@ -13,6 +15,7 @@ import { workerConfigSchema } from "#src/config.ts";
 import { readWorkerHealth } from "#src/health.ts";
 import { startHealthServer } from "#src/health-server.ts";
 import { buildJobHandlerMap, handledJobNameList } from "#src/jobs/index.ts";
+import { createPdfRenderer } from "#src/render/pdf-renderer.ts";
 import { startJobRunner } from "#src/runner/job-runner.ts";
 import {
   buildExhaustedJobDispatcher,
@@ -56,6 +59,7 @@ const storage = createR2ObjectStorage({
   accessKeyId: config.R2_ACCESS_KEY_ID,
   secretAccessKey: config.R2_SECRET_ACCESS_KEY,
 });
+const pdfRenderer = createPdfRenderer({ concurrency: config.RENDER_CONCURRENCY });
 const laneList = buildJobLaneList(handledJobNameList, {
   generateConcurrency: config.GENERATE_CONCURRENCY,
 });
@@ -67,6 +71,9 @@ const jobHandlerMap = buildJobHandlerMap({
   db: database.db,
   aiProvider,
   storage,
+  mathEvaluator: createMathjsEvaluator(),
+  isMathMarkupParsable: isKatexParsable,
+  pdfRenderer,
   paymentGateway: createPaymentGateway(
     config.paymentGateway,
     config.FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS,
@@ -112,6 +119,7 @@ async function shutdown(signal: NodeJS.Signals) {
   logger.info({ signal }, "worker parando");
   await scheduler.stop();
   await runner.stop();
+  await pdfRenderer.close();
   await healthServer.stop();
   await database.close({ timeoutSeconds: DATABASE_CLOSE_TIMEOUT_SECONDS });
   process.exit(0);
