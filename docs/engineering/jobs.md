@@ -1,6 +1,6 @@
 # Jobs e fila (`apps/worker`)
 
-**Versão:** 1.7 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md`; `docs/pedagogy/spec-pedagogica.md` (contratos e códigos do pipeline) · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
+**Versão:** 1.8 · **Data:** 2026-10-22 · **Fonte:** PRD §5, §7.4, §9.1, §9.2; `.claude/rules/worker.md`; `docs/pedagogy/spec-pedagogica.md` (contratos e códigos do pipeline) · **Código:** `jobNameList`, `jobPayloadSchema` e regras de retry em `packages/core/src/jobs/` (F0-04, F0-06); fila própria em `packages/db/src/queue/` (F0-06, ADR-0003 e ADR-0008); loop, agendador e health em `apps/worker/src/` (F0-07)
 
 O worker é um processo Bun que consome a fila no Postgres. Cada job tem um handler em `src/jobs/{nome}.ts`, payload validado por `jobPayloadSchema` ao enfileirar e ao consumir, e é **idempotente**: checa o estado do pedido antes de agir e reexecução não duplica kit, cobrança, e-mail nem mensagem.
 
@@ -11,7 +11,7 @@ O worker é um processo Bun que consome a fila no Postgres. Cada job tem um hand
 | `order.analyze` | `{ orderId }` | api, `POST /orders` (mesma transação do `draft`) e `PUT /orders/:token/photos` (mesma transação da troca); singleton por `orderId`, então a troca com análise pendente não cria outro | `draft → analyzing → preview_ready` ou `→ draft` com avisos por foto | própria, 2 |
 | `order.generate` | `{ orderId }` | `markOrderPaidAndEnqueue` (webhook ou reconciliação); admin `reprocess` | `paid → processing → ready` (via `publishKit`) ou `→ failed` | `GENERATE_CONCURRENCY` (default 2) |
 | `order.notify` | `{ orderId, kind }` | `publishKit` (`kit_ready`), `order.generate` ao falhar (`kit_failed`), `confirm` (`order_link`), `whatsapp.inbound` | nenhuma | padrão |
-| `charge.reconcile` | `{ orderId?, webhookEventId? }` (`webhookEventId` só junto com `orderId`) | webhook do Mercado Pago (com `orderId` e `webhookEventId`, na transação do `webhook_event`); agendador a cada 2 minutos (sem nenhum dos dois) | `awaiting_payment → paid` por `markOrderPaidAndEnqueue`, após consultar o gateway, repassando o `webhookEventId`; cobrança vencida → `expired` | 2 |
+| `charge.reconcile` | `{ orderId?, chargeId?, webhookEventId? }` (`chargeId` e `webhookEventId` só junto com `orderId`) | webhook do Mercado Pago (`{ orderId, chargeId, webhookEventId }`, na transação do `webhook_event`); `markOrderPaidAndEnqueue` (`{ orderId, chargeId }` da cobrança que expirou, com `run_after_datetime` = vencimento + `CHARGE_RECONCILE_AFTER_EXPIRY_MINUTES`); agendador a cada 2 minutos (`{}`) | `awaiting_payment → paid` por `markOrderPaidAndEnqueue`, após consultar o gateway, repassando o `webhookEventId`; cobrança que o gateway deu como vencida → `expired` | 2 |
 | `retention.purge` | `{}` | agendador, diário | nenhuma; grava `delete_datetime` | 1 |
 | `whatsapp.inbound` | `{ webhookEventId, phone, text ≤ 1000 }` | api, `POST /webhooks/whatsapp` | nenhuma; grava ou remove vínculo | padrão |
 
@@ -58,6 +58,37 @@ flowchart TD
 - Falha que não volta à fila (`ai_auth_failed`, `ai_request_invalid`, foto ausente ou recusada no storage, pedido sem foto atual) encerra em `{ outcome: "analysis_unavailable" }`, com log `error` e o job `completed` (ADR-0013). Falha transitória (`ai_*` transitório, `extraction_cache_failed`, `storage_unavailable`) segue o retry da fila com o pedido em `analyzing`.
 - `onExhausted`: com o pedido em `analyzing`, `analysis_failed` com `analysis_unavailable`, na transação do `failed`; nos outros estados, no-op.
 - Log por análise: `orderId`, `stage: "analyze"`, duração, custo, número de chamadas, desfecho, `failCode` e código de erro. Nunca evidência, perfil ou texto da foto.
+
+### Fluxo de `charge.reconcile` (F2-04; PRD §9.1 itens 4 e 5; `payments.md`)
+
+```mermaid
+flowchart TD
+  A[pega job] --> T{payload}
+  T -->|orderId e chargeId: webhook ou conferência agendada| C1[findChargeForReconcile, qualquer status]
+  T -->|só orderId| C2[cobranças pending do pedido]
+  T -->|vazio: agendado| C3[listChargesToReconcile: pending com mais de 1 min, pedido awaiting_payment, lote de 100]
+  C1 -->|não achou| N[webhook_event processado charge_not_found; Ok]
+  C1 --> G
+  C2 --> G
+  C3 --> G[getChargeStatus no gateway]
+  G -->|gateway_unavailable| R[dirigido: Err retryable; varredura: warn e segue]
+  G -->|gateway_rejected ou response_invalid| F[webhook_event processado com o código; dirigido: Err definitivo]
+  G --> D{decideChargeReconciliation}
+  D -->|referência ou valor divergente, ou pago sem id| M[payment_mismatch: log error, nada gravado, evento processado; dirigido: Err definitivo]
+  D -->|paid| P[markOrderPaidAndEnqueue com amountCents]
+  P -->|paid| X[depois do commit: cancelCharge dos outros Pix pendentes; falha é warn cancel_failed]
+  P -->|already_paid| I[info]
+  P -->|duplicate_payment| E[log error: reembolso manual pelo admin]
+  P -->|Err| F
+  D -->|expired e cobrança pending| Q[expireCharge + evento processado, mesma transação]
+  D -->|pending, refunded, expired já expirada| O[sem mudança; evento processado com o status]
+```
+
+- O payload decide o alvo: com `chargeId`, a cobrança é consultada qualquer que seja o status dela no banco, porque um Pix já `expired` pode ter sido pago (`duplicate_payment`); a varredura só vê `pending`, e a conferência agendada pelo `markOrderPaidAndEnqueue` cobre a cobrança antiga quando o cancelamento falha ou o worker cai antes dele.
+- A decisão é do core (`decideChargeReconciliation`): referência ou valor diferente da cobrança é `payment_mismatch`; `paid` sem id na consulta usa o `gateway_payment_id` gravado na criação; `expired` vale mesmo antes do `expire_datetime`, porque o gateway já deu a order como `canceled` ou `failed` e o comprador precisa de "gerar novo Pix". A cobrança vencida pelo relógio fica `pending` até o gateway confirmar: ele expira em lote, 1 a 2 minutos depois, e a varredura vê `action_required` nesse intervalo.
+- Desfecho do job: no dirigido, caminhos esperados terminam `completed`; anomalias que não voltam com retentativa (`Err` do `markOrderPaidAndEnqueue`, `payment_mismatch`, `gateway_rejected`, `gateway_response_invalid`) terminam `failed` com o código, para contar no `failedCount` do `/health`; `gateway_unavailable` volta à fila com o `webhook_event` sem `processed_datetime`, e o `onExhausted` grava o código nele. A varredura sempre termina `completed`, com um resumo (`scannedCount`, `paidCount`, `expiredCount`, `pendingCount`, `errorCount`).
+- O cancelamento dos outros Pix acontece depois do commit, como melhor esforço: a transação não espera IO externo e a order não cancelada expira sozinha em 30 minutos.
+- Log por cobrança: `orderId`, `chargeId`, `webhookEventId`, `stage: "reconcile"`, `outcome`, `gatewayStatus`, `reason` e código; `duplicate_payment` em `error`, `refunded` e `cancel_failed` em `warn`. Nunca `qr_code`, e-mail ou payload.
 
 ## 2. Fluxo de `order.generate` (PRD §7.4; contratos e códigos na spec pedagógica, ADR-0010)
 
@@ -106,7 +137,7 @@ flowchart TD
 | Enfileirar `order.analyze` | mesma transação do `INSERT` em `order` |
 | `markOrderPaidAndEnqueue` | `payment_confirmed` + `charge.paid` + `order.generate` + `webhook_event.processed_datetime` (com o `webhookEventId` do payload de `charge.reconcile`) em uma transação, com pedido e cobrança travados; cobrança já paga com o mesmo pagamento é no-op e unique em `webhook_event (source, external_id)` barra o webhook repetido; detalhes em `data-model.md` §6 |
 | `publishKit` | `kit` com as duas keys + `kit_published` + `order.notify` em uma transação; sem as duas keys não roda |
-| `charge.reconcile { orderId }` | consulta o gateway e chama `markOrderPaidAndEnqueue`; pedido já `paid` ou posterior é no-op, salvo se for **outra** cobrança paga do mesmo pedido: abre `support_ticket` `duplicate_payment` e alerta (reembolso manual) |
+| `charge.reconcile { orderId, chargeId }` | consulta o gateway e chama `markOrderPaidAndEnqueue`, que confere também o valor; pedido já `paid` ou posterior é no-op, salvo se for **outra** cobrança paga do mesmo pedido: abre `support_ticket` `duplicate_payment` e alerta (reembolso manual). Reexecução dá `already_paid`; varredura e job dirigido no mesmo pedido ao mesmo tempo dão um `paid` e um `already_paid` (trava do pedido) |
 | `order.notify` | unique `(order_id, kind, channel)` em `notification`: retry de envio atualiza a linha; segundo envio do mesmo evento é `skipped` |
 | `whatsapp.inbound` | mensagem é identificada pelo `webhookEventId`; vínculo repetido não muda nada; resposta de ajuda limitada a uma por 24 h por número |
 | Payload de job | nunca entra em log, em nível nenhum (o de `whatsapp.inbound` carrega telefone e texto); ao terminar (concluído ou falha definitiva), o payload de `whatsapp.inbound` é reduzido a `name` e `webhookEventId` (`personalDataJobRetainedFieldMap` do core) e a linha fica como registro |
@@ -137,7 +168,7 @@ flowchart TD
 
 ## 5. Agendamento
 
-- `charge.reconcile` sem `orderId`, a cada 2 minutos: cobranças `pending` com mais de 1 minuto são consultadas no gateway; pagas passam por `markOrderPaidAndEnqueue`; vencidas (`expire_datetime` passado e gateway confirma) viram `expired`. Com `orderId` (enfileirado pelo webhook), só aquele pedido, imediatamente, pelo mesmo código.
+- `charge.reconcile` sem `orderId`, a cada 2 minutos: cobranças `pending` com mais de 1 minuto (`CHARGE_RECONCILE_MIN_AGE_MINUTES`), de pedidos `awaiting_payment`, em lotes de `CHARGE_RECONCILE_BATCH_SIZE` (100), são consultadas no gateway; pagas passam por `markOrderPaidAndEnqueue`; as que o gateway dá como vencidas viram `expired`. Com `orderId` e `chargeId` (enfileirado pelo webhook ou pelo próprio `markOrderPaidAndEnqueue`), só aquela cobrança, pelo mesmo código (fluxo em §1).
 - `retention.purge` uma vez por dia: fotos com `insert_datetime` anterior a 30 dias e kits com `published_datetime` anterior a 12 meses; apaga do storage, grava `delete_datetime`; lote limitado por execução.
 - O agendador (`startScheduler`) enfileira na partida e a cada intervalo, com `enqueueSingletonJob` e a chave `scheduled`, só os periódicos que aquele worker consome: o unique parcial em `(name, singleton_key)` mantém um só job pendente ou ativo por nome, com uma réplica ou várias; periódico sem consumidor ficaria pendente e dispararia o alerta de fila parada.
 - Manutenção a cada 30 s, no mesmo agendador: `recoverExpiredJobs` com o `onExhausted` do mapa de handlers. Log `warn` quando recupera algo e `error` `job_compensation_failed` por compensação que falhou. Tarefa que falha vira log `error` (`scheduler_task_failed`) e roda de novo no próximo intervalo.
@@ -159,3 +190,4 @@ flowchart TD
 - **1.5 (2026-10-21):** F1-07: registro de cada chamada pelo `onAiCall`, teto conferido antes da chamada com o custo já gasto, `ai_aborted` no sinal, regeneração por execução e revisão completa depois do reparo por item vindo da validação.
 - **1.6 (2026-10-22):** F2-01: `order.analyze` enfileirado também pela troca de fotos e singleton por `orderId`.
 - **1.7 (2026-10-22):** F2-02 e ADR-0013: fluxo do `order.analyze` (início sob trava, retomada, `skip`, cache no banco, `ai_call`, `analysis_unavailable`, `onExhausted`), `completeWithin` no contexto do handler e mapa de handlers montado no boot.
+- **1.8 (2026-10-22):** F2-04: fluxo do `charge.reconcile` (alvos por payload, decisão no core, desfecho do job por caminho, cancelamento depois do commit), `chargeId` no payload, conferência agendada da cobrança expirada pelo `markOrderPaidAndEnqueue` e o worker com o `PaymentGateway`.

@@ -1,6 +1,6 @@
 # Máquina de estados do pedido
 
-**Versão:** 1.3 · **Data:** 2026-10-22 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
+**Versão:** 1.4 · **Data:** 2026-10-22 · **Fonte:** PRD §5; design doc §6.8 · **Código:** `packages/core/src/order/state-machine.ts` (F0-04) · **Regras:** `.claude/rules/core.md`
 
 O estado do pedido só muda pela função `transitionOrder(status, event)` do core, chamada por um service **dentro de uma transação** (invariante 1). A máquina é dado (`orderTransitionList`), não código: toda transição válida está na tabela abaixo e toda combinação fora dela devolve `InvalidTransitionError` sem lançar.
 
@@ -36,7 +36,7 @@ stateDiagram-v2
 | `analyzing` | `analysis_failed` | `draft` | worker, `order.analyze` | fotos insuficientes ou ilegíveis, só assunto não atendido ou nenhum assunto (avisos por foto e `failCode` em `order.analysis`); ou análise indisponível (`analysis_unavailable`: falha definitiva do provedor ou do storage, ou retentativas esgotadas pelo `onExhausted`) |
 | `preview_ready` | `confirm` | `awaiting_payment` | api, `POST /orders/:token/confirm` | assuntos, e-mail e aceite válidos; a cobrança é criada no gateway antes (idempotente por `chargeId`) e gravada na mesma transação da transição |
 | `preview_ready` | `photos_changed` | `draft` | api, rota de fotos (F2-01) | o responsável troca uma foto pela ação "Trocar foto" (design doc §6.3, PRD §5 "foto ruim: nova foto antes do Pix"); os assuntos confirmados são descartados, `order.analysis` e `material_profile` são limpos e a análise recomeça por `start_analysis` (a troca em `draft` também limpa a análise, sem transição) |
-| `awaiting_payment` | `payment_confirmed` | `paid` | worker, `charge.reconcile` (disparado pelo webhook com `orderId` ou pelo agendador) | **após consultar o gateway**; `markOrderPaidAndEnqueue` enfileira `order.generate` e expira as demais cobranças `pending` do pedido na mesma transação |
+| `awaiting_payment` | `payment_confirmed` | `paid` | worker, `charge.reconcile` (disparado pelo webhook com `orderId` e `chargeId` ou pelo agendador; F2-04) | **após consultar o gateway** e conferir referência e valor; `markOrderPaidAndEnqueue` enfileira `order.generate`, expira as demais cobranças `pending` do pedido e agenda a conferência delas na mesma transação; depois do commit, o worker cancela essas orders no gateway (`cancelCharge`) |
 | `paid` | `generation_started` | `processing` | worker, `order.generate` | ao pegar o job |
 | `paid` | `generation_failed` | `failed` | worker, `onExhausted` de `order.generate` (ADR-0009) | o job esgotou as tentativas antes de começar a gerar; `fail_reason_code` do job e `order.notify` `kit_failed` na mesma transação |
 | `processing` | `kit_published` | `ready` | worker, `publishKit` | os dois PDFs no storage e validações críticas verdes |
@@ -56,8 +56,10 @@ Não é um status do pedido. Com o pedido em `awaiting_payment`, o sub-estado de
 |---|---|
 | Webhook repetido | `webhook_event` é unique por (`source`, `external_id`): segundo recebimento responde 200 sem efeito |
 | Pagamento confirmado para pedido já `paid` ou posterior | no-op na máquina (`transitionOrder` recusaria de qualquer forma); se for **outra cobrança** do mesmo pedido, o responsável pagou duas vezes: `markOrderPaidAndEnqueue` abre `support_ticket` `duplicate_payment` e dispara alerta para reembolso manual pelo admin |
-| Pix pago depois da cobrança expirar | ainda vale: `payment_confirmed` segue e as demais cobranças `pending` do pedido viram `expired` (canceladas no gateway quando a API permitir), para um segundo Pix já gerado não ser pago também |
-| Webhook atrasado ou perdido | `charge.reconcile` consulta o gateway a cada 2 minutos para cobranças `awaiting_payment` com mais de 1 minuto |
+| Pix pago depois da cobrança expirar | ainda vale: `payment_confirmed` segue e as demais cobranças `pending` do pedido viram `expired` e são canceladas no gateway depois do commit (`cancelCharge`, melhor esforço), para um segundo Pix já gerado não ser pago também; se o cancelamento falhar, a conferência agendada 5 minutos depois do vencimento da antiga consulta o gateway e, se ela foi paga, abre o `duplicate_payment` |
+| Webhook atrasado ou perdido | `charge.reconcile` consulta o gateway a cada 2 minutos para cobranças `pending` com mais de 1 minuto de pedidos `awaiting_payment` |
+| Cobrança que o gateway deu como `canceled` ou `failed` antes do vencimento | a reconciliação marca `expired` mesmo assim; o sub-estado vira `charge_expired` e o comprador gera outro Pix |
+| Consulta ao gateway com referência ou valor diferente da cobrança | `payment_mismatch`: nada muda, log `error` repetido pela varredura; caminho quase impossível, porque a api cria a order com o valor e a referência |
 | Falha de geração | uma regeneração automática dentro do mesmo job; persistindo, `generation_failed` e aviso ao responsável (`kit_failed`) |
 | Falha transitória até esgotar a fila | o `onExhausted` de `order.generate` aplica `generation_failed` (de `paid` ou `processing`) e enfileira `kit_failed` na transação do `failed` do job; o admin pode reprocessar a partir de `failed` |
 | Reembolso durante `processing` | `refund` leva a `refunded`; quando o job tentar `kit_published`, a máquina recusa e o kit não é publicado |
@@ -75,6 +77,7 @@ O web decide a rota canônica a partir do status devolvido por `GET /orders/:tok
 
 ## Histórico
 
+- **1.4 (2026-10-22):** F2-04: `payment_confirmed` pelo `charge.reconcile` do webhook (`orderId` e `chargeId`) ou do agendador, com referência e valor conferidos; cancelamento dos outros Pix no gateway depois do commit e conferência agendada; `expired` antes do vencimento quando o gateway já cancelou; `payment_mismatch`. Sem transição nova.
 - **1.3 (2026-10-22):** F2-03: a renovação do Pix não marca a vencida `expired`; a trava do pedido garante uma cobrança ativa. Sem transição nova.
 - **1.2 (2026-10-22):** F2-02: análise pendente (`order.analysis` nula), `analysis_unavailable`, reexecução do `order.analyze` e conclusão do job na transação da transição (ADR-0013). Sem transição nova.
 - **1.1 (2026-10-19):** `preview_ready → draft` por `photos_changed` ("Trocar foto") e `paid → failed` por `generation_failed` (esgotamento antes de gerar), decididos pelo humano na revisão da F0 (`specs/cross/revisao-f0/`); `confirmedOrderStatusList` (alcançáveis de `awaiting_payment`) exige ao menos um assunto.

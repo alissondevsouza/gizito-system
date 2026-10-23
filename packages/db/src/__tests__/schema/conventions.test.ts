@@ -33,6 +33,7 @@ const expectedIndexMap: Record<string, { name: string; unique: boolean; partial?
     { name: "charge_gateway_payment_id_idx", unique: true, partial: true },
     { name: "charge_gateway_gateway_order_id_idx", unique: true, partial: true },
     { name: "charge_status_expire_datetime_idx", unique: false },
+    { name: "charge_status_insert_datetime_idx", unique: false },
   ],
   kit: [
     { name: "kit_order_id_idx", unique: false },

@@ -83,7 +83,7 @@ sequenceDiagram
   API->>PG: awaiting_payment + charge
   R->>MP: paga o Pix
   MP->>API: webhook (assinado)
-  API->>PG: webhook_event (unique) + job charge.reconcile {orderId} (mesma transação)
+  API->>PG: webhook_event (unique) + job charge.reconcile {orderId, chargeId, webhookEventId} (mesma transação)
   API-->>MP: 200
   WK->>MP: GET /v1/orders/{id}
   WK->>PG: paid + job order.generate (mesma transação)

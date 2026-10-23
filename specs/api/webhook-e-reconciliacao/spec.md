@@ -178,17 +178,17 @@ Unit no core (decisão, schema, erro), no integrations (adaptador com `fetch` in
 - [x] 3.1 `cancelCharge` no Mercado Pago (schema, fixture, testes) e no fake (`failNextCancel`, `cancelReferenceList`), `type` e teto do `action` no `parseWebhook` do fake e do real, `unknownChargeStatus` no fake, caso de cancelamento no contrato · Verificação: `bun test` no integrations
 
 ### M4 — api
-- [ ] 4.1 `webhook-rate-limit.ts` com unit · Verificação: `bun test` na api
-- [ ] 4.2 `services/charge-webhooks.ts`, `routes/webhooks/mercadopago.ts`, `errors.ts`, `app.ts` · Verificação: `bun run test:integration` na api (`webhooks.test.ts`)
+- [x] 4.1 `webhook-rate-limit.ts` com unit · Verificação: `bun test` na api
+- [x] 4.2 `services/charge-webhooks.ts`, `routes/webhooks/mercadopago.ts`, `errors.ts`, `app.ts` · Verificação: `bun run test:integration` na api (`webhooks.test.ts`)
 
 ### M5 — worker
-- [ ] 5.1 config (`MERCADOPAGO_*` com `mercadopago`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS` só com `fake`) e montagem do gateway, `charge.reconcile` em `handledJobNameList` · Verificação: `bun test` no worker
-- [ ] 5.2 `jobs/charge-reconcile.ts` com o teste de integração · Verificação: `bun run test:integration` no worker
-- [ ] 5.3 api e worker no ar com `PAYMENT_GATEWAY=fake` contra o banco de dev, o worker com `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`: pedido levado a `awaiting_payment` pelo `confirm`, webhook do fake por `curl` (`x-fake-signature`, corpo `{ gatewayOrderId, action }`), worker reconcilia pelo job dirigido e o `GET` mostra `paid`; webhook repetido dá `duplicate`; `type=payment` dá `ignored`; dados apagados depois · Verificação: respostas, linhas em `webhook_event` (`outcome_code` em `paid` ou `already_paid`, porque a varredura pode chegar antes do job dirigido), `charge`, `order` e `job`, e logs sem corpo nem e-mail
+- [x] 5.1 config (`MERCADOPAGO_*` com `mercadopago`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS` só com `fake`) e montagem do gateway, `charge.reconcile` em `handledJobNameList` · Verificação: `bun test` no worker
+- [x] 5.2 `jobs/charge-reconcile.ts` com o teste de integração · Verificação: `bun run test:integration` no worker
+- [x] 5.3 api e worker no ar com `PAYMENT_GATEWAY=fake` contra o banco de dev, o worker com `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`: pedido levado a `awaiting_payment` pelo `confirm`, webhook do fake por `curl` (`x-fake-signature`, corpo `{ gatewayOrderId, action }`), worker reconcilia pelo job dirigido e o `GET` mostra `paid`; webhook repetido dá `duplicate`; `type=payment` dá `ignored`; dados apagados depois · Verificação: respostas, linhas em `webhook_event` (`outcome_code` em `paid` ou `already_paid`, porque a varredura pode chegar antes do job dirigido), `charge`, `order` e `job`, e logs sem corpo nem e-mail
 
 ### M6 — docs e fechamento
-- [ ] 6.1 `api.md`, `jobs.md`, `data-model.md`, `state-machine.md`, `payments.md`, `known-issues.md`, roadmap
-- [ ] 6.2 `bun run lint`, `bun run typecheck`, `bun run test` e `test:integration` em db, integrations, api e worker
+- [x] 6.1 `api.md`, `jobs.md`, `data-model.md`, `state-machine.md`, `architecture.md`, `payments.md`, `known-issues.md`, roadmap
+- [x] 6.2 `bun run lint`, `bun run typecheck`, `bun run test` e `test:integration` em db, integrations, api e worker
 
 ## Decisões
 | Data | Decisão | Justificativa |
@@ -204,4 +204,16 @@ Unit no core (decisão, schema, erro), no integrations (adaptador com `fetch` in
 | 2026-10-22 | Revisão da spec (rodada 1, reprovada por 1 CRÍTICO): fake com `unknownChargeStatus` por env só no worker, para api e worker em processos separados; conferência agendada das cobranças expiradas pelo `markOrderPaidAndEnqueue` (`expire_datetime` + 5 min); desfecho do job declarado por caminho (`Err` não retryable nas anomalias); `gatewayPaymentId` da cobrança como fallback; `recordWebhookEvent` com `processed`; teto no `action`; índice `(status, insert_datetime)`; nomes de arquivo nos globs da regra de pagamentos | CRÍTICO e alertas aceitos; a sugestão de mover a fábrica do gateway para o `integrations` ficou de fora, porque os fakes vivem num entrypoint separado e a fábrica precisaria dos dois |
 
 ## Status
-Spec escrita em 22/10/2026. A revisão da spec reprovou a rodada 1 por um CRÍTICO (a task 5.3 com o fake em memória em dois processos) e aprovou a rodada 2 depois das correções (tabela de Decisões). M1, M2 e M3 implementados e com checkpoint. Em andamento: M4 (api) e M5 (worker).
+Implementação concluída em 22/10/2026 (todas as tasks marcadas), aguardando a revisão neutra do código. A revisão da spec reprovou a rodada 1 por um CRÍTICO (a task 5.3 com o fake em memória em dois processos) e aprovou a rodada 2 depois das correções (tabela de Decisões).
+
+Verificações feitas pelo orquestrador:
+- `bun run lint` e `bun run typecheck` limpos no monorepo; `bun run test` com os 6 workspaces verdes (core 848; integrations 487 e 21 pulados; api 123; worker 414 e 15 pulados);
+- `test:integration` com Postgres real: db 169, integrations 6, api 78, worker 71;
+- task 5.3: api (`PAYMENT_GATEWAY=fake`, porta 3101) e worker (`PAYMENT_GATEWAY=fake`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`, health 3102) no ar contra o banco de dev com a migration 0006 aplicada: pedido inserido em `preview_ready`, `confirm` 200 `awaiting_payment`, webhook do fake `queued` (200), repetido `duplicate` (200), `type=payment` `ignored` (200), sem assinatura 401; em segundos o `GET` mostrou `paid`, a `charge` ficou `paid` com `gateway_payment_id` e `paid_datetime`, o `webhook_event` processado com `paid`, o `charge.reconcile` `completed` e o `order.generate` `pending`; os logs da api e do worker não têm e-mail, `qr_code`, assinatura, `action` nem payload; os dados de teste foram apagados do banco de dev.
+
+Pendências para o humano:
+- `.env.example`: a variável nova `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS` (opcional, só com `PAYMENT_GATEWAY=fake`, valores `paid`, `pending` ou `expired`; o worker a lê) ainda não está documentada lá; o agente não lê nem edita o arquivo.
+- RF-12, notificação real do sandbox: subir a api com `PAYMENT_GATEWAY=mercadopago` e a credencial de teste em `MERCADOPAGO_ACCESS_TOKEN`, com `MERCADOPAGO_WEBHOOK_SECRET` igual ao segredo da aplicação; expor a porta com um túnel; cadastrar `https://<túnel>/webhooks/mercadopago` em "Webhooks > Configurar notificação" no modo teste, evento Order; criar uma cobrança pelo `confirm` e pagar com o usuário de teste ou simular a notificação pelo painel; conferir `outcome: "queued"` no log da api e, com o worker no ar com `PAYMENT_GATEWAY=mercadopago`, `outcome: "paid"` no log dele. A linha LOW do `known-issues.md` fecha com isso.
+- A migration 0006 ficou aplicada no banco de dev `gizito`.
+
+Herança para a F2-05: o `order.generate` já é enfileirado pelo `markOrderPaidAndEnqueue`; o worker só precisa ganhar o handler. Para a F2-09: o E2E com api e worker separados usa `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid` no worker e o webhook do fake (`buildFakeWebhookRequest`) para simular o pagamento.

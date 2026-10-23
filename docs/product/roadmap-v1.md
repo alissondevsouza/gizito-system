@@ -1,4 +1,4 @@
-# Gizito — Roadmap de Implementação v1.6
+# Gizito — Roadmap de Implementação v1.7
 
 **Status:** em execução  
 **Fase atual:** F2 — Fluxo comercial  
@@ -24,7 +24,7 @@ Resumo por fase:
 |---|---|---|---|---|
 | F0 Fundação | 7 | 7 | 0 | 0 |
 | F1 Prova técnica e pedagógica | 11 | 11 | 0 | 0 |
-| F2 Fluxo comercial | 14 | 2 | 1 | 11 |
+| F2 Fluxo comercial | 14 | 4 | 0 | 10 |
 | F3 Piloto pago | 5 atividades | 0 | 0 | 5 |
 | F4 Pós-validação | 8 itens por gatilho | 0 | 0 | 8 |
 
@@ -247,13 +247,14 @@ As estimativas são para uma pessoa com agentes, sem outro trabalho em paralelo,
   - Entrega: `order.analyze` com transições `draft → analyzing → preview_ready` e retorno a `draft` com avisos por foto ou de matéria ainda não atendida; cache da extração e resultado no banco; prévia no `GET /orders/:token` (`api.md` §3); `ObjectStorage.get`
   - Pronto quando: transições e avisos testados; reexecução idempotente
   - Concluída em 22/10/2026 (spec e revisão em `specs/worker/job-analise/`; tamanho revisto de M para L), aprovada na 2ª rodada da revisão neutra, vista funcionando com a IA real e mesclada na `main` (`c0680b7`)
-- [ ] **F2-03 `confirmacao-e-cobranca-pix`** **em andamento** — api, integrations · L · depende: F2-02
+- [x] **F2-03 `confirmacao-e-cobranca-pix`** — api, integrations · L · depende: F2-02
   - Entrega: `POST /orders/:token/confirm` (recusa assunto ainda não atendido, também como “outro”); `MercadoPagoGateway` (createCharge via Orders API, getChargeStatus, parseWebhook, refund) e fake; renovação de cobrança expirada
   - Pronto quando: no sandbox: cobrança criada, expira em 30 min, renova sem duplicar pedido
-  - Feito até agora: implementada na branch `feat/api/confirmacao-e-cobranca-pix` (spec em `specs/api/confirmacao-e-cobranca-pix/`), com fake, respostas gravadas da Orders API e a API vista no ar com o fake; aprovada na 2ª rodada da revisão neutra em 22/10/2026. O critério do sandbox foi cumprido em 22/10/2026 (`test:payment-live`: cobrança criada, expirada depois dos 30 min e renovada no mesmo pedido). Falta o merge do humano
-- [ ] **F2-04 `webhook-e-reconciliacao`** — api, worker · M · depende: F2-03
+  - Concluída em 22/10/2026 (spec e revisão em `specs/api/confirmacao-e-cobranca-pix/`), aprovada na 2ª rodada da revisão neutra, critério do sandbox cumprido pelo `test:payment-live` (cobrança criada, expirada depois dos 30 min e renovada no mesmo pedido) e mesclada na `main` (`4e8c87c`)
+- [x] **F2-04 `webhook-e-reconciliacao`** — api, worker, core, db, integrations · L (revisto de M) · depende: F2-03
   - Entrega: `POST /webhooks/mercadopago` com assinatura, `webhook_event`, GET do recurso, `markOrderPaidAndEnqueue`; job `charge.reconcile` (o webhook passa `webhookEventId` no payload; ao marcar pago, cancelar no gateway os outros Pix ainda pendentes do pedido, depois do commit)
   - Pronto quando: webhook duplicado é no-op; pagamento sem webhook é detectado pela reconciliação
+  - Concluída em 22/10/2026 na branch `feat/api/webhook-e-reconciliacao` (spec e revisão em `specs/api/webhook-e-reconciliacao/`): webhook que registra e enfileira `charge.reconcile { orderId, chargeId, webhookEventId }`; job dirigido e periódico com a decisão no core, `cancelCharge` depois do commit e conferência agendada da cobrança antiga; checks por status na `charge` e valor conferido na confirmação (dívidas da revisão da F0); api e worker vistos no ar com o fake. Pendente do humano: a notificação real do sandbox por túnel (linha LOW no `known-issues.md`) e o merge
 - [ ] **F2-05 `job-geracao-e-publicacao`** — worker · M · depende: F1-07, F1-08, F2-04
   - Entrega: `order.generate`: pipeline, render, `publishKit`; `failed` com `outcome_code`; limite de custo
   - Pronto quando: `ready` só com dois PDFs no storage; reexecução idempotente
@@ -336,6 +337,7 @@ Marcar o item só quando entregue; anotar ao lado a data em que o gatilho dispar
 
 ## 10. Histórico de revisões
 
+- **1.7 (22/10/2026):** F2-04 passa de M a L e cobre também core, db e integrations: `chargeId` no payload do `charge.reconcile`, `cancelCharge` na interface do gateway, checks por status na `charge` e valor conferido na confirmação, fake com `unknownChargeStatus` para api e worker em processos separados.
 - **1.6 (22/10/2026):** F2-02 passa de M a L e cobre também db, api, core e integrations: cache da extração e resultado no banco, prévia no `GET /orders/:token` e `ObjectStorage.get`. A F2-06 passa a agendar a purga do cache da extração vencido.
 - **1.5 (21/10/2026):** regressão com 35 casos em vez de 40 (PRD 1.5 §7.6, spec pedagógica 1.3): 30 imagens de caderno geradas por IA e 5 variações delas, sem foto real, decisão do humano. Mudaram o diagrama, o risco da extração manuscrita, a saída da F1, o "pronto quando" da F1-06 (sobre as imagens da regressão) e a entrega da F1-10. Pendências do humano atualizadas
 - **1.4 (19/10/2026):** F1-02 em andamento; a entrega da F1-03 passa a apontar o §14 da spec pedagógica, com os nomes de schema da spec (`photoExtractionSchema` no lugar de `extractionResultSchema`) e as funções de alocação, composição e revisão; a F1-06 passa a depender da F1-03, dona do schema e da junção da extração.
