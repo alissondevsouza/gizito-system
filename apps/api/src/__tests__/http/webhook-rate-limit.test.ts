@@ -6,10 +6,10 @@ const START = new Date("2026-10-22T12:00:00.000Z");
 function limiterAt(limitPerMinute: number) {
   let currentTime = START;
   const limiter = createWebhookRateLimiter({ limitPerMinute, now: () => currentTime });
-  return {
-    limiter,
-    advance: (ms: number) => void (currentTime = new Date(currentTime.getTime() + ms)),
+  const advance = (ms: number) => {
+    currentTime = new Date(currentTime.getTime() + ms);
   };
+  return { limiter, advance };
 }
 
 describe("rate limit do webhook por IP (spec F2-04, RF-08)", () => {
