@@ -34,7 +34,7 @@ paths:
 - Com `orderId` e `chargeId` (webhook ou conferência agendada), consulta só aquela cobrança, em qualquer status do banco: é assim que o Pix antigo pago em dobro vira `duplicate_payment`.
 - Depois do commit de um `paid`, `cancelCharge` nos outros Pix pendentes do pedido (melhor esforço, `warn cancel_failed`); o `markOrderPaidAndEnqueue` já agendou um `charge.reconcile` de cada um para `expire_datetime + CHARGE_RECONCILE_AFTER_EXPIRY_MINUTES`.
 - Referência ou valor divergente → `payment_mismatch`: nada muda, log `error`, job dirigido `failed`. Erro do gateway: `gateway_unavailable` volta à fila; os outros são falha definitiva com o código; na varredura, qualquer erro é `warn` e a varredura segue.
-- Dev e E2E com dois processos: `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid|pending|expired` no worker faz o fake responder por `fake-order-*` que a api criou em outro processo (só com `PAYMENT_GATEWAY=fake`). Com `paid`, a varredura paga toda cobrança pendente com mais de 1 minuto, com ou sem webhook.
+- Dev e E2E com dois processos: `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid|pending|expired` no worker faz o fake responder por `fake-order-*` que a api criou em outro processo (só com `PAYMENT_GATEWAY=fake`). Com `paid`, a varredura paga toda cobrança pendente com mais de 1 minuto, com ou sem webhook; a order desconhecida que o worker cancelou passa a responder `expired`.
 
 ## Reembolso
 - Só via painel admin, com motivo; chama a API de reembolso (`POST /v1/orders/{id}/refund` sem corpo, total, chave `refund-{charge_id}`), grava `refund_id`, transição para `refunded`. Nunca automático.

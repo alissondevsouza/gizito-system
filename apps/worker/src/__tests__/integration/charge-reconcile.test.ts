@@ -555,6 +555,40 @@ describe("charge.reconcile periódico (spec F2-04, RF-10)", () => {
     expect(await testDatabase.db.$count(supportTicket)).toBe(0);
   });
 
+  it("varredura e job dirigido no mesmo pedido ao mesmo tempo dão um paid e um already_paid", async () => {
+    const orderId = await createOrder();
+    const pending = await createCharge(orderId, { ageMinutes: 5 });
+    harness.gateway.markPaid(pending.chargeId, START);
+    const webhookEventId = await insertWebhookEvent();
+    await enqueueJob(
+      testDatabase.db,
+      { name: "charge.reconcile", orderId, chargeId: pending.chargeId, webhookEventId },
+      { runAfterDatetime: START },
+    );
+    await enqueueJob(testDatabase.db, { name: "charge.reconcile" }, { runAfterDatetime: START });
+    const outcomeList = await Promise.all(
+      ["worker-a", "worker-b"].map((workerId) =>
+        workJob(testDatabase.db, {
+          nameList: ["charge.reconcile"],
+          workerId,
+          clock: () => START,
+          handler: harness.definition.handle,
+        }),
+      ),
+    );
+    expect(outcomeList.map((outcome) => outcome.outcome)).toEqual(["completed", "completed"]);
+    expect((await loadOrder(orderId)).status).toBe("paid");
+    expect(await listJobs("order.generate")).toHaveLength(1);
+    expect(
+      reconciledEntryList()
+        .map((entry) => entry.outcome)
+        .sort(),
+    ).toEqual(["already_paid", "paid"]);
+    expect(["paid", "already_paid"]).toContain(
+      (await loadWebhookEvent(webhookEventId)).outcomeCode ?? "",
+    );
+  });
+
   it("os logs nunca levam o qr code, o e-mail ou o payload", async () => {
     const orderId = await createOrder();
     const pending = await createCharge(orderId);

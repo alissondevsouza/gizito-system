@@ -1,4 +1,9 @@
-import { MAX_WEBHOOK_BODY_BYTES, type WebhookRequest, webhookAckSchema } from "@gizito/core";
+import {
+  MAX_WEBHOOK_BODY_BYTES,
+  normalizeClientIp,
+  type WebhookRequest,
+  webhookAckSchema,
+} from "@gizito/core";
 import { Elysia, status } from "elysia";
 import {
   rateLimitedError,
@@ -38,10 +43,12 @@ export function createMercadoPagoWebhookRoutes(dependencies: MercadoPagoWebhookR
     "/webhooks/mercadopago",
     async ({ request, server, set }) => {
       set.headers["cache-control"] = NO_STORE;
-      const clientIp = resolveClientIp(
-        request.headers,
-        server?.requestIP(request)?.address ?? null,
-        trustedProxyHopCount,
+      const clientIp = normalizeClientIp(
+        resolveClientIp(
+          request.headers,
+          server?.requestIP(request)?.address ?? null,
+          trustedProxyHopCount,
+        ),
       );
       if (!webhookRateLimiter.take(clientIp)) throw status(429, rateLimitedError);
       if (declaresBodyAbove(request, MAX_WEBHOOK_BODY_BYTES)) {

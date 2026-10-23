@@ -131,6 +131,7 @@ export function createFakePaymentGateway({
   let statusFailure: PaymentGatewayErrorCode | null = null;
   let cancelFailure: PaymentGatewayErrorCode | null = null;
   const cancelReferenceList: ChargeReference[] = [];
+  const canceledUnknownGatewayOrderIdSet = new Set<string>();
   let activeCreateGate: ReturnType<typeof createGate> | null = null;
 
   function takeCreateFailure(): PaymentGatewayErrorCode | null {
@@ -160,12 +161,15 @@ export function createFakePaymentGateway({
     const chargeId = chargeIdOfFakeGatewayOrderId(gatewayOrderId);
     if (unknownChargeStatus === undefined || chargeId === null) return null;
     if (chargeIdByGatewayOrderId.has(gatewayOrderId)) return null;
+    const status = canceledUnknownGatewayOrderIdSet.has(gatewayOrderId)
+      ? "expired"
+      : unknownChargeStatus;
     return {
-      status: unknownChargeStatus,
+      status,
       gatewayPaymentId: fakeGatewayPaymentId(chargeId),
       amountCents: KIT_PRICE_CENTS,
       externalReference: null,
-      paidDatetime: unknownChargeStatus === "paid" ? now() : null,
+      paidDatetime: status === "paid" ? now() : null,
     };
   }
 
@@ -265,7 +269,10 @@ export function createFakePaymentGateway({
         cancelFailure = null;
         throw new PaymentGatewayError(code);
       }
-      if (unknownChargeStatusOf(reference.gatewayOrderId) !== null) return;
+      if (unknownChargeStatusOf(reference.gatewayOrderId) !== null) {
+        canceledUnknownGatewayOrderIdSet.add(reference.gatewayOrderId);
+        return;
+      }
       const charge = chargeOfGatewayOrder(reference.gatewayOrderId);
       if (charge.status !== "pending") throw new PaymentGatewayError("gateway_rejected");
       charge.status = "expired";

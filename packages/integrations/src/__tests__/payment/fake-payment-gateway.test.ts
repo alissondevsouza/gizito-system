@@ -183,6 +183,7 @@ describe("FakePaymentGateway (spec F2-03, RF-05)", () => {
         paidDatetime: status === "paid" ? paidAt : null,
       });
       await gateway.cancelCharge(unknownReference);
+      expect((await gateway.getChargeStatus(unknownReference)).status).toBe("expired");
       await gateway.createCharge(input);
       expect((await gateway.getChargeStatus(reference)).status).toBe("pending");
       await expectGatewayError(

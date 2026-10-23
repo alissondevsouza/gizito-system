@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { jobNameList, ok } from "@gizito/core";
+import { handledJobNameList } from "#src/jobs/index.ts";
 import {
   buildJobLaneList,
   CHARGE_RECONCILE_LANE_CONCURRENCY,
@@ -21,6 +22,14 @@ describe("raias de concorrência (jobs.md §1)", () => {
       { key: "default", concurrency: DEFAULT_LANE_CONCURRENCY },
     ]);
     expect(CHARGE_RECONCILE_LANE_CONCURRENCY).toBe(2);
+  });
+
+  it("com os handlers reais sobem as raias da prévia e da reconciliação (spec F2-04, RF-09)", () => {
+    const laneList = buildJobLaneList(handledJobNameList, { generateConcurrency: 2 });
+    expect(laneList.map(({ key, nameList }) => ({ key, nameList }))).toEqual([
+      { key: "charge_reconcile", nameList: ["charge.reconcile"] },
+      { key: "analyze", nameList: ["order.analyze"] },
+    ]);
   });
 
   it("a prévia não divide vaga com notificação e WhatsApp", () => {
