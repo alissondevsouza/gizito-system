@@ -49,6 +49,7 @@ export const PROVIDER_INCIDENT_LOG_MESSAGE = "incidente do provedor";
 export const PUBLISH_NO_EFFECT_LOG_MESSAGE = "publicação sem efeito";
 export const GENERATION_SKIPPED_LOG_MESSAGE = "geração pulada";
 export const KIT_OBJECT_DELETE_FAILED_ERROR_CODE = "kit_object_delete_failed";
+export const GENERATION_ABORTED_ERROR_CODE = "generation_aborted";
 
 export type OrderGenerateDependencies = {
   readonly db: Database;
@@ -136,9 +137,13 @@ export function createOrderGenerateJob(dependencies: OrderGenerateDependencies):
     return err({ errorCode: failReasonCode, retryable: false });
   }
 
-  function retryLater(summary: RunSummary, errorCode: string, isIncident: boolean): JobResult {
+  function retryLater(
+    summary: RunSummary,
+    errorCode: string,
+    isProviderIncident: boolean,
+  ): JobResult {
     const entry = { ...summary, outcome: "retry", errorCode };
-    if (isIncident) logger.error(entry, PROVIDER_INCIDENT_LOG_MESSAGE);
+    if (isProviderIncident) logger.error(entry, PROVIDER_INCIDENT_LOG_MESSAGE);
     else logger.warn(entry, GENERATION_RETRY_LOG_MESSAGE);
     return err({ errorCode, retryable: true });
   }
@@ -192,9 +197,11 @@ export function createOrderGenerateJob(dependencies: OrderGenerateDependencies):
     input: GenerationInput,
     startTime: number,
     generated: GeneratedKit,
+    signal: AbortSignal,
   ): Promise<JobResult> {
     const { studyKit, attemptList, aiCallList } = generated;
     const summary = () => summaryOf(orderId, startTime, aiCallList, attemptList);
+    if (signal.aborted) return retryLater(summary(), GENERATION_ABORTED_ERROR_CODE, false);
     const rendered = await renderKit({ studyKit, generatedAt: now() }, { pdfRenderer });
     if (!rendered.ok) {
       return failDefinitively(summary(), rendered.error.code, {
@@ -238,10 +245,10 @@ export function createOrderGenerateJob(dependencies: OrderGenerateDependencies):
       topicCount: input.topicRefList.length,
     };
     if (!published.ok) {
+      await deleteKitObjects(orderId, keyMap);
       if (published.error instanceof OrderNotFoundError) {
         return err({ errorCode: published.error.code, retryable: false });
       }
-      await deleteKitObjects(orderId, keyMap);
       logger.warn(
         { ...summary(), ...detail, outcome: "no_effect", errorCode: published.error.code },
         PUBLISH_NO_EFFECT_LOG_MESSAGE,
@@ -295,7 +302,7 @@ export function createOrderGenerateJob(dependencies: OrderGenerateDependencies):
       }
       return failDefinitively(summary, failure.code, { spentCostCents });
     }
-    return publish(orderId, input.value, startTime, generation.value);
+    return publish(orderId, input.value, startTime, generation.value, context.signal);
   }
 
   const onExhausted: ExhaustedJobHandler = async (tx, exhaustedJob) => {

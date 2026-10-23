@@ -45,6 +45,7 @@ import {
 import { createCountingRenderer } from "#src/__tests__/pipeline/__fixtures__/pipeline.ts";
 import {
   createOrderGenerateJob,
+  GENERATION_ABORTED_ERROR_CODE,
   GENERATION_FAILED_LOG_MESSAGE,
   GENERATION_RETRY_LOG_MESSAGE,
   GENERATION_SKIPPED_LOG_MESSAGE,
@@ -207,6 +208,16 @@ function expectNoKitContentInLogs() {
 async function expectNothingPublished(orderId: string) {
   expect(await loadKitList(orderId)).toEqual([]);
   expect(harness.storage.objectMap.size).toBe(0);
+}
+
+function untilAborted(signal: AbortSignal | undefined): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal === undefined || signal.aborted) {
+      resolve();
+      return;
+    }
+    signal.addEventListener("abort", () => resolve(), { once: true });
+  });
 }
 
 function blockedReviewFor(itemIdList: readonly ReviewedItemId[]): ReviewResult {
@@ -507,16 +518,59 @@ describe("order.generate: falhas que voltam à fila (spec F2-05, RF-07)", () => 
     });
   });
 
-  it("teto de execução do job vira job_timeout com o pedido em processing", async () => {
+  it("teto de execução durante uma chamada de IA vira job_timeout com o pedido em processing", async () => {
     const orderId = await createOrder("paid");
     await enqueueGenerate(orderId);
-    expect(await runGenerate(harness.definition, { maxRunMs: 1 })).toMatchObject({
+    const definition = definitionWith({
+      aiProvider: {
+        ...harness.provider,
+        plan: async (request) => {
+          await untilAborted(request.signal);
+          return harness.provider.plan(request);
+        },
+      },
+    });
+    expect(await runGenerate(definition, { maxRunMs: 1000 })).toMatchObject({
       outcome: "retry_scheduled",
       errorCode: "job_timeout",
     });
     expect((await loadOrder(orderId)).status).toBe("processing");
-    expect(stageListOf()).toEqual([]);
-    expect(await loadAiCallList(orderId)).toEqual([]);
+    expect(stageListOf()).toEqual(["plan"]);
+    expect((await loadAiCallList(orderId)).map((row) => [row.stage, row.outcomeCode])).toEqual([
+      ["plan", "ai_aborted"],
+    ]);
+    await expectNothingPublished(orderId);
+    expect((await loadJobList()).map((row) => row.name)).toEqual(["order.generate"]);
+  });
+
+  it("teto de execução depois da revisão não renderiza nem publica", async () => {
+    const orderId = await createOrder("paid");
+    await enqueueGenerate(orderId);
+    const definition = definitionWith({
+      aiProvider: {
+        ...harness.provider,
+        review: async (request) => {
+          const reviewed = await harness.provider.review(request);
+          await untilAborted(request.signal);
+          return reviewed;
+        },
+      },
+    });
+    expect(await runGenerate(definition, { maxRunMs: 1000 })).toMatchObject({
+      outcome: "retry_scheduled",
+      errorCode: "job_timeout",
+    });
+    expect((await loadOrder(orderId)).status).toBe("processing");
+    expect(harness.renderList).toEqual([]);
+    await expectNothingPublished(orderId);
+    expect((await loadAiCallList(orderId)).map((row) => row.outcomeCode)).toEqual([
+      "ok",
+      "ok",
+      "ok",
+    ]);
+    expect(logEntryList(GENERATION_RETRY_LOG_MESSAGE)[0]).toMatchObject({
+      errorCode: GENERATION_ABORTED_ERROR_CODE,
+    });
   });
 });
 

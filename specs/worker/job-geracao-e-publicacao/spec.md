@@ -19,9 +19,10 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
 - **RF-02 — entrada da geração no core.** `buildGenerationInput({ grade, subject, topicIdList, otherTopicText, perceivedDifficulty, noteText, materialProfile, analysis })` devolve `Result` com `{ grade, subject, topicRefList, otherTopicText, perceivedDifficulty, noteText, materialProfile, sourceWarningCodeList }`:
   - `topicRefList` = `topicIdList` seguido de `other` quando há `otherTopicText`; vazio é erro;
   - `materialProfile` passa em `materialProfileSchema`; nulo ou inválido é erro;
+  - cada id de `topicIdList` passa em `isSelectableTopic` para o ano e a disciplina do pedido (razão `topic_not_selectable`); sem essa defesa, o `generateKit` lançaria `RangeError` e o job repetiria `unhandled_error` até esgotar;
   - `sourceWarningCodeList` vem de `analysis.mergedExtraction.sourceWarningList` quando a análise passa em `orderAnalysisSchema` e tem extração; senão, lista vazia.
 
-  O erro é `GenerationInputError` com `code = "generation_input_invalid"`. · Aceite: unit com entrada válida (com e sem "outro"), perfil nulo, lista de assuntos vazia e análise ausente ou indisponível.
+  O erro é `GenerationInputError` com `code = "generation_input_invalid"` e a razão (`material_profile_invalid`, `topic_list_empty` ou `topic_not_selectable`) só no log. · Aceite: unit com entrada válida (com e sem "outro"), perfil nulo, lista de assuntos vazia e análise ausente ou indisponível.
 - **RF-03 — incidente do provedor no core.** `aiProviderIncidentCodeList = ["ai_auth_failed", "ai_request_invalid"]` e `isAiProviderIncidentCode(code)` em `interfaces/ai-provider.ts`. São falhas do operador (conta, saldo, limite de gasto), não do pedido. · Aceite: unit da lista e da função.
 - **RF-04 — início sob trava no db.** `startOrderGeneration(tx, orderId)` trava o pedido (`FOR UPDATE`), aplica `decideGenerationStart` e:
   - `start`: `transitionOrder(status, "generation_started")`, grava o status e limpa `fail_reason_code` (um pedido reprocessado não carrega o motivo antigo);
@@ -35,7 +36,7 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
   1. começa pelo RF-04; `skip` vira `Ok` com log `info`;
   2. monta a entrada pelo RF-02; erro → falha definitiva `generation_input_invalid`;
   3. lê o custo já gasto pelo RF-06 e chama `generateKit` com `spentCostCents`, `signal` do job e `onAiCall` que grava cada chamada em `ai_call` na hora (`recordAiCallList`), antes de qualquer transição;
-  4. `renderKit` com `generatedAt = now()`; falha → definitiva `render_failed`;
+  4. com o `signal` do job já abortado, volta à fila com `generation_aborted` antes de renderizar (o lease parou de ser renovado); senão, `renderKit` com `generatedAt = now()`; falha → definitiva `render_failed`;
   5. gera `kitId`, sobe `activities.pdf` e `answer-key.pdf` em `kitStorageKey(orderId, kitId, kind)` com `putPrivate` (`application/pdf`);
   6. `publishKit` numa transação com `studyKit`, `generationVersion` e `taxonomyVersion` do próprio kit e as contagens de páginas.
 
@@ -47,7 +48,7 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
   | Incidente do provedor (RF-03) ou `storage_rejected` no upload | `Err` retryable com o código e log `error` `incidente do provedor`; o pedido fica em `processing` e segue o retry da fila. Esgotado, o `onExhausted` (RF-08) leva a `failed` com esse código |
   | `generateKit` definitivo (`ai_output_invalid`, `generation_blocked`, `other_topic_unfeasible`, `ai_cost_exceeded`) ou qualquer outro código não retryable, `render_failed`, `generation_input_invalid` | `failOrderGeneration` numa transação e `Err` não retryable com o código; o job termina `failed` (conta no `failedCount` do `/health`), o pedido em `failed` com `fail_reason_code` e o `kit_failed` enfileirado |
   | `publishKit` com `InvalidTransitionError` (reembolso durante `processing`) | apaga do storage os dois objetos subidos (melhor esforço, `warn` se falhar), log `warn` `publicação sem efeito` e `Ok`; nada de kit |
-  | Pedido inexistente | `Err` não retryable `order_not_found` |
+  | Pedido inexistente (no início ou no `publishKit`, que também apaga os objetos subidos) | `Err` não retryable `order_not_found` |
 
   Log de cada fim: `orderId`, `stage: "generate"`, `durationMs`, `costCents` da execução, `aiCallCount`, `repairList` (reparos das tentativas), `outcome`, `errorCode`, `kitId` e as páginas dos dois PDFs quando publica, e `warningCodeList` do render (`page_count_out_of_range`). Nunca conteúdo do kit, prompt ou resposta.
 
@@ -62,11 +63,11 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
   - render falhando: `render_failed`, nada no storage;
   - reembolso durante o processamento: objetos apagados, sem kit, job `completed`, log `warn`;
   - storage indisponível no upload: retryable, pedido em `processing`;
-  - teto de execução do job (`maxRunMs` curto): `job_timeout`, pedido em `processing`;
+  - teto de execução do job durante uma chamada de IA (fake que espera o `signal`): `job_timeout`, pedido em `processing`, `ai_call` com `ai_aborted`; e depois da revisão: nada renderizado nem publicado, `generation_aborted` no log;
   - `material_profile` nulo: `generation_input_invalid` definitivo;
   - pedido inexistente.
 - **RF-08 — esgotamento.** O `onExhausted` de `order.generate` chama `failOrderGeneration` com o código do job (`ai_unavailable`, `ai_auth_failed`, `job_timeout`, `lock_expired`, `unhandled_error`, …). Em `paid` ou `processing`, aplica `generation_failed` e enfileira `kit_failed`; em qualquer outro estado, no-op (ADR-0009). · Aceite: integração com retentativas esgotadas e com `lock_expired` esgotado na varredura.
-- **RF-09 — boot do worker.** `buildJobHandlerMap` ganha `order.generate`; o boot cria `createMathjsEvaluator()`, `isKatexParsable` e `createPdfRenderer({ concurrency: RENDER_CONCURRENCY })` e fecha o renderizador no desligamento, depois do runner. `handledJobNameList` passa a listar `order.generate`, então a raia `generate` sobe com `GENERATE_CONCURRENCY` vagas. · Aceite: unit das raias e do mapa; o teste de boot e a integração do `/health` continuam verdes (o Chromium só sobe na primeira renderização).
+- **RF-09 — boot do worker.** `buildJobHandlerMap` ganha `order.generate`; o boot cria `createMathjsEvaluator()`, `isKatexParsable` e `createPdfRenderer({ concurrency: RENDER_CONCURRENCY })` e fecha o renderizador no desligamento, depois do runner. `handledJobNameList` passa a listar `order.generate`, então a raia `generate` sobe com `GENERATE_CONCURRENCY` vagas. · Aceite: unit das raias e do mapa (`buildJobHandlerMap` com fakes tem uma definição por nome de `handledJobNameList`, cada uma com `onExhausted`); o teste de boot e a integração do `/health` continuam verdes (o Chromium só sobe na primeira renderização).
 - **RF-10 — visto funcionando.** Api, worker, Postgres e MinIO no ar com `PAYMENT_GATEWAY=fake`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid` e a IA real: um pedido em `preview_ready`, `confirm`, webhook do fake, `charge.reconcile` → `paid` → `order.generate` → `ready`, com os dois PDFs no MinIO, o kit no banco, as linhas de `ai_call` com custo e `kit_ready` pendente. Logs sem conteúdo do kit. · Aceite: resultado no `review.md`, com custo e tempo.
 
 ## Fora de escopo
@@ -118,9 +119,10 @@ Tamanho M: toca worker, core e db, sem decisão arquitetural nova (o fluxo já e
 | 2026-10-22 | `generation_started` limpa `fail_reason_code` | Reprocesso não carrega o motivo antigo até `ready` |
 | 2026-10-22 | Sem `completeWithin` na publicação | Não há corrida equivalente à da troca de fotos (Fora de escopo) |
 | 2026-10-22 | Sem retentativa própria do upload | Simplicidade; o teto de custo limita o total (Riscos) |
+| 2026-10-22 | Revisão neutra do código, rodada 1 (reprovada por 1 CRÍTICO): teste de timeout determinístico com fake que espera o `signal`; unit do mapa de handlers; `deleteKitObjects` também no `OrderNotFoundError` do `publishKit`; `signal` conferido antes do render (`generation_aborted`); `topic_not_selectable` na spec; históricos em ordem | CRÍTICO, ALERTA e as 5 sugestões aceitos (`review.md`) |
 
 ## Status
-- **Fase:** implementada (M1 a M3, menos a task 3.4); aguardando a revisão neutra do código.
+- **Fase:** implementada; a revisão neutra reprovou a rodada 1 por um CRÍTICO (teste não determinístico), corrigido com os demais achados; aguardando a rodada 2, que revalida só os pontos corrigidos.
 - **Suíte (22/10/2026):** `bun run lint` limpo (452 arquivos); `bun run typecheck` 6 de 6; `bun run test` 6 de 6 verdes (core 861; db 112; integrations 481 e 21 pulados; api 45; worker 346 e 15 pulados); integração com Postgres real: db 184 (15 novos em `order-generation.test.ts`), worker 93 (21 novos em `order-generate.test.ts`); `bun run build` verde, com `playwright` externo no bundle do worker (o `bun build` não resolve o `chromium-bidi` opcional do Playwright; a imagem roda `bun apps/worker/src/index.ts`, sem bundle).
 - **RF-10 (visto funcionando, 22/10/2026):** api (`PAYMENT_GATEWAY=fake`, porta 3101) e worker (`PAYMENT_GATEWAY=fake`, `FAKE_GATEWAY_UNKNOWN_CHARGE_STATUS=paid`, health 3102) no ar contra o banco de dev (7 migrations) e o MinIO, com a IA real do `.env`:
   - pedido inserido em `preview_ready` (5º ano, Matemática, `ma5-fractions` e `ma5-equivalent-fractions`), `confirm` 200 → `awaiting_payment`; webhook do fake `queued` (200); `charge.reconcile` dirigido deu `paid` em 15 s e enfileirou o `order.generate`;
